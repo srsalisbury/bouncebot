@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = "github.org/srsalisbury/bouncebot/bouncebot";
+
+package bouncebot;
+
+// Service for client to fetch a game board and return results.
+service BounceBot {
+  rpc GetBoard (GetBoardRequest) returns (GetBoardResponse) {}
+}
+
+// Board grid position.
+// This refers to a board position relative to the upper-left board cell.
+// For robots, this is the cell the robot sits on.
+// For vertical walls, this is the cell to the left of the wall (the wall is to the right).
+// For horizontal walls, this is the cell above the wall (the wall below the cell).
+message Position {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message Board {
+  // Board is square with size cells horizontally and vertically.
+  int32 size = 1;
+  // Locations of the vertical walls (edges of board contain implicit walls).
+  repeated Position v_walls = 2;
+  // Locations of the horizontal walls (edges of board contain implicit walls).
+  repeated Position h_walls = 3;
+}
+
+message Bot {
+  int32 id = 1;
+  Position pos = 2;
+}
+
+message GetBoardRequest {
+  int32 size = 1;
+}
+
+message GetBoardResponse {
+  Board board = 1;
+  repeated Bot bots = 2;
+}
+
