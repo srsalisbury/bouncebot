@@ -24,11 +24,11 @@ func Render(b Board, g BotPosition, botStart []BotPosition) string {
 
 		// Iterate for each set of horizontal walls
 		for c := 0; c < int(size); c++ {
-			toReturn.WriteString("+ ")
+			toReturn.WriteString("+")
 			if r == 0 || slices.Contains(b.HWallPos, Position{int8(c), int8(r - 1)}) {
-				toReturn.WriteString("-- ")
+				toReturn.WriteString("----")
 			} else {
-				toReturn.WriteString("   ")
+				toReturn.WriteString("    ")
 			}
 		}
 		toReturn.WriteString("+\n")
@@ -60,7 +60,7 @@ func Render(b Board, g BotPosition, botStart []BotPosition) string {
 
 	// Print bottom edge
 	for c := 0; c < int(size); c++ {
-		toReturn.WriteString("+ -- ")
+		toReturn.WriteString("+----")
 	}
 	toReturn.WriteString("+")
 	return toReturn.String()

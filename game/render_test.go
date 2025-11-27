@@ -10,13 +10,13 @@ func TestRender(t *testing.T) {
 		{Id: 1, Pos: Position{0, 0}}}
 	goal := BotPosition{0, Position{1, 1}}
 	board := Board{Size: 3, VWallPos: vW, HWallPos: hW}
-	want := `+ -- + -- + -- +
+	want := `+----+----+----+
 | B1           |
 +    +    +    +
 |    | T0      |
-+    + -- +    +
++    +----+    +
 |           B0 |
-+ -- + -- + -- +`
++----+----+----+`
 	got := Render(board, goal, botStart)
 	if got != want {
 		t.Errorf(`Render(board)
