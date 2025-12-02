@@ -6,62 +6,85 @@ import (
 	"strings"
 )
 
-/*
-+ -- + -- + -- +
-| B1           |
-+    +    +    +
-|    | T0      |
-+    + -- +    +
-|           B0 |
-+ -- + -- + -- +
-*/
-func Render(b Board, g BotPosition, botStart []BotPosition) string {
-	var toReturn strings.Builder
-	size := int(b.Size)
+// Renders the board as a string.
+// Example output:
+// +----+----+----+
+// | B1           |
+// +    +    +    +
+// |    | T0      |
+// +    +----+    +
+// |           B0 |
+// +----+----+----+
+// TODO: Move to board.go as method on Board.
+func Render(b *Board, botTarget BotPosition, botsStart BotPositionMap) string {
+	botsStartSlice := make([]BotPosition, 0, len(botsStart))
+	for id, pos := range botsStart {
+		botsStartSlice = append(botsStartSlice, BotPosition{Id: id, Pos: pos})
+	}
+	return render(b, botTarget, botsStartSlice)
+}
 
-	// Iterate for every row
-	for r := 0; r < int(size); r++ {
-
-		// Iterate for each set of horizontal walls
-		for c := 0; c < int(size); c++ {
-			toReturn.WriteString("+")
-			if r == 0 || slices.Contains(b.HWallPos, Position{int8(c), int8(r - 1)}) {
-				toReturn.WriteString("----")
-			} else {
-				toReturn.WriteString("    ")
-			}
+// TODO: Rewrite to directly use BotPositionMap instead of converting to slice.
+// Then integrate it back into Render above.
+func render(b *Board, g BotPosition, botStart []BotPosition) string {
+	renderHWall := func(x, y int8) string {
+		if b.HasHWallAt(Position{x, y}) {
+			return "----"
 		}
-		toReturn.WriteString("+\n")
-
-		// Iterate over vertical walls/cell contents
-		for c := 0; c < int(size); c++ {
-
-			// Check for vWall
-			if c == 0 || slices.Contains(b.VWallPos, Position{int8(c - 1), int8(r)}) {
-				toReturn.WriteString("|")
-			} else {
-				toReturn.WriteString(" ")
-			}
-
-			// Check for bot/target
-			index := slices.IndexFunc(botStart, func(bp BotPosition) bool {
-				return bp.Pos.X == int8(c) && bp.Pos.Y == int8(r)
-			})
-			if index != -1 {
-				toReturn.WriteString(fmt.Sprintf(" B%v ", botStart[index].Id))
-			} else if g.Pos.X == int8(c) && g.Pos.Y == int8(r) {
-				toReturn.WriteString(fmt.Sprintf(" T%v ", g.Id))
-			} else {
-				toReturn.WriteString("    ")
-			}
+		return "    "
+	}
+	// Render a row with horizontal walls
+	renderHwallRow := func(y int8) string {
+		var rowstr strings.Builder
+		rowstr.WriteString("+")
+		for x := range b.Size {
+			rowstr.WriteString(renderHWall(x, y))
+			rowstr.WriteString("+")
 		}
-		toReturn.WriteString("|\n")
+		return rowstr.String()
+	}
+	renderVWall := func(x, y int8) string {
+		if b.HasVWallAt(Position{x, y}) {
+			return "|"
+		}
+		return " "
+	}
+	renderCell := func(x, y int8) string {
+		// Check for bot/target
+		index := slices.IndexFunc(botStart, func(bp BotPosition) bool {
+			return bp.Pos.X == x && bp.Pos.Y == y
+		})
+		if index != -1 {
+			return fmt.Sprintf(" B%v ", botStart[index].Id)
+		}
+		if g.Pos.X == x && g.Pos.Y == y {
+			return fmt.Sprintf(" T%v ", g.Id)
+		}
+		return "    "
+	}
+	// Render a row with vertical walls and cell contents
+	renderVwallRow := func(y int8) string {
+		var rowstr strings.Builder
+		// Leftmost VWall
+		rowstr.WriteString(renderVWall(-1, y))
+		// Iterate over vertical walls and cell contents
+		for x := range b.Size {
+			rowstr.WriteString(renderCell(x, y))
+			rowstr.WriteString(renderVWall(x, y))
+
+		}
+		return rowstr.String()
 	}
 
-	// Print bottom edge
-	for c := 0; c < int(size); c++ {
-		toReturn.WriteString("+----")
+	var boardstr strings.Builder
+	// Top HWall border
+	boardstr.WriteString(renderHwallRow(-1))
+	for y := range b.Size {
+		boardstr.WriteString("\n")
+		boardstr.WriteString(renderVwallRow(y))
+		boardstr.WriteString("\n")
+		boardstr.WriteString(renderHwallRow(y))
 	}
-	toReturn.WriteString("+")
-	return toReturn.String()
+
+	return boardstr.String()
 }
