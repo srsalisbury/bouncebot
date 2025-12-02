@@ -5,10 +5,13 @@ import (
 	"slices"
 )
 
-// Board represents the static bits of the game board.
+// Board represents the static bits of the a game board.
+// The board is square with Size x Size cells.
+// Bots will occupy cells, while walls exist between cells.
+// Implicit walls exist around the edges of the board.
 type Board struct {
-	// Length of one side of board
-	Size int8
+	// Length of one side of the square board.
+	Size BoardDim
 
 	VWallPos []Position // Vertical walls between (X,Y) and (X+1,Y)
 	HWallPos []Position // Horizontal walls between (X,Y) and (X,Y+1)
@@ -31,16 +34,16 @@ func (b *Board) IsHWallWithin(pos Position) bool {
 		pos.Y >= 0 && pos.Y < b.Size-1
 }
 
-// IsValid checks if the board's wall positions are within the board boundaries.
+// IsValid checks if the board's wall positions are each within the board boundaries.
 func (b *Board) IsValid() error {
 	for _, wallPos := range b.VWallPos {
 		if !b.IsVWallWithin(wallPos) {
-			return fmt.Errorf("vertical wall position (%d, %d) is out of board boundaries for board of size %d", wallPos.X, wallPos.Y, b.Size)
+			return fmt.Errorf("vertical wall position %v is out of board boundaries for board of size %d", wallPos, b.Size)
 		}
 	}
 	for _, wallPos := range b.HWallPos {
 		if !b.IsHWallWithin(wallPos) {
-			return fmt.Errorf("horizontal wall position (%d, %d) is out of board boundaries for board of size %d", wallPos.X, wallPos.Y, b.Size)
+			return fmt.Errorf("horizontal wall position %v is out of board boundaries for board of size %d", wallPos, b.Size)
 		}
 	}
 	return nil
@@ -49,7 +52,7 @@ func (b *Board) IsValid() error {
 // ValidateBotWithin validates if a given bot position is within the board boundaries.
 func (b *Board) ValidateBotWithin(pos Position) error {
 	if !b.IsBotWithin(pos) {
-		return fmt.Errorf("pos (%d, %d) is out of board boundaries for board of size %d", pos.X, pos.Y, b.Size)
+		return fmt.Errorf("pos %v is out of board boundaries for board of size %d", pos, b.Size)
 	}
 	return nil
 }
