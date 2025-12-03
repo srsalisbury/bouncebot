@@ -1,4 +1,4 @@
-module salisburyclan.com/bouncebot
+module github.com/srsalisbury/bouncebot
 
 go 1.25.4
 
