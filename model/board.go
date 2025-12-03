@@ -1,4 +1,4 @@
-package bouncebot
+package model
 
 import (
 	"fmt"

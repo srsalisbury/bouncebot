@@ -1,4 +1,4 @@
-package bouncebot
+package model
 
 // Returns a sample full-sized board.
 func Board1() *Board {
