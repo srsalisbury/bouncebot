@@ -15,6 +15,22 @@ type Board struct {
 
 	VWallPos []Position // Vertical walls between (X,Y) and (X+1,Y)
 	HWallPos []Position // Horizontal walls between (X,Y) and (X,Y+1)
+
+	// Whether this board is a panel (for rendering purposes, as panels don't have
+	// implicit walls on their right and bottom edges)
+	isPanel bool
+}
+
+func NewBoard(size BoardDim, vWalls, hWalls []Position) *Board {
+	return &Board{Size: size, VWallPos: vWalls, HWallPos: hWalls, isPanel: false}
+}
+
+func NewPanel(size BoardDim, vWalls, hWalls []Position) *Board {
+	return &Board{Size: size, VWallPos: vWalls, HWallPos: hWalls, isPanel: true}
+}
+
+func (b *Board) String() string {
+	return renderBoard(b)
 }
 
 // IsBotWithin checks if a given bot position is within the board boundaries.
@@ -24,14 +40,24 @@ func (b *Board) IsBotWithin(pos Position) bool {
 
 // IsVWallWithin checks if a given vertical wall position is within the board boundaries.
 func (b *Board) IsVWallWithin(pos Position) bool {
-	return pos.X >= 0 && pos.X < b.Size-1 &&
+	xsize := b.Size
+	if b.isPanel {
+		// Panels can have vwalls on the right edge
+		xsize++
+	}
+	return pos.X >= 0 && pos.X < xsize-1 &&
 		pos.Y >= 0 && pos.Y < b.Size
 }
 
 // IsHWallWithin checks if a given horizontal wall position is within the board boundaries.
 func (b *Board) IsHWallWithin(pos Position) bool {
+	ysize := b.Size
+	if b.isPanel {
+		// Panels can have hwalls on the bottom edge
+		ysize++
+	}
 	return pos.X >= 0 && pos.X < b.Size &&
-		pos.Y >= 0 && pos.Y < b.Size-1
+		pos.Y >= 0 && pos.Y < ysize-1
 }
 
 // IsValid checks if the board's wall positions are each within the board boundaries.
@@ -59,10 +85,10 @@ func (b *Board) ValidateBotWithin(pos Position) error {
 
 // Checks if there is a vertical wall at the given position
 func (b *Board) HasVWallAt(pos Position) bool {
-	return pos.X == -1 || pos.X == b.Size-1 || slices.Contains(b.VWallPos, pos)
+	return pos.X == -1 || (!b.isPanel && pos.X == b.Size-1) || slices.Contains(b.VWallPos, pos)
 }
 
 // Checks if there is a horizontal wall at the given position
 func (b *Board) HasHWallAt(pos Position) bool {
-	return pos.Y == -1 || pos.Y == b.Size-1 || slices.Contains(b.HWallPos, pos)
+	return pos.Y == -1 || (!b.isPanel && pos.Y == b.Size-1) || slices.Contains(b.HWallPos, pos)
 }

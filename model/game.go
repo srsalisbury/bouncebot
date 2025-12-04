@@ -5,7 +5,6 @@ import (
 	"maps"
 	"reflect"
 	"slices"
-	"strings"
 )
 
 type BotId int8
@@ -211,84 +210,18 @@ func (g *Game) Equals(o *Game) bool {
 }
 
 func (g *Game) String() string {
-	return g.render()
+	return renderGame(g.Board, g.Bots, &g.BotTarget)
 }
 
 // Returns whether there is a bot at the given position, and the ID of the bot if present.
-func (g *Game) hasBotAtPosition(pos Position) (bool, BotId) {
-	for id, botPos := range g.Bots {
+func hasBotAtPosition(bots map[BotId]Position, pos Position) (bool, BotId) {
+	if bots == nil {
+		return false, -1
+	}
+	for id, botPos := range bots {
 		if botPos == pos {
 			return true, id
 		}
 	}
 	return false, -1
-}
-
-// Renders the board as a string.
-// Example output:
-// +----+----+----+
-// | B1           |
-// +    +    +    +
-// |    | T0      |
-// +    +----+    +
-// |           B0 |
-// +----+----+----+
-func (g *Game) render() string {
-	renderHWall := func(x, y BoardDim) string {
-		if g.Board.HasHWallAt(Position{x, y}) {
-			return "----"
-		}
-		return "    "
-	}
-	// Render a row with horizontal walls
-	renderHwallRow := func(y BoardDim) string {
-		var rowstr strings.Builder
-		rowstr.WriteString("+")
-		for x := range g.Board.Size {
-			rowstr.WriteString(renderHWall(x, y))
-			rowstr.WriteString("+")
-		}
-		return rowstr.String()
-	}
-	renderVWall := func(x, y BoardDim) string {
-		if g.Board.HasVWallAt(Position{x, y}) {
-			return "|"
-		}
-		return " "
-	}
-	renderCell := func(x, y BoardDim) string {
-		cellPos := Position{x, y}
-		hasBot, botId := g.hasBotAtPosition(cellPos)
-		if hasBot {
-			return fmt.Sprintf(" B%v ", botId)
-		}
-		if g.BotTarget.Pos == cellPos {
-			return fmt.Sprintf(" T%v ", g.BotTarget.Id)
-		}
-		return "    "
-	}
-	// Render a row with vertical walls and cell contents
-	renderVwallRow := func(y BoardDim) string {
-		var rowstr strings.Builder
-		// Leftmost VWall
-		rowstr.WriteString(renderVWall(-1, y))
-		// Iterate over vertical walls and cell contents
-		for x := range g.Board.Size {
-			rowstr.WriteString(renderCell(x, y))
-			rowstr.WriteString(renderVWall(x, y))
-		}
-		return rowstr.String()
-	}
-
-	var boardstr strings.Builder
-	// Top HWall border
-	boardstr.WriteString(renderHwallRow(-1))
-	for y := range g.Board.Size {
-		boardstr.WriteString("\n")
-		boardstr.WriteString(renderVwallRow(y))
-		boardstr.WriteString("\n")
-		boardstr.WriteString(renderHwallRow(y))
-	}
-
-	return boardstr.String()
 }
