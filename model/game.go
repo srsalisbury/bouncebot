@@ -15,14 +15,14 @@ type BotPosition struct {
 
 // A full game state, including board, bot positions, and target bot position.
 type Game struct {
-	Board *Board
+	Board Board
 	Bots  map[BotId]Position
 	// Where the given bot needs to end up.
 	BotTarget BotPosition
 }
 
 // Creates a new Game instance, validating the inputs.
-func NewGame(board *Board, bots map[BotId]Position, botTarget BotPosition) (*Game, error) {
+func NewGame(board Board, bots map[BotId]Position, botTarget BotPosition) (*Game, error) {
 	err := board.IsValid()
 	if err != nil {
 		return nil, err
@@ -83,7 +83,8 @@ func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
 	// Check path for obstacles and end position validity for one axis
 	// given start and end positions, walls, and motion/axis coordinate getters.
 	// Returns an error if path is not clear or end position is invalid.
-	// This handles the logic for either horizontal or vertical moves by extracting the relevant coordinate from the relevant positions.
+	// This handles the logic for either horizontal or vertical moves by
+	// extracting the relevant coordinate from the relevant positions.
 	checkPathAlongAxis := func(startPos, endPos Position, walls []Position, getMotionCoord, getAxisCoord getCoordFunc) error {
 		minCoord, maxCoord := getMotionCoord(startPos), getMotionCoord(endPos)
 		// Is bot coordinate moving in increasing direction (right or down)?
@@ -117,7 +118,7 @@ func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
 		// Check end position validity: must be against wall, border, or another bot
 		if motionIsIncreasing { // Moving towards increasing coordinate (e.g., right or down)
 			// At board edge
-			if getMotionCoord(endPos) == g.Board.Size-1 {
+			if getMotionCoord(endPos) == g.Board.Size()-1 {
 				return nil
 			}
 			// Wall just beyond end position
@@ -169,10 +170,10 @@ func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
 	// Check path for obstacles and end position validity
 	if botEndPos.X == botPos.X {
 		// Vertical move
-		return checkPathAlongAxis(botPos, botEndPos, g.Board.HWallPos, getY, getX)
+		return checkPathAlongAxis(botPos, botEndPos, g.Board.HWalls(), getY, getX)
 	} else {
 		// Horizontal move
-		return checkPathAlongAxis(botPos, botEndPos, g.Board.VWallPos, getX, getY)
+		return checkPathAlongAxis(botPos, botEndPos, g.Board.VWalls(), getX, getY)
 	}
 }
 

@@ -19,10 +19,10 @@ func TestNewGame_Valid(t *testing.T) {
 		t.Fatalf("Failed to create new game: %v", err)
 	}
 
-	if game.Board.Size != 3 {
-		t.Errorf("Expected board size 3, got %d", game.Board.Size)
+	if game.Board.Size() != 3 {
+		t.Errorf("Expected board size 3, got %d", game.Board.Size())
 	}
-	if len(game.Board.VWallPos) != 1 || len(game.Board.HWallPos) != 1 {
+	if len(game.Board.VWalls()) != 1 || len(game.Board.HWalls()) != 1 {
 		t.Errorf("Unexpected wall positions in board")
 	}
 	if !reflect.DeepEqual(game.Bots, bots) {

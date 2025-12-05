@@ -151,7 +151,7 @@ func TestParseBoardString(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var board *Board
+			var board Board
 			var err error
 			if tc.isPanel {
 				board, err = ParsePanelString(tc.boardStr)

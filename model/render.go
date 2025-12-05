@@ -19,7 +19,7 @@ import (
 // +    +----+    +
 // |           B0 |
 // +----+----+----+
-func renderGame(board *Board, bots map[BotId]Position, target *BotPosition) string {
+func renderGame(board Board, bots map[BotId]Position, target *BotPosition) string {
 	renderHWall := func(x, y BoardDim) string {
 		if board.HasHWallAt(Position{x, y}) {
 			return "----"
@@ -30,7 +30,7 @@ func renderGame(board *Board, bots map[BotId]Position, target *BotPosition) stri
 	renderHwallRow := func(y BoardDim) string {
 		var rowstr strings.Builder
 		rowstr.WriteString("+")
-		for x := range board.Size {
+		for x := range board.Size() {
 			rowstr.WriteString(renderHWall(x, y))
 			rowstr.WriteString("+")
 		}
@@ -59,7 +59,7 @@ func renderGame(board *Board, bots map[BotId]Position, target *BotPosition) stri
 		// Leftmost VWall
 		rowstr.WriteString(renderVWall(-1, y))
 		// Iterate over vertical walls and cell contents
-		for x := range board.Size {
+		for x := range board.Size() {
 			rowstr.WriteString(renderCell(x, y))
 			rowstr.WriteString(renderVWall(x, y))
 		}
@@ -69,7 +69,7 @@ func renderGame(board *Board, bots map[BotId]Position, target *BotPosition) stri
 	var boardstr strings.Builder
 	// Top HWall border
 	boardstr.WriteString(renderHwallRow(-1))
-	for y := range board.Size {
+	for y := range board.Size() {
 		boardstr.WriteString("\n")
 		boardstr.WriteString(renderVwallRow(y))
 		boardstr.WriteString("\n")
@@ -79,7 +79,7 @@ func renderGame(board *Board, bots map[BotId]Position, target *BotPosition) stri
 	return boardstr.String()
 }
 
-func renderBoard(b *Board) string {
+func renderBoard(b Board) string {
 	return renderGame(b, nil, nil)
 }
 
@@ -94,13 +94,13 @@ func renderBoard(b *Board) string {
      +----+----+----+
    `)
 */
-func ParseBoardString(bs string) (*Board, error) {
+func ParseBoardString(bs string) (Board, error) {
 	return ParseGenericBoardString(bs, false)
 }
-func ParsePanelString(bs string) (*Board, error) {
+func ParsePanelString(bs string) (Board, error) {
 	return ParseGenericBoardString(bs, true)
 }
-func ParseGenericBoardString(bs string, isPanel bool) (*Board, error) {
+func ParseGenericBoardString(bs string, isPanel bool) (Board, error) {
 	bs = dedentBoardString(bs)
 	lines := strings.Split(bs, "\n")
 	size := BoardDim((len(lines) - 1) / 2)
@@ -148,7 +148,7 @@ func ParseGenericBoardString(bs string, isPanel bool) (*Board, error) {
 }
 
 // MustParseBoardString is like ParseBoardString but panics on error.
-func MustParseBoardString(bs string) *Board {
+func MustParseBoardString(bs string) Board {
 	board, err := ParseBoardString(bs)
 	if err != nil {
 		panic(err)
@@ -157,7 +157,7 @@ func MustParseBoardString(bs string) *Board {
 }
 
 // MustParsePanelString is like ParsePanelString but panics on error.
-func MustParsePanelString(bs string) *Board {
+func MustParsePanelString(bs string) Board {
 	board, err := ParsePanelString(bs)
 	if err != nil {
 		panic(err)
