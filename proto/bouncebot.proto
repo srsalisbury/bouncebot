@@ -42,7 +42,7 @@ message Game {
   BotPos target = 3;
 }
 
-message MakeBoardRequest {
+message MakeGameRequest {
   int32 size = 1;
 }
 
@@ -53,8 +53,9 @@ message CheckSolutionRequest {
 
 message CheckSolutionResponse {
   bool is_valid = 1;
-  bool num_moves = 2;
-  repeated MoveError bad_moves = 3;
+  int32 num_moves = 2;
+  Game resulting_game = 3;
+  MoveError first_bad_move = 4; // If solution is not valid
 }
 
 message MoveError {

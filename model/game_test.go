@@ -28,8 +28,8 @@ func TestNewGame_Valid(t *testing.T) {
 	if !reflect.DeepEqual(game.Bots, bots) {
 		t.Errorf("Bots mismatch: got %v, want %v", game.Bots, bots)
 	}
-	if game.BotTarget != target {
-		t.Errorf("BotTarget mismatch: got %v, want %v", game.BotTarget, target)
+	if game.Target != target {
+		t.Errorf("BotTarget mismatch: got %v, want %v", game.Target, target)
 	}
 }
 

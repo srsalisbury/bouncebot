@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"slices"
+
+	pb "github.com/srsalisbury/bouncebot/proto"
 )
 
 // Board represents the static bits of the a game board.
@@ -10,6 +12,7 @@ import (
 // Bots will occupy cells, while walls exist between cells.
 // Implicit walls exist around the edges of the board.
 type Board interface {
+	ToProto() *pb.Board
 	String() string
 	Size() BoardDim
 
@@ -44,6 +47,18 @@ type Board interface {
 	Rotate90cw() Board
 }
 
+func NewBoardFromProto(bp *pb.Board) Board {
+	vWalls := make([]Position, len(bp.VWalls))
+	for i, vp := range bp.VWalls {
+		vWalls[i] = NewPositionFromProto(vp)
+	}
+	hWalls := make([]Position, len(bp.HWalls))
+	for i, hp := range bp.HWalls {
+		hWalls[i] = NewPositionFromProto(hp)
+	}
+	return NewBoard(BoardDim(bp.Size), vWalls, hWalls)
+}
+
 func NewBoard(size BoardDim, vWalls, hWalls []Position) Board {
 	return &board{size: size, vWallPos: vWalls, hWallPos: hWalls, isPanel: false}
 }
@@ -62,6 +77,22 @@ type board struct {
 	// Whether this board is a panel (for rendering purposes, as panels don't have
 	// implicit walls on their right and bottom edges)
 	isPanel bool
+}
+
+func (b *board) ToProto() *pb.Board {
+	vWalls := make([]*pb.Position, len(b.VWalls()))
+	for i, vp := range b.VWalls() {
+		vWalls[i] = vp.ToProto()
+	}
+	hWalls := make([]*pb.Position, len(b.HWalls()))
+	for i, hp := range b.HWalls() {
+		hWalls[i] = hp.ToProto()
+	}
+	return &pb.Board{
+		Size:   int32(b.Size()),
+		VWalls: vWalls,
+		HWalls: hWalls,
+	}
 }
 
 func (b *board) Size() BoardDim {

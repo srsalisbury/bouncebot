@@ -2,6 +2,9 @@ module github.com/srsalisbury/bouncebot
 
 go 1.25.4
 
+replace github.com/srsalisbury/bouncebot/model => ./model
+replace github.com/srsalisbury/bouncebot/proto => ./proto
+
 require (
 	github.com/lithammer/dedent v1.1.0
 	google.golang.org/grpc v1.77.0
