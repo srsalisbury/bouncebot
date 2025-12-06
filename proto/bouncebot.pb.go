@@ -141,7 +141,7 @@ func (x *Board) GetHWalls() []*Position {
 	return nil
 }
 
-type Bot struct {
+type BotPos struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Pos           *Position              `protobuf:"bytes,2,opt,name=pos,proto3" json:"pos,omitempty"`
@@ -149,20 +149,20 @@ type Bot struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Bot) Reset() {
-	*x = Bot{}
+func (x *BotPos) Reset() {
+	*x = BotPos{}
 	mi := &file_bouncebot_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Bot) String() string {
+func (x *BotPos) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Bot) ProtoMessage() {}
+func (*BotPos) ProtoMessage() {}
 
-func (x *Bot) ProtoReflect() protoreflect.Message {
+func (x *BotPos) ProtoReflect() protoreflect.Message {
 	mi := &file_bouncebot_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -174,46 +174,48 @@ func (x *Bot) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Bot.ProtoReflect.Descriptor instead.
-func (*Bot) Descriptor() ([]byte, []int) {
+// Deprecated: Use BotPos.ProtoReflect.Descriptor instead.
+func (*BotPos) Descriptor() ([]byte, []int) {
 	return file_bouncebot_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Bot) GetId() int32 {
+func (x *BotPos) GetId() int32 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-func (x *Bot) GetPos() *Position {
+func (x *BotPos) GetPos() *Position {
 	if x != nil {
 		return x.Pos
 	}
 	return nil
 }
 
-type GetBoardRequest struct {
+type Game struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Size          int32                  `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
+	Board         *Board                 `protobuf:"bytes,1,opt,name=board,proto3" json:"board,omitempty"`
+	Bots          []*BotPos              `protobuf:"bytes,2,rep,name=bots,proto3" json:"bots,omitempty"`
+	Target        *BotPos                `protobuf:"bytes,3,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetBoardRequest) Reset() {
-	*x = GetBoardRequest{}
+func (x *Game) Reset() {
+	*x = Game{}
 	mi := &file_bouncebot_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetBoardRequest) String() string {
+func (x *Game) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetBoardRequest) ProtoMessage() {}
+func (*Game) ProtoMessage() {}
 
-func (x *GetBoardRequest) ProtoReflect() protoreflect.Message {
+func (x *Game) ProtoReflect() protoreflect.Message {
 	mi := &file_bouncebot_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -225,68 +227,246 @@ func (x *GetBoardRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetBoardRequest.ProtoReflect.Descriptor instead.
-func (*GetBoardRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use Game.ProtoReflect.Descriptor instead.
+func (*Game) Descriptor() ([]byte, []int) {
 	return file_bouncebot_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetBoardRequest) GetSize() int32 {
-	if x != nil {
-		return x.Size
-	}
-	return 0
-}
-
-type GetBoardResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Board         *Board                 `protobuf:"bytes,1,opt,name=board,proto3" json:"board,omitempty"`
-	Bots          []*Bot                 `protobuf:"bytes,2,rep,name=bots,proto3" json:"bots,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetBoardResponse) Reset() {
-	*x = GetBoardResponse{}
-	mi := &file_bouncebot_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetBoardResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetBoardResponse) ProtoMessage() {}
-
-func (x *GetBoardResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetBoardResponse.ProtoReflect.Descriptor instead.
-func (*GetBoardResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *GetBoardResponse) GetBoard() *Board {
+func (x *Game) GetBoard() *Board {
 	if x != nil {
 		return x.Board
 	}
 	return nil
 }
 
-func (x *GetBoardResponse) GetBots() []*Bot {
+func (x *Game) GetBots() []*BotPos {
 	if x != nil {
 		return x.Bots
 	}
 	return nil
+}
+
+func (x *Game) GetTarget() *BotPos {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
+type MakeGameRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Size          int32                  `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MakeGameRequest) Reset() {
+	*x = MakeGameRequest{}
+	mi := &file_bouncebot_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MakeGameRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MakeGameRequest) ProtoMessage() {}
+
+func (x *MakeGameRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MakeGameRequest.ProtoReflect.Descriptor instead.
+func (*MakeGameRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *MakeGameRequest) GetSize() int32 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+type CheckSolutionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Game          *Game                  `protobuf:"bytes,1,opt,name=game,proto3" json:"game,omitempty"`
+	Moves         []*BotPos              `protobuf:"bytes,2,rep,name=moves,proto3" json:"moves,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckSolutionRequest) Reset() {
+	*x = CheckSolutionRequest{}
+	mi := &file_bouncebot_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckSolutionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckSolutionRequest) ProtoMessage() {}
+
+func (x *CheckSolutionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckSolutionRequest.ProtoReflect.Descriptor instead.
+func (*CheckSolutionRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CheckSolutionRequest) GetGame() *Game {
+	if x != nil {
+		return x.Game
+	}
+	return nil
+}
+
+func (x *CheckSolutionRequest) GetMoves() []*BotPos {
+	if x != nil {
+		return x.Moves
+	}
+	return nil
+}
+
+type CheckSolutionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	IsValid       bool                   `protobuf:"varint,1,opt,name=is_valid,json=isValid,proto3" json:"is_valid,omitempty"`
+	NumMoves      int32                  `protobuf:"varint,2,opt,name=num_moves,json=numMoves,proto3" json:"num_moves,omitempty"`
+	ResultingGame *Game                  `protobuf:"bytes,3,opt,name=resulting_game,json=resultingGame,proto3" json:"resulting_game,omitempty"`
+	FirstBadMove  *MoveError             `protobuf:"bytes,4,opt,name=first_bad_move,json=firstBadMove,proto3" json:"first_bad_move,omitempty"` // If solution is not valid
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckSolutionResponse) Reset() {
+	*x = CheckSolutionResponse{}
+	mi := &file_bouncebot_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckSolutionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckSolutionResponse) ProtoMessage() {}
+
+func (x *CheckSolutionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckSolutionResponse.ProtoReflect.Descriptor instead.
+func (*CheckSolutionResponse) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CheckSolutionResponse) GetIsValid() bool {
+	if x != nil {
+		return x.IsValid
+	}
+	return false
+}
+
+func (x *CheckSolutionResponse) GetNumMoves() int32 {
+	if x != nil {
+		return x.NumMoves
+	}
+	return 0
+}
+
+func (x *CheckSolutionResponse) GetResultingGame() *Game {
+	if x != nil {
+		return x.ResultingGame
+	}
+	return nil
+}
+
+func (x *CheckSolutionResponse) GetFirstBadMove() *MoveError {
+	if x != nil {
+		return x.FirstBadMove
+	}
+	return nil
+}
+
+type MoveError struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Move             *BotPos                `protobuf:"bytes,1,opt,name=move,proto3" json:"move,omitempty"`
+	ErrorDescription string                 `protobuf:"bytes,2,opt,name=error_description,json=errorDescription,proto3" json:"error_description,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *MoveError) Reset() {
+	*x = MoveError{}
+	mi := &file_bouncebot_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveError) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveError) ProtoMessage() {}
+
+func (x *MoveError) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MoveError.ProtoReflect.Descriptor instead.
+func (*MoveError) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MoveError) GetMove() *BotPos {
+	if x != nil {
+		return x.Move
+	}
+	return nil
+}
+
+func (x *MoveError) GetErrorDescription() string {
+	if x != nil {
+		return x.ErrorDescription
+	}
+	return ""
 }
 
 var File_bouncebot_proto protoreflect.FileDescriptor
@@ -300,17 +480,30 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x05Board\x12\x12\n" +
 	"\x04size\x18\x01 \x01(\x05R\x04size\x12,\n" +
 	"\av_walls\x18\x02 \x03(\v2\x13.bouncebot.PositionR\x06vWalls\x12,\n" +
-	"\ah_walls\x18\x03 \x03(\v2\x13.bouncebot.PositionR\x06hWalls\"<\n" +
-	"\x03Bot\x12\x0e\n" +
+	"\ah_walls\x18\x03 \x03(\v2\x13.bouncebot.PositionR\x06hWalls\"?\n" +
+	"\x06BotPos\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12%\n" +
-	"\x03pos\x18\x02 \x01(\v2\x13.bouncebot.PositionR\x03pos\"%\n" +
-	"\x0fGetBoardRequest\x12\x12\n" +
-	"\x04size\x18\x01 \x01(\x05R\x04size\"^\n" +
-	"\x10GetBoardResponse\x12&\n" +
-	"\x05board\x18\x01 \x01(\v2\x10.bouncebot.BoardR\x05board\x12\"\n" +
-	"\x04bots\x18\x02 \x03(\v2\x0e.bouncebot.BotR\x04bots2R\n" +
-	"\tBounceBot\x12E\n" +
-	"\bGetBoard\x12\x1a.bouncebot.GetBoardRequest\x1a\x1b.bouncebot.GetBoardResponse\"\x00B,Z*github.org/srsalisbury/bouncebot/bouncebotb\x06proto3"
+	"\x03pos\x18\x02 \x01(\v2\x13.bouncebot.PositionR\x03pos\"\x80\x01\n" +
+	"\x04Game\x12&\n" +
+	"\x05board\x18\x01 \x01(\v2\x10.bouncebot.BoardR\x05board\x12%\n" +
+	"\x04bots\x18\x02 \x03(\v2\x11.bouncebot.BotPosR\x04bots\x12)\n" +
+	"\x06target\x18\x03 \x01(\v2\x11.bouncebot.BotPosR\x06target\"%\n" +
+	"\x0fMakeGameRequest\x12\x12\n" +
+	"\x04size\x18\x01 \x01(\x05R\x04size\"d\n" +
+	"\x14CheckSolutionRequest\x12#\n" +
+	"\x04game\x18\x01 \x01(\v2\x0f.bouncebot.GameR\x04game\x12'\n" +
+	"\x05moves\x18\x02 \x03(\v2\x11.bouncebot.BotPosR\x05moves\"\xc3\x01\n" +
+	"\x15CheckSolutionResponse\x12\x19\n" +
+	"\bis_valid\x18\x01 \x01(\bR\aisValid\x12\x1b\n" +
+	"\tnum_moves\x18\x02 \x01(\x05R\bnumMoves\x126\n" +
+	"\x0eresulting_game\x18\x03 \x01(\v2\x0f.bouncebot.GameR\rresultingGame\x12:\n" +
+	"\x0efirst_bad_move\x18\x04 \x01(\v2\x14.bouncebot.MoveErrorR\ffirstBadMove\"_\n" +
+	"\tMoveError\x12%\n" +
+	"\x04move\x18\x01 \x01(\v2\x11.bouncebot.BotPosR\x04move\x12+\n" +
+	"\x11error_description\x18\x02 \x01(\tR\x10errorDescription2\x9c\x01\n" +
+	"\tBounceBot\x129\n" +
+	"\bMakeGame\x12\x1a.bouncebot.MakeGameRequest\x1a\x0f.bouncebot.Game\"\x00\x12T\n" +
+	"\rCheckSolution\x12\x1f.bouncebot.CheckSolutionRequest\x1a .bouncebot.CheckSolutionResponse\"\x00B,Z*github.org/srsalisbury/bouncebot/bouncebotb\x06proto3"
 
 var (
 	file_bouncebot_proto_rawDescOnce sync.Once
@@ -324,27 +517,38 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_bouncebot_proto_goTypes = []any{
-	(*Position)(nil),         // 0: bouncebot.Position
-	(*Board)(nil),            // 1: bouncebot.Board
-	(*Bot)(nil),              // 2: bouncebot.Bot
-	(*GetBoardRequest)(nil),  // 3: bouncebot.GetBoardRequest
-	(*GetBoardResponse)(nil), // 4: bouncebot.GetBoardResponse
+	(*Position)(nil),              // 0: bouncebot.Position
+	(*Board)(nil),                 // 1: bouncebot.Board
+	(*BotPos)(nil),                // 2: bouncebot.BotPos
+	(*Game)(nil),                  // 3: bouncebot.Game
+	(*MakeGameRequest)(nil),       // 4: bouncebot.MakeGameRequest
+	(*CheckSolutionRequest)(nil),  // 5: bouncebot.CheckSolutionRequest
+	(*CheckSolutionResponse)(nil), // 6: bouncebot.CheckSolutionResponse
+	(*MoveError)(nil),             // 7: bouncebot.MoveError
 }
 var file_bouncebot_proto_depIdxs = []int32{
-	0, // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
-	0, // 1: bouncebot.Board.h_walls:type_name -> bouncebot.Position
-	0, // 2: bouncebot.Bot.pos:type_name -> bouncebot.Position
-	1, // 3: bouncebot.GetBoardResponse.board:type_name -> bouncebot.Board
-	2, // 4: bouncebot.GetBoardResponse.bots:type_name -> bouncebot.Bot
-	3, // 5: bouncebot.BounceBot.GetBoard:input_type -> bouncebot.GetBoardRequest
-	4, // 6: bouncebot.BounceBot.GetBoard:output_type -> bouncebot.GetBoardResponse
-	6, // [6:7] is the sub-list for method output_type
-	5, // [5:6] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
+	0,  // 1: bouncebot.Board.h_walls:type_name -> bouncebot.Position
+	0,  // 2: bouncebot.BotPos.pos:type_name -> bouncebot.Position
+	1,  // 3: bouncebot.Game.board:type_name -> bouncebot.Board
+	2,  // 4: bouncebot.Game.bots:type_name -> bouncebot.BotPos
+	2,  // 5: bouncebot.Game.target:type_name -> bouncebot.BotPos
+	3,  // 6: bouncebot.CheckSolutionRequest.game:type_name -> bouncebot.Game
+	2,  // 7: bouncebot.CheckSolutionRequest.moves:type_name -> bouncebot.BotPos
+	3,  // 8: bouncebot.CheckSolutionResponse.resulting_game:type_name -> bouncebot.Game
+	7,  // 9: bouncebot.CheckSolutionResponse.first_bad_move:type_name -> bouncebot.MoveError
+	2,  // 10: bouncebot.MoveError.move:type_name -> bouncebot.BotPos
+	4,  // 11: bouncebot.BounceBot.MakeGame:input_type -> bouncebot.MakeGameRequest
+	5,  // 12: bouncebot.BounceBot.CheckSolution:input_type -> bouncebot.CheckSolutionRequest
+	3,  // 13: bouncebot.BounceBot.MakeGame:output_type -> bouncebot.Game
+	6,  // 14: bouncebot.BounceBot.CheckSolution:output_type -> bouncebot.CheckSolutionResponse
+	13, // [13:15] is the sub-list for method output_type
+	11, // [11:13] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_bouncebot_proto_init() }
@@ -358,7 +562,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

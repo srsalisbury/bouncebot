@@ -6,7 +6,8 @@ package bouncebot;
 
 // Service for client to fetch a game board and return results.
 service BounceBot {
-  rpc GetBoard (GetBoardRequest) returns (GetBoardResponse) {}
+  rpc MakeGame (MakeGameRequest) returns (Game) {}
+  rpc CheckSolution (CheckSolutionRequest) returns (CheckSolutionResponse) {}
 }
 
 // Board grid position.
@@ -22,23 +23,43 @@ message Position {
 message Board {
   // Board is square with size cells horizontally and vertically.
   int32 size = 1;
+
   // Locations of the vertical walls (edges of board contain implicit walls).
   repeated Position v_walls = 2;
+
   // Locations of the horizontal walls (edges of board contain implicit walls).
   repeated Position h_walls = 3;
 }
 
-message Bot {
+message BotPos {
   int32 id = 1;
   Position pos = 2;
 }
 
-message GetBoardRequest {
+message Game {
+  Board board = 1;
+  repeated BotPos bots = 2;
+  BotPos target = 3;
+}
+
+message MakeGameRequest {
   int32 size = 1;
 }
 
-message GetBoardResponse {
-  Board board = 1;
-  repeated Bot bots = 2;
+message CheckSolutionRequest {
+  Game game = 1;
+  repeated BotPos moves = 2;
+}
+
+message CheckSolutionResponse {
+  bool is_valid = 1;
+  int32 num_moves = 2;
+  Game resulting_game = 3;
+  MoveError first_bad_move = 4; // If solution is not valid
+}
+
+message MoveError {
+  BotPos move = 1;
+  string error_description = 2;
 }
 

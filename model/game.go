@@ -5,7 +5,8 @@ import (
 	"maps"
 	"reflect"
 	"slices"
-	"strings"
+
+	pb "github.com/srsalisbury/bouncebot/proto"
 )
 
 type BotId int8
@@ -14,27 +15,84 @@ type BotPosition struct {
 	Pos Position
 }
 
+func (bp BotPosition) String() string {
+	return fmt.Sprintf("Bot %d at %v", bp.Id, bp.Pos)
+}
+
+func NewBotPosition(id BotId, x, y BoardDim) BotPosition {
+	return BotPosition{
+		Id:  id,
+		Pos: Position{X: x, Y: y},
+	}
+}
+
+func NewBotPositionFromProto(bpp *pb.BotPos) BotPosition {
+	return BotPosition{
+		Id:  BotId(bpp.Id),
+		Pos: NewPositionFromProto(bpp.Pos),
+	}
+}
+
+func NewBotPositionsFromProto(bpp []*pb.BotPos) []BotPosition {
+	bps := make([]BotPosition, len(bpp))
+	for i, bp := range bpp {
+		bps[i] = NewBotPositionFromProto(bp)
+	}
+	return bps
+}
+
+func (bp BotPosition) ToProto() *pb.BotPos {
+	return &pb.BotPos{
+		Id:  int32(bp.Id),
+		Pos: bp.Pos.ToProto(),
+	}
+}
+
 // A full game state, including board, bot positions, and target bot position.
 type Game struct {
-	Board *Board
+	Board Board
 	Bots  map[BotId]Position
 	// Where the given bot needs to end up.
-	BotTarget BotPosition
+	Target BotPosition
+}
+
+func NewGameFromProto(gp *pb.Game) *Game {
+	bots := make(map[BotId]Position)
+	for _, bot := range gp.Bots {
+		bots[BotId(bot.Id)] = NewPositionFromProto(bot.Pos)
+	}
+	return &Game{
+		Board:  NewBoardFromProto(gp.Board),
+		Bots:   bots,
+		Target: NewBotPositionFromProto(gp.Target),
+	}
+}
+
+func (g *Game) ToProto() *pb.Game {
+	bots := []*pb.BotPos{}
+	for id, pos := range g.Bots {
+		bots = append(bots, BotPosition{Id: id, Pos: pos}.ToProto())
+	}
+	return &pb.Game{
+		Board:  g.Board.ToProto(),
+		Bots:   bots,
+		Target: g.Target.ToProto(),
+	}
 }
 
 // Creates a new Game instance, validating the inputs.
-func NewGame(board *Board, bots map[BotId]Position, botTarget BotPosition) (*Game, error) {
+func NewGame(board Board, bots map[BotId]Position, target BotPosition) (*Game, error) {
 	err := board.IsValid()
 	if err != nil {
 		return nil, err
 	}
-	// Validate that botTarget.Id exists in bots
-	if _, ok := bots[botTarget.Id]; !ok {
-		return nil, fmt.Errorf("botTarget.Id %d not found in bots", botTarget.Id)
+	// Validate that target.Id exists in bots
+	if _, ok := bots[target.Id]; !ok {
+		return nil, fmt.Errorf("target.Id %d not found in bots", target.Id)
 	}
-	err = board.ValidateBotWithin(botTarget.Pos)
+	err = board.ValidateBotWithin(target.Pos)
 	if err != nil {
-		return nil, fmt.Errorf("botTarget %v", err)
+		return nil, fmt.Errorf("target %v", err)
 	}
 	for id, pos := range bots {
 		err = board.ValidateBotWithin(pos)
@@ -51,9 +109,9 @@ func NewGame(board *Board, bots map[BotId]Position, botTarget BotPosition) (*Gam
 		positionsSeen[botPos] = true
 	}
 	return &Game{
-		Board:     board,
-		Bots:      bots,
-		BotTarget: botTarget,
+		Board:  board,
+		Bots:   bots,
+		Target: target,
 	}, nil
 }
 
@@ -84,7 +142,8 @@ func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
 	// Check path for obstacles and end position validity for one axis
 	// given start and end positions, walls, and motion/axis coordinate getters.
 	// Returns an error if path is not clear or end position is invalid.
-	// This handles the logic for either horizontal or vertical moves by extracting the relevant coordinate from the relevant positions.
+	// This handles the logic for either horizontal or vertical moves by
+	// extracting the relevant coordinate from the relevant positions.
 	checkPathAlongAxis := func(startPos, endPos Position, walls []Position, getMotionCoord, getAxisCoord getCoordFunc) error {
 		minCoord, maxCoord := getMotionCoord(startPos), getMotionCoord(endPos)
 		// Is bot coordinate moving in increasing direction (right or down)?
@@ -118,7 +177,7 @@ func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
 		// Check end position validity: must be against wall, border, or another bot
 		if motionIsIncreasing { // Moving towards increasing coordinate (e.g., right or down)
 			// At board edge
-			if getMotionCoord(endPos) == g.Board.Size-1 {
+			if getMotionCoord(endPos) == g.Board.Size()-1 {
 				return nil
 			}
 			// Wall just beyond end position
@@ -170,10 +229,10 @@ func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
 	// Check path for obstacles and end position validity
 	if botEndPos.X == botPos.X {
 		// Vertical move
-		return checkPathAlongAxis(botPos, botEndPos, g.Board.HWallPos, getY, getX)
+		return checkPathAlongAxis(botPos, botEndPos, g.Board.HWalls(), getY, getX)
 	} else {
 		// Horizontal move
-		return checkPathAlongAxis(botPos, botEndPos, g.Board.VWallPos, getX, getY)
+		return checkPathAlongAxis(botPos, botEndPos, g.Board.VWalls(), getX, getY)
 	}
 }
 
@@ -195,15 +254,15 @@ func (g *Game) MoveBot(id BotId, pos Position) (*Game, error) {
 		}
 	}
 
-	return NewGame(g.Board, newBots, g.BotTarget)
+	return NewGame(g.Board, newBots, g.Target)
 }
 
 func (g *Game) IsWin() bool {
-	targetPos, ok := g.Bots[g.BotTarget.Id]
+	targetPos, ok := g.Bots[g.Target.Id]
 	if !ok {
 		return false
 	}
-	return targetPos == g.BotTarget.Pos
+	return targetPos == g.Target.Pos
 }
 
 func (g *Game) Equals(o *Game) bool {
@@ -211,12 +270,15 @@ func (g *Game) Equals(o *Game) bool {
 }
 
 func (g *Game) String() string {
-	return g.render()
+	return renderGame(g.Board, g.Bots, &g.Target)
 }
 
 // Returns whether there is a bot at the given position, and the ID of the bot if present.
-func (g *Game) hasBotAtPosition(pos Position) (bool, BotId) {
-	for id, botPos := range g.Bots {
+func hasBotAtPosition(bots map[BotId]Position, pos Position) (bool, BotId) {
+	if bots == nil {
+		return false, -1
+	}
+	for id, botPos := range bots {
 		if botPos == pos {
 			return true, id
 		}
@@ -224,71 +286,19 @@ func (g *Game) hasBotAtPosition(pos Position) (bool, BotId) {
 	return false, -1
 }
 
-// Renders the board as a string.
-// Example output:
-// +----+----+----+
-// | B1           |
-// +    +    +    +
-// |    | T0      |
-// +    +----+    +
-// |           B0 |
-// +----+----+----+
-func (g *Game) render() string {
-	renderHWall := func(x, y BoardDim) string {
-		if g.Board.HasHWallAt(Position{x, y}) {
-			return "----"
+// Returns isValid and the resulting game after applying the given moves.
+func (g *Game) CheckSolution(moves []BotPosition) (bool, *Game) {
+	currentGame := g
+	for _, move := range moves {
+		var err error
+		currentGame, err = currentGame.MoveBot(move.Id, move.Pos)
+		if err != nil {
+			//			return fmt.Errorf("invalid move %d (%v): %v", moveIdx, move, err)
+			return false, nil
 		}
-		return "    "
 	}
-	// Render a row with horizontal walls
-	renderHwallRow := func(y BoardDim) string {
-		var rowstr strings.Builder
-		rowstr.WriteString("+")
-		for x := range g.Board.Size {
-			rowstr.WriteString(renderHWall(x, y))
-			rowstr.WriteString("+")
-		}
-		return rowstr.String()
+	if !currentGame.IsWin() {
+		return false, nil
 	}
-	renderVWall := func(x, y BoardDim) string {
-		if g.Board.HasVWallAt(Position{x, y}) {
-			return "|"
-		}
-		return " "
-	}
-	renderCell := func(x, y BoardDim) string {
-		cellPos := Position{x, y}
-		hasBot, botId := g.hasBotAtPosition(cellPos)
-		if hasBot {
-			return fmt.Sprintf(" B%v ", botId)
-		}
-		if g.BotTarget.Pos == cellPos {
-			return fmt.Sprintf(" T%v ", g.BotTarget.Id)
-		}
-		return "    "
-	}
-	// Render a row with vertical walls and cell contents
-	renderVwallRow := func(y BoardDim) string {
-		var rowstr strings.Builder
-		// Leftmost VWall
-		rowstr.WriteString(renderVWall(-1, y))
-		// Iterate over vertical walls and cell contents
-		for x := range g.Board.Size {
-			rowstr.WriteString(renderCell(x, y))
-			rowstr.WriteString(renderVWall(x, y))
-		}
-		return rowstr.String()
-	}
-
-	var boardstr strings.Builder
-	// Top HWall border
-	boardstr.WriteString(renderHwallRow(-1))
-	for y := range g.Board.Size {
-		boardstr.WriteString("\n")
-		boardstr.WriteString(renderVwallRow(y))
-		boardstr.WriteString("\n")
-		boardstr.WriteString(renderHwallRow(y))
-	}
-
-	return boardstr.String()
+	return true, currentGame
 }

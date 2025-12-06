@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BounceBot_GetBoard_FullMethodName = "/bouncebot.BounceBot/GetBoard"
+	BounceBot_MakeGame_FullMethodName      = "/bouncebot.BounceBot/MakeGame"
+	BounceBot_CheckSolution_FullMethodName = "/bouncebot.BounceBot/CheckSolution"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -28,7 +29,8 @@ const (
 //
 // Service for client to fetch a game board and return results.
 type BounceBotClient interface {
-	GetBoard(ctx context.Context, in *GetBoardRequest, opts ...grpc.CallOption) (*GetBoardResponse, error)
+	MakeGame(ctx context.Context, in *MakeGameRequest, opts ...grpc.CallOption) (*Game, error)
+	CheckSolution(ctx context.Context, in *CheckSolutionRequest, opts ...grpc.CallOption) (*CheckSolutionResponse, error)
 }
 
 type bounceBotClient struct {
@@ -39,10 +41,20 @@ func NewBounceBotClient(cc grpc.ClientConnInterface) BounceBotClient {
 	return &bounceBotClient{cc}
 }
 
-func (c *bounceBotClient) GetBoard(ctx context.Context, in *GetBoardRequest, opts ...grpc.CallOption) (*GetBoardResponse, error) {
+func (c *bounceBotClient) MakeGame(ctx context.Context, in *MakeGameRequest, opts ...grpc.CallOption) (*Game, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetBoardResponse)
-	err := c.cc.Invoke(ctx, BounceBot_GetBoard_FullMethodName, in, out, cOpts...)
+	out := new(Game)
+	err := c.cc.Invoke(ctx, BounceBot_MakeGame_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) CheckSolution(ctx context.Context, in *CheckSolutionRequest, opts ...grpc.CallOption) (*CheckSolutionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckSolutionResponse)
+	err := c.cc.Invoke(ctx, BounceBot_CheckSolution_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +67,8 @@ func (c *bounceBotClient) GetBoard(ctx context.Context, in *GetBoardRequest, opt
 //
 // Service for client to fetch a game board and return results.
 type BounceBotServer interface {
-	GetBoard(context.Context, *GetBoardRequest) (*GetBoardResponse, error)
+	MakeGame(context.Context, *MakeGameRequest) (*Game, error)
+	CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error)
 	mustEmbedUnimplementedBounceBotServer()
 }
 
@@ -66,8 +79,11 @@ type BounceBotServer interface {
 // pointer dereference when methods are called.
 type UnimplementedBounceBotServer struct{}
 
-func (UnimplementedBounceBotServer) GetBoard(context.Context, *GetBoardRequest) (*GetBoardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBoard not implemented")
+func (UnimplementedBounceBotServer) MakeGame(context.Context, *MakeGameRequest) (*Game, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MakeGame not implemented")
+}
+func (UnimplementedBounceBotServer) CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckSolution not implemented")
 }
 func (UnimplementedBounceBotServer) mustEmbedUnimplementedBounceBotServer() {}
 func (UnimplementedBounceBotServer) testEmbeddedByValue()                   {}
@@ -90,20 +106,38 @@ func RegisterBounceBotServer(s grpc.ServiceRegistrar, srv BounceBotServer) {
 	s.RegisterService(&BounceBot_ServiceDesc, srv)
 }
 
-func _BounceBot_GetBoard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetBoardRequest)
+func _BounceBot_MakeGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MakeGameRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BounceBotServer).GetBoard(ctx, in)
+		return srv.(BounceBotServer).MakeGame(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BounceBot_GetBoard_FullMethodName,
+		FullMethod: BounceBot_MakeGame_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BounceBotServer).GetBoard(ctx, req.(*GetBoardRequest))
+		return srv.(BounceBotServer).MakeGame(ctx, req.(*MakeGameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_CheckSolution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckSolutionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).CheckSolution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_CheckSolution_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).CheckSolution(ctx, req.(*CheckSolutionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -116,8 +150,12 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BounceBotServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetBoard",
-			Handler:    _BounceBot_GetBoard_Handler,
+			MethodName: "MakeGame",
+			Handler:    _BounceBot_MakeGame_Handler,
+		},
+		{
+			MethodName: "CheckSolution",
+			Handler:    _BounceBot_CheckSolution_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

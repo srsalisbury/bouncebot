@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	game := model.Game1()
-	fmt.Println(game.String())
+	fmt.Println(model.Game1().String())
+	fmt.Println(model.Board1().String())
 }
