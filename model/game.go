@@ -19,6 +19,13 @@ func (bp BotPosition) String() string {
 	return fmt.Sprintf("Bot %d at %v", bp.Id, bp.Pos)
 }
 
+func NewBotPosition(id BotId, x, y BoardDim) BotPosition {
+	return BotPosition{
+		Id:  id,
+		Pos: Position{X: x, Y: y},
+	}
+}
+
 func NewBotPositionFromProto(bpp *pb.BotPos) BotPosition {
 	return BotPosition{
 		Id:  BotId(bpp.Id),
