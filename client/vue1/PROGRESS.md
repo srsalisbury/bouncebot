@@ -25,6 +25,24 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 2: Static 16x16 Grid
+**PR:** https://github.com/srsalisbury/bouncebot/pull/12
+**Status:** Complete
+
+**What was done:**
+- Created GameBoard component with CSS grid layout
+- Rendered 16x16 cells with light gray background (#dddddd)
+- Added border to represent board edges
+- Imported GameBoard into App.vue
+
+**Files added:**
+- `src/components/GameBoard.vue` - Game board component
+
+**Files modified:**
+- `src/App.vue` - Import and render GameBoard
+
+---
+
 ## In Progress
 
 _None currently_
@@ -33,4 +51,4 @@ _None currently_
 
 ## Up Next
 
-- Step 2: Static 16x16 Grid
+- Step 3: Add Hardcoded Robots
