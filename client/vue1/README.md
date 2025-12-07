@@ -1,5 +1,24 @@
-# Vue 3 + TypeScript + Vite
+# BounceBot Vue3 Client
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Web client for the BounceBot puzzle game (Ricochet Robots style).
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Quick Start
+
+```bash
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173/
+
+## Documentation
+
+- **[CONTEXT.md](./CONTEXT.md)** - Project overview, architecture, and key decisions
+- **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** - Step-by-step build plan
+- **[PROGRESS.md](./PROGRESS.md)** - Completed steps and PR history
+
+## Tech Stack
+
+- Vue 3 (Composition API)
+- TypeScript
+- Vite
