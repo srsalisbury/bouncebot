@@ -49,13 +49,18 @@ export function getRobotColor(robotId: number): string {
 }
 
 export const useGameStore = defineStore('game', () => {
-  // Hardcoded robot positions for now
-  const robots = ref<Robot[]>([
+  // Initial robot positions (stored for reset)
+  const initialRobots: Robot[] = [
     { id: 0, x: 2, y: 3 },
     { id: 1, x: 14, y: 1 },
     { id: 2, x: 5, y: 12 },
     { id: 3, x: 10, y: 8 },
-  ])
+  ]
+
+  // Hardcoded robot positions for now
+  const robots = ref<Robot[]>(
+    initialRobots.map(r => ({ ...r }))
+  )
 
   // Hardcoded walls for now
   // vWalls: vertical wall to the RIGHT of the cell at (x, y)
@@ -191,6 +196,12 @@ export const useGameStore = defineStore('game', () => {
     selectedRobotId.value = lastMove.robotId
   }
 
+  function resetPuzzle() {
+    robots.value = initialRobots.map(r => ({ ...r }))
+    moves.value = []
+    selectedRobotId.value = null
+  }
+
   return {
     // State
     robots,
@@ -206,5 +217,6 @@ export const useGameStore = defineStore('game', () => {
     selectRobot,
     moveRobot,
     undoMove,
+    resetPuzzle,
   }
 })
