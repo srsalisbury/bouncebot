@@ -51,6 +51,10 @@ const WALL_THICKNESS = 4
 // Selected robot state
 const selectedRobotId = ref<number | null>(null)
 
+// Move history
+type Move = { robotId: number; direction: Direction; color: string }
+const moves = ref<Move[]>([])
+
 function selectRobot(robotId: number) {
   if (selectedRobotId.value === robotId) {
     selectedRobotId.value = null
@@ -128,8 +132,20 @@ function moveRobot(direction: Direction) {
   if (!robot) return
 
   const destination = calculateDestination(robot, direction)
-  robot.x = destination.x
-  robot.y = destination.y
+
+  // Only count as a move if the robot actually moved
+  if (destination.x !== robot.x || destination.y !== robot.y) {
+    moves.value.push({ robotId: robot.id, direction, color: robot.color })
+    robot.x = destination.x
+    robot.y = destination.y
+  }
+}
+
+const DIRECTION_ARROWS: Record<Direction, string> = {
+  up: '↑',
+  down: '↓',
+  left: '←',
+  right: '→',
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -223,8 +239,9 @@ function getTargetBackgroundStyle() {
 </script>
 
 <template>
-  <div
-    class="board"
+  <div class="game-container">
+    <div
+      class="board"
     :style="{
       width: `${boardPixelSize}px`,
       height: `${boardPixelSize}px`,
@@ -272,10 +289,71 @@ function getTargetBackgroundStyle() {
       class="wall"
       :style="getHWallStyle(wall)"
     />
+    </div>
+
+    <!-- Move history panel -->
+    <div class="move-panel">
+      <div class="move-count">Moves: {{ moves.length }}</div>
+      <div class="move-list">
+        <div v-for="(move, i) in moves" :key="i" class="move-item">
+          <span class="move-robot" :style="{ backgroundColor: move.color }">
+            {{ move.robotId + 1 }}
+          </span>
+          <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.game-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.move-panel {
+  min-width: 120px;
+}
+
+.move-count {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.move-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 512px;
+  overflow-y: auto;
+}
+
+.move-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.move-robot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+  color: white;
+}
+
+.move-arrow {
+  font-size: 18px;
+}
+
 .board {
   display: grid;
   background: #dddddd;
