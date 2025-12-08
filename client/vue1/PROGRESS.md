@@ -116,6 +116,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 8: Sliding Movement Physics
+**Status:** Complete
+
+**What was done:**
+- Added hasWall() function to check walls and board edges
+- Added isOccupied() function to check for other robots
+- Added calculateDestination() to compute slide endpoint
+- Robots now slide until hitting wall, edge, or another robot
+- Replaced one-cell movement with sliding physics
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added sliding physics logic
+
+---
+
 ## In Progress
 
 _None currently_
@@ -124,4 +139,4 @@ _None currently_
 
 ## Up Next
 
-- Step 8: Sliding Movement Physics
+- Step 9: Move Counter
