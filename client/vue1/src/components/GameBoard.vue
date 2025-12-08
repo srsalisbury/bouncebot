@@ -14,13 +14,13 @@ const ROBOT_COLORS = {
   YELLOW: '#fdd835',
 }
 
-// Hardcoded robot positions for now
-const robots = [
+// Hardcoded robot positions for now (reactive for movement)
+const robots = ref([
   { id: 0, x: 2, y: 3, color: ROBOT_COLORS.RED },
   { id: 1, x: 14, y: 1, color: ROBOT_COLORS.BLUE },
   { id: 2, x: 5, y: 12, color: ROBOT_COLORS.GREEN },
   { id: 3, x: 10, y: 8, color: ROBOT_COLORS.YELLOW },
-]
+])
 
 // Hardcoded walls for now
 // vWalls: vertical wall to the RIGHT of the cell at (x, y)
@@ -59,10 +59,52 @@ function selectRobot(robotId: number) {
   }
 }
 
+type Direction = 'up' | 'down' | 'left' | 'right'
+
+function moveRobot(direction: Direction) {
+  if (selectedRobotId.value === null) return
+
+  const robot = robots.value.find(r => r.id === selectedRobotId.value)
+  if (!robot) return
+
+  let newX = robot.x
+  let newY = robot.y
+
+  switch (direction) {
+    case 'up': newY = Math.max(0, robot.y - 1); break
+    case 'down': newY = Math.min(BOARD_SIZE - 1, robot.y + 1); break
+    case 'left': newX = Math.max(0, robot.x - 1); break
+    case 'right': newX = Math.min(BOARD_SIZE - 1, robot.x + 1); break
+  }
+
+  robot.x = newX
+  robot.y = newY
+}
+
 function handleKeydown(event: KeyboardEvent) {
+  // Number keys for robot selection
   const num = parseInt(event.key)
-  if (num >= 1 && num <= robots.length) {
+  if (num >= 1 && num <= robots.value.length) {
     selectRobot(num - 1)
+    return
+  }
+
+  // Arrow keys for movement
+  const keyMap: Record<string, Direction> = {
+    ArrowUp: 'up',
+    ArrowDown: 'down',
+    ArrowLeft: 'left',
+    ArrowRight: 'right',
+    w: 'up',
+    s: 'down',
+    a: 'left',
+    d: 'right',
+  }
+
+  const direction = keyMap[event.key]
+  if (direction && selectedRobotId.value !== null) {
+    event.preventDefault()
+    moveRobot(direction)
   }
 }
 
@@ -115,7 +157,7 @@ function getTargetContainerStyle() {
 }
 
 function getTargetBackgroundStyle() {
-  const targetRobot = robots.find(r => r.id === target.robotId)
+  const targetRobot = robots.value.find(r => r.id === target.robotId)
   const color = targetRobot?.color ?? '#ffffff'
   const robotPadding = CELL_SIZE * 0.1
   const holeSize = CELL_SIZE - robotPadding * 2
