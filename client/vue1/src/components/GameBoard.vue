@@ -37,6 +37,13 @@ const hWalls = [
   { x: 12, y: 5 },
 ]
 
+// Target: which robot needs to reach which position
+const target = {
+  robotId: 0,  // Red robot
+  x: 7,
+  y: 7,
+}
+
 const WALL_THICKNESS = 4
 
 function getVWallStyle(wall: { x: number; y: number }) {
@@ -69,6 +76,29 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
     backgroundColor: robot.color,
   }
 }
+
+function getTargetContainerStyle() {
+  return {
+    left: `${target.x * CELL_SIZE}px`,
+    top: `${target.y * CELL_SIZE}px`,
+    width: `${CELL_SIZE}px`,
+    height: `${CELL_SIZE}px`,
+  }
+}
+
+function getTargetBackgroundStyle() {
+  const targetRobot = robots.find(r => r.id === target.robotId)
+  const color = targetRobot?.color ?? '#ffffff'
+  const robotPadding = CELL_SIZE * 0.1
+  const holeSize = CELL_SIZE - robotPadding * 2
+  return {
+    width: '100%',
+    height: '100%',
+    backgroundColor: color,
+    maskImage: `radial-gradient(circle at center, transparent ${holeSize / 2}px, black ${holeSize / 2}px)`,
+    WebkitMaskImage: `radial-gradient(circle at center, transparent ${holeSize / 2}px, black ${holeSize / 2}px)`,
+  }
+}
 </script>
 
 <template>
@@ -87,6 +117,12 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
       :key="i"
       class="cell"
     />
+
+    <!-- Target marker -->
+    <div class="target-container" :style="getTargetContainerStyle()">
+      <div class="target-background" :style="getTargetBackgroundStyle()" />
+      <span class="target-number">{{ target.robotId + 1 }}</span>
+    </div>
 
     <!-- Robots -->
     <div
@@ -144,5 +180,24 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
 .wall {
   position: absolute;
   z-index: 5;
+}
+
+.target-container {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.target-background {
+  position: absolute;
+  border-radius: 4px;
+}
+
+.target-number {
+  position: relative;
+  font-weight: bold;
+  font-size: 14px;
+  color: black;
 }
 </style>
