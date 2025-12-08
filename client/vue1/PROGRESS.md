@@ -101,6 +101,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 7: Keyboard Movement (No Physics)
+**Status:** Complete
+
+**What was done:**
+- Made robots array reactive for movement updates
+- Added arrow key and WASD support for movement
+- Move selected robot one cell in pressed direction
+- Prevent moving off board edges
+- preventDefault on arrow keys to avoid page scrolling
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added movement logic
+
+---
+
 ## In Progress
 
 _None currently_
@@ -109,4 +124,4 @@ _None currently_
 
 ## Up Next
 
-- Step 7: Keyboard Movement (No Physics)
+- Step 8: Sliding Movement Physics
