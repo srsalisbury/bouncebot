@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+
 const BOARD_SIZE = 16
 const CELL_SIZE = 32
 const WALL_COLOR = '#8b4513'
@@ -45,6 +47,32 @@ const target = {
 }
 
 const WALL_THICKNESS = 4
+
+// Selected robot state
+const selectedRobotId = ref<number | null>(null)
+
+function selectRobot(robotId: number) {
+  if (selectedRobotId.value === robotId) {
+    selectedRobotId.value = null
+  } else {
+    selectedRobotId.value = robotId
+  }
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  const num = parseInt(event.key)
+  if (num >= 1 && num <= robots.length) {
+    selectRobot(num - 1)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 
 function getVWallStyle(wall: { x: number; y: number }) {
   return {
@@ -129,7 +157,9 @@ function getTargetBackgroundStyle() {
       v-for="robot in robots"
       :key="`robot-${robot.id}`"
       class="robot"
+      :class="{ selected: selectedRobotId === robot.id }"
       :style="getRobotStyle(robot)"
+      @click="selectRobot(robot.id)"
     >
       {{ robot.id + 1 }}
     </div>
@@ -175,6 +205,17 @@ function getTargetBackgroundStyle() {
   color: white;
   font-size: 14px;
   user-select: none;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.robot:hover {
+  transform: scale(1.05);
+}
+
+.robot.selected {
+  box-shadow: 0 0 0 3px white, 0 0 0 4px black, 0 0 10px 3px rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
 }
 
 .wall {

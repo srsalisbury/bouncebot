@@ -86,6 +86,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 6: Robot Selection
+**Status:** Complete
+
+**What was done:**
+- Added click handler to select/deselect robots
+- Track selected robot ID in reactive state
+- Visual highlight: white border with black outline, scale effect
+- Hover effect on robots
+- Keyboard support: press 1-4 to select robots by number
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added selection state and interaction
+
+---
+
 ## In Progress
 
 _None currently_
@@ -94,4 +109,4 @@ _None currently_
 
 ## Up Next
 
-- Step 6: Robot Selection
+- Step 7: Keyboard Movement (No Physics)
