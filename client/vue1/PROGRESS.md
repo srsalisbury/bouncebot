@@ -169,6 +169,22 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Refactor: Implicit Robot Colors
+**Status:** Complete
+
+**What was done:**
+- Changed ROBOT_COLORS from named object to array of 10 colors
+- Added getRobotColor(robotId) function to derive color from ID
+- Removed color field from Robot and Move types
+- Removed targetRobot computed property (no longer needed)
+- Updated GameBoard.vue to use getRobotColor() everywhere
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Color palette and helper function
+- `src/components/GameBoard.vue` - Use getRobotColor()
+
+---
+
 ## In Progress
 
 _None currently_

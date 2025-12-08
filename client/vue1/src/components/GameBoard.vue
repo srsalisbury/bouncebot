@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
-import { useGameStore, BOARD_SIZE, type Direction } from '../stores/gameStore'
+import { useGameStore, BOARD_SIZE, getRobotColor, type Direction } from '../stores/gameStore'
 
 const store = useGameStore()
 
@@ -72,14 +72,14 @@ function getHWallStyle(wall: { x: number; y: number }) {
   }
 }
 
-function getRobotStyle(robot: { x: number; y: number; color: string }) {
+function getRobotStyle(robot: { id: number; x: number; y: number }) {
   const padding = CELL_SIZE * 0.1
   return {
     left: `${robot.x * CELL_SIZE + padding}px`,
     top: `${robot.y * CELL_SIZE + padding}px`,
     width: `${CELL_SIZE - padding * 2}px`,
     height: `${CELL_SIZE - padding * 2}px`,
-    backgroundColor: robot.color,
+    backgroundColor: getRobotColor(robot.id),
   }
 }
 
@@ -93,7 +93,7 @@ function getTargetContainerStyle() {
 }
 
 function getTargetBackgroundStyle() {
-  const color = store.targetRobot?.color ?? '#ffffff'
+  const color = getRobotColor(store.target.robotId)
   const robotPadding = CELL_SIZE * 0.1
   const holeSize = CELL_SIZE - robotPadding * 2
   return {
@@ -164,7 +164,7 @@ function getTargetBackgroundStyle() {
       <div class="move-count">Moves: {{ store.moveCount }}</div>
       <div class="move-list">
         <div v-for="(move, i) in store.moves" :key="i" class="move-item">
-          <span class="move-robot" :style="{ backgroundColor: move.color }">
+          <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
             {{ move.robotId + 1 }}
           </span>
           <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
