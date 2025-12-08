@@ -148,6 +148,27 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 10: Pinia Store Setup
+**Status:** Complete
+
+**What was done:**
+- Installed and configured Pinia for state management
+- Created `src/stores/gameStore.ts` with centralized game state
+- Moved all game state to store: robots, walls, target, moves, selectedRobotId
+- Moved game logic to store: selectRobot, moveRobot, hasWall, isOccupied, calculateDestination
+- Exported reusable types: Direction, Robot, Wall, Target, Move
+- Refactored GameBoard.vue to use store instead of local state
+
+**Files added:**
+- `src/stores/gameStore.ts` - Pinia store for game state
+
+**Files modified:**
+- `src/main.ts` - Configure Pinia
+- `src/components/GameBoard.vue` - Use store instead of local state
+- `package.json` - Added pinia dependency
+
+---
+
 ## In Progress
 
 _None currently_
@@ -156,4 +177,4 @@ _None currently_
 
 ## Up Next
 
-- Step 10: Reset Button
+- Step 11: Win Detection

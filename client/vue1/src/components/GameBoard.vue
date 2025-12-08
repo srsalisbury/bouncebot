@@ -1,145 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
+import { useGameStore, BOARD_SIZE, type Direction } from '../stores/gameStore'
 
-const BOARD_SIZE = 16
+const store = useGameStore()
+
 const CELL_SIZE = 32
 const WALL_COLOR = '#8b4513'
-
-const boardPixelSize = BOARD_SIZE * CELL_SIZE
-
-const ROBOT_COLORS = {
-  RED: '#e53935',
-  BLUE: '#1e88e5',
-  GREEN: '#43a047',
-  YELLOW: '#fdd835',
-}
-
-// Hardcoded robot positions for now (reactive for movement)
-const robots = ref([
-  { id: 0, x: 2, y: 3, color: ROBOT_COLORS.RED },
-  { id: 1, x: 14, y: 1, color: ROBOT_COLORS.BLUE },
-  { id: 2, x: 5, y: 12, color: ROBOT_COLORS.GREEN },
-  { id: 3, x: 10, y: 8, color: ROBOT_COLORS.YELLOW },
-])
-
-// Hardcoded walls for now
-// vWalls: vertical wall to the RIGHT of the cell at (x, y)
-// hWalls: horizontal wall BELOW the cell at (x, y)
-const vWalls = [
-  { x: 3, y: 2 },
-  { x: 7, y: 5 },
-  { x: 10, y: 8 },
-  { x: 5, y: 12 },
-]
-
-const hWalls = [
-  { x: 2, y: 3 },
-  { x: 5, y: 7 },
-  { x: 8, y: 10 },
-  { x: 12, y: 5 },
-]
-
-// Target: which robot needs to reach which position
-const target = {
-  robotId: 0,  // Red robot
-  x: 7,
-  y: 7,
-}
-
 const WALL_THICKNESS = 4
 
-// Selected robot state
-const selectedRobotId = ref<number | null>(null)
-
-// Move history
-type Move = { robotId: number; direction: Direction; color: string }
-const moves = ref<Move[]>([])
-
-function selectRobot(robotId: number) {
-  if (selectedRobotId.value === robotId) {
-    selectedRobotId.value = null
-  } else {
-    selectedRobotId.value = robotId
-  }
-}
-
-type Direction = 'up' | 'down' | 'left' | 'right'
-
-// Check if there's a wall blocking movement from a position in a direction
-function hasWall(x: number, y: number, direction: Direction): boolean {
-  // Check board edges
-  if (direction === 'up' && y === 0) return true
-  if (direction === 'down' && y === BOARD_SIZE - 1) return true
-  if (direction === 'left' && x === 0) return true
-  if (direction === 'right' && x === BOARD_SIZE - 1) return true
-
-  // Check internal walls
-  // vWalls: wall is to the RIGHT of the cell at position
-  // hWalls: wall is BELOW the cell at position
-  if (direction === 'right') {
-    return vWalls.some(w => w.x === x && w.y === y)
-  }
-  if (direction === 'left') {
-    return vWalls.some(w => w.x === x - 1 && w.y === y)
-  }
-  if (direction === 'down') {
-    return hWalls.some(w => w.x === x && w.y === y)
-  }
-  if (direction === 'up') {
-    return hWalls.some(w => w.x === x && w.y === y - 1)
-  }
-
-  return false
-}
-
-// Check if a position is occupied by another robot
-function isOccupied(x: number, y: number, excludeRobotId: number): boolean {
-  return robots.value.some(r => r.id !== excludeRobotId && r.x === x && r.y === y)
-}
-
-// Calculate where a robot would stop if moved in a direction (sliding)
-function calculateDestination(robot: { id: number; x: number; y: number }, direction: Direction): { x: number; y: number } {
-  let x = robot.x
-  let y = robot.y
-
-  const delta = {
-    up: { dx: 0, dy: -1 },
-    down: { dx: 0, dy: 1 },
-    left: { dx: -1, dy: 0 },
-    right: { dx: 1, dy: 0 },
-  }[direction]
-
-  // Slide until hitting a wall or another robot
-  while (true) {
-    if (hasWall(x, y, direction)) break
-
-    const nextX = x + delta.dx
-    const nextY = y + delta.dy
-
-    if (isOccupied(nextX, nextY, robot.id)) break
-
-    x = nextX
-    y = nextY
-  }
-
-  return { x, y }
-}
-
-function moveRobot(direction: Direction) {
-  if (selectedRobotId.value === null) return
-
-  const robot = robots.value.find(r => r.id === selectedRobotId.value)
-  if (!robot) return
-
-  const destination = calculateDestination(robot, direction)
-
-  // Only count as a move if the robot actually moved
-  if (destination.x !== robot.x || destination.y !== robot.y) {
-    moves.value.push({ robotId: robot.id, direction, color: robot.color })
-    robot.x = destination.x
-    robot.y = destination.y
-  }
-}
+const boardPixelSize = BOARD_SIZE * CELL_SIZE
 
 const DIRECTION_ARROWS: Record<Direction, string> = {
   up: '↑',
@@ -151,8 +20,8 @@ const DIRECTION_ARROWS: Record<Direction, string> = {
 function handleKeydown(event: KeyboardEvent) {
   // Number keys for robot selection
   const num = parseInt(event.key)
-  if (num >= 1 && num <= robots.value.length) {
-    selectRobot(num - 1)
+  if (num >= 1 && num <= store.robots.length) {
+    store.selectRobot(num - 1)
     return
   }
 
@@ -169,9 +38,9 @@ function handleKeydown(event: KeyboardEvent) {
   }
 
   const direction = keyMap[event.key]
-  if (direction && selectedRobotId.value !== null) {
+  if (direction && store.selectedRobotId !== null) {
     event.preventDefault()
-    moveRobot(direction)
+    store.moveRobot(direction)
   }
 }
 
@@ -216,16 +85,15 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
 
 function getTargetContainerStyle() {
   return {
-    left: `${target.x * CELL_SIZE}px`,
-    top: `${target.y * CELL_SIZE}px`,
+    left: `${store.target.x * CELL_SIZE}px`,
+    top: `${store.target.y * CELL_SIZE}px`,
     width: `${CELL_SIZE}px`,
     height: `${CELL_SIZE}px`,
   }
 }
 
 function getTargetBackgroundStyle() {
-  const targetRobot = robots.value.find(r => r.id === target.robotId)
-  const color = targetRobot?.color ?? '#ffffff'
+  const color = store.targetRobot?.color ?? '#ffffff'
   const robotPadding = CELL_SIZE * 0.1
   const holeSize = CELL_SIZE - robotPadding * 2
   return {
@@ -259,24 +127,24 @@ function getTargetBackgroundStyle() {
     <!-- Target marker -->
     <div class="target-container" :style="getTargetContainerStyle()">
       <div class="target-background" :style="getTargetBackgroundStyle()" />
-      <span class="target-number">{{ target.robotId + 1 }}</span>
+      <span class="target-number">{{ store.target.robotId + 1 }}</span>
     </div>
 
     <!-- Robots -->
     <div
-      v-for="robot in robots"
+      v-for="robot in store.robots"
       :key="`robot-${robot.id}`"
       class="robot"
-      :class="{ selected: selectedRobotId === robot.id }"
+      :class="{ selected: store.selectedRobotId === robot.id }"
       :style="getRobotStyle(robot)"
-      @click="selectRobot(robot.id)"
+      @click="store.selectRobot(robot.id)"
     >
       {{ robot.id + 1 }}
     </div>
 
     <!-- Vertical walls -->
     <div
-      v-for="(wall, i) in vWalls"
+      v-for="(wall, i) in store.vWalls"
       :key="`vwall-${i}`"
       class="wall"
       :style="getVWallStyle(wall)"
@@ -284,7 +152,7 @@ function getTargetBackgroundStyle() {
 
     <!-- Horizontal walls -->
     <div
-      v-for="(wall, i) in hWalls"
+      v-for="(wall, i) in store.hWalls"
       :key="`hwall-${i}`"
       class="wall"
       :style="getHWallStyle(wall)"
@@ -293,9 +161,9 @@ function getTargetBackgroundStyle() {
 
     <!-- Move history panel -->
     <div class="move-panel">
-      <div class="move-count">Moves: {{ moves.length }}</div>
+      <div class="move-count">Moves: {{ store.moveCount }}</div>
       <div class="move-list">
-        <div v-for="(move, i) in moves" :key="i" class="move-item">
+        <div v-for="(move, i) in store.moves" :key="i" class="move-item">
           <span class="move-robot" :style="{ backgroundColor: move.color }">
             {{ move.robotId + 1 }}
           </span>
