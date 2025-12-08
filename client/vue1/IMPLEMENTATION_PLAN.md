@@ -118,15 +118,16 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-### Step 9: Move Counter
-**Goal:** Track and display number of moves made.
+### Step 9: Move Counter & History
+**Goal:** Track and display moves with full history.
 
 **Tasks:**
-- Count each successful move
-- Display move count in UI header
-- Reset counter on new game
+- Track each move with robot ID, direction, and color
+- Display move count above history panel
+- Display move history list to the right of the board
+- Each move shown as colored robot dot with direction arrow
 
-**Visible result:** UI shows "Moves: X" updating as player moves
+**Visible result:** Move panel shows count and scrollable history of all moves
 
 ---
 
@@ -288,7 +289,6 @@ Each step is a single PR-sized change with visible progress in the browser.
 - Leaderboards
 
 ### Enhanced Features
-- Move history display
 - Puzzle difficulty selection
 - Optimal solution hints
 

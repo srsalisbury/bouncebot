@@ -131,6 +131,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 9: Move Counter & History
+**Status:** Complete
+
+**What was done:**
+- Added Move type tracking robotId, direction, and color
+- Added moves ref array to store move history
+- Created move panel displayed to the right of the board
+- Shows move count at top ("Moves: N")
+- Lists each move as colored robot dot with direction arrow
+- Added DIRECTION_ARROWS constant for arrow symbols (↑↓←→)
+- Used flexbox layout for game-container to position board and panel side by side
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added move tracking and history panel
+
+---
+
 ## In Progress
 
 _None currently_
@@ -139,4 +156,4 @@ _None currently_
 
 ## Up Next
 
-- Step 9: Move Counter
+- Step 10: Reset Button
