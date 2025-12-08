@@ -18,6 +18,12 @@ const DIRECTION_ARROWS: Record<Direction, string> = {
 }
 
 function handleKeydown(event: KeyboardEvent) {
+  // Undo with z, u, or Escape
+  if (event.key === 'z' || event.key === 'u' || event.key === 'Escape') {
+    store.undoMove()
+    return
+  }
+
   // Number keys for robot selection
   const num = parseInt(event.key)
   if (num >= 1 && num <= store.robots.length) {

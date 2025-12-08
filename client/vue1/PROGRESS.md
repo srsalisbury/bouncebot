@@ -200,6 +200,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 12: Undo Move
+**Status:** Complete
+
+**What was done:**
+- Added fromX/fromY to Move type to track previous position
+- Added undoMove() action to restore robot to previous position
+- Keyboard shortcuts: z, u, or Escape to undo
+- Auto-select the robot that was just undone for easy re-move
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Added position tracking and undoMove action
+- `src/components/GameBoard.vue` - Added undo keyboard shortcuts
+
+---
+
 ## In Progress
 
 _None currently_
@@ -208,4 +223,4 @@ _None currently_
 
 ## Up Next
 
-- Step 12: Undo Move
+- Step 13: Reset Puzzle

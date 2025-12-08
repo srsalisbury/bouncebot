@@ -23,6 +23,8 @@ export type Target = {
 export type Move = {
   robotId: number
   direction: Direction
+  fromX: number
+  fromY: number
 }
 
 export const BOARD_SIZE = 16
@@ -171,10 +173,22 @@ export const useGameStore = defineStore('game', () => {
 
     // Only count as a move if the robot actually moved
     if (destination.x !== robot.x || destination.y !== robot.y) {
-      moves.value.push({ robotId: robot.id, direction })
+      moves.value.push({ robotId: robot.id, direction, fromX: robot.x, fromY: robot.y })
       robot.x = destination.x
       robot.y = destination.y
     }
+  }
+
+  function undoMove() {
+    const lastMove = moves.value.pop()
+    if (!lastMove) return
+
+    const robot = robots.value.find(r => r.id === lastMove.robotId)
+    if (!robot) return
+
+    robot.x = lastMove.fromX
+    robot.y = lastMove.fromY
+    selectedRobotId.value = lastMove.robotId
   }
 
   return {
@@ -191,5 +205,6 @@ export const useGameStore = defineStore('game', () => {
     // Actions
     selectRobot,
     moveRobot,
+    undoMove,
   }
 })
