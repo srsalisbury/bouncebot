@@ -44,7 +44,6 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 ---
 
 ### Step 3: Add Hardcoded Robots
-**PR:** _(pending)_
 **Status:** Complete
 
 **What was done:**
@@ -58,6 +57,20 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 4: Add Hardcoded Walls
+**Status:** Complete
+
+**What was done:**
+- Added vertical and horizontal walls with hardcoded positions
+- Styled walls as brown bars (WALL_COLOR constant)
+- Made board border match wall color/thickness
+- Made grid lines thinner (0.5px) to distinguish from walls
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added wall rendering
+
+---
+
 ## In Progress
 
 _None currently_
@@ -66,4 +79,4 @@ _None currently_
 
 ## Up Next
 
-- Step 4: Add Hardcoded Walls
+- Step 5: Add Target Marker

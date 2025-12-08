@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const BOARD_SIZE = 16
 const CELL_SIZE = 32
+const WALL_COLOR = '#8b4513'
 
 const boardPixelSize = BOARD_SIZE * CELL_SIZE
 
@@ -18,6 +19,45 @@ const robots = [
   { id: 2, x: 5, y: 12, color: ROBOT_COLORS.GREEN },
   { id: 3, x: 10, y: 8, color: ROBOT_COLORS.YELLOW },
 ]
+
+// Hardcoded walls for now
+// vWalls: vertical wall to the RIGHT of the cell at (x, y)
+// hWalls: horizontal wall BELOW the cell at (x, y)
+const vWalls = [
+  { x: 3, y: 2 },
+  { x: 7, y: 5 },
+  { x: 10, y: 8 },
+  { x: 5, y: 12 },
+]
+
+const hWalls = [
+  { x: 2, y: 3 },
+  { x: 5, y: 7 },
+  { x: 8, y: 10 },
+  { x: 12, y: 5 },
+]
+
+const WALL_THICKNESS = 4
+
+function getVWallStyle(wall: { x: number; y: number }) {
+  return {
+    left: `${(wall.x + 1) * CELL_SIZE - WALL_THICKNESS / 2}px`,
+    top: `${wall.y * CELL_SIZE}px`,
+    height: `${CELL_SIZE}px`,
+    width: `${WALL_THICKNESS}px`,
+    backgroundColor: WALL_COLOR,
+  }
+}
+
+function getHWallStyle(wall: { x: number; y: number }) {
+  return {
+    left: `${wall.x * CELL_SIZE}px`,
+    top: `${(wall.y + 1) * CELL_SIZE - WALL_THICKNESS / 2}px`,
+    width: `${CELL_SIZE}px`,
+    height: `${WALL_THICKNESS}px`,
+    backgroundColor: WALL_COLOR,
+  }
+}
 
 function getRobotStyle(robot: { x: number; y: number; color: string }) {
   const padding = CELL_SIZE * 0.1
@@ -39,6 +79,7 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
       height: `${boardPixelSize}px`,
       gridTemplateColumns: `repeat(${BOARD_SIZE}, ${CELL_SIZE}px)`,
       gridTemplateRows: `repeat(${BOARD_SIZE}, ${CELL_SIZE}px)`,
+      borderColor: WALL_COLOR,
     }"
   >
     <div
@@ -56,6 +97,22 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
     >
       {{ robot.id + 1 }}
     </div>
+
+    <!-- Vertical walls -->
+    <div
+      v-for="(wall, i) in vWalls"
+      :key="`vwall-${i}`"
+      class="wall"
+      :style="getVWallStyle(wall)"
+    />
+
+    <!-- Horizontal walls -->
+    <div
+      v-for="(wall, i) in hWalls"
+      :key="`hwall-${i}`"
+      class="wall"
+      :style="getHWallStyle(wall)"
+    />
   </div>
 </template>
 
@@ -63,12 +120,12 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
 .board {
   display: grid;
   background: #dddddd;
-  border: 4px solid #546e7a;
+  border: 4px solid;
   position: relative;
 }
 
 .cell {
-  border: 1px solid #37474f;
+  border: 0.5px solid #aaaaaa;
   box-sizing: border-box;
 }
 
@@ -82,5 +139,10 @@ function getRobotStyle(robot: { x: number; y: number; color: string }) {
   color: white;
   font-size: 14px;
   user-select: none;
+}
+
+.wall {
+  position: absolute;
+  z-index: 5;
 }
 </style>
