@@ -185,6 +185,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 11: Solved Detection
+**Status:** Complete
+
+**What was done:**
+- Added isSolved computed property to check if target robot is at target position
+- Display "Solved" label in green next to move count when puzzle is solved
+- Prevent further moves after puzzle is solved
+- Added walls at (0,7) and (7,7) to make test puzzle solvable
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Added isSolved computed, block moves when solved, added walls
+- `src/components/GameBoard.vue` - Added solved label display
+
+---
+
 ## In Progress
 
 _None currently_
@@ -193,4 +208,4 @@ _None currently_
 
 ## Up Next
 
-- Step 11: Win Detection
+- Step 12: Undo Move

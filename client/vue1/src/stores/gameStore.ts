@@ -61,11 +61,13 @@ export const useGameStore = defineStore('game', () => {
   const vWalls = ref<Wall[]>([
     { x: 3, y: 2 },
     { x: 7, y: 5 },
+    { x: 7, y: 7 },
     { x: 10, y: 8 },
     { x: 5, y: 12 },
   ])
 
   const hWalls = ref<Wall[]>([
+    { x: 0, y: 7 },
     { x: 2, y: 3 },
     { x: 5, y: 7 },
     { x: 8, y: 10 },
@@ -87,6 +89,12 @@ export const useGameStore = defineStore('game', () => {
 
   // Computed
   const moveCount = computed(() => moves.value.length)
+
+  const isSolved = computed(() => {
+    const targetRobot = robots.value.find(r => r.id === target.value.robotId)
+    if (!targetRobot) return false
+    return targetRobot.x === target.value.x && targetRobot.y === target.value.y
+  })
 
   // Actions
   function selectRobot(robotId: number) {
@@ -154,6 +162,7 @@ export const useGameStore = defineStore('game', () => {
 
   function moveRobot(direction: Direction) {
     if (selectedRobotId.value === null) return
+    if (isSolved.value) return
 
     const robot = robots.value.find(r => r.id === selectedRobotId.value)
     if (!robot) return
@@ -178,6 +187,7 @@ export const useGameStore = defineStore('game', () => {
     moves,
     // Computed
     moveCount,
+    isSolved,
     // Actions
     selectRobot,
     moveRobot,
