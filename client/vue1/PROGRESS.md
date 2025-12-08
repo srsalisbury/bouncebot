@@ -215,6 +215,20 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 13: Reset Puzzle
+**Status:** Complete
+
+**What was done:**
+- Store initial robot positions for reset
+- Added resetPuzzle() action to restore robots, clear moves, deselect
+- Keyboard shortcut: Shift+R to reset (uppercase to prevent accidental reset)
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Added initialRobots and resetPuzzle action
+- `src/components/GameBoard.vue` - Added reset keyboard shortcut
+
+---
+
 ## In Progress
 
 _None currently_
@@ -223,4 +237,4 @@ _None currently_
 
 ## Up Next
 
-- Step 13: Reset Puzzle
+- Step 14: Connect Server (Go Backend)

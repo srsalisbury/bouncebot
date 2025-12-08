@@ -24,6 +24,12 @@ function handleKeydown(event: KeyboardEvent) {
     return
   }
 
+  // Reset with R (shift+r)
+  if (event.key === 'R') {
+    store.resetPuzzle()
+    return
+  }
+
   // Number keys for robot selection
   const num = parseInt(event.key)
   if (num >= 1 && num <= store.robots.length) {
