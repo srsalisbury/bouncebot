@@ -7,7 +7,6 @@ export type Robot = {
   id: number
   x: number
   y: number
-  color: string
 }
 
 export type Wall = {
@@ -24,25 +23,36 @@ export type Target = {
 export type Move = {
   robotId: number
   direction: Direction
-  color: string
 }
 
 export const BOARD_SIZE = 16
 
-export const ROBOT_COLORS = {
-  RED: '#e53935',
-  BLUE: '#1e88e5',
-  GREEN: '#43a047',
-  YELLOW: '#fdd835',
+// Color palette for robots - colors are assigned by robot ID (index)
+export const ROBOT_COLORS = [
+  '#e53935', // red
+  '#1e88e5', // blue
+  '#43a047', // green
+  '#fdd835', // yellow
+  '#8e24aa', // purple
+  '#ff6f00', // orange
+  '#00acc1', // cyan
+  '#f06292', // pink
+  '#5d4037', // brown
+  '#546e7a', // blue-gray
+]
+
+export function getRobotColor(robotId: number): string {
+  const index = robotId % ROBOT_COLORS.length
+  return ROBOT_COLORS[index]!
 }
 
 export const useGameStore = defineStore('game', () => {
   // Hardcoded robot positions for now
   const robots = ref<Robot[]>([
-    { id: 0, x: 2, y: 3, color: ROBOT_COLORS.RED },
-    { id: 1, x: 14, y: 1, color: ROBOT_COLORS.BLUE },
-    { id: 2, x: 5, y: 12, color: ROBOT_COLORS.GREEN },
-    { id: 3, x: 10, y: 8, color: ROBOT_COLORS.YELLOW },
+    { id: 0, x: 2, y: 3 },
+    { id: 1, x: 14, y: 1 },
+    { id: 2, x: 5, y: 12 },
+    { id: 3, x: 10, y: 8 },
   ])
 
   // Hardcoded walls for now
@@ -77,10 +87,6 @@ export const useGameStore = defineStore('game', () => {
 
   // Computed
   const moveCount = computed(() => moves.value.length)
-
-  const targetRobot = computed(() =>
-    robots.value.find(r => r.id === target.value.robotId)
-  )
 
   // Actions
   function selectRobot(robotId: number) {
@@ -156,7 +162,7 @@ export const useGameStore = defineStore('game', () => {
 
     // Only count as a move if the robot actually moved
     if (destination.x !== robot.x || destination.y !== robot.y) {
-      moves.value.push({ robotId: robot.id, direction, color: robot.color })
+      moves.value.push({ robotId: robot.id, direction })
       robot.x = destination.x
       robot.y = destination.y
     }
@@ -172,7 +178,6 @@ export const useGameStore = defineStore('game', () => {
     moves,
     // Computed
     moveCount,
-    targetRobot,
     // Actions
     selectRobot,
     moveRobot,
