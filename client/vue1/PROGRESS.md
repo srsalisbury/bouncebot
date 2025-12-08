@@ -43,6 +43,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 3: Add Hardcoded Robots
+**PR:** _(pending)_
+**Status:** Complete
+
+**What was done:**
+- Added 4 robots with hardcoded positions
+- Styled robots as colored circles (red, blue, green, yellow)
+- Numbered robots 1-4 for identification
+- Factored out robot colors as named constants (ROBOT_COLORS)
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added robot rendering
+
+---
+
 ## In Progress
 
 _None currently_
@@ -51,4 +66,4 @@ _None currently_
 
 ## Up Next
 
-- Step 3: Add Hardcoded Robots
+- Step 4: Add Hardcoded Walls
