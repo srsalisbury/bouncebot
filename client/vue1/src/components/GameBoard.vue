@@ -161,7 +161,10 @@ function getTargetBackgroundStyle() {
 
     <!-- Move history panel -->
     <div class="move-panel">
-      <div class="move-count">Moves: {{ store.moveCount }}</div>
+      <div class="move-count">
+        Moves: {{ store.moveCount }}
+        <span v-if="store.isSolved" class="solved-label">Solved</span>
+      </div>
       <div class="move-list">
         <div v-for="(move, i) in store.moves" :key="i" class="move-item">
           <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
@@ -190,6 +193,11 @@ function getTargetBackgroundStyle() {
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
+}
+
+.solved-label {
+  color: #43a047;
+  margin-left: 0.5rem;
 }
 
 .move-list {
