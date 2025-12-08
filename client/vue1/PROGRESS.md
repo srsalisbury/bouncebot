@@ -71,6 +71,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 5: Add Target Marker
+**Status:** Complete
+
+**What was done:**
+- Added target with hardcoded position and robot ID
+- Styled as solid rounded rectangle with circular hole (robot-sized)
+- Used CSS mask to create the hole effect
+- Added black number in center matching target robot ID
+- Target color matches the target robot's color
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added target rendering
+
+---
+
 ## In Progress
 
 _None currently_
@@ -79,4 +94,4 @@ _None currently_
 
 ## Up Next
 
-- Step 5: Add Target Marker
+- Step 6: Robot Selection
