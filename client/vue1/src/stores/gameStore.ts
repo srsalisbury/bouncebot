@@ -249,9 +249,21 @@ export const useGameStore = defineStore('game', () => {
 
     try {
       const game = await bounceBotClient.makeGame({ size: BOARD_SIZE })
+
+      // Validate game response
+      if (!game.board || !game.bots || game.bots.length === 0 || !game.target) {
+        throw new Error('Invalid game data received from server')
+      }
+
       applyGame(game)
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Failed to load game'
+      // Format error message for user
+      const message = e instanceof Error ? e.message : 'Failed to load game'
+      if (message.includes('fetch') || message.includes('network') || message.includes('Failed to fetch')) {
+        error.value = 'Unable to connect to server. Please check your connection and try again.'
+      } else {
+        error.value = message
+      }
     } finally {
       isLoading.value = false
     }

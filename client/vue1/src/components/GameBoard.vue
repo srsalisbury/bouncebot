@@ -145,8 +145,9 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 
     <!-- Error state -->
     <div v-else-if="store.error" class="error">
-      {{ store.error }}
-      <button @click="store.loadGame()">Retry</button>
+      <div class="error-icon">⚠</div>
+      <div class="error-message">{{ store.error }}</div>
+      <button @click="store.loadGame()">Try Again</button>
     </div>
 
     <!-- Game content wrapper -->
@@ -429,12 +430,22 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 }
 
 .error {
-  color: #e53935;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: center;
   padding: 2rem;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 2.5rem;
+  color: #e53935;
+}
+
+.error-message {
+  color: #e53935;
+  max-width: 300px;
 }
 
 .error button {
