@@ -27,6 +27,8 @@ export type Move = {
   direction: Direction
   fromX: number
   fromY: number
+  toX: number
+  toY: number
 }
 
 export const BOARD_SIZE = 16
@@ -55,8 +57,13 @@ export const useGameStore = defineStore('game', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Initial robot positions (stored for reset)
+  // Initial state (stored for reset and validation)
   let initialRobots: Robot[] = []
+  let initialGame: Game | null = null
+
+  // Validation state
+  const isValidating = ref(false)
+  const validationResult = ref<{ isValid: boolean; message: string } | null>(null)
 
   // Game state
   const robots = ref<Robot[]>([])
@@ -158,7 +165,14 @@ export const useGameStore = defineStore('game', () => {
 
     // Only count as a move if the robot actually moved
     if (destination.x !== robot.x || destination.y !== robot.y) {
-      moves.value.push({ robotId: robot.id, direction, fromX: robot.x, fromY: robot.y })
+      moves.value.push({
+        robotId: robot.id,
+        direction,
+        fromX: robot.x,
+        fromY: robot.y,
+        toX: destination.x,
+        toY: destination.y,
+      })
       robot.x = destination.x
       robot.y = destination.y
     }
@@ -174,6 +188,7 @@ export const useGameStore = defineStore('game', () => {
     robot.x = lastMove.fromX
     robot.y = lastMove.fromY
     selectedRobotId.value = lastMove.robotId
+    validationResult.value = null
   }
 
   function resetPuzzle() {
@@ -183,6 +198,9 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function applyGame(game: Game) {
+    // Store initial game for validation
+    initialGame = game
+
     // Parse robots
     const newRobots: Robot[] = game.bots.map(bot => ({
       id: bot.id,
@@ -206,6 +224,7 @@ export const useGameStore = defineStore('game', () => {
     // Reset game state
     moves.value = []
     selectedRobotId.value = null
+    validationResult.value = null
   }
 
   async function loadGame() {
@@ -222,6 +241,45 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  async function checkSolution() {
+    if (!initialGame) return
+    if (moves.value.length === 0) return
+
+    isValidating.value = true
+
+    try {
+      // Convert moves to BotPos format (robot id + destination position)
+      const movesForServer = moves.value.map(m => ({
+        id: m.robotId,
+        pos: { x: m.toX, y: m.toY },
+      }))
+
+      const response = await bounceBotClient.checkSolution({
+        game: initialGame,
+        moves: movesForServer,
+      })
+
+      if (response.isValid) {
+        validationResult.value = {
+          isValid: true,
+          message: `Solution verified! ${response.numMoves} moves.`,
+        }
+      } else {
+        validationResult.value = {
+          isValid: false,
+          message: response.firstBadMove?.errorDescription ?? 'Invalid solution',
+        }
+      }
+    } catch (e) {
+      validationResult.value = {
+        isValid: false,
+        message: e instanceof Error ? e.message : 'Validation failed',
+      }
+    } finally {
+      isValidating.value = false
+    }
+  }
+
   return {
     // State
     robots,
@@ -232,6 +290,8 @@ export const useGameStore = defineStore('game', () => {
     moves,
     isLoading,
     error,
+    isValidating,
+    validationResult,
     // Computed
     moveCount,
     isSolved,
@@ -241,5 +301,6 @@ export const useGameStore = defineStore('game', () => {
     undoMove,
     resetPuzzle,
     loadGame,
+    checkSolution,
   }
 })
