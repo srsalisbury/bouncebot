@@ -370,6 +370,18 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 22: Distinguish Walls Adjacent to Target
+**Status:** Complete
+
+**What was done:**
+- Changed wall color from brown (#8b4513) to dark gray (#2a2a2a)
+- Dark gray contrasts better with all robot colors
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Changed WALL_COLOR constant
+
+---
+
 ## In Progress
 
 _None currently_
@@ -378,4 +390,4 @@ _None currently_
 
 ## Up Next
 
-- Step 22: Distinguish Walls Adjacent to Target
+- Step 23: Error Handling

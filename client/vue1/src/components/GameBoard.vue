@@ -12,7 +12,7 @@ watch(() => store.isSolved, (solved) => {
 })
 
 const CELL_SIZE = 32
-const WALL_COLOR = '#8b4513'
+const WALL_COLOR = '#2a2a2a'
 const WALL_THICKNESS = 4
 
 const boardPixelSize = BOARD_SIZE * CELL_SIZE
