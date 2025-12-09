@@ -320,7 +320,7 @@ function getTargetBackgroundStyle() {
   font-size: 14px;
   user-select: none;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: left 0.15s ease-out, top 0.15s ease-out, transform 0.1s, box-shadow 0.1s;
 }
 
 .robot:hover {

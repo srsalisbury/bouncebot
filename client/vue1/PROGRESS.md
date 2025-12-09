@@ -323,6 +323,18 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 19: Move Animations
+**Status:** Complete
+
+**What was done:**
+- Added CSS transition for left/top properties on robots
+- Robots now animate smoothly when sliding (150ms ease-out)
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added position transitions to robot class
+
+---
+
 ## In Progress
 
 _None currently_
@@ -331,4 +343,4 @@ _None currently_
 
 ## Up Next
 
-- Step 19: Move Animations
+- Step 20: Better Styling
