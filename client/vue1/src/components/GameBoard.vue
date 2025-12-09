@@ -124,6 +124,18 @@ function getTargetBackgroundStyle() {
     WebkitMaskImage: `radial-gradient(circle at center, transparent ${holeSize / 2}px, black ${holeSize / 2}px)`,
   }
 }
+
+function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: boolean) {
+  const size = isStart ? CELL_SIZE * 0.35 : CELL_SIZE * 0.25
+  const offset = (CELL_SIZE - size) / 2
+  return {
+    left: `${x * CELL_SIZE + offset}px`,
+    top: `${y * CELL_SIZE + offset}px`,
+    width: `${size}px`,
+    height: `${size}px`,
+    backgroundColor: getRobotColor(robotId),
+  }
+}
 </script>
 
 <template>
@@ -161,6 +173,22 @@ function getTargetBackgroundStyle() {
       <div class="target-background" :style="getTargetBackgroundStyle()" />
       <span class="target-number">{{ store.target.robotId + 1 }}</span>
     </div>
+
+    <!-- Robot starting positions (large dots) -->
+    <div
+      v-for="robot in store.initialRobots"
+      :key="`start-${robot.id}`"
+      class="history-dot start-dot"
+      :style="getHistoryDotStyle(robot.x, robot.y, robot.id, true)"
+    />
+
+    <!-- Robot move history (small dots at destinations) -->
+    <div
+      v-for="(move, i) in store.committedMoves"
+      :key="`move-${i}`"
+      class="history-dot"
+      :style="getHistoryDotStyle(move.toX, move.toY, move.robotId, false)"
+    />
 
     <!-- Robots -->
     <div
@@ -339,6 +367,13 @@ function getTargetBackgroundStyle() {
   box-sizing: border-box;
 }
 
+.history-dot {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.8;
+  z-index: 1;
+}
+
 .robot {
   position: absolute;
   border-radius: 50%;
@@ -351,6 +386,7 @@ function getTargetBackgroundStyle() {
   user-select: none;
   cursor: pointer;
   transition: left 0.15s ease-out, top 0.15s ease-out, transform 0.1s, box-shadow 0.1s;
+  z-index: 2;
 }
 
 .robot:hover {

@@ -352,6 +352,24 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 21: Render Robot History
+**Status:** Complete
+
+**What was done:**
+- Made initialRobots reactive and exposed from store
+- Added larger dots at each robot's starting position
+- Added smaller dots at each move destination (using committedMoves)
+- Dots use robot colors with 80% opacity
+- Proper z-index ordering (robots above dots)
+- Added committedMoves array with 150ms delay to sync dots with animation
+- Dots cleared on undo/reset
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Made initialRobots reactive, added committedMoves with delay
+- `src/components/GameBoard.vue` - Added history dot rendering and styling
+
+---
+
 ## In Progress
 
 _None currently_
@@ -360,4 +378,4 @@ _None currently_
 
 ## Up Next
 
-- Step 21: Error Handling
+- Step 22: Distinguish Walls Adjacent to Target
