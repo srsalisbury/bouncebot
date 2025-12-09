@@ -255,6 +255,27 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 15: Proto/Connect Client Setup
+**Status:** Complete
+
+**What was done:**
+- Installed @connectrpc/connect, @connectrpc/connect-web, @bufbuild/protobuf
+- Installed @bufbuild/buf, @bufbuild/protoc-gen-es as dev dependencies
+- Created buf.gen.yaml for TypeScript code generation
+- Generated TypeScript types from proto in src/gen/bouncebot_pb.ts
+- Created Connect client service in src/services/connectClient.ts
+- Added npm run generate script
+
+**Files added:**
+- `buf.gen.yaml` - Buf code generation config
+- `src/gen/bouncebot_pb.ts` - Generated TypeScript types
+- `src/services/connectClient.ts` - Connect client setup
+
+**Files modified:**
+- `package.json` - Added dependencies and generate script
+
+---
+
 ## In Progress
 
 _None currently_
@@ -263,4 +284,4 @@ _None currently_
 
 ## Up Next
 
-- Step 15: Proto/Connect Client Setup
+- Step 16: Fetch Game from Server
