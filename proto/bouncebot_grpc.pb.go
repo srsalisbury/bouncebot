@@ -4,7 +4,7 @@
 // - protoc             v6.33.1
 // source: bouncebot.proto
 
-package bouncebot
+package proto
 
 import (
 	context "context"

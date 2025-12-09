@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	addr = flag.String("addr", "localhost:50055", "the address to connect to")
+	addr = flag.String("addr", "localhost:8080", "the address to connect to")
 )
 
 // Why isn't this built in?

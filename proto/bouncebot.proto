@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.org/srsalisbury/bouncebot/bouncebot";
+option go_package = "github.com/srsalisbury/bouncebot/proto";
 
 package bouncebot;
 
