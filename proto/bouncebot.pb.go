@@ -4,7 +4,7 @@
 // 	protoc        v6.33.1
 // source: bouncebot.proto
 
-package bouncebot
+package proto
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -503,7 +503,7 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x11error_description\x18\x02 \x01(\tR\x10errorDescription2\x9c\x01\n" +
 	"\tBounceBot\x129\n" +
 	"\bMakeGame\x12\x1a.bouncebot.MakeGameRequest\x1a\x0f.bouncebot.Game\"\x00\x12T\n" +
-	"\rCheckSolution\x12\x1f.bouncebot.CheckSolutionRequest\x1a .bouncebot.CheckSolutionResponse\"\x00B,Z*github.org/srsalisbury/bouncebot/bouncebotb\x06proto3"
+	"\rCheckSolution\x12\x1f.bouncebot.CheckSolutionRequest\x1a .bouncebot.CheckSolutionResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
 
 var (
 	file_bouncebot_proto_rawDescOnce sync.Once

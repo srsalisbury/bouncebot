@@ -229,6 +229,32 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 14: Connect Server (Go Backend)
+**Status:** Complete
+
+**What was done:**
+- Fixed proto go_package to use correct module path (github.com not github.org)
+- Updated compile_protos.sh to generate Connect code
+- Generated Connect handler in proto/protoconnect/
+- Added Connect and CORS dependencies to go.mod
+- Rewrote server/main.go to use Connect instead of gRPC
+- Added CORS support for browser access from localhost:5173
+- Changed default port from 50055 to 8080
+- Added h2c (HTTP/2 cleartext) support so gRPC clients still work
+- Updated cmd/clienttest to use new default port
+
+**Files added:**
+- `proto/protoconnect/bouncebot.connect.go` - Generated Connect handlers
+
+**Files modified:**
+- `proto/bouncebot.proto` - Fixed go_package path
+- `proto/compile_protos.sh` - Added Connect code generation
+- `server/main.go` - Rewrote for Connect with CORS and h2c
+- `go.mod` - Added connectrpc.com/connect, github.com/rs/cors, h2c
+- `cmd/clienttest/main.go` - Updated default port to 8080
+
+---
+
 ## In Progress
 
 _None currently_
@@ -237,4 +263,4 @@ _None currently_
 
 ## Up Next
 
-- Step 14: Connect Server (Go Backend)
+- Step 15: Proto/Connect Client Setup
