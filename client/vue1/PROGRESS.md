@@ -306,6 +306,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 18: Server Solution Validation
+**Status:** Complete
+
+**What was done:**
+- Added toX/toY to Move type to track destination positions
+- Store initial Game object from server for validation requests
+- Added checkSolution() action that calls CheckSolution RPC
+- Added isValidating and validationResult state
+- Auto-validate with server when puzzle is solved (via watcher)
+- Display validation status: "Validating...", success message, or error
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Added checkSolution, validation state, toX/toY tracking
+- `src/components/GameBoard.vue` - Added watcher for auto-validation, validation UI
+
+---
+
 ## In Progress
 
 _None currently_
@@ -314,4 +331,4 @@ _None currently_
 
 ## Up Next
 
-- Step 18: Server Solution Validation
+- Step 19: Move Animations

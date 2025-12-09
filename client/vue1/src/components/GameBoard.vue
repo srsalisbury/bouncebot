@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useGameStore, BOARD_SIZE, getRobotColor, type Direction } from '../stores/gameStore'
 
 const store = useGameStore()
+
+// Auto-validate when puzzle is solved
+watch(() => store.isSolved, (solved) => {
+  if (solved && !store.validationResult) {
+    store.checkSolution()
+  }
+})
 
 const CELL_SIZE = 32
 const WALL_COLOR = '#8b4513'
@@ -190,6 +197,17 @@ function getTargetBackgroundStyle() {
         Moves: {{ store.moveCount }}
         <span v-if="store.isSolved" class="solved-label">Solved</span>
       </div>
+      <!-- Validation result -->
+      <div v-if="store.isValidating" class="validation-status validating">
+        Validating...
+      </div>
+      <div
+        v-else-if="store.validationResult"
+        class="validation-status"
+        :class="{ valid: store.validationResult.isValid, invalid: !store.validationResult.isValid }"
+      >
+        {{ store.validationResult.message }}
+      </div>
       <div class="move-list">
         <div v-for="(move, i) in store.moves" :key="i" class="move-item">
           <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
@@ -230,6 +248,23 @@ function getTargetBackgroundStyle() {
 .solved-label {
   color: #43a047;
   margin-left: 0.5rem;
+}
+
+.validation-status {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.validation-status.validating {
+  color: #888;
+}
+
+.validation-status.valid {
+  color: #43a047;
+}
+
+.validation-status.invalid {
+  color: #e53935;
 }
 
 .move-list {
