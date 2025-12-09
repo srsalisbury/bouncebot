@@ -294,6 +294,18 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 17: New Game Button
+**Status:** Complete
+
+**What was done:**
+- Added "New Game" button to move panel
+- Button calls loadGame() to fetch a fresh puzzle from server
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added New Game button with styling
+
+---
+
 ## In Progress
 
 _None currently_
@@ -302,4 +314,4 @@ _None currently_
 
 ## Up Next
 
-- Step 17: New Game Button
+- Step 18: Server Solution Validation

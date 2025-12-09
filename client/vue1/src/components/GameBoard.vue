@@ -185,6 +185,7 @@ function getTargetBackgroundStyle() {
 
     <!-- Move history panel -->
     <div v-if="!store.isLoading && !store.error" class="move-panel">
+      <button class="new-game-btn" @click="store.loadGame()">New Game</button>
       <div class="move-count">
         Moves: {{ store.moveCount }}
         <span v-if="store.isSolved" class="solved-label">Solved</span>
@@ -211,6 +212,13 @@ function getTargetBackgroundStyle() {
 
 .move-panel {
   min-width: 120px;
+}
+
+.new-game-btn {
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  font-size: 1rem;
 }
 
 .move-count {
