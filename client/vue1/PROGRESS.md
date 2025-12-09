@@ -335,6 +335,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 20: Better Styling
+**Status:** Complete
+
+**What was done:**
+- Styled "New Game" button with green theme, hover/active states
+- Improved move panel layout with consistent spacing
+- Styled error retry button to match theme
+- Added keyboard hints below board showing controls
+- Restructured layout with game-content wrapper for better organization
+- Improved App.vue title spacing
+
+**Files modified:**
+- `src/App.vue` - Improved layout spacing
+- `src/components/GameBoard.vue` - Button styles, keyboard hints, layout restructure
+
+---
+
 ## In Progress
 
 _None currently_
@@ -343,4 +360,4 @@ _None currently_
 
 ## Up Next
 
-- Step 20: Better Styling
+- Step 21: Error Handling

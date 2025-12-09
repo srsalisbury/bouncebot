@@ -137,10 +137,11 @@ function getTargetBackgroundStyle() {
       <button @click="store.loadGame()">Retry</button>
     </div>
 
-    <!-- Game board -->
-    <div
-      v-else
-      class="board"
+    <!-- Game content wrapper -->
+    <div v-else class="game-content">
+      <!-- Game board -->
+      <div
+        class="board"
     :style="{
       width: `${boardPixelSize}px`,
       height: `${boardPixelSize}px`,
@@ -190,32 +191,38 @@ function getTargetBackgroundStyle() {
     />
     </div>
 
-    <!-- Move history panel -->
-    <div v-if="!store.isLoading && !store.error" class="move-panel">
-      <button class="new-game-btn" @click="store.loadGame()">New Game</button>
-      <div class="move-count">
-        Moves: {{ store.moveCount }}
-        <span v-if="store.isSolved" class="solved-label">Solved</span>
-      </div>
-      <!-- Validation result -->
-      <div v-if="store.isValidating" class="validation-status validating">
-        Validating...
-      </div>
-      <div
-        v-else-if="store.validationResult"
-        class="validation-status"
-        :class="{ valid: store.validationResult.isValid, invalid: !store.validationResult.isValid }"
-      >
-        {{ store.validationResult.message }}
-      </div>
-      <div class="move-list">
-        <div v-for="(move, i) in store.moves" :key="i" class="move-item">
-          <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
-            {{ move.robotId + 1 }}
-          </span>
-          <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+      <!-- Move history panel -->
+      <div class="move-panel">
+        <button class="new-game-btn" @click="store.loadGame()">New Game</button>
+        <div class="move-count">
+          Moves: {{ store.moveCount }}
+          <span v-if="store.isSolved" class="solved-label">Solved</span>
+        </div>
+        <!-- Validation result -->
+        <div v-if="store.isValidating" class="validation-status validating">
+          Validating...
+        </div>
+        <div
+          v-else-if="store.validationResult"
+          class="validation-status"
+          :class="{ valid: store.validationResult.isValid, invalid: !store.validationResult.isValid }"
+        >
+          {{ store.validationResult.message }}
+        </div>
+        <div class="move-list">
+          <div v-for="(move, i) in store.moves" :key="i" class="move-item">
+            <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
+              {{ move.robotId + 1 }}
+            </span>
+            <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- Keyboard hints under board -->
+    <div v-if="!store.isLoading && !store.error" class="keyboard-hints">
+      <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset
     </div>
   </div>
 </template>
@@ -223,26 +230,49 @@ function getTargetBackgroundStyle() {
 <style scoped>
 .game-container {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.game-content {
+  display: flex;
   flex-direction: row;
   align-items: flex-start;
   gap: 2rem;
 }
 
 .move-panel {
-  min-width: 120px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .new-game-btn {
-  padding: 0.5rem 1rem;
-  margin-bottom: 1rem;
+  padding: 0.6rem 1.2rem;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: #42b883;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.new-game-btn:hover {
+  background: #3aa876;
+  transform: translateY(-1px);
+}
+
+.new-game-btn:active {
+  transform: translateY(0);
 }
 
 .move-count {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .solved-label {
@@ -357,8 +387,9 @@ function getTargetBackgroundStyle() {
 }
 
 .loading {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #888;
+  padding: 2rem;
 }
 
 .error {
@@ -367,10 +398,35 @@ function getTargetBackgroundStyle() {
   flex-direction: column;
   gap: 1rem;
   align-items: flex-start;
+  padding: 2rem;
 }
 
 .error button {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   cursor: pointer;
+  font-size: 0.95rem;
+  background: #e53935;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+.error button:hover {
+  background: #c62828;
+}
+
+.keyboard-hints {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+.keyboard-hints kbd {
+  background: #333;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.75rem;
 }
 </style>
