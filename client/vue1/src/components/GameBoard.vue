@@ -58,6 +58,7 @@ function handleKeydown(event: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  store.loadGame()
 })
 
 onUnmounted(() => {
@@ -120,7 +121,18 @@ function getTargetBackgroundStyle() {
 
 <template>
   <div class="game-container">
+    <!-- Loading state -->
+    <div v-if="store.isLoading" class="loading">Loading game...</div>
+
+    <!-- Error state -->
+    <div v-else-if="store.error" class="error">
+      {{ store.error }}
+      <button @click="store.loadGame()">Retry</button>
+    </div>
+
+    <!-- Game board -->
     <div
+      v-else
       class="board"
     :style="{
       width: `${boardPixelSize}px`,
@@ -172,7 +184,7 @@ function getTargetBackgroundStyle() {
     </div>
 
     <!-- Move history panel -->
-    <div class="move-panel">
+    <div v-if="!store.isLoading && !store.error" class="move-panel">
       <div class="move-count">
         Moves: {{ store.moveCount }}
         <span v-if="store.isSolved" class="solved-label">Solved</span>
@@ -299,5 +311,23 @@ function getTargetBackgroundStyle() {
   font-weight: bold;
   font-size: 14px;
   color: black;
+}
+
+.loading {
+  font-size: 1.2rem;
+  color: #888;
+}
+
+.error {
+  color: #e53935;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.error button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
 }
 </style>
