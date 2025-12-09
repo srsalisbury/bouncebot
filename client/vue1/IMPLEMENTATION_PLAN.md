@@ -269,7 +269,28 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-### Step 21: Error Handling
+### Step 21: Render robot history
+**Goal:** Make it easier for the user to understand each robot's past movement.
+
+**Tasks:**
+- Leave a robot-colored dot behind showing each robot's starting position and a smaller dot at each robot's move-end position.
+- Make sure to remove the dots on undo.
+
+**Visible result:** Dots are left in robot's path.
+
+---
+
+### Step 22: Distinguish walls adjacent to target
+**Goal:** Cleaner visuals.
+
+**Tasks:**
+- Figure out a way to better distinguish between the target rendering and the walls adjacent to it. Currently they both blend into each other when the colors are both dark.
+
+**Visible result:** Visually distinct target box and walls.
+
+---
+
+### Step 23: Error Handling
 **Goal:** Graceful handling of failures.
 
 **Tasks:**

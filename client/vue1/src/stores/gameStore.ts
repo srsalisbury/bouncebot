@@ -58,7 +58,7 @@ export const useGameStore = defineStore('game', () => {
   const error = ref<string | null>(null)
 
   // Initial state (stored for reset and validation)
-  let initialRobots: Robot[] = []
+  const initialRobots = ref<Robot[]>([])
   let initialGame: Game | null = null
 
   // Validation state
@@ -80,6 +80,8 @@ export const useGameStore = defineStore('game', () => {
 
   // Move history
   const moves = ref<Move[]>([])
+  // Committed moves (for history dots - delayed to match animation)
+  const committedMoves = ref<Move[]>([])
 
   // Computed
   const moveCount = computed(() => moves.value.length)
@@ -165,22 +167,34 @@ export const useGameStore = defineStore('game', () => {
 
     // Only count as a move if the robot actually moved
     if (destination.x !== robot.x || destination.y !== robot.y) {
-      moves.value.push({
+      const move: Move = {
         robotId: robot.id,
         direction,
         fromX: robot.x,
         fromY: robot.y,
         toX: destination.x,
         toY: destination.y,
-      })
+      }
+      moves.value.push(move)
       robot.x = destination.x
       robot.y = destination.y
+
+      // Delay adding to committedMoves to match animation (150ms)
+      setTimeout(() => {
+        committedMoves.value.push(move)
+      }, 150)
     }
   }
 
   function undoMove() {
     const lastMove = moves.value.pop()
     if (!lastMove) return
+
+    // Also remove from committedMoves if present
+    const committedIndex = committedMoves.value.indexOf(lastMove)
+    if (committedIndex !== -1) {
+      committedMoves.value.splice(committedIndex, 1)
+    }
 
     const robot = robots.value.find(r => r.id === lastMove.robotId)
     if (!robot) return
@@ -192,8 +206,9 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function resetPuzzle() {
-    robots.value = initialRobots.map(r => ({ ...r }))
+    robots.value = initialRobots.value.map(r => ({ ...r }))
     moves.value = []
+    committedMoves.value = []
     selectedRobotId.value = null
   }
 
@@ -207,7 +222,7 @@ export const useGameStore = defineStore('game', () => {
       x: bot.pos?.x ?? 0,
       y: bot.pos?.y ?? 0,
     }))
-    initialRobots = newRobots.map(r => ({ ...r }))
+    initialRobots.value = newRobots.map(r => ({ ...r }))
     robots.value = newRobots
 
     // Parse walls
@@ -223,6 +238,7 @@ export const useGameStore = defineStore('game', () => {
 
     // Reset game state
     moves.value = []
+    committedMoves.value = []
     selectedRobotId.value = null
     validationResult.value = null
   }
@@ -283,11 +299,13 @@ export const useGameStore = defineStore('game', () => {
   return {
     // State
     robots,
+    initialRobots,
     vWalls,
     hWalls,
     target,
     selectedRobotId,
     moves,
+    committedMoves,
     isLoading,
     error,
     isValidating,
