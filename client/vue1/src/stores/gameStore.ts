@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { bounceBotClient } from '../services/connectClient'
+import type { Game } from '../gen/bouncebot_pb'
 
 export type Direction = 'up' | 'down' | 'left' | 'right'
 
@@ -49,43 +51,21 @@ export function getRobotColor(robotId: number): string {
 }
 
 export const useGameStore = defineStore('game', () => {
+  // Loading state
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+
   // Initial robot positions (stored for reset)
-  const initialRobots: Robot[] = [
-    { id: 0, x: 2, y: 3 },
-    { id: 1, x: 14, y: 1 },
-    { id: 2, x: 5, y: 12 },
-    { id: 3, x: 10, y: 8 },
-  ]
+  let initialRobots: Robot[] = []
 
-  // Hardcoded robot positions for now
-  const robots = ref<Robot[]>(
-    initialRobots.map(r => ({ ...r }))
-  )
-
-  // Hardcoded walls for now
-  // vWalls: vertical wall to the RIGHT of the cell at (x, y)
-  // hWalls: horizontal wall BELOW the cell at (x, y)
-  const vWalls = ref<Wall[]>([
-    { x: 3, y: 2 },
-    { x: 7, y: 5 },
-    { x: 7, y: 7 },
-    { x: 10, y: 8 },
-    { x: 5, y: 12 },
-  ])
-
-  const hWalls = ref<Wall[]>([
-    { x: 0, y: 7 },
-    { x: 2, y: 3 },
-    { x: 5, y: 7 },
-    { x: 8, y: 10 },
-    { x: 12, y: 5 },
-  ])
-
-  // Target: which robot needs to reach which position
+  // Game state
+  const robots = ref<Robot[]>([])
+  const vWalls = ref<Wall[]>([])
+  const hWalls = ref<Wall[]>([])
   const target = ref<Target>({
-    robotId: 0, // Red robot
-    x: 7,
-    y: 7,
+    robotId: 0,
+    x: 0,
+    y: 0,
   })
 
   // Selected robot state
@@ -202,6 +182,46 @@ export const useGameStore = defineStore('game', () => {
     selectedRobotId.value = null
   }
 
+  function applyGame(game: Game) {
+    // Parse robots
+    const newRobots: Robot[] = game.bots.map(bot => ({
+      id: bot.id,
+      x: bot.pos?.x ?? 0,
+      y: bot.pos?.y ?? 0,
+    }))
+    initialRobots = newRobots.map(r => ({ ...r }))
+    robots.value = newRobots
+
+    // Parse walls
+    vWalls.value = game.board?.vWalls.map(w => ({ x: w.x, y: w.y })) ?? []
+    hWalls.value = game.board?.hWalls.map(w => ({ x: w.x, y: w.y })) ?? []
+
+    // Parse target
+    target.value = {
+      robotId: game.target?.id ?? 0,
+      x: game.target?.pos?.x ?? 0,
+      y: game.target?.pos?.y ?? 0,
+    }
+
+    // Reset game state
+    moves.value = []
+    selectedRobotId.value = null
+  }
+
+  async function loadGame() {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const game = await bounceBotClient.makeGame({ size: BOARD_SIZE })
+      applyGame(game)
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to load game'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     // State
     robots,
@@ -210,6 +230,8 @@ export const useGameStore = defineStore('game', () => {
     target,
     selectedRobotId,
     moves,
+    isLoading,
+    error,
     // Computed
     moveCount,
     isSolved,
@@ -218,5 +240,6 @@ export const useGameStore = defineStore('game', () => {
     moveRobot,
     undoMove,
     resetPuzzle,
+    loadGame,
   }
 })

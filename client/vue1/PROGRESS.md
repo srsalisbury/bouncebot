@@ -276,6 +276,24 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 16: Fetch Game from Server
+**Status:** Complete
+
+**What was done:**
+- Added loadGame() action to store that calls MakeGame RPC
+- Added applyGame() helper to parse server response into game state
+- Added isLoading and error state for loading/error handling
+- Removed hardcoded robot, wall, and target data
+- Call loadGame() on component mount
+- Display loading message while fetching
+- Display error message with retry button on failure
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Added loadGame, applyGame, isLoading, error
+- `src/components/GameBoard.vue` - Added loading/error UI, call loadGame on mount
+
+---
+
 ## In Progress
 
 _None currently_
@@ -284,4 +302,4 @@ _None currently_
 
 ## Up Next
 
-- Step 16: Fetch Game from Server
+- Step 17: New Game Button
