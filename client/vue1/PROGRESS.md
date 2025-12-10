@@ -415,6 +415,31 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 27: Multiple Solutions Tracking
+**Status:** Complete
+
+**What was done:**
+- Added Solution type to track moves and solved status per solution
+- Added solutions array, activeSolutionIndex, animatingMoveIndex to store
+- Added unwindMoves and replayMoves shared animation functions
+- Added switchSolution action to unwind current and replay target solution with animation
+- Added startNewSolution action (can start new solution any time, max 4 per puzzle)
+- Removed server-side validation (isValidating, validationResult, checkSolution)
+- Removed New Game button from UI
+- UI shows solution columns side by side with move count and checkmark when solved
+- Click column to switch solutions; active column highlighted with green border
+- Move highlighting during unwind/replay animation
+- Fixed-width solution area (min 280px) to prevent board shifting
+- Keyboard shortcuts: n/+ to start new solution, shift+left/right to switch
+- Restructured layout with board-column wrapper for title/board/hints alignment
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Added Solution type, solutions state, switch/start actions, removed validation
+- `src/components/GameBoard.vue` - Added solutions columns UI, keyboard shortcuts, layout restructure
+- `src/App.vue` - Simplified to just render GameBoard (title moved to GameBoard)
+
+---
+
 ## In Progress
 
 _None currently_
