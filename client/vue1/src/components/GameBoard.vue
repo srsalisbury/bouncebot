@@ -54,6 +54,12 @@ function handleKeydown(event: KeyboardEvent) {
     return
   }
 
+  // Delete current solution with D (shift+d)
+  if (event.key === 'D') {
+    store.deleteSolution(store.activeSolutionIndex)
+    return
+  }
+
   // Number keys for robot selection
   const num = parseInt(event.key)
   if (num >= 1 && num <= store.robots.length) {
@@ -244,7 +250,7 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 
           <!-- Keyboard hints under board -->
           <div class="keyboard-hints">
-            <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset · <kbd>n</kbd> new solution · <kbd>?</kbd> help
+            <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>?</kbd> help
           </div>
         </div>
 

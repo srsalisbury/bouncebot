@@ -36,8 +36,12 @@ function handleBackdropClick(event: MouseEvent) {
           <ul>
             <li><kbd>1</kbd>-<kbd>4</kbd> — Select robot by number</li>
             <li><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — Move selected robot</li>
-            <li><kbd>Z</kbd> / <kbd>U</kbd> / <kbd>Esc</kbd> — Undo last move</li>
-            <li><kbd>Shift+R</kbd> — Reset puzzle</li>
+            <li><kbd>z</kbd> / <kbd>u</kbd> / <kbd>Esc</kbd> — Undo last move</li>
+            <li><kbd>n</kbd> / <kbd>+</kbd> — Start a new solution attempt</li>
+            <li><kbd>Shift+←</kbd> / <kbd>Shift+→</kbd> — Switch between solutions</li>
+            <li><kbd>Shift+D</kbd> — Delete current solution</li>
+            <li><kbd>Shift+R</kbd> — Reset puzzle to starting positions</li>
+            <li><kbd>?</kbd> — Toggle this help</li>
           </ul>
           <p>You can also click on a robot to select it.</p>
         </div>
