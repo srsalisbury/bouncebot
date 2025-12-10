@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore, BOARD_SIZE, getRobotColor, type Direction } from '../stores/gameStore'
 import HowToPlayModal from './HowToPlayModal.vue'
 
 const store = useGameStore()
 const showHowToPlay = ref(false)
-
-// Auto-validate when puzzle is solved
-watch(() => store.isSolved, (solved) => {
-  if (solved && !store.validationResult) {
-    store.checkSolution()
-  }
-})
 
 const CELL_SIZE = 32
 const WALL_COLOR = '#2a2a2a'
@@ -42,6 +35,22 @@ function handleKeydown(event: KeyboardEvent) {
   // Reset with R (shift+r)
   if (event.key === 'R') {
     store.resetPuzzle()
+    return
+  }
+
+  // Start new solution with n or +
+  if ((event.key === 'n' || event.key === '+') && store.canStartNewSolution) {
+    store.startNewSolution()
+    return
+  }
+
+  // Switch solutions with shift+left/right
+  if (event.shiftKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+    event.preventDefault()
+    const newIndex = event.key === 'ArrowLeft'
+      ? store.activeSolutionIndex - 1
+      : store.activeSolutionIndex + 1
+    store.switchSolution(newIndex)
     return
   }
 
@@ -160,9 +169,13 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 
     <!-- Game content wrapper -->
     <div v-else class="game-content">
-      <!-- Game board -->
-      <div
-        class="board"
+      <!-- Board column (title, board, hints) -->
+      <div class="board-column">
+        <h1 class="title">BounceBot</h1>
+
+        <!-- Game board -->
+        <div
+          class="board"
     :style="{
       width: `${boardPixelSize}px`,
       height: `${boardPixelSize}px`,
@@ -228,38 +241,43 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
     />
     </div>
 
-      <!-- Move history panel -->
-      <div class="move-panel">
-        <button class="new-game-btn" @click="store.loadGame()">New Game</button>
-        <div class="move-count">
-          Moves: {{ store.moveCount }}
-          <span v-if="store.isSolved" class="solved-label">Solved</span>
+        <!-- Keyboard hints under board -->
+        <div class="keyboard-hints">
+          <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset · <kbd>n</kbd> new solution · <kbd>?</kbd> help
         </div>
-        <!-- Validation result -->
-        <div v-if="store.isValidating" class="validation-status validating">
-          Validating...
-        </div>
-        <div
-          v-else-if="store.validationResult"
-          class="validation-status"
-          :class="{ valid: store.validationResult.isValid, invalid: !store.validationResult.isValid }"
-        >
-          {{ store.validationResult.message }}
-        </div>
-        <div class="move-list">
-          <div v-for="(move, i) in store.moves" :key="i" class="move-item">
-            <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
-              {{ move.robotId + 1 }}
-            </span>
-            <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+      </div>
+
+      <!-- Solutions panel -->
+      <div class="solutions-panel">
+        <div class="solutions-columns">
+          <!-- Solution columns -->
+          <div
+            v-for="(solution, index) in store.solutions"
+            :key="index"
+            class="solution-column"
+            :class="{ active: index === store.activeSolutionIndex }"
+            @click="store.switchSolution(index)"
+          >
+            <div class="solution-header">
+              <span class="solution-moves">{{ solution.moves.length }}</span>
+              <span class="solved-check" :class="{ visible: solution.isSolved }">✓</span>
+            </div>
+            <div class="move-list">
+              <div
+                v-for="(move, i) in solution.moves"
+                :key="i"
+                class="move-item"
+                :class="{ animating: index === store.activeSolutionIndex && store.animatingMoveIndex === i }"
+              >
+                <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
+                  {{ move.robotId + 1 }}
+                </span>
+                <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Keyboard hints under board -->
-    <div v-if="!store.isLoading && !store.error" class="keyboard-hints">
-      <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset · <kbd>?</kbd> help
     </div>
 
     <!-- How to Play modal -->
@@ -282,64 +300,72 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
   gap: 2rem;
 }
 
-.move-panel {
-  min-width: 140px;
+.solutions-panel {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.new-game-btn {
-  padding: 0.6rem 1.2rem;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  background: #42b883;
-  color: white;
-  border: none;
+.solutions-columns {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: flex-start;
+  min-width: 280px;
+}
+
+.solution-column {
+  min-width: 54px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem;
   border-radius: 6px;
-  transition: background 0.15s, transform 0.1s;
+  background: #dddddd;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 
-.new-game-btn:hover {
-  background: #3aa876;
-  transform: translateY(-1px);
+.solution-column:hover {
+  background: #cccccc;
 }
 
-.new-game-btn:active {
-  transform: translateY(0);
+.solution-column.active {
+  background: #dddddd;
+  box-shadow: 0 0 0 2px #42b883;
 }
 
-.move-count {
-  font-size: 1.1rem;
+.solution-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   font-weight: 600;
+  font-size: 1.2rem;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid #999;
 }
 
-.solved-label {
+.solution-moves {
+  color: #333;
+}
+
+.solved-check {
+  position: absolute;
+  right: 0;
   color: #43a047;
-  margin-left: 0.5rem;
+  opacity: 0;
 }
 
-.validation-status {
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.validation-status.validating {
-  color: #888;
-}
-
-.validation-status.valid {
-  color: #43a047;
-}
-
-.validation-status.invalid {
-  color: #e53935;
+.solved-check.visible {
+  opacity: 1;
 }
 
 .move-list {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
   max-height: 512px;
   overflow-y: auto;
@@ -349,6 +375,12 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.move-item.animating {
+  background: #42b883;
 }
 
 .move-robot {
@@ -365,6 +397,9 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 
 .move-arrow {
   font-size: 18px;
+  color: #333;
+  width: 18px;
+  text-align: center;
 }
 
 .board {

@@ -31,6 +31,13 @@ export type Move = {
   toY: number
 }
 
+export type Solution = {
+  moves: Move[]
+  isSolved: boolean
+}
+
+export const MAX_SOLUTIONS = 4
+
 export const BOARD_SIZE = 16
 
 // Color palette for robots - colors are assigned by robot ID (index)
@@ -57,13 +64,9 @@ export const useGameStore = defineStore('game', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Initial state (stored for reset and validation)
+  // Initial state (stored for reset)
   const initialRobots = ref<Robot[]>([])
-  let initialGame: Game | null = null
 
-  // Validation state
-  const isValidating = ref(false)
-  const validationResult = ref<{ isValid: boolean; message: string } | null>(null)
 
   // Game state
   const robots = ref<Robot[]>([])
@@ -78,18 +81,27 @@ export const useGameStore = defineStore('game', () => {
   // Selected robot state
   const selectedRobotId = ref<number | null>(null)
 
-  // Move history
-  const moves = ref<Move[]>([])
+  // Solutions tracking
+  const solutions = ref<Solution[]>([{ moves: [], isSolved: false }])
+  const activeSolutionIndex = ref(0)
+  const animatingMoveIndex = ref<number | null>(null)
+
   // Committed moves (for history dots - delayed to match animation)
   const committedMoves = ref<Move[]>([])
 
   // Computed
+  const activeSolution = computed(() => solutions.value[activeSolutionIndex.value]!)
+  const moves = computed(() => activeSolution.value.moves)
   const moveCount = computed(() => moves.value.length)
 
   const isSolved = computed(() => {
     const targetRobot = robots.value.find(r => r.id === target.value.robotId)
     if (!targetRobot) return false
     return targetRobot.x === target.value.x && targetRobot.y === target.value.y
+  })
+
+  const canStartNewSolution = computed(() => {
+    return solutions.value.length < MAX_SOLUTIONS
   })
 
   // Actions
@@ -175,7 +187,7 @@ export const useGameStore = defineStore('game', () => {
         toX: destination.x,
         toY: destination.y,
       }
-      moves.value.push(move)
+      activeSolution.value.moves.push(move)
       robot.x = destination.x
       robot.y = destination.y
 
@@ -183,12 +195,20 @@ export const useGameStore = defineStore('game', () => {
       setTimeout(() => {
         committedMoves.value.push(move)
       }, 150)
+
+      // Check if puzzle is now solved and mark the solution
+      const targetRobot = robots.value.find(r => r.id === target.value.robotId)
+      if (targetRobot && targetRobot.x === target.value.x && targetRobot.y === target.value.y) {
+        activeSolution.value.isSolved = true
+      }
     }
   }
 
   function undoMove() {
-    const lastMove = moves.value.pop()
-    if (!lastMove) return
+    const solutionMoves = activeSolution.value.moves
+    if (solutionMoves.length === 0) return
+
+    const lastMove = solutionMoves.pop()!
 
     // Also remove from committedMoves if present
     const committedIndex = committedMoves.value.indexOf(lastMove)
@@ -202,20 +222,105 @@ export const useGameStore = defineStore('game', () => {
     robot.x = lastMove.fromX
     robot.y = lastMove.fromY
     selectedRobotId.value = lastMove.robotId
-    validationResult.value = null
+
+    // Mark solution as unsolved since we undid a move
+    activeSolution.value.isSolved = false
   }
 
   function resetPuzzle() {
     robots.value = initialRobots.value.map(r => ({ ...r }))
-    moves.value = []
+    activeSolution.value.moves.length = 0
+    activeSolution.value.isSolved = false
     committedMoves.value = []
     selectedRobotId.value = null
   }
 
-  function applyGame(game: Game) {
-    // Store initial game for validation
-    initialGame = game
+  // Shared function to unwind moves with animation, returns total time in ms
+  function unwindMoves(movesToUnwind: Move[]): number {
+    movesToUnwind.slice().reverse().forEach((move, i) => {
+      const moveIndex = movesToUnwind.length - 1 - i
+      setTimeout(() => {
+        animatingMoveIndex.value = moveIndex
+        const robot = robots.value.find(r => r.id === move.robotId)
+        if (robot) {
+          robot.x = move.fromX
+          robot.y = move.fromY
+        }
+        // Remove from committedMoves
+        const idx = committedMoves.value.indexOf(move)
+        if (idx !== -1) {
+          committedMoves.value.splice(idx, 1)
+        }
+      }, i * 150)
+    })
+    return movesToUnwind.length * 150
+  }
 
+  // Shared function to replay moves with animation, starting after a delay
+  function replayMoves(movesToReplay: Move[], startDelay: number): number {
+    movesToReplay.forEach((move, i) => {
+      setTimeout(() => {
+        animatingMoveIndex.value = i
+        const robot = robots.value.find(r => r.id === move.robotId)
+        if (robot) {
+          robot.x = move.toX
+          robot.y = move.toY
+        }
+        committedMoves.value.push(move)
+      }, startDelay + i * 150)
+    })
+    return startDelay + movesToReplay.length * 150
+  }
+
+  function switchSolution(index: number) {
+    if (index < 0 || index >= solutions.value.length) return
+    if (index === activeSolutionIndex.value) return
+
+    const currentMoves = [...activeSolution.value.moves]
+    const targetMoves = solutions.value[index]!.moves
+
+    selectedRobotId.value = null
+
+    // Unwind current solution
+    const unwindTime = unwindMoves(currentMoves)
+
+    // Switch to target solution after unwind completes
+    setTimeout(() => {
+      animatingMoveIndex.value = null
+      activeSolutionIndex.value = index
+    }, unwindTime)
+
+    // Replay target moves after switching
+    const totalTime = replayMoves(targetMoves, unwindTime)
+
+    // Clear highlight after replay completes
+    setTimeout(() => {
+      animatingMoveIndex.value = null
+    }, totalTime)
+  }
+
+  function startNewSolution() {
+    if (!canStartNewSolution.value) return
+
+    const currentMoves = [...activeSolution.value.moves]
+
+    // Create new empty solution
+    solutions.value.push({ moves: [], isSolved: false })
+    const newIndex = solutions.value.length - 1
+
+    selectedRobotId.value = null
+
+    // Unwind current solution
+    const unwindTime = unwindMoves(currentMoves)
+
+    // Switch to new solution after unwind completes
+    setTimeout(() => {
+      animatingMoveIndex.value = null
+      activeSolutionIndex.value = newIndex
+    }, unwindTime)
+  }
+
+  function applyGame(game: Game) {
     // Parse robots
     const newRobots: Robot[] = game.bots.map(bot => ({
       id: bot.id,
@@ -237,10 +342,10 @@ export const useGameStore = defineStore('game', () => {
     }
 
     // Reset game state
-    moves.value = []
+    solutions.value = [{ moves: [], isSolved: false }]
+    activeSolutionIndex.value = 0
     committedMoves.value = []
     selectedRobotId.value = null
-    validationResult.value = null
   }
 
   async function loadGame() {
@@ -269,45 +374,6 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  async function checkSolution() {
-    if (!initialGame) return
-    if (moves.value.length === 0) return
-
-    isValidating.value = true
-
-    try {
-      // Convert moves to BotPos format (robot id + destination position)
-      const movesForServer = moves.value.map(m => ({
-        id: m.robotId,
-        pos: { x: m.toX, y: m.toY },
-      }))
-
-      const response = await bounceBotClient.checkSolution({
-        game: initialGame,
-        moves: movesForServer,
-      })
-
-      if (response.isValid) {
-        validationResult.value = {
-          isValid: true,
-          message: `Solution verified! ${response.numMoves} moves.`,
-        }
-      } else {
-        validationResult.value = {
-          isValid: false,
-          message: response.firstBadMove?.errorDescription ?? 'Invalid solution',
-        }
-      }
-    } catch (e) {
-      validationResult.value = {
-        isValid: false,
-        message: e instanceof Error ? e.message : 'Validation failed',
-      }
-    } finally {
-      isValidating.value = false
-    }
-  }
-
   return {
     // State
     robots,
@@ -320,17 +386,20 @@ export const useGameStore = defineStore('game', () => {
     committedMoves,
     isLoading,
     error,
-    isValidating,
-    validationResult,
+    solutions,
+    activeSolutionIndex,
+    animatingMoveIndex,
     // Computed
     moveCount,
     isSolved,
+    canStartNewSolution,
     // Actions
     selectRobot,
     moveRobot,
     undoMove,
     resetPuzzle,
     loadGame,
-    checkSolution,
+    switchSolution,
+    startNewSolution,
   }
 })
