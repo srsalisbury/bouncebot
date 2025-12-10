@@ -169,11 +169,12 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 
     <!-- Game content wrapper -->
     <div v-else class="game-content">
-      <!-- Board column (title, board, hints) -->
-      <div class="board-column">
+      <!-- Board layout (grid: title on top, board and solutions below) -->
+      <div class="board-layout">
         <h1 class="title">BounceBot</h1>
-
-        <!-- Game board -->
+        <!-- Board area (board + hints) -->
+        <div class="board-area">
+          <!-- Game board -->
         <div
           class="board"
     :style="{
@@ -241,13 +242,13 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
     />
     </div>
 
-        <!-- Keyboard hints under board -->
-        <div class="keyboard-hints">
-          <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset · <kbd>n</kbd> new solution · <kbd>?</kbd> help
+          <!-- Keyboard hints under board -->
+          <div class="keyboard-hints">
+            <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset · <kbd>n</kbd> new solution · <kbd>?</kbd> help
+          </div>
         </div>
-      </div>
 
-      <!-- Solutions panel -->
+        <!-- Solutions panel (grid-aligned with board) -->
       <div class="solutions-panel">
         <div class="solutions-columns">
           <!-- Solution columns -->
@@ -278,6 +279,7 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
           </div>
         </div>
       </div>
+      </div>
     </div>
 
     <!-- How to Play modal -->
@@ -295,12 +297,34 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 
 .game-content {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 2rem;
+}
+
+.board-layout {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  gap: 0.5rem 2rem;
+}
+
+.title {
+  grid-column: 1;
+  grid-row: 1;
+  color: #42b883;
+  margin: 0;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.board-area {
+  grid-column: 1;
+  grid-row: 2;
 }
 
 .solutions-panel {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -311,7 +335,7 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
   flex-direction: row;
   gap: 0.5rem;
   align-items: flex-start;
-  min-width: 280px;
+  width: 280px;
 }
 
 .solution-column {
