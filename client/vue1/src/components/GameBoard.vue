@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useGameStore, BOARD_SIZE, getRobotColor, type Direction } from '../stores/gameStore'
+import HowToPlayModal from './HowToPlayModal.vue'
 
 const store = useGameStore()
+const showHowToPlay = ref(false)
 
 // Auto-validate when puzzle is solved
 watch(() => store.isSolved, (solved) => {
@@ -25,6 +27,12 @@ const DIRECTION_ARROWS: Record<Direction, string> = {
 }
 
 function handleKeydown(event: KeyboardEvent) {
+  // Toggle help with ?
+  if (event.key === '?') {
+    showHowToPlay.value = !showHowToPlay.value
+    return
+  }
+
   // Undo with z, u, or Escape
   if (event.key === 'z' || event.key === 'u' || event.key === 'Escape') {
     store.undoMove()
@@ -251,8 +259,11 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
 
     <!-- Keyboard hints under board -->
     <div v-if="!store.isLoading && !store.error" class="keyboard-hints">
-      <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset
+      <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>R</kbd> reset · <kbd>?</kbd> help
     </div>
+
+    <!-- How to Play modal -->
+    <HowToPlayModal :show="showHowToPlay" @close="showHowToPlay = false" />
   </div>
 </template>
 
