@@ -397,6 +397,24 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 24: How to Play Popup
+**Status:** Complete
+
+**What was done:**
+- Created HowToPlayModal component with game instructions
+- Added keyboard shortcut (?) to toggle help modal
+- Modal covers: goal, robot movement physics, controls, tips
+- Modal dismissable with close button or clicking outside
+- Updated keyboard hints to show ? for help
+
+**Files added:**
+- `src/components/HowToPlayModal.vue` - Modal component with game instructions
+
+**Files modified:**
+- `src/components/GameBoard.vue` - Added modal integration and ? keyboard shortcut
+
+---
+
 ## In Progress
 
 _None currently_
@@ -405,4 +423,4 @@ _None currently_
 
 ## Up Next
 
-_All planned steps complete!_
+- Step 25: Keyboard Hints Toggle
