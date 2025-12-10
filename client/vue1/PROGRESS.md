@@ -429,9 +429,9 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 - UI shows solution columns side by side with move count and checkmark when solved
 - Click column to switch solutions; active column highlighted with green border
 - Move highlighting during unwind/replay animation
-- Fixed-width solution area (min 280px) to prevent board shifting
+- Fixed-width solution area (280px) to prevent board shifting
 - Keyboard shortcuts: n/+ to start new solution, shift+left/right to switch
-- Restructured layout with board-column wrapper for title/board/hints alignment
+- CSS Grid layout: title centered above board, solutions panel aligned with board top
 
 **Files modified:**
 - `src/stores/gameStore.ts` - Added Solution type, solutions state, switch/start actions, removed validation
