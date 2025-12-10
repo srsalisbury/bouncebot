@@ -329,19 +329,7 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-### Step 26: Solution Replay
-**Goal:** Allow reviewing solved puzzles move-by-move.
-
-**Tasks:**
-- Add replay controls after solving (play, step forward/back)
-- Animate moves with proper timing
-- Show current move index during replay
-
-**Visible result:** Can watch solution playback after solving
-
----
-
-### Step 27: Multiple Solutions Tracking
+### Step 26: Multiple Solutions Tracking
 **Goal:** Track and compare different solution attempts.
 
 **Tasks:**
@@ -354,7 +342,7 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-### Step 28: Update Solution Checking
+### Step 27: Update Solution Checking
 **Goal:** Improve how solutions are validated.
 
 **Tasks:**
@@ -365,7 +353,7 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-### Step 29: Documentation
+### Step 28: Documentation
 **Goal:** Help developers build and run the project.
 
 **Tasks:**
@@ -378,7 +366,7 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-### Step 30: Multiplayer Support
+### Step 29: Multiplayer Support
 **Goal:** Allow multiple players to compete on the same puzzle.
 
 **Tasks:**
