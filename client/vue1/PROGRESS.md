@@ -457,6 +457,20 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 28: Documentation
+**Status:** Complete
+
+**What was done:**
+- Updated README.md with Quick Start instructions
+- Added Server section with run and build commands
+- Added Proto Generation section for Go and TypeScript
+- Added Connect RPC to tech stack
+
+**Files modified:**
+- `README.md` - Added server documentation, proto generation instructions
+
+---
+
 ## In Progress
 
 _None currently_

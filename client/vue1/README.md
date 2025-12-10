@@ -4,12 +4,51 @@ Web client for the BounceBot puzzle game (Ricochet Robots style).
 
 ## Quick Start
 
+**1. Start the Go server** (from repo root):
+```bash
+go run ./server
+```
+Server runs at http://localhost:8080
+
+**2. Start the Vue client** (from this directory):
 ```bash
 npm install
 npm run dev
 ```
+Client runs at http://localhost:5173
 
-Then open http://localhost:5173/
+## Server
+
+The Go backend provides puzzle generation and solution validation via Connect RPC.
+
+**Run server:**
+```bash
+# From repo root
+go run ./server
+
+# Or with custom port
+go run ./server -port 9000
+```
+
+**Build server:**
+```bash
+go build -o bouncebot-server ./server
+./bouncebot-server
+```
+
+## Proto Generation
+
+**Go (server):** Run from `proto/` directory:
+```bash
+./compile_protos.sh
+```
+Requires: `protoc`, `protoc-gen-go`, `protoc-gen-go-grpc`, `protoc-gen-connect-go`
+
+**TypeScript (client):** Run from this directory:
+```bash
+npm run generate
+```
+Generates types to `src/gen/bouncebot_pb.ts`
 
 ## Documentation
 
@@ -22,3 +61,4 @@ Then open http://localhost:5173/
 - Vue 3 (Composition API)
 - TypeScript
 - Vite
+- Connect RPC (browser-friendly gRPC)
