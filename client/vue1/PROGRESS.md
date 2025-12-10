@@ -440,6 +440,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 28: Delete Solution
+**Status:** Complete
+
+**What was done:**
+- Added deleteSolution action to store (can't delete last remaining solution)
+- Keyboard shortcut: Shift+D to delete current solution
+- Deleting active solution animates unwind then switches to adjacent solution
+- Updated help modal with all keyboard commands
+- Simplified keyboard hints to essential commands only
+
+**Files modified:**
+- `src/stores/gameStore.ts` - Added deleteSolution action
+- `src/components/GameBoard.vue` - Added Shift+D keyboard shortcut, simplified hints
+- `src/components/HowToPlayModal.vue` - Added complete keyboard reference
+
+---
+
 ## In Progress
 
 _None currently_

@@ -320,6 +320,47 @@ export const useGameStore = defineStore('game', () => {
     }, unwindTime)
   }
 
+  function deleteSolution(index: number) {
+    // Can't delete if only one solution remains
+    if (solutions.value.length <= 1) return
+    if (index < 0 || index >= solutions.value.length) return
+
+    // If deleting the active solution, switch to another first
+    if (index === activeSolutionIndex.value) {
+      // Switch to previous solution, or first if deleting index 0
+      const newActiveIndex = index > 0 ? index - 1 : 1
+      const currentMoves = [...activeSolution.value.moves]
+      const targetMoves = solutions.value[newActiveIndex]!.moves
+
+      selectedRobotId.value = null
+
+      // Unwind current solution
+      const unwindTime = unwindMoves(currentMoves)
+
+      // After unwind, remove solution and replay new active
+      setTimeout(() => {
+        solutions.value.splice(index, 1)
+        // Adjust active index after removal
+        activeSolutionIndex.value = index > 0 ? index - 1 : 0
+        animatingMoveIndex.value = null
+      }, unwindTime)
+
+      // Replay new active solution
+      const totalTime = replayMoves(targetMoves, unwindTime)
+
+      setTimeout(() => {
+        animatingMoveIndex.value = null
+      }, totalTime)
+    } else {
+      // Not deleting active solution, just remove it
+      solutions.value.splice(index, 1)
+      // Adjust active index if it was after the deleted one
+      if (activeSolutionIndex.value > index) {
+        activeSolutionIndex.value--
+      }
+    }
+  }
+
   function applyGame(game: Game) {
     // Parse robots
     const newRobots: Robot[] = game.bots.map(bot => ({
@@ -401,5 +442,6 @@ export const useGameStore = defineStore('game', () => {
     loadGame,
     switchSolution,
     startNewSolution,
+    deleteSolution,
   }
 })
