@@ -302,16 +302,93 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-## Future Phases (Deferred)
+## Future Steps
 
-### Multiplayer Competition
+### Step 24: How to Play Popup
+**Goal:** Help new players understand the game.
+
+**Tasks:**
+- Add "How to Play" button or icon
+- Create modal/popup explaining game rules
+- Cover: goal, robot movement physics, controls
+- Dismissable with click outside or close button
+
+**Visible result:** New players can learn how to play
+
+---
+
+### Step 25: Keyboard Hints Toggle
+**Goal:** Reduce visual clutter for experienced players.
+
+**Tasks:**
+- Add toggle button or key to show/hide keyboard hints
+- Remember preference in localStorage
+- Default to showing hints
+
+**Visible result:** Cleaner UI for experienced players
+
+---
+
+### Step 26: Solution Replay
+**Goal:** Allow reviewing solved puzzles move-by-move.
+
+**Tasks:**
+- Add replay controls after solving (play, step forward/back)
+- Animate moves with proper timing
+- Show current move index during replay
+
+**Visible result:** Can watch solution playback after solving
+
+---
+
+### Step 27: Multiple Solutions Tracking
+**Goal:** Track and compare different solution attempts.
+
+**Tasks:**
+- Store multiple solutions per puzzle
+- Allow switching between saved solutions
+- Show move count comparison
+- Clear solutions on new puzzle
+
+**Visible result:** Can save and compare different approaches
+
+---
+
+### Step 28: Update Solution Checking
+**Goal:** Improve how solutions are validated.
+
+**Tasks:**
+- Review current CheckSolution RPC usage
+- Determine improvements needed (TBD based on requirements)
+
+**Visible result:** More robust solution validation
+
+---
+
+### Step 29: Documentation
+**Goal:** Help developers build and run the project.
+
+**Tasks:**
+- Document Go server build and run instructions
+- Document Vue client setup and dev server
+- Document proto compilation steps
+- Add to root README.md
+
+**Visible result:** Clear setup instructions for contributors
+
+---
+
+### Step 30: Multiplayer Support
+**Goal:** Allow multiple players to compete on the same puzzle.
+
+**Tasks:**
+- Design multiplayer protocol (WebSocket or polling)
+- Add game rooms/lobbies
+- Real-time move synchronization
 - Timer and scoring
-- Real-time competition rooms
 - Leaderboards
 
-### Enhanced Features
-- Puzzle difficulty selection
-- Optimal solution hints
+**Visible result:** Competitive multiplayer experience
 
 ---
 
