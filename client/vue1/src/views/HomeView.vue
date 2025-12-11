@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
+import { useSessionStore } from '../stores/sessionStore'
 
 const router = useRouter()
+const sessionStore = useSessionStore()
 
 const playerName = ref('')
 const joinSessionId = ref('')
@@ -24,6 +26,7 @@ async function createSession() {
     const session = await bounceBotClient.createSession({
       playerName: playerName.value.trim(),
     })
+    sessionStore.setCurrentPlayer(playerName.value.trim())
     router.push(`/session/${session.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to create session'
@@ -50,6 +53,7 @@ async function joinSession() {
       sessionId: joinSessionId.value.trim(),
       playerName: playerName.value.trim(),
     })
+    sessionStore.setCurrentPlayer(playerName.value.trim())
     router.push(`/session/${joinSessionId.value.trim()}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to join session'
