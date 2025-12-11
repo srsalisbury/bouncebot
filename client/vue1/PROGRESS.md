@@ -494,6 +494,36 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.2: Client Session Flow
+**Status:** Complete
+
+**What was done:**
+- Regenerated TypeScript types from proto (Session, Player messages)
+- Installed vue-router for navigation
+- Created HomeView with Create/Join session functionality
+- Created SessionView with waiting room and game display
+- Added vue-router configuration with / and /session/:sessionId routes
+- Updated App.vue to use router-view
+- Exported applyGame from gameStore for session use
+- Removed auto-loadGame from GameBoard (now handled by SessionView)
+- Fixed: Only apply game once when it first starts (not on every poll)
+- Fixed: Stop polling once game starts
+
+**Files added:**
+- `src/router.ts` - Vue Router configuration
+- `src/views/HomeView.vue` - Create/Join session UI
+- `src/views/SessionView.vue` - Waiting room and game container
+
+**Files modified:**
+- `src/main.ts` - Added router plugin
+- `src/App.vue` - Replaced GameBoard with router-view
+- `src/stores/gameStore.ts` - Exported applyGame
+- `src/components/GameBoard.vue` - Removed loadGame on mount
+- `src/gen/bouncebot_pb.ts` - Regenerated with session types
+- `package.json` - Added vue-router dependency
+
+---
+
 ## In Progress
 
 _None currently_
@@ -502,4 +532,4 @@ _None currently_
 
 ## Up Next
 
-- Step 29.2: Client Session Flow
+- Step 29.3: Player Display

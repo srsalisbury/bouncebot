@@ -366,6 +366,7 @@ export const useGameStore = defineStore('game', () => {
     undoMove,
     resetPuzzle,
     loadGame,
+    applyGame,
     switchSolution,
     startNewSolution,
     deleteSolution,

@@ -61,7 +61,6 @@ function handleKeydown(event: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-  store.loadGame()
 })
 
 onUnmounted(() => {
