@@ -4,13 +4,15 @@
 
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Timestamp } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file bouncebot.proto.
  */
 export const file_bouncebot: GenFile = /*@__PURE__*/
-  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiHwoPTWFrZUdhbWVSZXF1ZXN0EgwKBHNpemUYASABKAUiVwoUQ2hlY2tTb2x1dGlvblJlcXVlc3QSHQoEZ2FtZRgBIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiAKBW1vdmVzGAIgAygLMhEuYm91bmNlYm90LkJvdFBvcyKTAQoVQ2hlY2tTb2x1dGlvblJlc3BvbnNlEhAKCGlzX3ZhbGlkGAEgASgIEhEKCW51bV9tb3ZlcxgCIAEoBRInCg5yZXN1bHRpbmdfZ2FtZRgDIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiwKDmZpcnN0X2JhZF9tb3ZlGAQgASgLMhQuYm91bmNlYm90Lk1vdmVFcnJvciJHCglNb3ZlRXJyb3ISHwoEbW92ZRgBIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MSGQoRZXJyb3JfZGVzY3JpcHRpb24YAiABKAkynAEKCUJvdW5jZUJvdBI5CghNYWtlR2FtZRIaLmJvdW5jZWJvdC5NYWtlR2FtZVJlcXVlc3QaDy5ib3VuY2Vib3QuR2FtZSIAElQKDUNoZWNrU29sdXRpb24SHy5ib3VuY2Vib3QuQ2hlY2tTb2x1dGlvblJlcXVlc3QaIC5ib3VuY2Vib3QuQ2hlY2tTb2x1dGlvblJlc3BvbnNlIgBCKFomZ2l0aHViLmNvbS9zcnNhbGlzYnVyeS9ib3VuY2Vib3QvcHJvdG9iBnByb3RvMw");
+  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiHwoPTWFrZUdhbWVSZXF1ZXN0EgwKBHNpemUYASABKAUiVwoUQ2hlY2tTb2x1dGlvblJlcXVlc3QSHQoEZ2FtZRgBIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiAKBW1vdmVzGAIgAygLMhEuYm91bmNlYm90LkJvdFBvcyKTAQoVQ2hlY2tTb2x1dGlvblJlc3BvbnNlEhAKCGlzX3ZhbGlkGAEgASgIEhEKCW51bV9tb3ZlcxgCIAEoBRInCg5yZXN1bHRpbmdfZ2FtZRgDIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiwKDmZpcnN0X2JhZF9tb3ZlGAQgASgLMhQuYm91bmNlYm90Lk1vdmVFcnJvciJHCglNb3ZlRXJyb3ISHwoEbW92ZRgBIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MSGQoRZXJyb3JfZGVzY3JpcHRpb24YAiABKAkiIgoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkixQEKB1Nlc3Npb24SCgoCaWQYASABKAkSIgoHcGxheWVycxgCIAMoCzIRLmJvdW5jZWJvdC5QbGF5ZXISLgoKY3JlYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASJQoMY3VycmVudF9nYW1lGAQgASgLMg8uYm91bmNlYm90LkdhbWUSMwoPZ2FtZV9zdGFydGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIrChRDcmVhdGVTZXNzaW9uUmVxdWVzdBITCgtwbGF5ZXJfbmFtZRgBIAEoCSI9ChJKb2luU2Vzc2lvblJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRITCgtwbGF5ZXJfbmFtZRgCIAEoCSInChFHZXRTZXNzaW9uUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIiYKEFN0YXJ0R2FtZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCTKqAwoJQm91bmNlQm90EjkKCE1ha2VHYW1lEhouYm91bmNlYm90Lk1ha2VHYW1lUmVxdWVzdBoPLmJvdW5jZWJvdC5HYW1lIgASVAoNQ2hlY2tTb2x1dGlvbhIfLmJvdW5jZWJvdC5DaGVja1NvbHV0aW9uUmVxdWVzdBogLmJvdW5jZWJvdC5DaGVja1NvbHV0aW9uUmVzcG9uc2UiABJGCg1DcmVhdGVTZXNzaW9uEh8uYm91bmNlYm90LkNyZWF0ZVNlc3Npb25SZXF1ZXN0GhIuYm91bmNlYm90LlNlc3Npb24iABJCCgtKb2luU2Vzc2lvbhIdLmJvdW5jZWJvdC5Kb2luU2Vzc2lvblJlcXVlc3QaEi5ib3VuY2Vib3QuU2Vzc2lvbiIAEkAKCkdldFNlc3Npb24SHC5ib3VuY2Vib3QuR2V0U2Vzc2lvblJlcXVlc3QaEi5ib3VuY2Vib3QuU2Vzc2lvbiIAEj4KCVN0YXJ0R2FtZRIbLmJvdW5jZWJvdC5TdGFydEdhbWVSZXF1ZXN0GhIuYm91bmNlYm90LlNlc3Npb24iAEIoWiZnaXRodWIuY29tL3Nyc2FsaXNidXJ5L2JvdW5jZWJvdC9wcm90b2IGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * Board grid position.
@@ -218,6 +220,146 @@ export const MoveErrorSchema: GenMessage<MoveError> = /*@__PURE__*/
   messageDesc(file_bouncebot, 7);
 
 /**
+ * Player in a session
+ *
+ * @generated from message bouncebot.Player
+ */
+export type Player = Message<"bouncebot.Player"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message bouncebot.Player.
+ * Use `create(PlayerSchema)` to create a new message.
+ */
+export const PlayerSchema: GenMessage<Player> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 8);
+
+/**
+ * Game session for multiplayer
+ *
+ * @generated from message bouncebot.Session
+ */
+export type Session = Message<"bouncebot.Session"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: repeated bouncebot.Player players = 2;
+   */
+  players: Player[];
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 3;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * null if no game started yet
+   *
+   * @generated from field: bouncebot.Game current_game = 4;
+   */
+  currentGame?: Game;
+
+  /**
+   * when current game started
+   *
+   * @generated from field: google.protobuf.Timestamp game_started_at = 5;
+   */
+  gameStartedAt?: Timestamp;
+};
+
+/**
+ * Describes the message bouncebot.Session.
+ * Use `create(SessionSchema)` to create a new message.
+ */
+export const SessionSchema: GenMessage<Session> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 9);
+
+/**
+ * @generated from message bouncebot.CreateSessionRequest
+ */
+export type CreateSessionRequest = Message<"bouncebot.CreateSessionRequest"> & {
+  /**
+   * @generated from field: string player_name = 1;
+   */
+  playerName: string;
+};
+
+/**
+ * Describes the message bouncebot.CreateSessionRequest.
+ * Use `create(CreateSessionRequestSchema)` to create a new message.
+ */
+export const CreateSessionRequestSchema: GenMessage<CreateSessionRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 10);
+
+/**
+ * @generated from message bouncebot.JoinSessionRequest
+ */
+export type JoinSessionRequest = Message<"bouncebot.JoinSessionRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string player_name = 2;
+   */
+  playerName: string;
+};
+
+/**
+ * Describes the message bouncebot.JoinSessionRequest.
+ * Use `create(JoinSessionRequestSchema)` to create a new message.
+ */
+export const JoinSessionRequestSchema: GenMessage<JoinSessionRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 11);
+
+/**
+ * @generated from message bouncebot.GetSessionRequest
+ */
+export type GetSessionRequest = Message<"bouncebot.GetSessionRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+};
+
+/**
+ * Describes the message bouncebot.GetSessionRequest.
+ * Use `create(GetSessionRequestSchema)` to create a new message.
+ */
+export const GetSessionRequestSchema: GenMessage<GetSessionRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 12);
+
+/**
+ * @generated from message bouncebot.StartGameRequest
+ */
+export type StartGameRequest = Message<"bouncebot.StartGameRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+};
+
+/**
+ * Describes the message bouncebot.StartGameRequest.
+ * Use `create(StartGameRequestSchema)` to create a new message.
+ */
+export const StartGameRequestSchema: GenMessage<StartGameRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 13);
+
+/**
  * Service for client to fetch a game board and return results.
  *
  * @generated from service bouncebot.BounceBot
@@ -238,6 +380,40 @@ export const BounceBot: GenService<{
     methodKind: "unary";
     input: typeof CheckSolutionRequestSchema;
     output: typeof CheckSolutionResponseSchema;
+  },
+  /**
+   * Session management
+   *
+   * @generated from rpc bouncebot.BounceBot.CreateSession
+   */
+  createSession: {
+    methodKind: "unary";
+    input: typeof CreateSessionRequestSchema;
+    output: typeof SessionSchema;
+  },
+  /**
+   * @generated from rpc bouncebot.BounceBot.JoinSession
+   */
+  joinSession: {
+    methodKind: "unary";
+    input: typeof JoinSessionRequestSchema;
+    output: typeof SessionSchema;
+  },
+  /**
+   * @generated from rpc bouncebot.BounceBot.GetSession
+   */
+  getSession: {
+    methodKind: "unary";
+    input: typeof GetSessionRequestSchema;
+    output: typeof SessionSchema;
+  },
+  /**
+   * @generated from rpc bouncebot.BounceBot.StartGame
+   */
+  startGame: {
+    methodKind: "unary";
+    input: typeof StartGameRequestSchema;
+    output: typeof SessionSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_bouncebot, 0);
