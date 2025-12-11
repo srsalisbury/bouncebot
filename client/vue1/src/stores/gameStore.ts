@@ -2,8 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { bounceBotClient } from '../services/connectClient'
 import type { Game } from '../gen/bouncebot_pb'
+import { BOARD_SIZE, MAX_SOLUTIONS, type Direction } from '../constants'
+import { calculateDestination } from '../gamePhysics'
 
-export type Direction = 'up' | 'down' | 'left' | 'right'
+// Re-export for backward compatibility
+export { BOARD_SIZE, MAX_SOLUTIONS, type Direction } from '../constants'
+export { getRobotColor, ROBOT_COLORS } from '../constants'
 
 export type Robot = {
   id: number
@@ -34,29 +38,6 @@ export type Move = {
 export type Solution = {
   moves: Move[]
   isSolved: boolean
-}
-
-export const MAX_SOLUTIONS = 4
-
-export const BOARD_SIZE = 16
-
-// Color palette for robots - colors are assigned by robot ID (index)
-export const ROBOT_COLORS = [
-  '#e53935', // red
-  '#1e88e5', // blue
-  '#43a047', // green
-  '#fdd835', // yellow
-  '#8e24aa', // purple
-  '#ff6f00', // orange
-  '#00acc1', // cyan
-  '#f06292', // pink
-  '#5d4037', // brown
-  '#546e7a', // blue-gray
-]
-
-export function getRobotColor(robotId: number): string {
-  const index = robotId % ROBOT_COLORS.length
-  return ROBOT_COLORS[index]!
 }
 
 export const useGameStore = defineStore('game', () => {
@@ -113,61 +94,6 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  function hasWall(x: number, y: number, direction: Direction): boolean {
-    // Check board edges
-    if (direction === 'up' && y === 0) return true
-    if (direction === 'down' && y === BOARD_SIZE - 1) return true
-    if (direction === 'left' && x === 0) return true
-    if (direction === 'right' && x === BOARD_SIZE - 1) return true
-
-    // Check internal walls
-    if (direction === 'right') {
-      return vWalls.value.some(w => w.x === x && w.y === y)
-    }
-    if (direction === 'left') {
-      return vWalls.value.some(w => w.x === x - 1 && w.y === y)
-    }
-    if (direction === 'down') {
-      return hWalls.value.some(w => w.x === x && w.y === y)
-    }
-    if (direction === 'up') {
-      return hWalls.value.some(w => w.x === x && w.y === y - 1)
-    }
-
-    return false
-  }
-
-  function isOccupied(x: number, y: number, excludeRobotId: number): boolean {
-    return robots.value.some(r => r.id !== excludeRobotId && r.x === x && r.y === y)
-  }
-
-  function calculateDestination(robot: Robot, direction: Direction): { x: number; y: number } {
-    let x = robot.x
-    let y = robot.y
-
-    const delta = {
-      up: { dx: 0, dy: -1 },
-      down: { dx: 0, dy: 1 },
-      left: { dx: -1, dy: 0 },
-      right: { dx: 1, dy: 0 },
-    }[direction]
-
-    // Slide until hitting a wall or another robot
-    while (true) {
-      if (hasWall(x, y, direction)) break
-
-      const nextX = x + delta.dx
-      const nextY = y + delta.dy
-
-      if (isOccupied(nextX, nextY, robot.id)) break
-
-      x = nextX
-      y = nextY
-    }
-
-    return { x, y }
-  }
-
   function moveRobot(direction: Direction) {
     if (selectedRobotId.value === null) return
     if (isSolved.value) return
@@ -175,7 +101,7 @@ export const useGameStore = defineStore('game', () => {
     const robot = robots.value.find(r => r.id === selectedRobotId.value)
     if (!robot) return
 
-    const destination = calculateDestination(robot, direction)
+    const destination = calculateDestination(robot, direction, robots.value, vWalls.value, hWalls.value)
 
     // Only count as a move if the robot actually moved
     if (destination.x !== robot.x || destination.y !== robot.y) {
