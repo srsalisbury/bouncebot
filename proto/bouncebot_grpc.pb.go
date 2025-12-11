@@ -21,6 +21,10 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	BounceBot_MakeGame_FullMethodName      = "/bouncebot.BounceBot/MakeGame"
 	BounceBot_CheckSolution_FullMethodName = "/bouncebot.BounceBot/CheckSolution"
+	BounceBot_CreateSession_FullMethodName = "/bouncebot.BounceBot/CreateSession"
+	BounceBot_JoinSession_FullMethodName   = "/bouncebot.BounceBot/JoinSession"
+	BounceBot_GetSession_FullMethodName    = "/bouncebot.BounceBot/GetSession"
+	BounceBot_StartGame_FullMethodName     = "/bouncebot.BounceBot/StartGame"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -31,6 +35,11 @@ const (
 type BounceBotClient interface {
 	MakeGame(ctx context.Context, in *MakeGameRequest, opts ...grpc.CallOption) (*Game, error)
 	CheckSolution(ctx context.Context, in *CheckSolutionRequest, opts ...grpc.CallOption) (*CheckSolutionResponse, error)
+	// Session management
+	CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*Session, error)
+	JoinSession(ctx context.Context, in *JoinSessionRequest, opts ...grpc.CallOption) (*Session, error)
+	GetSession(ctx context.Context, in *GetSessionRequest, opts ...grpc.CallOption) (*Session, error)
+	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Session, error)
 }
 
 type bounceBotClient struct {
@@ -61,6 +70,46 @@ func (c *bounceBotClient) CheckSolution(ctx context.Context, in *CheckSolutionRe
 	return out, nil
 }
 
+func (c *bounceBotClient) CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*Session, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Session)
+	err := c.cc.Invoke(ctx, BounceBot_CreateSession_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) JoinSession(ctx context.Context, in *JoinSessionRequest, opts ...grpc.CallOption) (*Session, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Session)
+	err := c.cc.Invoke(ctx, BounceBot_JoinSession_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) GetSession(ctx context.Context, in *GetSessionRequest, opts ...grpc.CallOption) (*Session, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Session)
+	err := c.cc.Invoke(ctx, BounceBot_GetSession_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Session, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Session)
+	err := c.cc.Invoke(ctx, BounceBot_StartGame_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BounceBotServer is the server API for BounceBot service.
 // All implementations must embed UnimplementedBounceBotServer
 // for forward compatibility.
@@ -69,6 +118,11 @@ func (c *bounceBotClient) CheckSolution(ctx context.Context, in *CheckSolutionRe
 type BounceBotServer interface {
 	MakeGame(context.Context, *MakeGameRequest) (*Game, error)
 	CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error)
+	// Session management
+	CreateSession(context.Context, *CreateSessionRequest) (*Session, error)
+	JoinSession(context.Context, *JoinSessionRequest) (*Session, error)
+	GetSession(context.Context, *GetSessionRequest) (*Session, error)
+	StartGame(context.Context, *StartGameRequest) (*Session, error)
 	mustEmbedUnimplementedBounceBotServer()
 }
 
@@ -84,6 +138,18 @@ func (UnimplementedBounceBotServer) MakeGame(context.Context, *MakeGameRequest) 
 }
 func (UnimplementedBounceBotServer) CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckSolution not implemented")
+}
+func (UnimplementedBounceBotServer) CreateSession(context.Context, *CreateSessionRequest) (*Session, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSession not implemented")
+}
+func (UnimplementedBounceBotServer) JoinSession(context.Context, *JoinSessionRequest) (*Session, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinSession not implemented")
+}
+func (UnimplementedBounceBotServer) GetSession(context.Context, *GetSessionRequest) (*Session, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSession not implemented")
+}
+func (UnimplementedBounceBotServer) StartGame(context.Context, *StartGameRequest) (*Session, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartGame not implemented")
 }
 func (UnimplementedBounceBotServer) mustEmbedUnimplementedBounceBotServer() {}
 func (UnimplementedBounceBotServer) testEmbeddedByValue()                   {}
@@ -142,6 +208,78 @@ func _BounceBot_CheckSolution_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BounceBot_CreateSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).CreateSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_CreateSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).CreateSession(ctx, req.(*CreateSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_JoinSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).JoinSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_JoinSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).JoinSession(ctx, req.(*JoinSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_GetSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).GetSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_GetSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).GetSession(ctx, req.(*GetSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_StartGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartGameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).StartGame(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_StartGame_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).StartGame(ctx, req.(*StartGameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BounceBot_ServiceDesc is the grpc.ServiceDesc for BounceBot service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,6 +294,22 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckSolution",
 			Handler:    _BounceBot_CheckSolution_Handler,
+		},
+		{
+			MethodName: "CreateSession",
+			Handler:    _BounceBot_CreateSession_Handler,
+		},
+		{
+			MethodName: "JoinSession",
+			Handler:    _BounceBot_JoinSession_Handler,
+		},
+		{
+			MethodName: "GetSession",
+			Handler:    _BounceBot_GetSession_Handler,
+		},
+		{
+			MethodName: "StartGame",
+			Handler:    _BounceBot_StartGame_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

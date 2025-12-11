@@ -4,10 +4,18 @@ option go_package = "github.com/srsalisbury/bouncebot/proto";
 
 package bouncebot;
 
+import "google/protobuf/timestamp.proto";
+
 // Service for client to fetch a game board and return results.
 service BounceBot {
   rpc MakeGame (MakeGameRequest) returns (Game) {}
   rpc CheckSolution (CheckSolutionRequest) returns (CheckSolutionResponse) {}
+
+  // Session management
+  rpc CreateSession (CreateSessionRequest) returns (Session) {}
+  rpc JoinSession (JoinSessionRequest) returns (Session) {}
+  rpc GetSession (GetSessionRequest) returns (Session) {}
+  rpc StartGame (StartGameRequest) returns (Session) {}
 }
 
 // Board grid position.
@@ -61,5 +69,37 @@ message CheckSolutionResponse {
 message MoveError {
   BotPos move = 1;
   string error_description = 2;
+}
+
+// Player in a session
+message Player {
+  string id = 1;
+  string name = 2;
+}
+
+// Game session for multiplayer
+message Session {
+  string id = 1;
+  repeated Player players = 2;
+  google.protobuf.Timestamp created_at = 3;
+  Game current_game = 4;  // null if no game started yet
+  google.protobuf.Timestamp game_started_at = 5;  // when current game started
+}
+
+message CreateSessionRequest {
+  string player_name = 1;
+}
+
+message JoinSessionRequest {
+  string session_id = 1;
+  string player_name = 2;
+}
+
+message GetSessionRequest {
+  string session_id = 1;
+}
+
+message StartGameRequest {
+  string session_id = 1;
 }
 

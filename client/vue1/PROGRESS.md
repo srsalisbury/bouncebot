@@ -471,6 +471,29 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.1: Session Model & API
+**Status:** Complete
+
+**What was done:**
+- Added Session, Player messages to proto
+- Added CreateSession, JoinSession, GetSession, StartGame RPCs
+- Created session.go with in-memory SessionStore
+- Implemented session RPC handlers in server
+- Added tests for all session operations (9 tests)
+
+**Files added:**
+- `server/session.go` - Session model and in-memory store
+- `server/session_test.go` - Tests for session operations
+
+**Files modified:**
+- `proto/bouncebot.proto` - Added session messages and RPCs
+- `proto/bouncebot.pb.go` - Regenerated
+- `proto/bouncebot_grpc.pb.go` - Regenerated
+- `proto/protoconnect/bouncebot.connect.go` - Regenerated
+- `server/main.go` - Added session RPC handlers
+
+---
+
 ## In Progress
 
 _None currently_
@@ -479,4 +502,4 @@ _None currently_
 
 ## Up Next
 
-- Step 25: Keyboard Hints Toggle
+- Step 29.2: Client Session Flow
