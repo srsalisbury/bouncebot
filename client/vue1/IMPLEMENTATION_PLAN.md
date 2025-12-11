@@ -369,14 +369,120 @@ Each step is a single PR-sized change with visible progress in the browser.
 ### Step 29: Multiplayer Support
 **Goal:** Allow multiple players to compete on the same puzzle.
 
-**Tasks:**
-- Design multiplayer protocol (WebSocket or polling)
-- Add game rooms/lobbies
-- Real-time move synchronization
-- Timer and scoring
-- Leaderboards
-
 **Visible result:** Competitive multiplayer experience
+
+---
+
+#### Step 29.1: Session Model & API
+**Goal:** Server can create and manage game sessions.
+
+**Tasks:**
+- Add Session message to proto (id, players, created_at, current_game)
+- Add Player message (id, name)
+- Add CreateSession RPC (player_name) → returns session (no game yet)
+- Add JoinSession RPC (session_id, player_name) → returns session
+- Add GetSession RPC (session_id) → returns current session state
+- Add StartGame RPC (session_id) → generates puzzle, returns session with game
+- Server: Add session.go model with in-memory session store
+- Server: Implement session RPCs
+- Tests for session creation, joining, starting games
+
+**Visible result:** Can create session, have players join, then start a game via API
+
+---
+
+#### Step 29.2: Client Session Flow
+**Goal:** Players can create and join game sessions.
+
+**Tasks:**
+- Generate TypeScript types from updated proto
+- Add vue-router for navigation
+- Create HomeView: "Create Session" button, "Join Session" input
+- Create SessionView: waiting room before game starts
+- Create GameView: existing game board (session-aware)
+- Store session state in Pinia (sessionId, players, currentPlayer, currentGame)
+- Routes: / → HomeView, /session/:sessionId → SessionView or GameView
+- Create session on "Create", redirect to /session/:sessionId
+- Join session on "Join" or direct URL access
+- Display shareable link for session
+- "Start Game" button generates puzzle for everyone
+
+**Visible result:** Two browsers can join same session, then start a game together
+
+---
+
+#### Step 29.3: Player Display
+**Goal:** See who's in the session.
+
+**Tasks:**
+- Add players panel showing connected players
+- Poll GetSession every 3s to refresh player list
+- Show player names with colored indicators
+- Highlight current player
+- Show "Waiting for players..." if alone
+
+**Visible result:** See other players join in real-time (via polling)
+
+---
+
+#### Step 29.4: WebSocket Infrastructure
+**Goal:** Real-time updates without polling.
+
+**Tasks:**
+- Server: Add /ws endpoint using gorilla/websocket
+- Server: Session broadcasts events to connected clients
+- Server: Event types: player_joined, player_left, player_solved, game_started
+- Client: Connect to WebSocket on session join
+- Client: Handle incoming events, update store
+- Client: Reconnect on disconnect
+- Replace polling with WebSocket events
+- Tests for WebSocket connection and event handling
+
+**Visible result:** Instant player join/leave updates
+
+---
+
+#### Step 29.5: Solution Broadcasting
+**Goal:** Players see when others solve the puzzle.
+
+**Tasks:**
+- Client: Send solve event to server when puzzle solved
+- Server: Broadcast player_solved event (player_id, move_count)
+- Client: Show notification "Player X solved in N moves!"
+- Add solved players list to session state
+- Display each player's best solution count
+- Sort players by solution (best first, unsolved last)
+
+**Visible result:** See "Alice solved in 5 moves!" when another player solves
+
+---
+
+#### Step 29.6: Game Timer
+**Goal:** Timed competitive play.
+
+**Tasks:**
+- Server: Add started_at timestamp to current game
+- Client: Display elapsed time since game started
+- Show timer prominently in UI
+- Timer starts when StartGame is called
+
+**Visible result:** Timer visible to all players during game
+
+---
+
+#### Step 29.7: Scoring & Results
+**Goal:** Determine winner and show results after each game.
+
+**Tasks:**
+- Define scoring: moves (primary), time to solve (secondary)
+- Server: Track solve time for each player per game
+- Client: Show game results when all players solve (or timeout)
+- Display winner announcement for current game
+- Track cumulative scores across games in session
+- "Next Game" button starts new puzzle for same session
+- Show session leaderboard (total wins/points)
+
+**Visible result:** Results screen after each game, cumulative session scores
 
 ---
 
