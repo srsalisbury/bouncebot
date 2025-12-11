@@ -536,6 +536,7 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 - Show "Waiting for players..." message when alone in waiting room
 - Compact mode for game view (horizontal layout)
 - Added join form for users who navigate directly to session URL
+- Persist player name to localStorage across page reloads
 
 **Files added:**
 - `src/stores/sessionStore.ts` - Pinia store for session state
