@@ -1,13 +1,13 @@
-package main
+package session
 
 import (
 	"testing"
 )
 
-func TestCreateSession(t *testing.T) {
-	store := NewSessionStore()
+func TestCreate(t *testing.T) {
+	store := NewStore()
 
-	session := store.CreateSession("Alice")
+	session := store.Create("Alice")
 
 	if session.ID == "" {
 		t.Error("expected session ID to be set")
@@ -29,13 +29,13 @@ func TestCreateSession(t *testing.T) {
 	}
 }
 
-func TestJoinSession(t *testing.T) {
-	store := NewSessionStore()
+func TestJoin(t *testing.T) {
+	store := NewStore()
 
-	session := store.CreateSession("Alice")
+	session := store.Create("Alice")
 	sessionID := session.ID
 
-	session, err := store.JoinSession(sessionID, "Bob")
+	session, err := store.Join(sessionID, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -48,21 +48,21 @@ func TestJoinSession(t *testing.T) {
 	}
 }
 
-func TestJoinSession_NotFound(t *testing.T) {
-	store := NewSessionStore()
+func TestJoin_NotFound(t *testing.T) {
+	store := NewStore()
 
-	_, err := store.JoinSession("nonexistent", "Bob")
+	_, err := store.Join("nonexistent", "Bob")
 	if err == nil {
 		t.Error("expected error for nonexistent session")
 	}
 }
 
-func TestGetSession(t *testing.T) {
-	store := NewSessionStore()
+func TestGet(t *testing.T) {
+	store := NewStore()
 
-	created := store.CreateSession("Alice")
+	created := store.Create("Alice")
 
-	session, err := store.GetSession(created.ID)
+	session, err := store.Get(created.ID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -72,19 +72,19 @@ func TestGetSession(t *testing.T) {
 	}
 }
 
-func TestGetSession_NotFound(t *testing.T) {
-	store := NewSessionStore()
+func TestGet_NotFound(t *testing.T) {
+	store := NewStore()
 
-	_, err := store.GetSession("nonexistent")
+	_, err := store.Get("nonexistent")
 	if err == nil {
 		t.Error("expected error for nonexistent session")
 	}
 }
 
 func TestStartGame(t *testing.T) {
-	store := NewSessionStore()
+	store := NewStore()
 
-	session := store.CreateSession("Alice")
+	session := store.Create("Alice")
 	sessionID := session.ID
 
 	session, err := store.StartGame(sessionID)
@@ -101,7 +101,7 @@ func TestStartGame(t *testing.T) {
 }
 
 func TestStartGame_NotFound(t *testing.T) {
-	store := NewSessionStore()
+	store := NewStore()
 
 	_, err := store.StartGame("nonexistent")
 	if err == nil {
@@ -110,9 +110,9 @@ func TestStartGame_NotFound(t *testing.T) {
 }
 
 func TestStartGame_Multiple(t *testing.T) {
-	store := NewSessionStore()
+	store := NewStore()
 
-	session := store.CreateSession("Alice")
+	session := store.Create("Alice")
 	sessionID := session.ID
 
 	// Start first game
@@ -134,13 +134,13 @@ func TestStartGame_Multiple(t *testing.T) {
 }
 
 func TestSessionToProto(t *testing.T) {
-	store := NewSessionStore()
+	store := NewStore()
 
-	session := store.CreateSession("Alice")
-	store.JoinSession(session.ID, "Bob")
+	session := store.Create("Alice")
+	store.Join(session.ID, "Bob")
 	store.StartGame(session.ID)
 
-	session, _ = store.GetSession(session.ID)
+	session, _ = store.Get(session.ID)
 	proto := session.ToProto()
 
 	if proto.Id != session.ID {

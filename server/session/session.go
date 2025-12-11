@@ -1,4 +1,5 @@
-package main
+// Package session provides multiplayer game session management.
+package session
 
 import (
 	"crypto/rand"
@@ -12,13 +13,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Player represents a player in a session
+// Player represents a player in a session.
 type Player struct {
 	ID   string
 	Name string
 }
 
-// Session represents a multiplayer game session
+// Session represents a multiplayer game session.
 type Session struct {
 	ID            string
 	Players       []Player
@@ -27,7 +28,7 @@ type Session struct {
 	GameStartedAt *time.Time
 }
 
-// ToProto converts a Session to its protobuf representation
+// ToProto converts a Session to its protobuf representation.
 func (s *Session) ToProto() *pb.Session {
 	players := make([]*pb.Player, len(s.Players))
 	for i, p := range s.Players {
@@ -54,28 +55,28 @@ func (s *Session) ToProto() *pb.Session {
 	return session
 }
 
-// SessionStore manages sessions in memory
-type SessionStore struct {
+// Store manages sessions in memory.
+type Store struct {
 	mu       sync.RWMutex
 	sessions map[string]*Session
 }
 
-// NewSessionStore creates a new session store
-func NewSessionStore() *SessionStore {
-	return &SessionStore{
+// NewStore creates a new session store.
+func NewStore() *Store {
+	return &Store{
 		sessions: make(map[string]*Session),
 	}
 }
 
-// generateID creates a random session or player ID
+// generateID creates a random session or player ID.
 func generateID() string {
 	bytes := make([]byte, 8)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }
 
-// CreateSession creates a new session with the given player
-func (store *SessionStore) CreateSession(playerName string) *Session {
+// Create creates a new session with the given player.
+func (store *Store) Create(playerName string) *Session {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -94,8 +95,8 @@ func (store *SessionStore) CreateSession(playerName string) *Session {
 	return session
 }
 
-// JoinSession adds a player to an existing session
-func (store *SessionStore) JoinSession(sessionID, playerName string) (*Session, error) {
+// Join adds a player to an existing session.
+func (store *Store) Join(sessionID, playerName string) (*Session, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -113,8 +114,8 @@ func (store *SessionStore) JoinSession(sessionID, playerName string) (*Session, 
 	return session, nil
 }
 
-// GetSession retrieves a session by ID
-func (store *SessionStore) GetSession(sessionID string) (*Session, error) {
+// Get retrieves a session by ID.
+func (store *Store) Get(sessionID string) (*Session, error) {
 	store.mu.RLock()
 	defer store.mu.RUnlock()
 
@@ -126,8 +127,8 @@ func (store *SessionStore) GetSession(sessionID string) (*Session, error) {
 	return session, nil
 }
 
-// StartGame starts a new game in the session
-func (store *SessionStore) StartGame(sessionID string) (*Session, error) {
+// StartGame starts a new game in the session.
+func (store *Store) StartGame(sessionID string) (*Session, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 

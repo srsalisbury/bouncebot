@@ -12,6 +12,7 @@ import (
 	"github.com/srsalisbury/bouncebot/model"
 	pb "github.com/srsalisbury/bouncebot/proto"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
+	"github.com/srsalisbury/bouncebot/server/session"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -21,7 +22,7 @@ var (
 )
 
 type bounceBotServer struct {
-	sessions *SessionStore
+	sessions *session.Store
 }
 
 func (s *bounceBotServer) MakeGame(_ context.Context, req *connect.Request[pb.MakeGameRequest]) (*connect.Response[pb.Game], error) {
@@ -41,38 +42,38 @@ func (s *bounceBotServer) CheckSolution(_ context.Context, req *connect.Request[
 }
 
 func (s *bounceBotServer) CreateSession(_ context.Context, req *connect.Request[pb.CreateSessionRequest]) (*connect.Response[pb.Session], error) {
-	session := s.sessions.CreateSession(req.Msg.PlayerName)
-	return connect.NewResponse(session.ToProto()), nil
+	sess := s.sessions.Create(req.Msg.PlayerName)
+	return connect.NewResponse(sess.ToProto()), nil
 }
 
 func (s *bounceBotServer) JoinSession(_ context.Context, req *connect.Request[pb.JoinSessionRequest]) (*connect.Response[pb.Session], error) {
-	session, err := s.sessions.JoinSession(req.Msg.SessionId, req.Msg.PlayerName)
+	sess, err := s.sessions.Join(req.Msg.SessionId, req.Msg.PlayerName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(session.ToProto()), nil
+	return connect.NewResponse(sess.ToProto()), nil
 }
 
 func (s *bounceBotServer) GetSession(_ context.Context, req *connect.Request[pb.GetSessionRequest]) (*connect.Response[pb.Session], error) {
-	session, err := s.sessions.GetSession(req.Msg.SessionId)
+	sess, err := s.sessions.Get(req.Msg.SessionId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(session.ToProto()), nil
+	return connect.NewResponse(sess.ToProto()), nil
 }
 
 func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.StartGameRequest]) (*connect.Response[pb.Session], error) {
-	session, err := s.sessions.StartGame(req.Msg.SessionId)
+	sess, err := s.sessions.StartGame(req.Msg.SessionId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(session.ToProto()), nil
+	return connect.NewResponse(sess.ToProto()), nil
 }
 
 func main() {
 	flag.Parse()
 
-	sessions := NewSessionStore()
+	sessions := session.NewStore()
 
 	mux := http.NewServeMux()
 	path, handler := protoconnect.NewBounceBotHandler(&bounceBotServer{sessions: sessions})
