@@ -524,6 +524,29 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.3: Player Display
+**Status:** Complete
+
+**What was done:**
+- Created sessionStore to track current player name
+- Store player name when creating or joining session
+- Created PlayersPanel component with colored indicators
+- Show players in both waiting room and game view
+- Highlight current player with green border and "(you)" label
+- Show "Waiting for players..." message when alone in waiting room
+- Compact mode for game view (horizontal layout)
+- Added join form for users who navigate directly to session URL
+
+**Files added:**
+- `src/stores/sessionStore.ts` - Pinia store for session state
+- `src/components/PlayersPanel.vue` - Reusable players display component
+
+**Files modified:**
+- `src/views/HomeView.vue` - Store player name on create/join
+- `src/views/SessionView.vue` - Use PlayersPanel in waiting room and game view
+
+---
+
 ## In Progress
 
 _None currently_
@@ -532,4 +555,4 @@ _None currently_
 
 ## Up Next
 
-- Step 29.3: Player Display
+- Step 29.4: WebSocket Infrastructure

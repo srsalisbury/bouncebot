@@ -3,8 +3,10 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
+import { useSessionStore } from '../stores/sessionStore'
 import type { Session } from '../gen/bouncebot_pb'
 import GameBoard from '../components/GameBoard.vue'
+import PlayersPanel from '../components/PlayersPanel.vue'
 
 const props = defineProps<{
   sessionId: string
@@ -12,15 +14,19 @@ const props = defineProps<{
 
 const router = useRouter()
 const gameStore = useGameStore()
+const sessionStore = useSessionStore()
 
 const session = ref<Session | null>(null)
 const isLoading = ref(true)
 const isStarting = ref(false)
+const isJoining = ref(false)
 const error = ref<string | null>(null)
 const pollInterval = ref<number | null>(null)
+const joinName = ref('')
 
 const hasGame = computed(() => session.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
+const hasJoined = computed(() => sessionStore.currentPlayerName != null)
 
 async function loadSession() {
   try {
@@ -64,6 +70,30 @@ async function startGame() {
   }
 }
 
+async function joinSession() {
+  if (!joinName.value.trim()) {
+    error.value = 'Please enter your name'
+    return
+  }
+
+  isJoining.value = true
+  error.value = null
+
+  try {
+    await bounceBotClient.joinSession({
+      sessionId: props.sessionId,
+      playerName: joinName.value.trim(),
+    })
+    sessionStore.setCurrentPlayer(joinName.value.trim())
+    // Reload session to get updated player list
+    await loadSession()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to join session'
+  } finally {
+    isJoining.value = false
+  }
+}
+
 function copyShareUrl() {
   navigator.clipboard.writeText(shareUrl.value)
 }
@@ -97,13 +127,53 @@ onUnmounted(() => {
       <button class="btn" @click="goHome">Back to Home</button>
     </div>
 
+    <!-- Join form (for users who navigated directly to session URL) -->
+    <div v-else-if="session && !hasJoined" class="join-view">
+      <h1 class="title">BounceBot</h1>
+      <p class="subtitle">Join Session</p>
+
+      <div class="card">
+        <div class="players-section">
+          <h3>Players in session ({{ session.players.length }})</h3>
+          <PlayersPanel :players="session.players" />
+        </div>
+
+        <div class="form-group">
+          <label for="joinName">Your Name</label>
+          <input
+            id="joinName"
+            v-model="joinName"
+            type="text"
+            placeholder="Enter your name"
+            maxlength="20"
+            @keyup.enter="joinSession"
+          />
+        </div>
+
+        <div v-if="error" class="error">{{ error }}</div>
+
+        <button
+          class="btn primary join-btn"
+          :disabled="isJoining"
+          @click="joinSession"
+        >
+          {{ isJoining ? 'Joining...' : 'Join Session' }}
+        </button>
+      </div>
+    </div>
+
     <!-- Game in progress -->
-    <div v-else-if="hasGame" class="game-container">
-      <GameBoard />
+    <div v-else-if="hasGame && session" class="game-wrapper">
+      <div class="game-header">
+        <PlayersPanel :players="session.players" compact />
+      </div>
+      <div class="game-container">
+        <GameBoard />
+      </div>
     </div>
 
     <!-- Waiting room -->
-    <div v-else-if="session" class="waiting-room">
+    <div v-else-if="session && hasJoined" class="waiting-room">
       <h1 class="title">BounceBot</h1>
       <p class="subtitle">Waiting Room</p>
 
@@ -118,11 +188,7 @@ onUnmounted(() => {
 
         <div class="players-section">
           <h3>Players ({{ session.players.length }})</h3>
-          <ul class="player-list">
-            <li v-for="player in session.players" :key="player.id" class="player">
-              {{ player.name }}
-            </li>
-          </ul>
+          <PlayersPanel :players="session.players" />
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
@@ -175,15 +241,63 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.game-container {
+.game-wrapper {
+  display: flex;
+  flex-direction: column;
   padding: 1rem;
 }
 
-.waiting-room {
+.game-header {
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.game-container {
+  /* contains GameBoard */
+}
+
+.waiting-room,
+.join-view {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #242424;
+  color: #fff;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #42b883;
+}
+
+.join-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
 }
 
 .title {
@@ -254,18 +368,8 @@ onUnmounted(() => {
   font-size: 1rem;
 }
 
-.player-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1.5rem;
-}
-
-.player {
-  padding: 0.5rem 0.75rem;
-  background: #242424;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  color: #ddd;
+.players-section :deep(.players-panel) {
+  margin-bottom: 1.5rem;
 }
 
 .error {
