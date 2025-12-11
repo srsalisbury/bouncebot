@@ -1,85 +1,58 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useGameStore, BOARD_SIZE, getRobotColor, type Direction } from '../stores/gameStore'
+import { useGameStore } from '../stores/gameStore'
+import { BOARD_SIZE, CELL_SIZE, WALL_COLOR, WALL_THICKNESS, DIRECTION_ARROWS, getRobotColor, type Direction } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
 
 const store = useGameStore()
 const showHowToPlay = ref(false)
 
-const CELL_SIZE = 32
-const WALL_COLOR = '#2a2a2a'
-const WALL_THICKNESS = 4
-
 const boardPixelSize = BOARD_SIZE * CELL_SIZE
 
-const DIRECTION_ARROWS: Record<Direction, string> = {
-  up: '↑',
-  down: '↓',
-  left: '←',
-  right: '→',
+// Key mappings for movement directions
+const MOVEMENT_KEYS: Record<string, Direction> = {
+  ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+  w: 'up', s: 'down', a: 'left', d: 'right',
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  // Toggle help with ?
-  if (event.key === '?') {
+  const { key, shiftKey } = event
+
+  // Help toggle
+  if (key === '?') {
     showHowToPlay.value = !showHowToPlay.value
     return
   }
 
-  // Undo with z, u, or Escape
-  if (event.key === 'z' || event.key === 'u' || event.key === 'Escape') {
+  // Undo
+  if (key === 'z' || key === 'u' || key === 'Escape') {
     store.undoMove()
     return
   }
 
-  // Reset with R (shift+r)
-  if (event.key === 'R') {
-    store.resetPuzzle()
-    return
+  // Shift commands
+  if (shiftKey) {
+    if (key === 'R') { store.resetPuzzle(); return }
+    if (key === 'D') { store.deleteSolution(store.activeSolutionIndex); return }
+    if (key === 'ArrowLeft') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex - 1); return }
+    if (key === 'ArrowRight') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex + 1); return }
   }
 
-  // Start new solution with n or +
-  if ((event.key === 'n' || event.key === '+') && store.canStartNewSolution) {
+  // New solution
+  if ((key === 'n' || key === '+') && store.canStartNewSolution) {
     store.startNewSolution()
     return
   }
 
-  // Switch solutions with shift+left/right
-  if (event.shiftKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
-    event.preventDefault()
-    const newIndex = event.key === 'ArrowLeft'
-      ? store.activeSolutionIndex - 1
-      : store.activeSolutionIndex + 1
-    store.switchSolution(newIndex)
-    return
-  }
-
-  // Delete current solution with D (shift+d)
-  if (event.key === 'D') {
-    store.deleteSolution(store.activeSolutionIndex)
-    return
-  }
-
-  // Number keys for robot selection
-  const num = parseInt(event.key)
+  // Robot selection (1-4)
+  const num = parseInt(key)
   if (num >= 1 && num <= store.robots.length) {
     store.selectRobot(num - 1)
     return
   }
 
-  // Arrow keys for movement
-  const keyMap: Record<string, Direction> = {
-    ArrowUp: 'up',
-    ArrowDown: 'down',
-    ArrowLeft: 'left',
-    ArrowRight: 'right',
-    w: 'up',
-    s: 'down',
-    a: 'left',
-    d: 'right',
-  }
-
-  const direction = keyMap[event.key]
+  // Movement
+  const direction = MOVEMENT_KEYS[key]
   if (direction && store.selectedRobotId !== null) {
     event.preventDefault()
     store.moveRobot(direction)
