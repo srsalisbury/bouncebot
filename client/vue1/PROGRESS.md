@@ -548,6 +548,33 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.4: WebSocket Infrastructure
+**Status:** Complete
+
+**What was done:**
+- Server: Added gorilla/websocket dependency
+- Server: Created ws package with Hub for managing connections per session
+- Server: Event types: player_joined, game_started
+- Server: Session store broadcasts events via EventBroadcaster interface
+- Server: Added /ws endpoint to main.go
+- Client: Created websocket.ts service with connect/disconnect/reconnect
+- Client: SessionView connects to WebSocket when user joins
+- Client: Handles player_joined and game_started events to refresh session
+- Client: Auto-reconnect on disconnect (3 second delay)
+- Replaced polling with WebSocket for joined users
+
+**Files added:**
+- `server/ws/hub.go` - WebSocket hub managing connections and events
+- `src/services/websocket.ts` - Client WebSocket service
+
+**Files modified:**
+- `server/session/session.go` - Added EventBroadcaster interface, broadcasts on Join/StartGame
+- `server/main.go` - Wire up WebSocket hub and /ws endpoint
+- `src/views/SessionView.vue` - Connect to WebSocket, handle events
+- `go.mod` - Added gorilla/websocket
+
+---
+
 ## In Progress
 
 _None currently_
@@ -556,4 +583,4 @@ _None currently_
 
 ## Up Next
 
-- Step 29.4: WebSocket Infrastructure
+- Step 29.5: Solution Broadcasting

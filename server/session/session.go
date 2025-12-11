@@ -55,10 +55,17 @@ func (s *Session) ToProto() *pb.Session {
 	return session
 }
 
+// EventBroadcaster is an interface for broadcasting session events.
+type EventBroadcaster interface {
+	BroadcastPlayerJoined(sessionID, playerID, playerName string)
+	BroadcastGameStarted(sessionID string)
+}
+
 // Store manages sessions in memory.
 type Store struct {
-	mu       sync.RWMutex
-	sessions map[string]*Session
+	mu          sync.RWMutex
+	sessions    map[string]*Session
+	broadcaster EventBroadcaster
 }
 
 // NewStore creates a new session store.
@@ -66,6 +73,11 @@ func NewStore() *Store {
 	return &Store{
 		sessions: make(map[string]*Session),
 	}
+}
+
+// SetBroadcaster sets the event broadcaster for the store.
+func (store *Store) SetBroadcaster(b EventBroadcaster) {
+	store.broadcaster = b
 }
 
 // generateID creates a random session or player ID.
@@ -111,6 +123,11 @@ func (store *Store) Join(sessionID, playerName string) (*Session, error) {
 		Name: playerName,
 	})
 
+	// Broadcast player joined event
+	if store.broadcaster != nil {
+		store.broadcaster.BroadcastPlayerJoined(sessionID, playerID, playerName)
+	}
+
 	return session, nil
 }
 
@@ -143,6 +160,11 @@ func (store *Store) StartGame(sessionID string) (*Session, error) {
 
 	session.CurrentGame = game
 	session.GameStartedAt = &now
+
+	// Broadcast game started event
+	if store.broadcaster != nil {
+		store.broadcaster.BroadcastGameStarted(sessionID)
+	}
 
 	return session, nil
 }

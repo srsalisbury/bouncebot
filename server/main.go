@@ -13,6 +13,7 @@ import (
 	pb "github.com/srsalisbury/bouncebot/proto"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
 	"github.com/srsalisbury/bouncebot/server/session"
+	"github.com/srsalisbury/bouncebot/server/ws"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -74,10 +75,15 @@ func main() {
 	flag.Parse()
 
 	sessions := session.NewStore()
+	wsHub := ws.NewHub()
+	sessions.SetBroadcaster(wsHub)
 
 	mux := http.NewServeMux()
 	path, handler := protoconnect.NewBounceBotHandler(&bounceBotServer{sessions: sessions})
 	mux.Handle(path, handler)
+
+	// WebSocket endpoint
+	mux.HandleFunc("/ws", wsHub.HandleWebSocket)
 
 	// CORS configuration for browser access
 	corsHandler := cors.New(cors.Options{
