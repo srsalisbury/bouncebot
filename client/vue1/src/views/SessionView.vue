@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useSessionStore } from '../stores/sessionStore'
+import { websocketService, type WebSocketEvent } from '../services/websocket'
 import type { Session } from '../gen/bouncebot_pb'
 import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
@@ -102,16 +103,50 @@ function goHome() {
   router.push('/')
 }
 
+function handleWebSocketEvent(event: WebSocketEvent) {
+  if (event.type === 'player_joined') {
+    // Refresh session to get updated player list
+    loadSession()
+  } else if (event.type === 'game_started') {
+    // Refresh session to get the game
+    loadSession()
+  }
+}
+
+function connectWebSocket() {
+  if (hasJoined.value) {
+    websocketService.connect(props.sessionId, handleWebSocketEvent)
+  }
+}
+
+// Connect to WebSocket when user joins
+watch(hasJoined, (joined) => {
+  if (joined) {
+    connectWebSocket()
+    // Stop polling once connected via WebSocket
+    if (pollInterval.value) {
+      clearInterval(pollInterval.value)
+      pollInterval.value = null
+    }
+  }
+})
+
 onMounted(() => {
   loadSession()
-  // Poll for session updates every 3 seconds
-  pollInterval.value = window.setInterval(loadSession, 3000)
+  // If already joined, connect WebSocket immediately
+  if (hasJoined.value) {
+    connectWebSocket()
+  } else {
+    // Poll until joined (for users who haven't joined yet)
+    pollInterval.value = window.setInterval(loadSession, 3000)
+  }
 })
 
 onUnmounted(() => {
   if (pollInterval.value) {
     clearInterval(pollInterval.value)
   }
+  websocketService.disconnect()
 })
 </script>
 
