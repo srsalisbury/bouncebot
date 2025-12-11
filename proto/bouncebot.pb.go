@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -469,11 +470,325 @@ func (x *MoveError) GetErrorDescription() string {
 	return ""
 }
 
+// Player in a session
+type Player struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Player) Reset() {
+	*x = Player{}
+	mi := &file_bouncebot_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Player) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Player) ProtoMessage() {}
+
+func (x *Player) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Player.ProtoReflect.Descriptor instead.
+func (*Player) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *Player) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Player) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+// Game session for multiplayer
+type Session struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Players       []*Player              `protobuf:"bytes,2,rep,name=players,proto3" json:"players,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CurrentGame   *Game                  `protobuf:"bytes,4,opt,name=current_game,json=currentGame,proto3" json:"current_game,omitempty"`         // null if no game started yet
+	GameStartedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=game_started_at,json=gameStartedAt,proto3" json:"game_started_at,omitempty"` // when current game started
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Session) Reset() {
+	*x = Session{}
+	mi := &file_bouncebot_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Session) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Session) ProtoMessage() {}
+
+func (x *Session) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Session.ProtoReflect.Descriptor instead.
+func (*Session) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Session) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Session) GetPlayers() []*Player {
+	if x != nil {
+		return x.Players
+	}
+	return nil
+}
+
+func (x *Session) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Session) GetCurrentGame() *Game {
+	if x != nil {
+		return x.CurrentGame
+	}
+	return nil
+}
+
+func (x *Session) GetGameStartedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.GameStartedAt
+	}
+	return nil
+}
+
+type CreateSessionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerName    string                 `protobuf:"bytes,1,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSessionRequest) Reset() {
+	*x = CreateSessionRequest{}
+	mi := &file_bouncebot_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSessionRequest) ProtoMessage() {}
+
+func (x *CreateSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSessionRequest.ProtoReflect.Descriptor instead.
+func (*CreateSessionRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreateSessionRequest) GetPlayerName() string {
+	if x != nil {
+		return x.PlayerName
+	}
+	return ""
+}
+
+type JoinSessionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	PlayerName    string                 `protobuf:"bytes,2,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinSessionRequest) Reset() {
+	*x = JoinSessionRequest{}
+	mi := &file_bouncebot_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinSessionRequest) ProtoMessage() {}
+
+func (x *JoinSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinSessionRequest.ProtoReflect.Descriptor instead.
+func (*JoinSessionRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *JoinSessionRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *JoinSessionRequest) GetPlayerName() string {
+	if x != nil {
+		return x.PlayerName
+	}
+	return ""
+}
+
+type GetSessionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSessionRequest) Reset() {
+	*x = GetSessionRequest{}
+	mi := &file_bouncebot_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSessionRequest) ProtoMessage() {}
+
+func (x *GetSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSessionRequest.ProtoReflect.Descriptor instead.
+func (*GetSessionRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *GetSessionRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type StartGameRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartGameRequest) Reset() {
+	*x = StartGameRequest{}
+	mi := &file_bouncebot_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartGameRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartGameRequest) ProtoMessage() {}
+
+func (x *StartGameRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartGameRequest.ProtoReflect.Descriptor instead.
+func (*StartGameRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *StartGameRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 var File_bouncebot_proto protoreflect.FileDescriptor
 
 const file_bouncebot_proto_rawDesc = "" +
 	"\n" +
-	"\x0fbouncebot.proto\x12\tbouncebot\"&\n" +
+	"\x0fbouncebot.proto\x12\tbouncebot\x1a\x1fgoogle/protobuf/timestamp.proto\"&\n" +
 	"\bPosition\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x05R\x01y\"w\n" +
@@ -500,10 +815,39 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x0efirst_bad_move\x18\x04 \x01(\v2\x14.bouncebot.MoveErrorR\ffirstBadMove\"_\n" +
 	"\tMoveError\x12%\n" +
 	"\x04move\x18\x01 \x01(\v2\x11.bouncebot.BotPosR\x04move\x12+\n" +
-	"\x11error_description\x18\x02 \x01(\tR\x10errorDescription2\x9c\x01\n" +
+	"\x11error_description\x18\x02 \x01(\tR\x10errorDescription\",\n" +
+	"\x06Player\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\xf9\x01\n" +
+	"\aSession\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12+\n" +
+	"\aplayers\x18\x02 \x03(\v2\x11.bouncebot.PlayerR\aplayers\x129\n" +
+	"\n" +
+	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x122\n" +
+	"\fcurrent_game\x18\x04 \x01(\v2\x0f.bouncebot.GameR\vcurrentGame\x12B\n" +
+	"\x0fgame_started_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\rgameStartedAt\"7\n" +
+	"\x14CreateSessionRequest\x12\x1f\n" +
+	"\vplayer_name\x18\x01 \x01(\tR\n" +
+	"playerName\"T\n" +
+	"\x12JoinSessionRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1f\n" +
+	"\vplayer_name\x18\x02 \x01(\tR\n" +
+	"playerName\"2\n" +
+	"\x11GetSessionRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"1\n" +
+	"\x10StartGameRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId2\xaa\x03\n" +
 	"\tBounceBot\x129\n" +
 	"\bMakeGame\x12\x1a.bouncebot.MakeGameRequest\x1a\x0f.bouncebot.Game\"\x00\x12T\n" +
-	"\rCheckSolution\x12\x1f.bouncebot.CheckSolutionRequest\x1a .bouncebot.CheckSolutionResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
+	"\rCheckSolution\x12\x1f.bouncebot.CheckSolutionRequest\x1a .bouncebot.CheckSolutionResponse\"\x00\x12F\n" +
+	"\rCreateSession\x12\x1f.bouncebot.CreateSessionRequest\x1a\x12.bouncebot.Session\"\x00\x12B\n" +
+	"\vJoinSession\x12\x1d.bouncebot.JoinSessionRequest\x1a\x12.bouncebot.Session\"\x00\x12@\n" +
+	"\n" +
+	"GetSession\x12\x1c.bouncebot.GetSessionRequest\x1a\x12.bouncebot.Session\"\x00\x12>\n" +
+	"\tStartGame\x12\x1b.bouncebot.StartGameRequest\x1a\x12.bouncebot.Session\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
 
 var (
 	file_bouncebot_proto_rawDescOnce sync.Once
@@ -517,7 +861,7 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_bouncebot_proto_goTypes = []any{
 	(*Position)(nil),              // 0: bouncebot.Position
 	(*Board)(nil),                 // 1: bouncebot.Board
@@ -527,6 +871,13 @@ var file_bouncebot_proto_goTypes = []any{
 	(*CheckSolutionRequest)(nil),  // 5: bouncebot.CheckSolutionRequest
 	(*CheckSolutionResponse)(nil), // 6: bouncebot.CheckSolutionResponse
 	(*MoveError)(nil),             // 7: bouncebot.MoveError
+	(*Player)(nil),                // 8: bouncebot.Player
+	(*Session)(nil),               // 9: bouncebot.Session
+	(*CreateSessionRequest)(nil),  // 10: bouncebot.CreateSessionRequest
+	(*JoinSessionRequest)(nil),    // 11: bouncebot.JoinSessionRequest
+	(*GetSessionRequest)(nil),     // 12: bouncebot.GetSessionRequest
+	(*StartGameRequest)(nil),      // 13: bouncebot.StartGameRequest
+	(*timestamppb.Timestamp)(nil), // 14: google.protobuf.Timestamp
 }
 var file_bouncebot_proto_depIdxs = []int32{
 	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
@@ -540,15 +891,27 @@ var file_bouncebot_proto_depIdxs = []int32{
 	3,  // 8: bouncebot.CheckSolutionResponse.resulting_game:type_name -> bouncebot.Game
 	7,  // 9: bouncebot.CheckSolutionResponse.first_bad_move:type_name -> bouncebot.MoveError
 	2,  // 10: bouncebot.MoveError.move:type_name -> bouncebot.BotPos
-	4,  // 11: bouncebot.BounceBot.MakeGame:input_type -> bouncebot.MakeGameRequest
-	5,  // 12: bouncebot.BounceBot.CheckSolution:input_type -> bouncebot.CheckSolutionRequest
-	3,  // 13: bouncebot.BounceBot.MakeGame:output_type -> bouncebot.Game
-	6,  // 14: bouncebot.BounceBot.CheckSolution:output_type -> bouncebot.CheckSolutionResponse
-	13, // [13:15] is the sub-list for method output_type
-	11, // [11:13] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	8,  // 11: bouncebot.Session.players:type_name -> bouncebot.Player
+	14, // 12: bouncebot.Session.created_at:type_name -> google.protobuf.Timestamp
+	3,  // 13: bouncebot.Session.current_game:type_name -> bouncebot.Game
+	14, // 14: bouncebot.Session.game_started_at:type_name -> google.protobuf.Timestamp
+	4,  // 15: bouncebot.BounceBot.MakeGame:input_type -> bouncebot.MakeGameRequest
+	5,  // 16: bouncebot.BounceBot.CheckSolution:input_type -> bouncebot.CheckSolutionRequest
+	10, // 17: bouncebot.BounceBot.CreateSession:input_type -> bouncebot.CreateSessionRequest
+	11, // 18: bouncebot.BounceBot.JoinSession:input_type -> bouncebot.JoinSessionRequest
+	12, // 19: bouncebot.BounceBot.GetSession:input_type -> bouncebot.GetSessionRequest
+	13, // 20: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
+	3,  // 21: bouncebot.BounceBot.MakeGame:output_type -> bouncebot.Game
+	6,  // 22: bouncebot.BounceBot.CheckSolution:output_type -> bouncebot.CheckSolutionResponse
+	9,  // 23: bouncebot.BounceBot.CreateSession:output_type -> bouncebot.Session
+	9,  // 24: bouncebot.BounceBot.JoinSession:output_type -> bouncebot.Session
+	9,  // 25: bouncebot.BounceBot.GetSession:output_type -> bouncebot.Session
+	9,  // 26: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Session
+	21, // [21:27] is the sub-list for method output_type
+	15, // [15:21] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_bouncebot_proto_init() }
@@ -562,7 +925,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -37,12 +37,25 @@ const (
 	BounceBotMakeGameProcedure = "/bouncebot.BounceBot/MakeGame"
 	// BounceBotCheckSolutionProcedure is the fully-qualified name of the BounceBot's CheckSolution RPC.
 	BounceBotCheckSolutionProcedure = "/bouncebot.BounceBot/CheckSolution"
+	// BounceBotCreateSessionProcedure is the fully-qualified name of the BounceBot's CreateSession RPC.
+	BounceBotCreateSessionProcedure = "/bouncebot.BounceBot/CreateSession"
+	// BounceBotJoinSessionProcedure is the fully-qualified name of the BounceBot's JoinSession RPC.
+	BounceBotJoinSessionProcedure = "/bouncebot.BounceBot/JoinSession"
+	// BounceBotGetSessionProcedure is the fully-qualified name of the BounceBot's GetSession RPC.
+	BounceBotGetSessionProcedure = "/bouncebot.BounceBot/GetSession"
+	// BounceBotStartGameProcedure is the fully-qualified name of the BounceBot's StartGame RPC.
+	BounceBotStartGameProcedure = "/bouncebot.BounceBot/StartGame"
 )
 
 // BounceBotClient is a client for the bouncebot.BounceBot service.
 type BounceBotClient interface {
 	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
 	CheckSolution(context.Context, *connect.Request[proto.CheckSolutionRequest]) (*connect.Response[proto.CheckSolutionResponse], error)
+	// Session management
+	CreateSession(context.Context, *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error)
+	JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error)
+	GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error)
+	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
 }
 
 // NewBounceBotClient constructs a client for the bouncebot.BounceBot service. By default, it uses
@@ -68,6 +81,30 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("CheckSolution")),
 			connect.WithClientOptions(opts...),
 		),
+		createSession: connect.NewClient[proto.CreateSessionRequest, proto.Session](
+			httpClient,
+			baseURL+BounceBotCreateSessionProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("CreateSession")),
+			connect.WithClientOptions(opts...),
+		),
+		joinSession: connect.NewClient[proto.JoinSessionRequest, proto.Session](
+			httpClient,
+			baseURL+BounceBotJoinSessionProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("JoinSession")),
+			connect.WithClientOptions(opts...),
+		),
+		getSession: connect.NewClient[proto.GetSessionRequest, proto.Session](
+			httpClient,
+			baseURL+BounceBotGetSessionProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("GetSession")),
+			connect.WithClientOptions(opts...),
+		),
+		startGame: connect.NewClient[proto.StartGameRequest, proto.Session](
+			httpClient,
+			baseURL+BounceBotStartGameProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("StartGame")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -75,6 +112,10 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 type bounceBotClient struct {
 	makeGame      *connect.Client[proto.MakeGameRequest, proto.Game]
 	checkSolution *connect.Client[proto.CheckSolutionRequest, proto.CheckSolutionResponse]
+	createSession *connect.Client[proto.CreateSessionRequest, proto.Session]
+	joinSession   *connect.Client[proto.JoinSessionRequest, proto.Session]
+	getSession    *connect.Client[proto.GetSessionRequest, proto.Session]
+	startGame     *connect.Client[proto.StartGameRequest, proto.Session]
 }
 
 // MakeGame calls bouncebot.BounceBot.MakeGame.
@@ -87,10 +128,35 @@ func (c *bounceBotClient) CheckSolution(ctx context.Context, req *connect.Reques
 	return c.checkSolution.CallUnary(ctx, req)
 }
 
+// CreateSession calls bouncebot.BounceBot.CreateSession.
+func (c *bounceBotClient) CreateSession(ctx context.Context, req *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error) {
+	return c.createSession.CallUnary(ctx, req)
+}
+
+// JoinSession calls bouncebot.BounceBot.JoinSession.
+func (c *bounceBotClient) JoinSession(ctx context.Context, req *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error) {
+	return c.joinSession.CallUnary(ctx, req)
+}
+
+// GetSession calls bouncebot.BounceBot.GetSession.
+func (c *bounceBotClient) GetSession(ctx context.Context, req *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error) {
+	return c.getSession.CallUnary(ctx, req)
+}
+
+// StartGame calls bouncebot.BounceBot.StartGame.
+func (c *bounceBotClient) StartGame(ctx context.Context, req *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error) {
+	return c.startGame.CallUnary(ctx, req)
+}
+
 // BounceBotHandler is an implementation of the bouncebot.BounceBot service.
 type BounceBotHandler interface {
 	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
 	CheckSolution(context.Context, *connect.Request[proto.CheckSolutionRequest]) (*connect.Response[proto.CheckSolutionResponse], error)
+	// Session management
+	CreateSession(context.Context, *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error)
+	JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error)
+	GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error)
+	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
 }
 
 // NewBounceBotHandler builds an HTTP handler from the service implementation. It returns the path
@@ -112,12 +178,44 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("CheckSolution")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bounceBotCreateSessionHandler := connect.NewUnaryHandler(
+		BounceBotCreateSessionProcedure,
+		svc.CreateSession,
+		connect.WithSchema(bounceBotMethods.ByName("CreateSession")),
+		connect.WithHandlerOptions(opts...),
+	)
+	bounceBotJoinSessionHandler := connect.NewUnaryHandler(
+		BounceBotJoinSessionProcedure,
+		svc.JoinSession,
+		connect.WithSchema(bounceBotMethods.ByName("JoinSession")),
+		connect.WithHandlerOptions(opts...),
+	)
+	bounceBotGetSessionHandler := connect.NewUnaryHandler(
+		BounceBotGetSessionProcedure,
+		svc.GetSession,
+		connect.WithSchema(bounceBotMethods.ByName("GetSession")),
+		connect.WithHandlerOptions(opts...),
+	)
+	bounceBotStartGameHandler := connect.NewUnaryHandler(
+		BounceBotStartGameProcedure,
+		svc.StartGame,
+		connect.WithSchema(bounceBotMethods.ByName("StartGame")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/bouncebot.BounceBot/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case BounceBotMakeGameProcedure:
 			bounceBotMakeGameHandler.ServeHTTP(w, r)
 		case BounceBotCheckSolutionProcedure:
 			bounceBotCheckSolutionHandler.ServeHTTP(w, r)
+		case BounceBotCreateSessionProcedure:
+			bounceBotCreateSessionHandler.ServeHTTP(w, r)
+		case BounceBotJoinSessionProcedure:
+			bounceBotJoinSessionHandler.ServeHTTP(w, r)
+		case BounceBotGetSessionProcedure:
+			bounceBotGetSessionHandler.ServeHTTP(w, r)
+		case BounceBotStartGameProcedure:
+			bounceBotStartGameHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -133,4 +231,20 @@ func (UnimplementedBounceBotHandler) MakeGame(context.Context, *connect.Request[
 
 func (UnimplementedBounceBotHandler) CheckSolution(context.Context, *connect.Request[proto.CheckSolutionRequest]) (*connect.Response[proto.CheckSolutionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CheckSolution is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) CreateSession(context.Context, *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CreateSession is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.JoinSession is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.GetSession is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.StartGame is not implemented"))
 }

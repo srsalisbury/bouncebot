@@ -20,7 +20,9 @@ var (
 	port = flag.Int("port", 8080, "The server port")
 )
 
-type bounceBotServer struct{}
+type bounceBotServer struct {
+	sessions *SessionStore
+}
 
 func (s *bounceBotServer) MakeGame(_ context.Context, req *connect.Request[pb.MakeGameRequest]) (*connect.Response[pb.Game], error) {
 	game := model.Game1()
@@ -38,11 +40,42 @@ func (s *bounceBotServer) CheckSolution(_ context.Context, req *connect.Request[
 	}), nil
 }
 
+func (s *bounceBotServer) CreateSession(_ context.Context, req *connect.Request[pb.CreateSessionRequest]) (*connect.Response[pb.Session], error) {
+	session := s.sessions.CreateSession(req.Msg.PlayerName)
+	return connect.NewResponse(session.ToProto()), nil
+}
+
+func (s *bounceBotServer) JoinSession(_ context.Context, req *connect.Request[pb.JoinSessionRequest]) (*connect.Response[pb.Session], error) {
+	session, err := s.sessions.JoinSession(req.Msg.SessionId, req.Msg.PlayerName)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(session.ToProto()), nil
+}
+
+func (s *bounceBotServer) GetSession(_ context.Context, req *connect.Request[pb.GetSessionRequest]) (*connect.Response[pb.Session], error) {
+	session, err := s.sessions.GetSession(req.Msg.SessionId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(session.ToProto()), nil
+}
+
+func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.StartGameRequest]) (*connect.Response[pb.Session], error) {
+	session, err := s.sessions.StartGame(req.Msg.SessionId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(session.ToProto()), nil
+}
+
 func main() {
 	flag.Parse()
 
+	sessions := NewSessionStore()
+
 	mux := http.NewServeMux()
-	path, handler := protoconnect.NewBounceBotHandler(&bounceBotServer{})
+	path, handler := protoconnect.NewBounceBotHandler(&bounceBotServer{sessions: sessions})
 	mux.Handle(path, handler)
 
 	// CORS configuration for browser access
