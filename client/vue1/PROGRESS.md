@@ -506,6 +506,8 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 - Updated App.vue to use router-view
 - Exported applyGame from gameStore for session use
 - Removed auto-loadGame from GameBoard (now handled by SessionView)
+- Fixed: Only apply game once when it first starts (not on every poll)
+- Fixed: Stop polling once game starts
 
 **Files added:**
 - `src/router.ts` - Vue Router configuration

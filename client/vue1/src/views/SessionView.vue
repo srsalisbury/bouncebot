@@ -25,11 +25,17 @@ const shareUrl = computed(() => window.location.href)
 async function loadSession() {
   try {
     const sess = await bounceBotClient.getSession({ sessionId: props.sessionId })
+    const hadGame = hasGame.value
     session.value = sess
 
-    // If game exists, apply it to the game store
-    if (sess.currentGame) {
+    // Only apply game when it first appears (not on every poll)
+    if (sess.currentGame && !hadGame) {
       gameStore.applyGame(sess.currentGame)
+      // Stop polling once game starts
+      if (pollInterval.value) {
+        clearInterval(pollInterval.value)
+        pollInterval.value = null
+      }
     }
 
     error.value = null
