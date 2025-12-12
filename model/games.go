@@ -23,21 +23,25 @@ func BuildBoardFromPanels(a, b, c, d Board) Board {
 	size := a.Size()
 	vWalls := make([]Position, 0)
 	hWalls := make([]Position, 0)
+	possibleTargets := make([]Position, 0)
 
-	appendPanelWalls := func(p Board, xOffset, yOffset BoardDim) {
+	appendPanelData := func(p Board, xOffset, yOffset BoardDim) {
 		for _, pos := range p.VWalls() {
 			vWalls = append(vWalls, Position{X: pos.X + xOffset, Y: pos.Y + yOffset})
 		}
 		for _, pos := range p.HWalls() {
 			hWalls = append(hWalls, Position{X: pos.X + xOffset, Y: pos.Y + yOffset})
 		}
+		for _, pos := range p.PossibleTargets() {
+			possibleTargets = append(possibleTargets, Position{X: pos.X + xOffset, Y: pos.Y + yOffset})
+		}
 	}
-	appendPanelWalls(a, 0, 0)
-	appendPanelWalls(b.Rotate90cw(), size, 0)
-	appendPanelWalls(c.Rotate90cw().Rotate90cw(), size, size)
-	appendPanelWalls(d.Rotate90cw().Rotate90cw().Rotate90cw(), 0, size)
+	appendPanelData(a, 0, 0)
+	appendPanelData(b.Rotate90cw(), size, 0)
+	appendPanelData(c.Rotate90cw().Rotate90cw(), size, size)
+	appendPanelData(d.Rotate90cw().Rotate90cw().Rotate90cw(), 0, size)
 
-	return NewBoard(size*2, vWalls, hWalls)
+	return NewBoardWithTargets(size*2, vWalls, hWalls, possibleTargets)
 }
 
 // Returns a sample panel.
@@ -46,17 +50,17 @@ func Panel1() Board {
 		+----+----+----+----+----+----+----+----+
 		|         |                              
 		+    +    +    +    +----+    +    +    +
-		|                   |                    
+		|                   | []                 
 		+    +----+    +    +    +    +    +    +
-		|         |                              
+		|      [] |                              
 		+    +    +    +    +    +    +    +    +
-		|                                  |     
+		|                               [] |     
 		+    +    +    +    +    +    +----+    +
 		|                                        
 		+    +    +    +    +    +    +    +    +
 		|                                        
 		+----+    +    +    +    +    +    +    +
-		|              |                         
+		|              | []                      
 		+    +    +    +----+    +    +    +----+
 		|                                  |     
 		+    +    +    +    +    +----+    +    +
@@ -69,17 +73,17 @@ func Panel2() Board {
 		+----+----+----+----+----+----+----+----+
 		|                        |               
 		+    +    +----+    +    +    +    +    +
-		|         |                              
+		|         | []                           
 		+    +    +    +    +    +    +    +    +
 		|                                        
 		+    +    +    +    +    +    +    +    +
-		|                             |          
+		|                             | []       
 		+    +    +    +    +    +    +----+    +
 		|                                        
 		+----+    +    +    +----+    +    +    +
-		|                        |               
+		|                     [] |               
 		+    +    +    +    +    +    +    +    +
-		|         |                              
+		|      [] |                              
 		+    +----+    +    +    +    +    +----+
 		|                                  |     
 		+    +    +    +    +    +    +    +    +
@@ -92,15 +96,15 @@ func Panel3() Board {
 		+----+----+----+----+----+----+----+----+
 		|                   |                    
 		+    +    +    +    +    +    +    +    +
-		|    |                                   
+		|    | []                                
 		+    +----+    +    +    +    +----+    +
-		|                                  |     
+		|                               [] |     
 		+    +    +    +    +    +    +    +    +
 		|                                        
 		+    +    +    +    +    +    +    +    +
-		|              |                         
+		|           [] |                         
 		+    +    +----+    +    +    +    +----+
-		|                                  |     
+		|                                  | []  
 		+----+    +    +    +    +    +    +    +
 		|                                        
 		+    +    +    +    +    +    +    +----+
@@ -115,15 +119,15 @@ func Panel4() Board {
 		+----+----+----+----+----+----+----+----+
 		|                   |                    
 		+    +    +    +    +    +    +    +    +
-		|                             |          
+		|                             | []       
 		+    +    +    +    +    +    +----+    +
 		|                                        
 		+    +----+    +    +    +    +    +    +
-		|         |                              
+		|      [] |                              
 		+    +    +    +    +    +----+    +    +
-		|                        |               
+		|                        | []            
 		+    +    +    +    +    +    +    +    +
-		|              |                        |
+		|           [] |                     [] |
 		+    +    +----+    +    +    +    +----+
 		|                                        
 		+----+    +    +    +    +    +    +----+

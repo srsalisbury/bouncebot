@@ -21,6 +21,9 @@ type Board interface {
 	// Returns all vertical wall positions
 	VWalls() []Position
 
+	// Returns all possible target positions (cells where a target can be placed)
+	PossibleTargets() []Position
+
 	// Checks if there is a vertical wall at the given position
 	HasVWallAt(pos Position) bool
 
@@ -63,16 +66,25 @@ func NewBoard(size BoardDim, vWalls, hWalls []Position) Board {
 	return &board{size: size, vWallPos: vWalls, hWallPos: hWalls, isPanel: false}
 }
 
+func NewBoardWithTargets(size BoardDim, vWalls, hWalls, possibleTargets []Position) Board {
+	return &board{size: size, vWallPos: vWalls, hWallPos: hWalls, possibleTargetPos: possibleTargets, isPanel: false}
+}
+
 func NewPanel(size BoardDim, vWalls, hWalls []Position) Board {
 	return &board{size: size, vWallPos: vWalls, hWallPos: hWalls, isPanel: true}
+}
+
+func NewPanelWithTargets(size BoardDim, vWalls, hWalls, possibleTargets []Position) Board {
+	return &board{size: size, vWallPos: vWalls, hWallPos: hWalls, possibleTargetPos: possibleTargets, isPanel: true}
 }
 
 type board struct {
 	// Length of one side of the square board.
 	size BoardDim
 
-	vWallPos []Position // Vertical walls between (X,Y) and (X+1,Y)
-	hWallPos []Position // Horizontal walls between (X,Y) and (X,Y+1)
+	vWallPos          []Position // Vertical walls between (X,Y) and (X+1,Y)
+	hWallPos          []Position // Horizontal walls between (X,Y) and (X,Y+1)
+	possibleTargetPos []Position // Possible target cell positions
 
 	// Whether this board is a panel (for rendering purposes, as panels don't have
 	// implicit walls on their right and bottom edges)
@@ -114,6 +126,13 @@ func (b *board) VWalls() []Position {
 	// Make a copy to prevent external modification
 	result := make([]Position, len(b.vWallPos))
 	copy(result, b.vWallPos)
+	return result
+}
+
+func (b *board) PossibleTargets() []Position {
+	// Make a copy to prevent external modification
+	result := make([]Position, len(b.possibleTargetPos))
+	copy(result, b.possibleTargetPos)
 	return result
 }
 
@@ -179,8 +198,13 @@ func (b *board) Rotate90cw() Board {
 	for i, pos := range b.vWallPos {
 		newHWalls[i] = Position{X: b.size - 1 - pos.Y, Y: pos.X}
 	}
-	if b.isPanel {
-		return NewPanel(b.size, newVWalls, newHWalls)
+	// Rotate possible targets: (x, y) -> (size - 1 - y, x)
+	newTargets := make([]Position, len(b.possibleTargetPos))
+	for i, pos := range b.possibleTargetPos {
+		newTargets[i] = Position{X: b.size - 1 - pos.Y, Y: pos.X}
 	}
-	return NewBoard(b.size, newVWalls, newHWalls)
+	if b.isPanel {
+		return NewPanelWithTargets(b.size, newVWalls, newHWalls, newTargets)
+	}
+	return NewBoardWithTargets(b.size, newVWalls, newHWalls, newTargets)
 }

@@ -615,6 +615,27 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 31: Track Possible Target Locations
+**Status:** Complete
+
+**What was done:**
+- Added PossibleTargets() method to Board interface
+- Added possibleTargetPos field to board struct
+- Added NewBoardWithTargets and NewPanelWithTargets constructors
+- Updated ParseGenericBoardString to parse [] markers as target locations
+- Updated Rotate90cw to rotate possible target positions
+- Updated BuildBoardFromPanels to combine targets from all panels
+- Added target markers to Panel1-4 at L-corner wall locations (excluding center cells)
+- Full board now has 17 possible target positions
+
+**Files modified:**
+- `model/board.go` - Added PossibleTargets to interface, possibleTargetPos field, new constructors
+- `model/render.go` - Parse [] markers for possible targets
+- `model/games.go` - Updated BuildBoardFromPanels, added [] markers to panels
+- `model/board_test.go` - Added tests for target parsing, rotation, and board building
+
+---
+
 ## In Progress
 
 _None currently_
@@ -624,3 +645,4 @@ _None currently_
 ## Up Next
 
 - Step 29.6: Game Timer
+- Step 32: Dynamic Game Board Generation

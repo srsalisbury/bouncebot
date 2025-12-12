@@ -141,10 +141,23 @@ func ParseGenericBoardString(bs string, isPanel bool) (Board, error) {
 			}
 		}
 	}
-	if isPanel {
-		return NewPanel(size, vWalls, hWalls), nil
+	// Populate possibleTargets (cells containing "[]")
+	var possibleTargets []Position
+	for y := range size {
+		lineIdx := y*2 + 1
+		line := lines[lineIdx]
+		for x := range size {
+			charIdx := int(x)*5 + 1
+			cellContent := line[charIdx : charIdx+4]
+			if strings.Contains(cellContent, "[]") {
+				possibleTargets = append(possibleTargets, Position{x, y})
+			}
+		}
 	}
-	return NewBoard(size, vWalls, hWalls), nil
+	if isPanel {
+		return NewPanelWithTargets(size, vWalls, hWalls, possibleTargets), nil
+	}
+	return NewBoardWithTargets(size, vWalls, hWalls, possibleTargets), nil
 }
 
 // MustParseBoardString is like ParseBoardString but panics on error.
