@@ -71,6 +71,30 @@ func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.S
 	return connect.NewResponse(sess.ToProto()), nil
 }
 
+func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request[pb.SubmitSolutionRequest]) (*connect.Response[pb.SubmitSolutionResponse], error) {
+	solution, err := s.sessions.SubmitSolution(req.Msg.SessionId, req.Msg.PlayerId, int(req.Msg.MoveCount))
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&pb.SubmitSolutionResponse{
+		Solution: &pb.PlayerSolution{
+			PlayerId:   solution.PlayerID,
+			PlayerName: solution.PlayerName,
+			MoveCount:  int32(solution.MoveCount),
+		},
+	}), nil
+}
+
+func (s *bounceBotServer) RetractSolution(_ context.Context, req *connect.Request[pb.RetractSolutionRequest]) (*connect.Response[pb.RetractSolutionResponse], error) {
+	err := s.sessions.RetractSolution(req.Msg.SessionId, req.Msg.PlayerId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&pb.RetractSolutionResponse{
+		Success: true,
+	}), nil
+}
+
 func main() {
 	flag.Parse()
 

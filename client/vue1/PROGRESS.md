@@ -575,6 +575,46 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.5: Solution Broadcasting & Leaderboard
+**Status:** Complete
+
+**What was done:**
+- Added PlayerSolution message to proto (player_id, player_name, move_count, solved_at)
+- Added solutions field to Session message
+- Added SubmitSolution and RetractSolution RPCs
+- Server tracks solutions per session with history (for restoring after retraction)
+- Server broadcasts player_solved and solution_retracted events via WebSocket
+- Client submits solution automatically when puzzle is solved
+- Better solutions replace previous ones (lower move count wins)
+- Client handles player_solved and solution_retracted events with notifications
+
+**Leaderboard features:**
+- PlayersPanel shows solution badges with move count and solve time (e.g. "10 moves 15.3s")
+- Players sorted by move count (ascending), then by solve time (earlier wins ties)
+- Leader (best solution, first to achieve it) highlighted in gold
+- Animated transitions when leaderboard order changes
+- Player identification uses IDs (not names) for correctness
+
+**Solution retraction:**
+- If player undoes or deletes a solved solution, confirmation dialog appears
+- Retracting removes current best and restores previous solution from history
+- Previous solution keeps its original timestamp
+- If no previous solution exists, player is removed from leaderboard
+- Dialog supports Enter to confirm, Escape to cancel
+
+**Files modified:**
+- `proto/bouncebot.proto` - Added PlayerSolution, SubmitSolution, RetractSolution RPCs
+- `server/session/session.go` - Solution tracking with history, retraction restores previous
+- `server/ws/hub.go` - Added player_solved, solution_retracted events
+- `server/main.go` - Added SubmitSolution, RetractSolution RPC handlers
+- `src/gen/bouncebot_pb.ts` - Regenerated with new types
+- `src/services/websocket.ts` - Added event types and payloads
+- `src/views/SessionView.vue` - Solution submission, retraction confirmation dialog
+- `src/components/PlayersPanel.vue` - Leaderboard with sorting, leader highlight, solve times
+- `src/components/GameBoard.vue` - Wrap undo/delete to trigger retraction flow
+
+---
+
 ## In Progress
 
 _None currently_
@@ -583,4 +623,4 @@ _None currently_
 
 ## Up Next
 
-- Step 29.5: Solution Broadcasting
+- Step 29.6: Game Timer

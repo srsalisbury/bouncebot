@@ -16,6 +16,8 @@ service BounceBot {
   rpc JoinSession (JoinSessionRequest) returns (Session) {}
   rpc GetSession (GetSessionRequest) returns (Session) {}
   rpc StartGame (StartGameRequest) returns (Session) {}
+  rpc SubmitSolution (SubmitSolutionRequest) returns (SubmitSolutionResponse) {}
+  rpc RetractSolution (RetractSolutionRequest) returns (RetractSolutionResponse) {}
 }
 
 // Board grid position.
@@ -77,6 +79,14 @@ message Player {
   string name = 2;
 }
 
+// Player's solution result
+message PlayerSolution {
+  string player_id = 1;
+  string player_name = 2;
+  int32 move_count = 3;
+  google.protobuf.Timestamp solved_at = 4;
+}
+
 // Game session for multiplayer
 message Session {
   string id = 1;
@@ -84,6 +94,7 @@ message Session {
   google.protobuf.Timestamp created_at = 3;
   Game current_game = 4;  // null if no game started yet
   google.protobuf.Timestamp game_started_at = 5;  // when current game started
+  repeated PlayerSolution solutions = 6;  // players who have solved the current game
 }
 
 message CreateSessionRequest {
@@ -101,5 +112,24 @@ message GetSessionRequest {
 
 message StartGameRequest {
   string session_id = 1;
+}
+
+message SubmitSolutionRequest {
+  string session_id = 1;
+  string player_id = 2;
+  int32 move_count = 3;
+}
+
+message SubmitSolutionResponse {
+  PlayerSolution solution = 1;
+}
+
+message RetractSolutionRequest {
+  string session_id = 1;
+  string player_id = 2;
+}
+
+message RetractSolutionResponse {
+  bool success = 1;
 }
 

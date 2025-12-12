@@ -26,7 +26,11 @@ async function createSession() {
     const session = await bounceBotClient.createSession({
       playerName: playerName.value.trim(),
     })
-    sessionStore.setCurrentPlayer(playerName.value.trim())
+    // Creator is the first (and only) player in the new session
+    const player = session.players[0]
+    if (player) {
+      sessionStore.setCurrentPlayer(player.id, player.name)
+    }
     router.push(`/session/${session.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to create session'
@@ -49,11 +53,15 @@ async function joinSession() {
   error.value = null
 
   try {
-    await bounceBotClient.joinSession({
+    const session = await bounceBotClient.joinSession({
       sessionId: joinSessionId.value.trim(),
       playerName: playerName.value.trim(),
     })
-    sessionStore.setCurrentPlayer(playerName.value.trim())
+    // Find ourselves in the players list (we're the last one added)
+    const player = session.players[session.players.length - 1]
+    if (player) {
+      sessionStore.setCurrentPlayer(player.id, player.name)
+    }
     router.push(`/session/${joinSessionId.value.trim()}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to join session'

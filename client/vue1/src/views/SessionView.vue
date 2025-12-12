@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useSessionStore } from '../stores/sessionStore'
-import { websocketService, type WebSocketEvent } from '../services/websocket'
+import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload } from '../services/websocket'
 import type { Session } from '../gen/bouncebot_pb'
 import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
@@ -24,10 +24,20 @@ const isJoining = ref(false)
 const error = ref<string | null>(null)
 const pollInterval = ref<number | null>(null)
 const joinName = ref('')
+const notification = ref<string | null>(null)
+const notificationTimeout = ref<number | null>(null)
+const bestSubmittedMoveCount = ref<number | null>(null)
+const showRetractConfirm = ref(false)
+const pendingRetractAction = ref<(() => void) | null>(null)
 
 const hasGame = computed(() => session.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
-const hasJoined = computed(() => sessionStore.currentPlayerName != null)
+const hasJoined = computed(() => sessionStore.currentPlayerId != null)
+
+function getPlayerName(playerId: string): string {
+  const player = session.value?.players.find(p => p.id === playerId)
+  return player?.name ?? 'Unknown'
+}
 
 async function loadSession() {
   try {
@@ -81,11 +91,15 @@ async function joinSession() {
   error.value = null
 
   try {
-    await bounceBotClient.joinSession({
+    const sess = await bounceBotClient.joinSession({
       sessionId: props.sessionId,
       playerName: joinName.value.trim(),
     })
-    sessionStore.setCurrentPlayer(joinName.value.trim())
+    // Find ourselves in the players list (we're the last one added)
+    const player = sess.players[sess.players.length - 1]
+    if (player) {
+      sessionStore.setCurrentPlayer(player.id, player.name)
+    }
     // Reload session to get updated player list
     await loadSession()
   } catch (e) {
@@ -103,12 +117,104 @@ function goHome() {
   router.push('/')
 }
 
+function showNotification(message: string) {
+  notification.value = message
+  if (notificationTimeout.value) {
+    clearTimeout(notificationTimeout.value)
+  }
+  notificationTimeout.value = window.setTimeout(() => {
+    notification.value = null
+  }, 4000)
+}
+
+async function submitSolution(moveCount: number) {
+  if (!sessionStore.currentPlayerId) return
+  // Only submit if this is better than our previous best (or first submission)
+  if (bestSubmittedMoveCount.value !== null && moveCount >= bestSubmittedMoveCount.value) return
+
+  try {
+    await bounceBotClient.submitSolution({
+      sessionId: props.sessionId,
+      playerId: sessionStore.currentPlayerId,
+      moveCount,
+    })
+    bestSubmittedMoveCount.value = moveCount
+    // Reload session to get updated solutions list
+    await loadSession()
+  } catch (e) {
+    console.error('Failed to submit solution:', e)
+  }
+}
+
+async function retractSolution() {
+  if (!sessionStore.currentPlayerId) return
+
+  try {
+    await bounceBotClient.retractSolution({
+      sessionId: props.sessionId,
+      playerId: sessionStore.currentPlayerId,
+    })
+    // Reload session to get updated solutions list
+    await loadSession()
+  } catch (e) {
+    console.error('Failed to retract solution:', e)
+  }
+}
+
+// Called by GameBoard before undoing/deleting a solved solution
+function onBeforeRetract(action: () => void) {
+  if (bestSubmittedMoveCount.value !== null) {
+    // User has a submitted solution - show confirmation
+    pendingRetractAction.value = action
+    showRetractConfirm.value = true
+  } else {
+    // No submitted solution - just proceed
+    action()
+  }
+}
+
+async function confirmRetract() {
+  showRetractConfirm.value = false
+  await retractSolution()
+  if (pendingRetractAction.value) {
+    pendingRetractAction.value()
+    pendingRetractAction.value = null
+  }
+  // Clear after the action so the watch doesn't re-submit while puzzle is still solved
+  bestSubmittedMoveCount.value = null
+}
+
+function cancelRetract() {
+  showRetractConfirm.value = false
+  pendingRetractAction.value = null
+}
+
+
 function handleWebSocketEvent(event: WebSocketEvent) {
   if (event.type === 'player_joined') {
     // Refresh session to get updated player list
     loadSession()
   } else if (event.type === 'game_started') {
     // Refresh session to get the game
+    bestSubmittedMoveCount.value = null // Reset for new game
+    loadSession()
+  } else if (event.type === 'player_solved') {
+    const payload = event.payload as PlayerSolvedPayload
+    // Show notification for other players' solutions
+    if (payload.playerId !== sessionStore.currentPlayerId) {
+      const playerName = getPlayerName(payload.playerId)
+      showNotification(`${playerName} solved in ${payload.moveCount} moves!`)
+    }
+    // Refresh session to get updated solutions list
+    loadSession()
+  } else if (event.type === 'solution_retracted') {
+    const payload = event.payload as SolutionRetractedPayload
+    // Show notification for other players' retractions
+    if (payload.playerId !== sessionStore.currentPlayerId) {
+      const playerName = getPlayerName(payload.playerId)
+      showNotification(`${playerName} retracted their solution`)
+    }
+    // Refresh session to get updated solutions list
     loadSession()
   }
 }
@@ -131,6 +237,39 @@ watch(hasJoined, (joined) => {
   }
 })
 
+// Submit solution when puzzle is solved (or improved)
+watch(
+  () => gameStore.isSolved,
+  (solved) => {
+    if (solved && hasGame.value) {
+      submitSolution(gameStore.moveCount)
+    }
+  }
+)
+
+// Handle dialog keyboard events at window level (capture phase) to intercept before GameBoard
+function globalKeydownHandler(event: KeyboardEvent) {
+  if (!showRetractConfirm.value) return
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    event.stopPropagation()
+    confirmRetract()
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    cancelRetract()
+  }
+}
+
+// Add/remove global listener when dialog opens/closes
+watch(showRetractConfirm, (show) => {
+  if (show) {
+    window.addEventListener('keydown', globalKeydownHandler, true) // capture phase
+  } else {
+    window.removeEventListener('keydown', globalKeydownHandler, true)
+  }
+})
+
 onMounted(() => {
   loadSession()
   // If already joined, connect WebSocket immediately
@@ -146,12 +285,20 @@ onUnmounted(() => {
   if (pollInterval.value) {
     clearInterval(pollInterval.value)
   }
+  if (notificationTimeout.value) {
+    clearTimeout(notificationTimeout.value)
+  }
   websocketService.disconnect()
 })
 </script>
 
 <template>
   <div class="session-view">
+    <!-- Notification toast -->
+    <div v-if="notification" class="notification">
+      {{ notification }}
+    </div>
+
     <!-- Loading state -->
     <div v-if="isLoading" class="loading">Loading session...</div>
 
@@ -200,10 +347,10 @@ onUnmounted(() => {
     <!-- Game in progress -->
     <div v-else-if="hasGame && session" class="game-wrapper">
       <div class="game-header">
-        <PlayersPanel :players="session.players" compact />
+        <PlayersPanel :players="session.players" :solutions="session.solutions" :game-started-at="session.gameStartedAt" compact />
       </div>
       <div class="game-container">
-        <GameBoard />
+        <GameBoard :on-before-retract="onBeforeRetract" />
       </div>
     </div>
 
@@ -239,12 +386,55 @@ onUnmounted(() => {
         <p class="hint">Share the link above with friends to play together!</p>
       </div>
     </div>
+
+    <!-- Retract confirmation dialog -->
+    <div v-if="showRetractConfirm" class="dialog-overlay" @click.self="cancelRetract">
+      <div class="dialog">
+        <h3>Retract Solution?</h3>
+        <p>
+          You have a submitted solution. This action will retract it and you'll
+          lose credit for finding this solution.
+        </p>
+        <div class="dialog-actions">
+          <button class="btn" @click="cancelRetract">Cancel</button>
+          <button class="btn danger" @click="confirmRetract">Retract</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .session-view {
   min-height: 100vh;
+  position: relative;
+}
+
+.notification {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #42b883;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .loading {
@@ -456,5 +646,52 @@ onUnmounted(() => {
   color: #666;
   font-size: 0.85rem;
   text-align: center;
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 400px;
+  margin: 1rem;
+}
+
+.dialog h3 {
+  margin: 0 0 1rem;
+  color: #eee;
+}
+
+.dialog p {
+  margin: 0 0 1.5rem;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn.danger {
+  background: #e53935;
+  color: #fff;
+}
+
+.btn.danger:hover {
+  background: #c62828;
 }
 </style>
