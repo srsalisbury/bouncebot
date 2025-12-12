@@ -501,15 +501,32 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-## Recommended Implementation Order
+#### Step 31: Track available robot target locations
+**Goal:** Panels and Boards know where it's okay to place a target location.
 
-For fastest visible progress:
-1. Steps 1-5 (static display) - See the game board
-2. Steps 6-9 (interaction) - Play the game locally
-3. Steps 11-13 (game features) - Complete single-player experience
-4. Steps 10 (Pinia) - Code quality improvement
-5. Steps 14-18 (server) - Real backend integration
-6. Steps 19-21 (polish) - Production quality
+**Tasks:**
+- Add possibleTargets Position to board/Board.
+- Update parse board to handle possible targets
+- Render should not render possible targets
+- Rotate panel should rotate possible targets
+- Add tests
+
+**Visible result:** Nothing.
+
+---
+
+#### Step 32: Support dynamic generation of game boards.
+**Goal:** New game can result in lots of possible configurations.
+
+**Tasks:**
+- A new game be formed by random panels, random robots, and random target.
+- Panels should be some permutation of 1-4 for now
+- Target can be on any possibleTarget location with a random robot chosen.
+- Robots can be placed anywhere except on each other, on the target, or in the middle four cells.
+- We should still be able to generate the current fixed configuration for now.
+- Add tests
+
+**Visible result:** New session generates a random game configuration.
 
 ---
 

@@ -19,12 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BounceBot_MakeGame_FullMethodName      = "/bouncebot.BounceBot/MakeGame"
-	BounceBot_CheckSolution_FullMethodName = "/bouncebot.BounceBot/CheckSolution"
-	BounceBot_CreateSession_FullMethodName = "/bouncebot.BounceBot/CreateSession"
-	BounceBot_JoinSession_FullMethodName   = "/bouncebot.BounceBot/JoinSession"
-	BounceBot_GetSession_FullMethodName    = "/bouncebot.BounceBot/GetSession"
-	BounceBot_StartGame_FullMethodName     = "/bouncebot.BounceBot/StartGame"
+	BounceBot_MakeGame_FullMethodName        = "/bouncebot.BounceBot/MakeGame"
+	BounceBot_CheckSolution_FullMethodName   = "/bouncebot.BounceBot/CheckSolution"
+	BounceBot_CreateSession_FullMethodName   = "/bouncebot.BounceBot/CreateSession"
+	BounceBot_JoinSession_FullMethodName     = "/bouncebot.BounceBot/JoinSession"
+	BounceBot_GetSession_FullMethodName      = "/bouncebot.BounceBot/GetSession"
+	BounceBot_StartGame_FullMethodName       = "/bouncebot.BounceBot/StartGame"
+	BounceBot_SubmitSolution_FullMethodName  = "/bouncebot.BounceBot/SubmitSolution"
+	BounceBot_RetractSolution_FullMethodName = "/bouncebot.BounceBot/RetractSolution"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -40,6 +42,8 @@ type BounceBotClient interface {
 	JoinSession(ctx context.Context, in *JoinSessionRequest, opts ...grpc.CallOption) (*Session, error)
 	GetSession(ctx context.Context, in *GetSessionRequest, opts ...grpc.CallOption) (*Session, error)
 	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Session, error)
+	SubmitSolution(ctx context.Context, in *SubmitSolutionRequest, opts ...grpc.CallOption) (*SubmitSolutionResponse, error)
+	RetractSolution(ctx context.Context, in *RetractSolutionRequest, opts ...grpc.CallOption) (*RetractSolutionResponse, error)
 }
 
 type bounceBotClient struct {
@@ -110,6 +114,26 @@ func (c *bounceBotClient) StartGame(ctx context.Context, in *StartGameRequest, o
 	return out, nil
 }
 
+func (c *bounceBotClient) SubmitSolution(ctx context.Context, in *SubmitSolutionRequest, opts ...grpc.CallOption) (*SubmitSolutionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubmitSolutionResponse)
+	err := c.cc.Invoke(ctx, BounceBot_SubmitSolution_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) RetractSolution(ctx context.Context, in *RetractSolutionRequest, opts ...grpc.CallOption) (*RetractSolutionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RetractSolutionResponse)
+	err := c.cc.Invoke(ctx, BounceBot_RetractSolution_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BounceBotServer is the server API for BounceBot service.
 // All implementations must embed UnimplementedBounceBotServer
 // for forward compatibility.
@@ -123,6 +147,8 @@ type BounceBotServer interface {
 	JoinSession(context.Context, *JoinSessionRequest) (*Session, error)
 	GetSession(context.Context, *GetSessionRequest) (*Session, error)
 	StartGame(context.Context, *StartGameRequest) (*Session, error)
+	SubmitSolution(context.Context, *SubmitSolutionRequest) (*SubmitSolutionResponse, error)
+	RetractSolution(context.Context, *RetractSolutionRequest) (*RetractSolutionResponse, error)
 	mustEmbedUnimplementedBounceBotServer()
 }
 
@@ -150,6 +176,12 @@ func (UnimplementedBounceBotServer) GetSession(context.Context, *GetSessionReque
 }
 func (UnimplementedBounceBotServer) StartGame(context.Context, *StartGameRequest) (*Session, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartGame not implemented")
+}
+func (UnimplementedBounceBotServer) SubmitSolution(context.Context, *SubmitSolutionRequest) (*SubmitSolutionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitSolution not implemented")
+}
+func (UnimplementedBounceBotServer) RetractSolution(context.Context, *RetractSolutionRequest) (*RetractSolutionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetractSolution not implemented")
 }
 func (UnimplementedBounceBotServer) mustEmbedUnimplementedBounceBotServer() {}
 func (UnimplementedBounceBotServer) testEmbeddedByValue()                   {}
@@ -280,6 +312,42 @@ func _BounceBot_StartGame_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BounceBot_SubmitSolution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitSolutionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).SubmitSolution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_SubmitSolution_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).SubmitSolution(ctx, req.(*SubmitSolutionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_RetractSolution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetractSolutionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).RetractSolution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_RetractSolution_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).RetractSolution(ctx, req.(*RetractSolutionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BounceBot_ServiceDesc is the grpc.ServiceDesc for BounceBot service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -310,6 +378,14 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StartGame",
 			Handler:    _BounceBot_StartGame_Handler,
+		},
+		{
+			MethodName: "SubmitSolution",
+			Handler:    _BounceBot_SubmitSolution_Handler,
+		},
+		{
+			MethodName: "RetractSolution",
+			Handler:    _BounceBot_RetractSolution_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

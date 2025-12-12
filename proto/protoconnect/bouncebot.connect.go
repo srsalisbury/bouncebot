@@ -45,6 +45,12 @@ const (
 	BounceBotGetSessionProcedure = "/bouncebot.BounceBot/GetSession"
 	// BounceBotStartGameProcedure is the fully-qualified name of the BounceBot's StartGame RPC.
 	BounceBotStartGameProcedure = "/bouncebot.BounceBot/StartGame"
+	// BounceBotSubmitSolutionProcedure is the fully-qualified name of the BounceBot's SubmitSolution
+	// RPC.
+	BounceBotSubmitSolutionProcedure = "/bouncebot.BounceBot/SubmitSolution"
+	// BounceBotRetractSolutionProcedure is the fully-qualified name of the BounceBot's RetractSolution
+	// RPC.
+	BounceBotRetractSolutionProcedure = "/bouncebot.BounceBot/RetractSolution"
 )
 
 // BounceBotClient is a client for the bouncebot.BounceBot service.
@@ -56,6 +62,8 @@ type BounceBotClient interface {
 	JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error)
 	GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
+	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
+	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
 }
 
 // NewBounceBotClient constructs a client for the bouncebot.BounceBot service. By default, it uses
@@ -105,17 +113,31 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("StartGame")),
 			connect.WithClientOptions(opts...),
 		),
+		submitSolution: connect.NewClient[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse](
+			httpClient,
+			baseURL+BounceBotSubmitSolutionProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("SubmitSolution")),
+			connect.WithClientOptions(opts...),
+		),
+		retractSolution: connect.NewClient[proto.RetractSolutionRequest, proto.RetractSolutionResponse](
+			httpClient,
+			baseURL+BounceBotRetractSolutionProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("RetractSolution")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // bounceBotClient implements BounceBotClient.
 type bounceBotClient struct {
-	makeGame      *connect.Client[proto.MakeGameRequest, proto.Game]
-	checkSolution *connect.Client[proto.CheckSolutionRequest, proto.CheckSolutionResponse]
-	createSession *connect.Client[proto.CreateSessionRequest, proto.Session]
-	joinSession   *connect.Client[proto.JoinSessionRequest, proto.Session]
-	getSession    *connect.Client[proto.GetSessionRequest, proto.Session]
-	startGame     *connect.Client[proto.StartGameRequest, proto.Session]
+	makeGame        *connect.Client[proto.MakeGameRequest, proto.Game]
+	checkSolution   *connect.Client[proto.CheckSolutionRequest, proto.CheckSolutionResponse]
+	createSession   *connect.Client[proto.CreateSessionRequest, proto.Session]
+	joinSession     *connect.Client[proto.JoinSessionRequest, proto.Session]
+	getSession      *connect.Client[proto.GetSessionRequest, proto.Session]
+	startGame       *connect.Client[proto.StartGameRequest, proto.Session]
+	submitSolution  *connect.Client[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse]
+	retractSolution *connect.Client[proto.RetractSolutionRequest, proto.RetractSolutionResponse]
 }
 
 // MakeGame calls bouncebot.BounceBot.MakeGame.
@@ -148,6 +170,16 @@ func (c *bounceBotClient) StartGame(ctx context.Context, req *connect.Request[pr
 	return c.startGame.CallUnary(ctx, req)
 }
 
+// SubmitSolution calls bouncebot.BounceBot.SubmitSolution.
+func (c *bounceBotClient) SubmitSolution(ctx context.Context, req *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error) {
+	return c.submitSolution.CallUnary(ctx, req)
+}
+
+// RetractSolution calls bouncebot.BounceBot.RetractSolution.
+func (c *bounceBotClient) RetractSolution(ctx context.Context, req *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error) {
+	return c.retractSolution.CallUnary(ctx, req)
+}
+
 // BounceBotHandler is an implementation of the bouncebot.BounceBot service.
 type BounceBotHandler interface {
 	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
@@ -157,6 +189,8 @@ type BounceBotHandler interface {
 	JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error)
 	GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
+	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
+	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
 }
 
 // NewBounceBotHandler builds an HTTP handler from the service implementation. It returns the path
@@ -202,6 +236,18 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("StartGame")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bounceBotSubmitSolutionHandler := connect.NewUnaryHandler(
+		BounceBotSubmitSolutionProcedure,
+		svc.SubmitSolution,
+		connect.WithSchema(bounceBotMethods.ByName("SubmitSolution")),
+		connect.WithHandlerOptions(opts...),
+	)
+	bounceBotRetractSolutionHandler := connect.NewUnaryHandler(
+		BounceBotRetractSolutionProcedure,
+		svc.RetractSolution,
+		connect.WithSchema(bounceBotMethods.ByName("RetractSolution")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/bouncebot.BounceBot/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case BounceBotMakeGameProcedure:
@@ -216,6 +262,10 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 			bounceBotGetSessionHandler.ServeHTTP(w, r)
 		case BounceBotStartGameProcedure:
 			bounceBotStartGameHandler.ServeHTTP(w, r)
+		case BounceBotSubmitSolutionProcedure:
+			bounceBotSubmitSolutionHandler.ServeHTTP(w, r)
+		case BounceBotRetractSolutionProcedure:
+			bounceBotRetractSolutionHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -247,4 +297,12 @@ func (UnimplementedBounceBotHandler) GetSession(context.Context, *connect.Reques
 
 func (UnimplementedBounceBotHandler) StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.StartGame is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.SubmitSolution is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.RetractSolution is not implemented"))
 }

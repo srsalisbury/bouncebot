@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file bouncebot.proto.
  */
 export const file_bouncebot: GenFile = /*@__PURE__*/
-  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiHwoPTWFrZUdhbWVSZXF1ZXN0EgwKBHNpemUYASABKAUiVwoUQ2hlY2tTb2x1dGlvblJlcXVlc3QSHQoEZ2FtZRgBIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiAKBW1vdmVzGAIgAygLMhEuYm91bmNlYm90LkJvdFBvcyKTAQoVQ2hlY2tTb2x1dGlvblJlc3BvbnNlEhAKCGlzX3ZhbGlkGAEgASgIEhEKCW51bV9tb3ZlcxgCIAEoBRInCg5yZXN1bHRpbmdfZ2FtZRgDIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiwKDmZpcnN0X2JhZF9tb3ZlGAQgASgLMhQuYm91bmNlYm90Lk1vdmVFcnJvciJHCglNb3ZlRXJyb3ISHwoEbW92ZRgBIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MSGQoRZXJyb3JfZGVzY3JpcHRpb24YAiABKAkiIgoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkixQEKB1Nlc3Npb24SCgoCaWQYASABKAkSIgoHcGxheWVycxgCIAMoCzIRLmJvdW5jZWJvdC5QbGF5ZXISLgoKY3JlYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASJQoMY3VycmVudF9nYW1lGAQgASgLMg8uYm91bmNlYm90LkdhbWUSMwoPZ2FtZV9zdGFydGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIrChRDcmVhdGVTZXNzaW9uUmVxdWVzdBITCgtwbGF5ZXJfbmFtZRgBIAEoCSI9ChJKb2luU2Vzc2lvblJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRITCgtwbGF5ZXJfbmFtZRgCIAEoCSInChFHZXRTZXNzaW9uUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIiYKEFN0YXJ0R2FtZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCTKqAwoJQm91bmNlQm90EjkKCE1ha2VHYW1lEhouYm91bmNlYm90Lk1ha2VHYW1lUmVxdWVzdBoPLmJvdW5jZWJvdC5HYW1lIgASVAoNQ2hlY2tTb2x1dGlvbhIfLmJvdW5jZWJvdC5DaGVja1NvbHV0aW9uUmVxdWVzdBogLmJvdW5jZWJvdC5DaGVja1NvbHV0aW9uUmVzcG9uc2UiABJGCg1DcmVhdGVTZXNzaW9uEh8uYm91bmNlYm90LkNyZWF0ZVNlc3Npb25SZXF1ZXN0GhIuYm91bmNlYm90LlNlc3Npb24iABJCCgtKb2luU2Vzc2lvbhIdLmJvdW5jZWJvdC5Kb2luU2Vzc2lvblJlcXVlc3QaEi5ib3VuY2Vib3QuU2Vzc2lvbiIAEkAKCkdldFNlc3Npb24SHC5ib3VuY2Vib3QuR2V0U2Vzc2lvblJlcXVlc3QaEi5ib3VuY2Vib3QuU2Vzc2lvbiIAEj4KCVN0YXJ0R2FtZRIbLmJvdW5jZWJvdC5TdGFydEdhbWVSZXF1ZXN0GhIuYm91bmNlYm90LlNlc3Npb24iAEIoWiZnaXRodWIuY29tL3Nyc2FsaXNidXJ5L2JvdW5jZWJvdC9wcm90b2IGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiHwoPTWFrZUdhbWVSZXF1ZXN0EgwKBHNpemUYASABKAUiVwoUQ2hlY2tTb2x1dGlvblJlcXVlc3QSHQoEZ2FtZRgBIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiAKBW1vdmVzGAIgAygLMhEuYm91bmNlYm90LkJvdFBvcyKTAQoVQ2hlY2tTb2x1dGlvblJlc3BvbnNlEhAKCGlzX3ZhbGlkGAEgASgIEhEKCW51bV9tb3ZlcxgCIAEoBRInCg5yZXN1bHRpbmdfZ2FtZRgDIAEoCzIPLmJvdW5jZWJvdC5HYW1lEiwKDmZpcnN0X2JhZF9tb3ZlGAQgASgLMhQuYm91bmNlYm90Lk1vdmVFcnJvciJHCglNb3ZlRXJyb3ISHwoEbW92ZRgBIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MSGQoRZXJyb3JfZGVzY3JpcHRpb24YAiABKAkiIgoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkiewoOUGxheWVyU29sdXRpb24SEQoJcGxheWVyX2lkGAEgASgJEhMKC3BsYXllcl9uYW1lGAIgASgJEhIKCm1vdmVfY291bnQYAyABKAUSLQoJc29sdmVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCLzAQoHU2Vzc2lvbhIKCgJpZBgBIAEoCRIiCgdwbGF5ZXJzGAIgAygLMhEuYm91bmNlYm90LlBsYXllchIuCgpjcmVhdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIlCgxjdXJyZW50X2dhbWUYBCABKAsyDy5ib3VuY2Vib3QuR2FtZRIzCg9nYW1lX3N0YXJ0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCXNvbHV0aW9ucxgGIAMoCzIZLmJvdW5jZWJvdC5QbGF5ZXJTb2x1dGlvbiIrChRDcmVhdGVTZXNzaW9uUmVxdWVzdBITCgtwbGF5ZXJfbmFtZRgBIAEoCSI9ChJKb2luU2Vzc2lvblJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRITCgtwbGF5ZXJfbmFtZRgCIAEoCSInChFHZXRTZXNzaW9uUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIiYKEFN0YXJ0R2FtZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSJSChVTdWJtaXRTb2x1dGlvblJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIRCglwbGF5ZXJfaWQYAiABKAkSEgoKbW92ZV9jb3VudBgDIAEoBSJFChZTdWJtaXRTb2x1dGlvblJlc3BvbnNlEisKCHNvbHV0aW9uGAEgASgLMhkuYm91bmNlYm90LlBsYXllclNvbHV0aW9uIj8KFlJldHJhY3RTb2x1dGlvblJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIRCglwbGF5ZXJfaWQYAiABKAkiKgoXUmV0cmFjdFNvbHV0aW9uUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCDLfBAoJQm91bmNlQm90EjkKCE1ha2VHYW1lEhouYm91bmNlYm90Lk1ha2VHYW1lUmVxdWVzdBoPLmJvdW5jZWJvdC5HYW1lIgASVAoNQ2hlY2tTb2x1dGlvbhIfLmJvdW5jZWJvdC5DaGVja1NvbHV0aW9uUmVxdWVzdBogLmJvdW5jZWJvdC5DaGVja1NvbHV0aW9uUmVzcG9uc2UiABJGCg1DcmVhdGVTZXNzaW9uEh8uYm91bmNlYm90LkNyZWF0ZVNlc3Npb25SZXF1ZXN0GhIuYm91bmNlYm90LlNlc3Npb24iABJCCgtKb2luU2Vzc2lvbhIdLmJvdW5jZWJvdC5Kb2luU2Vzc2lvblJlcXVlc3QaEi5ib3VuY2Vib3QuU2Vzc2lvbiIAEkAKCkdldFNlc3Npb24SHC5ib3VuY2Vib3QuR2V0U2Vzc2lvblJlcXVlc3QaEi5ib3VuY2Vib3QuU2Vzc2lvbiIAEj4KCVN0YXJ0R2FtZRIbLmJvdW5jZWJvdC5TdGFydEdhbWVSZXF1ZXN0GhIuYm91bmNlYm90LlNlc3Npb24iABJXCg5TdWJtaXRTb2x1dGlvbhIgLmJvdW5jZWJvdC5TdWJtaXRTb2x1dGlvblJlcXVlc3QaIS5ib3VuY2Vib3QuU3VibWl0U29sdXRpb25SZXNwb25zZSIAEloKD1JldHJhY3RTb2x1dGlvbhIhLmJvdW5jZWJvdC5SZXRyYWN0U29sdXRpb25SZXF1ZXN0GiIuYm91bmNlYm90LlJldHJhY3RTb2x1dGlvblJlc3BvbnNlIgBCKFomZ2l0aHViLmNvbS9zcnNhbGlzYnVyeS9ib3VuY2Vib3QvcHJvdG9iBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * Board grid position.
@@ -244,6 +244,40 @@ export const PlayerSchema: GenMessage<Player> = /*@__PURE__*/
   messageDesc(file_bouncebot, 8);
 
 /**
+ * Player's solution result
+ *
+ * @generated from message bouncebot.PlayerSolution
+ */
+export type PlayerSolution = Message<"bouncebot.PlayerSolution"> & {
+  /**
+   * @generated from field: string player_id = 1;
+   */
+  playerId: string;
+
+  /**
+   * @generated from field: string player_name = 2;
+   */
+  playerName: string;
+
+  /**
+   * @generated from field: int32 move_count = 3;
+   */
+  moveCount: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp solved_at = 4;
+   */
+  solvedAt?: Timestamp;
+};
+
+/**
+ * Describes the message bouncebot.PlayerSolution.
+ * Use `create(PlayerSolutionSchema)` to create a new message.
+ */
+export const PlayerSolutionSchema: GenMessage<PlayerSolution> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 9);
+
+/**
  * Game session for multiplayer
  *
  * @generated from message bouncebot.Session
@@ -277,6 +311,13 @@ export type Session = Message<"bouncebot.Session"> & {
    * @generated from field: google.protobuf.Timestamp game_started_at = 5;
    */
   gameStartedAt?: Timestamp;
+
+  /**
+   * players who have solved the current game
+   *
+   * @generated from field: repeated bouncebot.PlayerSolution solutions = 6;
+   */
+  solutions: PlayerSolution[];
 };
 
 /**
@@ -284,7 +325,7 @@ export type Session = Message<"bouncebot.Session"> & {
  * Use `create(SessionSchema)` to create a new message.
  */
 export const SessionSchema: GenMessage<Session> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 9);
+  messageDesc(file_bouncebot, 10);
 
 /**
  * @generated from message bouncebot.CreateSessionRequest
@@ -301,7 +342,7 @@ export type CreateSessionRequest = Message<"bouncebot.CreateSessionRequest"> & {
  * Use `create(CreateSessionRequestSchema)` to create a new message.
  */
 export const CreateSessionRequestSchema: GenMessage<CreateSessionRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 10);
+  messageDesc(file_bouncebot, 11);
 
 /**
  * @generated from message bouncebot.JoinSessionRequest
@@ -323,7 +364,7 @@ export type JoinSessionRequest = Message<"bouncebot.JoinSessionRequest"> & {
  * Use `create(JoinSessionRequestSchema)` to create a new message.
  */
 export const JoinSessionRequestSchema: GenMessage<JoinSessionRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 11);
+  messageDesc(file_bouncebot, 12);
 
 /**
  * @generated from message bouncebot.GetSessionRequest
@@ -340,7 +381,7 @@ export type GetSessionRequest = Message<"bouncebot.GetSessionRequest"> & {
  * Use `create(GetSessionRequestSchema)` to create a new message.
  */
 export const GetSessionRequestSchema: GenMessage<GetSessionRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 12);
+  messageDesc(file_bouncebot, 13);
 
 /**
  * @generated from message bouncebot.StartGameRequest
@@ -357,7 +398,90 @@ export type StartGameRequest = Message<"bouncebot.StartGameRequest"> & {
  * Use `create(StartGameRequestSchema)` to create a new message.
  */
 export const StartGameRequestSchema: GenMessage<StartGameRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 13);
+  messageDesc(file_bouncebot, 14);
+
+/**
+ * @generated from message bouncebot.SubmitSolutionRequest
+ */
+export type SubmitSolutionRequest = Message<"bouncebot.SubmitSolutionRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string player_id = 2;
+   */
+  playerId: string;
+
+  /**
+   * @generated from field: int32 move_count = 3;
+   */
+  moveCount: number;
+};
+
+/**
+ * Describes the message bouncebot.SubmitSolutionRequest.
+ * Use `create(SubmitSolutionRequestSchema)` to create a new message.
+ */
+export const SubmitSolutionRequestSchema: GenMessage<SubmitSolutionRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 15);
+
+/**
+ * @generated from message bouncebot.SubmitSolutionResponse
+ */
+export type SubmitSolutionResponse = Message<"bouncebot.SubmitSolutionResponse"> & {
+  /**
+   * @generated from field: bouncebot.PlayerSolution solution = 1;
+   */
+  solution?: PlayerSolution;
+};
+
+/**
+ * Describes the message bouncebot.SubmitSolutionResponse.
+ * Use `create(SubmitSolutionResponseSchema)` to create a new message.
+ */
+export const SubmitSolutionResponseSchema: GenMessage<SubmitSolutionResponse> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 16);
+
+/**
+ * @generated from message bouncebot.RetractSolutionRequest
+ */
+export type RetractSolutionRequest = Message<"bouncebot.RetractSolutionRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string player_id = 2;
+   */
+  playerId: string;
+};
+
+/**
+ * Describes the message bouncebot.RetractSolutionRequest.
+ * Use `create(RetractSolutionRequestSchema)` to create a new message.
+ */
+export const RetractSolutionRequestSchema: GenMessage<RetractSolutionRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 17);
+
+/**
+ * @generated from message bouncebot.RetractSolutionResponse
+ */
+export type RetractSolutionResponse = Message<"bouncebot.RetractSolutionResponse"> & {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
+};
+
+/**
+ * Describes the message bouncebot.RetractSolutionResponse.
+ * Use `create(RetractSolutionResponseSchema)` to create a new message.
+ */
+export const RetractSolutionResponseSchema: GenMessage<RetractSolutionResponse> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 18);
 
 /**
  * Service for client to fetch a game board and return results.
@@ -414,6 +538,22 @@ export const BounceBot: GenService<{
     methodKind: "unary";
     input: typeof StartGameRequestSchema;
     output: typeof SessionSchema;
+  },
+  /**
+   * @generated from rpc bouncebot.BounceBot.SubmitSolution
+   */
+  submitSolution: {
+    methodKind: "unary";
+    input: typeof SubmitSolutionRequestSchema;
+    output: typeof SubmitSolutionResponseSchema;
+  },
+  /**
+   * @generated from rpc bouncebot.BounceBot.RetractSolution
+   */
+  retractSolution: {
+    methodKind: "unary";
+    input: typeof RetractSolutionRequestSchema;
+    output: typeof RetractSolutionResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_bouncebot, 0);

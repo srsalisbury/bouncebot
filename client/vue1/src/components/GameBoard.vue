@@ -4,8 +4,32 @@ import { useGameStore } from '../stores/gameStore'
 import { BOARD_SIZE, CELL_SIZE, WALL_COLOR, WALL_THICKNESS, DIRECTION_ARROWS, getRobotColor, type Direction } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
 
+const props = defineProps<{
+  onBeforeRetract?: (action: () => void) => void
+}>()
+
 const store = useGameStore()
 const showHowToPlay = ref(false)
+
+// Wrap actions that could retract a solution
+function doUndo() {
+  // Only need confirmation if current solution is solved and this is the last move
+  const currentSolution = store.solutions[store.activeSolutionIndex]
+  if (currentSolution?.isSolved && props.onBeforeRetract) {
+    props.onBeforeRetract(() => store.undoMove())
+  } else {
+    store.undoMove()
+  }
+}
+
+function doDelete(index: number) {
+  const solution = store.solutions[index]
+  if (solution?.isSolved && props.onBeforeRetract) {
+    props.onBeforeRetract(() => store.deleteSolution(index))
+  } else {
+    store.deleteSolution(index)
+  }
+}
 
 const boardPixelSize = BOARD_SIZE * CELL_SIZE
 
@@ -26,14 +50,14 @@ function handleKeydown(event: KeyboardEvent) {
 
   // Undo
   if (key === 'z' || key === 'u' || key === 'Escape') {
-    store.undoMove()
+    doUndo()
     return
   }
 
   // Shift commands
   if (shiftKey) {
     if (key === 'R') { store.resetPuzzle(); return }
-    if (key === 'D') { store.deleteSolution(store.activeSolutionIndex); return }
+    if (key === 'D') { doDelete(store.activeSolutionIndex); return }
     if (key === 'ArrowLeft') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex - 1); return }
     if (key === 'ArrowRight') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex + 1); return }
   }

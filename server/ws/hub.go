@@ -40,6 +40,17 @@ type GameStartedPayload struct {
 	// Game data is sent via session refresh
 }
 
+// PlayerSolvedPayload is the payload for player_solved events.
+type PlayerSolvedPayload struct {
+	PlayerID  string `json:"playerId"`
+	MoveCount int    `json:"moveCount"`
+}
+
+// SolutionRetractedPayload is the payload for solution_retracted events.
+type SolutionRetractedPayload struct {
+	PlayerID string `json:"playerId"`
+}
+
 // Client represents a WebSocket client connection.
 type Client struct {
 	hub       *Hub
@@ -106,6 +117,27 @@ func (h *Hub) BroadcastGameStarted(sessionID string) {
 	h.Broadcast(sessionID, Event{
 		Type:    "game_started",
 		Payload: GameStartedPayload{},
+	})
+}
+
+// BroadcastPlayerSolved broadcasts a player_solved event to all clients in a session.
+func (h *Hub) BroadcastPlayerSolved(sessionID, playerID string, moveCount int) {
+	h.Broadcast(sessionID, Event{
+		Type: "player_solved",
+		Payload: PlayerSolvedPayload{
+			PlayerID:  playerID,
+			MoveCount: moveCount,
+		},
+	})
+}
+
+// BroadcastSolutionRetracted broadcasts a solution_retracted event to all clients in a session.
+func (h *Hub) BroadcastSolutionRetracted(sessionID, playerID string) {
+	h.Broadcast(sessionID, Event{
+		Type: "solution_retracted",
+		Payload: SolutionRetractedPayload{
+			PlayerID: playerID,
+		},
 	})
 }
 
