@@ -43,6 +43,19 @@ const isPlayerDone = computed(() => {
   return session.value.donePlayers.includes(sessionStore.currentPlayerId)
 })
 
+const sortedSolutions = computed(() => {
+  if (!session.value) return []
+  return [...session.value.solutions].sort((a, b) => {
+    // Sort by move count (ascending), then by solve time (earlier first)
+    if (a.moves.length !== b.moves.length) {
+      return a.moves.length - b.moves.length
+    }
+    const timeA = a.solvedAt?.seconds ?? 0n
+    const timeB = b.solvedAt?.seconds ?? 0n
+    return Number(timeA - timeB)
+  })
+})
+
 function getPlayerName(playerId: string): string {
   const player = session.value?.players.find(p => p.id === playerId)
   return player?.name ?? 'Unknown'
@@ -424,10 +437,22 @@ onUnmounted(() => {
       <!-- Game ended overlay -->
       <div v-if="gameEnded" class="game-ended-overlay">
         <div class="game-ended-content">
-          <h2 v-if="winner">{{ winner.name }} wins!</h2>
-          <h2 v-else>No winner</h2>
-          <p v-if="winner">Solved in {{ winner.moveCount }} moves</p>
-          <p v-else>No one submitted a solution</p>
+          <h2>Board Solved</h2>
+
+          <!-- Results list -->
+          <div v-if="session && session.solutions.length > 0" class="results-list">
+            <div
+              v-for="(solution, index) in sortedSolutions"
+              :key="solution.playerId"
+              class="result-item"
+              :class="{ winner: index === 0 }"
+            >
+              <span class="result-name">{{ getPlayerName(solution.playerId) }}</span>
+              <span class="result-moves">{{ solution.moves.length }} moves</span>
+            </div>
+          </div>
+          <p v-else class="no-winner">No one submitted a solution</p>
+
           <button
             class="btn primary"
             :disabled="isStarting"
@@ -850,15 +875,45 @@ onUnmounted(() => {
 }
 
 .game-ended-content h2 {
-  color: #ffd700;
-  margin: 0 0 0.5rem;
+  color: #eee;
+  margin: 0 0 1rem;
   font-size: 1.75rem;
 }
 
-.game-ended-content p {
-  color: #aaa;
+.game-ended-content .no-winner {
+  color: #888;
   margin: 0 0 1.5rem;
   font-size: 1.1rem;
+}
+
+.results-list {
+  margin: 1rem 0 1.5rem;
+  text-align: left;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  background: #242424;
+}
+
+.result-item.winner {
+  background: #2e2a1a;
+  border: 1px solid #ffd700;
+}
+
+.result-name {
+  flex: 1;
+  color: #ddd;
+}
+
+.result-moves {
+  color: #42b883;
+  font-size: 0.9rem;
 }
 
 .game-ended-content .btn {
