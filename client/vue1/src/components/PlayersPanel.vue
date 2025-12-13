@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { Player, PlayerSolution } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import { useSessionStore } from '../stores/sessionStore'
@@ -10,6 +10,64 @@ const props = defineProps<{
   gameStartedAt?: Timestamp
   compact?: boolean
 }>()
+
+// Timer state
+const elapsedTime = ref<string>('0:00')
+const timerInterval = ref<number | null>(null)
+
+function formatElapsedTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+function updateTimer() {
+  if (!props.gameStartedAt) {
+    elapsedTime.value = '0:00'
+    return
+  }
+
+  const startSeconds = Number(props.gameStartedAt.seconds ?? 0)
+  const startNanos = Number(props.gameStartedAt.nanos ?? 0)
+  const startTime = startSeconds + startNanos / 1e9
+
+  const now = Date.now() / 1000
+  const elapsed = Math.max(0, now - startTime)
+  elapsedTime.value = formatElapsedTime(elapsed)
+}
+
+function startTimer() {
+  stopTimer()
+  updateTimer()
+  timerInterval.value = window.setInterval(updateTimer, 1000)
+}
+
+function stopTimer() {
+  if (timerInterval.value !== null) {
+    clearInterval(timerInterval.value)
+    timerInterval.value = null
+  }
+}
+
+// Start timer when gameStartedAt changes
+watch(() => props.gameStartedAt, (newVal) => {
+  if (newVal) {
+    startTimer()
+  } else {
+    stopTimer()
+    elapsedTime.value = '0:00'
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  if (props.gameStartedAt) {
+    startTimer()
+  }
+})
+
+onUnmounted(() => {
+  stopTimer()
+})
 
 const sessionStore = useSessionStore()
 
@@ -142,6 +200,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
         </span>
       </div>
     </TransitionGroup>
+    <!-- Timer display in compact mode (during game) - on right end -->
+    <div v-if="compact && gameStartedAt" class="timer-display">
+      <span class="timer-icon">⏱</span>
+      <span class="timer-value">{{ elapsedTime }}</span>
+    </div>
   </div>
 </template>
 
@@ -150,6 +213,17 @@ function getSolveTime(solution: PlayerSolution): string | null {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: #242424;
+  border-radius: 6px;
+  color: #ddd;
+  font-size: 0.9rem;
 }
 
 .waiting-message {
@@ -230,6 +304,19 @@ function getSolveTime(solution: PlayerSolution): string | null {
 }
 
 /* Compact mode for game view */
+.compact {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.compact .timer-display {
+  padding: 0.3rem 0.5rem;
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
 .compact .players-list {
   flex-direction: row;
   flex-wrap: wrap;

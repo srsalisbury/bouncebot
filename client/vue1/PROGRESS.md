@@ -680,6 +680,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.6: Game Timer
+**Status:** Complete
+
+**What was done:**
+- Added live timer display to PlayersPanel component
+- Timer shows elapsed time since game started (MM:SS format)
+- Updates every second using setInterval
+- Positioned on right end of players bar in compact mode
+- Styled consistently with player items (same font, color, background)
+- Timer starts automatically when gameStartedAt prop changes
+- Properly cleans up interval on unmount
+
+**Files modified:**
+- `src/components/PlayersPanel.vue` - Added timer state, formatting, and display
+
+---
+
 ## In Progress
 
 _None currently_
@@ -688,4 +705,4 @@ _None currently_
 
 ## Up Next
 
-- Step 29.6: Game Timer
+- Step 29.7: Scoring & Results
