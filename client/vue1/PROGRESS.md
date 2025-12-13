@@ -654,6 +654,32 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 32: Dynamic Game Board Generation
+**Status:** Complete
+
+**What was done:**
+- Added NewRandomGame() function to model/games.go
+- Shuffles panels 1-4 into random positions for board variety
+- Picks random target from PossibleTargets() locations
+- Picks random target robot (0-3)
+- Places robots randomly avoiding: each other, target position, center 4 cells
+- Updated StartGame() to use NewRandomGame() by default
+- Added `use_fixed_board` option to StartGameRequest proto for testing with Game1()
+- Added comprehensive tests for random game generation and fixed board option
+
+**Files modified:**
+- `model/games.go` - Added NewRandomGame() function
+- `model/games_test.go` - Added TestNewRandomGame with constraint validation
+- `server/session/session.go` - Changed StartGame to support random/fixed boards
+- `server/session/session_test.go` - Added TestStartGame_FixedBoard test
+- `server/main.go` - Pass UseFixedBoard flag to session store
+- `proto/bouncebot.proto` - Added use_fixed_board to StartGameRequest
+- `proto/*.go` - Regenerated
+- `src/gen/bouncebot_pb.ts` - Regenerated
+- `src/views/SessionView.vue` - Added "Use fixed board" checkbox option
+
+---
+
 ## In Progress
 
 _None currently_
@@ -663,4 +689,3 @@ _None currently_
 ## Up Next
 
 - Step 29.6: Game Timer
-- Step 32: Dynamic Game Board Generation

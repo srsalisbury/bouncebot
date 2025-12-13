@@ -185,7 +185,8 @@ func (store *Store) Get(sessionID string) (*Session, error) {
 }
 
 // StartGame starts a new game in the session.
-func (store *Store) StartGame(sessionID string) (*Session, error) {
+// If useFixedBoard is true, uses the fixed Game1() configuration instead of random.
+func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -194,8 +195,13 @@ func (store *Store) StartGame(sessionID string) (*Session, error) {
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
 
-	// Generate a new game
-	game := model.Game1()
+	// Generate game (fixed or random)
+	var game *model.Game
+	if useFixedBoard {
+		game = model.Game1()
+	} else {
+		game = model.NewRandomGame()
+	}
 	now := time.Now()
 
 	session.CurrentGame = game

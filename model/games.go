@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 // Tools for building boards and games.
 
@@ -174,7 +177,7 @@ func mustBuildNewGame(board Board, bots map[BotId]Position, botTarget BotPositio
 	return game
 }
 
-// Returns a sample full-sized game.
+// Returns a sample full-sized game with fixed configuration.
 func Game1() *Game {
 	board := Board1()
 	bots := map[BotId]Position{
@@ -184,5 +187,76 @@ func Game1() *Game {
 		3: {X: 12, Y: 4},
 	}
 	target := BotPosition{Id: 0, Pos: Position{X: 5, Y: 13}}
+	return mustBuildNewGame(board, bots, target)
+}
+
+// NewRandomGame generates a new game with random configuration:
+// - Random permutation of panels 1-4
+// - Random target from possible target locations
+// - Random robot placement (avoiding each other, target, and center cells)
+func NewRandomGame() *Game {
+	// Shuffle panels 1-4 into random positions
+	panels := []int{1, 2, 3, 4}
+	rand.Shuffle(len(panels), func(i, j int) {
+		panels[i], panels[j] = panels[j], panels[i]
+	})
+	board := BuildBoard(panels[0], panels[1], panels[2], panels[3])
+
+	// Pick a random target from possible targets
+	possibleTargets := board.PossibleTargets()
+	if len(possibleTargets) == 0 {
+		panic("board has no possible targets")
+	}
+	targetPos := possibleTargets[rand.Intn(len(possibleTargets))]
+	targetBotId := BotId(rand.Intn(4))
+	target := BotPosition{Id: targetBotId, Pos: targetPos}
+
+	// Place robots randomly, avoiding:
+	// - Each other
+	// - The target position
+	// - The center 4 cells (for a 16x16 board: (7,7), (8,7), (7,8), (8,8))
+	size := board.Size()
+	centerCells := []Position{
+		{X: size/2 - 1, Y: size/2 - 1},
+		{X: size / 2, Y: size/2 - 1},
+		{X: size/2 - 1, Y: size / 2},
+		{X: size / 2, Y: size / 2},
+	}
+
+	isOccupied := func(pos Position, placedBots map[BotId]Position) bool {
+		// Check if position is the target
+		if pos == targetPos {
+			return true
+		}
+		// Check if position is a center cell
+		for _, center := range centerCells {
+			if pos == center {
+				return true
+			}
+		}
+		// Check if position is already occupied by another bot
+		for _, botPos := range placedBots {
+			if pos == botPos {
+				return true
+			}
+		}
+		return false
+	}
+
+	bots := make(map[BotId]Position)
+	for botId := BotId(0); botId < 4; botId++ {
+		// Find a random unoccupied position
+		for {
+			pos := Position{
+				X: BoardDim(rand.Intn(int(size))),
+				Y: BoardDim(rand.Intn(int(size))),
+			}
+			if !isOccupied(pos, bots) {
+				bots[botId] = pos
+				break
+			}
+		}
+	}
+
 	return mustBuildNewGame(board, bots, target)
 }

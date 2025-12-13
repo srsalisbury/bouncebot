@@ -87,7 +87,7 @@ func TestStartGame(t *testing.T) {
 	session := store.Create("Alice")
 	sessionID := session.ID
 
-	session, err := store.StartGame(sessionID)
+	session, err := store.StartGame(sessionID, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -103,9 +103,35 @@ func TestStartGame(t *testing.T) {
 func TestStartGame_NotFound(t *testing.T) {
 	store := NewStore()
 
-	_, err := store.StartGame("nonexistent")
+	_, err := store.StartGame("nonexistent", false)
 	if err == nil {
 		t.Error("expected error for nonexistent session")
+	}
+}
+
+func TestStartGame_FixedBoard(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	sessionID := session.ID
+
+	// Start with fixed board
+	session, err := store.StartGame(sessionID, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if session.CurrentGame == nil {
+		t.Error("expected game to be set after StartGame")
+	}
+
+	// Fixed board should have target at position (5, 13) for robot 0
+	target := session.CurrentGame.Target
+	if target.Id != 0 {
+		t.Errorf("expected fixed board target robot ID 0, got %d", target.Id)
+	}
+	if target.Pos.X != 5 || target.Pos.Y != 13 {
+		t.Errorf("expected fixed board target at (5, 13), got (%d, %d)", target.Pos.X, target.Pos.Y)
 	}
 }
 
@@ -116,11 +142,11 @@ func TestStartGame_Multiple(t *testing.T) {
 	sessionID := session.ID
 
 	// Start first game
-	session, _ = store.StartGame(sessionID)
+	session, _ = store.StartGame(sessionID, false)
 	firstGameStartedAt := session.GameStartedAt
 
 	// Start second game (simulates "next game")
-	session, err := store.StartGame(sessionID)
+	session, err := store.StartGame(sessionID, false)
 	if err != nil {
 		t.Fatalf("unexpected error starting second game: %v", err)
 	}
@@ -138,7 +164,7 @@ func TestSessionToProto(t *testing.T) {
 
 	session := store.Create("Alice")
 	store.Join(session.ID, "Bob")
-	store.StartGame(session.ID)
+	store.StartGame(session.ID, false)
 
 	session, _ = store.Get(session.ID)
 	proto := session.ToProto()
