@@ -753,7 +753,7 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ## In Progress
 
-### Step 29.8: End of Game Experience (Steps 1-2)
+### Step 29.8: End of Game Experience (Steps 1-3)
 **Status:** In Progress
 
 **Step 1 - I'm Done Button:**
@@ -768,8 +768,14 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 **Step 2 - Game End Detection:**
 - Server detects when all players are done
 - Added game_ended WebSocket event with winner info (id, name, moveCount)
-- Client shows game ended overlay with winner announcement
+- Client shows game ended overlay with "Board Solved" heading
 - Removed redundant "Next Game" button from header (only in overlay now)
+
+**Step 3 - Results Display:**
+- Game ended overlay shows ranked list of all solvers
+- Each solver shows name and move count
+- Winner (best solution) highlighted with gold border
+- Sorted by move count, then solve time
 
 **Files modified:**
 - `proto/bouncebot.proto` - Added done_players, MarkDone RPC
@@ -777,13 +783,16 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 - `server/ws/hub.go` - Added PlayerDonePayload, GameEndedPayload, BroadcastPlayerDone, BroadcastGameEnded
 - `server/main.go` - Added MarkDone RPC handler
 - `src/services/websocket.ts` - Added player_done, game_ended event types
-- `src/views/SessionView.vue` - I'm Done button, game ended overlay, WebSocket handlers
+- `src/views/SessionView.vue` - I'm Done button, game ended overlay with results, WebSocket handlers
 - `src/components/PlayersPanel.vue` - donePlayers prop, checkmark display, timer cap
 
 **Remaining steps for End of Game Experience:**
-- Step 3: Winner announcement UI (basic version done, may enhance)
 - Step 4: Solution replay (step through winning moves slowly, no move counter)
 - Step 5: "Ready for Next Game" flow with waiting indicators
+
+**Future UI improvements:**
+- Add a separate session scoreboard overlay showing players and their cumulative win counts
+- Remove win counts from the in-game leaderboard (PlayersPanel) to reduce clutter
 
 ---
 
