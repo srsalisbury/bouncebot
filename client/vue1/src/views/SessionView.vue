@@ -71,6 +71,7 @@ async function startGame(useFixedBoard = false) {
   try {
     const sess = await bounceBotClient.startGame({ sessionId: props.sessionId, useFixedBoard })
     session.value = sess
+    bestSubmittedMoveCount.value = null // Reset for new game
 
     if (sess.currentGame) {
       gameStore.applyGame(sess.currentGame)
@@ -349,6 +350,13 @@ onUnmounted(() => {
     <div v-else-if="hasGame && session" class="game-wrapper">
       <div class="game-header">
         <PlayersPanel :players="session.players" :solutions="session.solutions" :game-started-at="session.gameStartedAt" compact />
+        <button
+          class="btn next-game-btn"
+          :disabled="isStarting"
+          @click="startGame(false)"
+        >
+          {{ isStarting ? 'Starting...' : 'Next Game' }}
+        </button>
       </div>
       <div class="game-container">
         <GameBoard :on-before-retract="onBeforeRetract" />
@@ -481,10 +489,20 @@ onUnmounted(() => {
 }
 
 .game-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
   padding: 0.5rem 1rem;
   background: #1a1a1a;
   border-radius: 8px;
+}
+
+.next-game-btn {
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .game-container {

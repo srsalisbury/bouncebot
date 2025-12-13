@@ -66,7 +66,7 @@ func Panel1() Board {
 		|              | []                      
 		+    +    +    +----+    +    +    +----+
 		|                                  |     
-		+    +    +    +    +    +----+    +    +
+		+    +    +    +    +    +    +    +    +
 	`)
 }
 
@@ -259,4 +259,53 @@ func NewRandomGame() *Game {
 	}
 
 	return mustBuildNewGame(board, bots, target)
+}
+
+// NewContinuationGame creates a new game continuing from the previous game:
+// - Same board configuration
+// - Same robot positions (keeps robots where they ended up)
+// - New random target position and robot
+func NewContinuationGame(prev *Game) *Game {
+	if prev == nil {
+		return NewRandomGame()
+	}
+
+	// Copy the bot positions
+	bots := make(map[BotId]Position)
+	for id, pos := range prev.Bots {
+		bots[id] = pos
+	}
+
+	// Pick a new random target from possible targets
+	// Avoid placing target where a robot already is
+	possibleTargets := prev.Board.PossibleTargets()
+	if len(possibleTargets) == 0 {
+		panic("board has no possible targets")
+	}
+
+	// Filter out positions occupied by robots
+	availableTargets := make([]Position, 0, len(possibleTargets))
+	for _, pos := range possibleTargets {
+		occupied := false
+		for _, botPos := range bots {
+			if pos == botPos {
+				occupied = true
+				break
+			}
+		}
+		if !occupied {
+			availableTargets = append(availableTargets, pos)
+		}
+	}
+
+	// If all targets are occupied (unlikely), fall back to all possible targets
+	if len(availableTargets) == 0 {
+		availableTargets = possibleTargets
+	}
+
+	targetPos := availableTargets[rand.Intn(len(availableTargets))]
+	targetBotId := BotId(rand.Intn(4))
+	target := BotPosition{Id: targetBotId, Pos: targetPos}
+
+	return mustBuildNewGame(prev.Board, bots, target)
 }

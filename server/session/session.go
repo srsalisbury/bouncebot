@@ -186,6 +186,7 @@ func (store *Store) Get(sessionID string) (*Session, error) {
 
 // StartGame starts a new game in the session.
 // If useFixedBoard is true, uses the fixed Game1() configuration instead of random.
+// If there's an existing game, continues with same board/robots but new target.
 func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
@@ -195,11 +196,15 @@ func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, e
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
 
-	// Generate game (fixed or random)
+	// Generate game
 	var game *model.Game
 	if useFixedBoard {
 		game = model.Game1()
+	} else if session.CurrentGame != nil {
+		// Continue from existing game: same board/robots, new target
+		game = model.NewContinuationGame(session.CurrentGame)
 	} else {
+		// First game: fully random
 		game = model.NewRandomGame()
 	}
 	now := time.Now()
