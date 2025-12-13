@@ -21,17 +21,15 @@ type Player struct {
 
 // PlayerSolution represents a player's solution to the current game.
 type PlayerSolution struct {
-	PlayerID   string
-	PlayerName string
-	MoveCount  int
-	SolvedAt   time.Time
+	PlayerID  string
+	MoveCount int
+	SolvedAt  time.Time
 }
 
 // PlayerSolutionHistory tracks all solutions a player has found (for restoring after retraction).
 type PlayerSolutionHistory struct {
-	PlayerID   string
-	PlayerName string
-	Solutions  []struct {
+	PlayerID  string
+	Solutions []struct {
 		MoveCount int
 		SolvedAt  time.Time
 	}
@@ -44,8 +42,18 @@ type Session struct {
 	CreatedAt       time.Time
 	CurrentGame     *model.Game
 	GameStartedAt   *time.Time
-	Solutions       []PlayerSolution          // Current best solution per player
-	SolutionHistory []PlayerSolutionHistory   // All solutions per player (for retraction)
+	Solutions       []PlayerSolution        // Current best solution per player
+	SolutionHistory []PlayerSolutionHistory // All solutions per player (for retraction)
+}
+
+// GetPlayerName returns the name of the player with the given ID, or empty string if not found.
+func (s *Session) GetPlayerName(playerID string) string {
+	for _, p := range s.Players {
+		if p.ID == playerID {
+			return p.Name
+		}
+	}
+	return ""
 }
 
 // ToProto converts a Session to its protobuf representation.
@@ -61,10 +69,9 @@ func (s *Session) ToProto() *pb.Session {
 	solutions := make([]*pb.PlayerSolution, len(s.Solutions))
 	for i, sol := range s.Solutions {
 		solutions[i] = &pb.PlayerSolution{
-			PlayerId:   sol.PlayerID,
-			PlayerName: sol.PlayerName,
-			MoveCount:  int32(sol.MoveCount),
-			SolvedAt:   timestamppb.New(sol.SolvedAt),
+			PlayerId:  sol.PlayerID,
+			MoveCount: int32(sol.MoveCount),
+			SolvedAt:  timestamppb.New(sol.SolvedAt),
 		}
 	}
 
@@ -218,22 +225,15 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moveCount int) (*
 		return nil, fmt.Errorf("no game in progress")
 	}
 
-	// Find player name from ID
-	var playerName string
-	for _, p := range session.Players {
-		if p.ID == playerID {
-			playerName = p.Name
-			break
-		}
-	}
-	if playerName == "" {
+	// Verify player exists
+	if session.GetPlayerName(playerID) == "" {
 		return nil, fmt.Errorf("player not found: %s", playerID)
 	}
 
 	now := time.Now()
 
 	// Add to solution history
-	store.addToHistory(session, playerID, playerName, moveCount, now)
+	store.addToHistory(session, playerID, moveCount, now)
 
 	// Check if player already submitted a solution for this game
 	for i := range session.Solutions {
@@ -253,10 +253,9 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moveCount int) (*
 	}
 
 	solution := PlayerSolution{
-		PlayerID:   playerID,
-		PlayerName: playerName,
-		MoveCount:  moveCount,
-		SolvedAt:   now,
+		PlayerID:  playerID,
+		MoveCount: moveCount,
+		SolvedAt:  now,
 	}
 	session.Solutions = append(session.Solutions, solution)
 
@@ -269,7 +268,7 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moveCount int) (*
 }
 
 // addToHistory adds a solution to the player's history (if not already present with same move count).
-func (store *Store) addToHistory(session *Session, playerID, playerName string, moveCount int, solvedAt time.Time) {
+func (store *Store) addToHistory(session *Session, playerID string, moveCount int, solvedAt time.Time) {
 	// Find or create history entry for this player
 	var history *PlayerSolutionHistory
 	for i := range session.SolutionHistory {
@@ -280,8 +279,7 @@ func (store *Store) addToHistory(session *Session, playerID, playerName string, 
 	}
 	if history == nil {
 		session.SolutionHistory = append(session.SolutionHistory, PlayerSolutionHistory{
-			PlayerID:   playerID,
-			PlayerName: playerName,
+			PlayerID: playerID,
 		})
 		history = &session.SolutionHistory[len(session.SolutionHistory)-1]
 	}

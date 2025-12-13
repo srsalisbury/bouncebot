@@ -636,6 +636,24 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Refactor: Remove Redundant PlayerName from Solution Types
+**Status:** Complete
+
+**What was done:**
+- Removed player_name field from PlayerSolution proto message
+- Removed PlayerName field from Go PlayerSolution and PlayerSolutionHistory structs
+- Added Session.GetPlayerName() helper method for name lookups
+- Client already uses player ID to look up names from session's Players list
+
+**Files modified:**
+- `proto/bouncebot.proto` - Removed player_name from PlayerSolution
+- `proto/bouncebot.pb.go` - Regenerated
+- `client/vue1/src/gen/bouncebot_pb.ts` - Regenerated
+- `server/session/session.go` - Removed PlayerName fields, added GetPlayerName helper
+- `server/main.go` - Simplified SubmitSolution response
+
+---
+
 ## In Progress
 
 _None currently_
