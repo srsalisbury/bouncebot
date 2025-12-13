@@ -82,8 +82,14 @@ message Player {
 // Player's solution result
 message PlayerSolution {
   string player_id = 1;
-  int32 move_count = 2;
-  google.protobuf.Timestamp solved_at = 3;
+  google.protobuf.Timestamp solved_at = 2;
+  repeated BotPos moves = 3;
+}
+
+// Player's cumulative score in the session
+message PlayerScore {
+  string player_id = 1;
+  int32 wins = 2;  // number of games won
 }
 
 // Game session for multiplayer
@@ -94,6 +100,8 @@ message Session {
   Game current_game = 4;  // null if no game started yet
   google.protobuf.Timestamp game_started_at = 5;  // when current game started
   repeated PlayerSolution solutions = 6;  // players who have solved the current game
+  repeated PlayerScore scores = 7;  // cumulative scores across games
+  int32 games_played = 8;  // total games completed in session
 }
 
 message CreateSessionRequest {
@@ -117,7 +125,7 @@ message StartGameRequest {
 message SubmitSolutionRequest {
   string session_id = 1;
   string player_id = 2;
-  int32 move_count = 3;
+  repeated BotPos moves = 3;
 }
 
 message SubmitSolutionResponse {

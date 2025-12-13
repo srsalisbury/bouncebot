@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { Player, PlayerSolution } from '../gen/bouncebot_pb'
+import type { Player, PlayerSolution, PlayerScore } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import { useSessionStore } from '../stores/sessionStore'
 
 const props = defineProps<{
   players: Player[]
   solutions?: PlayerSolution[]
+  scores?: PlayerScore[]
   gameStartedAt?: Timestamp
   compact?: boolean
 }>()
@@ -104,8 +105,8 @@ const sortedPlayers = computed(() => {
 
     // Both solved: sort by move count (ascending), then by time (earlier first)
     if (solA && solB) {
-      if (solA.moveCount !== solB.moveCount) {
-        return solA.moveCount - solB.moveCount
+      if (solA.moves.length !== solB.moves.length) {
+        return solA.moves.length - solB.moves.length
       }
       // Same move count: sort by solved time (earlier first)
       const timeA = solA.solvedAt?.seconds ?? 0
@@ -125,8 +126,8 @@ const sortedPlayers = computed(() => {
 const leaderPlayerId = computed(() => {
   if (!props.solutions || props.solutions.length === 0) return null
 
-  const bestMoveCount = Math.min(...props.solutions.map((s) => s.moveCount))
-  const bestSolutions = props.solutions.filter((s) => s.moveCount === bestMoveCount)
+  const bestMoveCount = Math.min(...props.solutions.map((s) => s.moves.length))
+  const bestSolutions = props.solutions.filter((s) => s.moves.length === bestMoveCount)
 
   // Find earliest among best solutions
   let earliest = bestSolutions[0]
@@ -143,6 +144,11 @@ const leaderPlayerId = computed(() => {
 
 function getPlayerSolution(player: Player): PlayerSolution | undefined {
   return props.solutions?.find((s) => s.playerId === player.id)
+}
+
+function getPlayerWins(player: Player): number {
+  const score = props.scores?.find((s) => s.playerId === player.id)
+  return score?.wins ?? 0
 }
 
 function getPlayerColor(player: Player): string {
@@ -192,8 +198,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
         <span class="player-dot" :style="{ backgroundColor: getPlayerColor(player) }" />
         <span class="player-name">{{ player.name }}</span>
         <span v-if="isCurrentPlayer(player)" class="you-label">(you)</span>
+        <span v-if="getPlayerWins(player) > 0" class="wins-badge">
+          {{ getPlayerWins(player) }} {{ getPlayerWins(player) === 1 ? 'win' : 'wins' }}
+        </span>
         <span v-if="getPlayerSolution(player)" class="solution-badge">
-          {{ getPlayerSolution(player)?.moveCount }} moves
+          {{ getPlayerSolution(player)?.moves.length }} moves
           <span v-if="getSolveTime(getPlayerSolution(player)!)" class="solve-time">
             {{ getSolveTime(getPlayerSolution(player)!) }}
           </span>
@@ -272,6 +281,15 @@ function getSolveTime(solution: PlayerSolution): string | null {
 .you-label {
   color: #42b883;
   font-size: 0.8rem;
+}
+
+.wins-badge {
+  padding: 0.1rem 0.35rem;
+  background: #4a4a6a;
+  color: #ddd;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
 .solution-badge {

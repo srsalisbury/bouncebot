@@ -21,18 +21,20 @@ type Player struct {
 
 // PlayerSolution represents a player's solution to the current game.
 type PlayerSolution struct {
-	PlayerID  string
-	MoveCount int
-	SolvedAt  time.Time
+	PlayerID string
+	SolvedAt time.Time
+	Moves    []model.BotPosition // The actual moves that solved the puzzle
+}
+
+// MoveCount returns the number of moves in the solution.
+func (s *PlayerSolution) MoveCount() int {
+	return len(s.Moves)
 }
 
 // PlayerSolutionHistory tracks all solutions a player has found (for restoring after retraction).
 type PlayerSolutionHistory struct {
 	PlayerID  string
-	Solutions []struct {
-		MoveCount int
-		SolvedAt  time.Time
-	}
+	Solutions []PlayerSolution
 }
 
 // Session represents a multiplayer game session.
@@ -44,6 +46,8 @@ type Session struct {
 	GameStartedAt   *time.Time
 	Solutions       []PlayerSolution        // Current best solution per player
 	SolutionHistory []PlayerSolutionHistory // All solutions per player (for retraction)
+	Wins            map[string]int          // Wins per player ID
+	GamesPlayed     int                     // Total games completed in session
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -68,18 +72,33 @@ func (s *Session) ToProto() *pb.Session {
 
 	solutions := make([]*pb.PlayerSolution, len(s.Solutions))
 	for i, sol := range s.Solutions {
+		moves := make([]*pb.BotPos, len(sol.Moves))
+		for j, move := range sol.Moves {
+			moves[j] = move.ToProto()
+		}
 		solutions[i] = &pb.PlayerSolution{
-			PlayerId:  sol.PlayerID,
-			MoveCount: int32(sol.MoveCount),
-			SolvedAt:  timestamppb.New(sol.SolvedAt),
+			PlayerId: sol.PlayerID,
+			SolvedAt: timestamppb.New(sol.SolvedAt),
+			Moves:    moves,
 		}
 	}
 
+	// Convert wins map to proto
+	scores := make([]*pb.PlayerScore, 0, len(s.Wins))
+	for playerID, wins := range s.Wins {
+		scores = append(scores, &pb.PlayerScore{
+			PlayerId: playerID,
+			Wins:     int32(wins),
+		})
+	}
+
 	session := &pb.Session{
-		Id:        s.ID,
-		Players:   players,
-		CreatedAt: timestamppb.New(s.CreatedAt),
-		Solutions: solutions,
+		Id:          s.ID,
+		Players:     players,
+		CreatedAt:   timestamppb.New(s.CreatedAt),
+		Solutions:   solutions,
+		Scores:      scores,
+		GamesPlayed: int32(s.GamesPlayed),
 	}
 
 	if s.CurrentGame != nil {
@@ -141,6 +160,7 @@ func (store *Store) Create(playerName string) *Session {
 			{ID: playerID, Name: playerName},
 		},
 		CreatedAt: time.Now(),
+		Wins:      make(map[string]int),
 	}
 
 	store.sessions[sessionID] = session
@@ -187,6 +207,7 @@ func (store *Store) Get(sessionID string) (*Session, error) {
 // StartGame starts a new game in the session.
 // If useFixedBoard is true, uses the fixed Game1() configuration instead of random.
 // If there's an existing game, continues with same board/robots but new target.
+// Robot positions are taken from the winning solution's final state.
 func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
@@ -196,12 +217,30 @@ func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, e
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
 
+	// If there was a previous game with solutions, determine and record the winner
+	// and get the final game state from the winning solution
+	var winningGameState *model.Game
+	if session.CurrentGame != nil && len(session.Solutions) > 0 {
+		winningSolution := store.getWinningSolution(session.Solutions)
+		if winningSolution != nil {
+			session.Wins[winningSolution.PlayerID]++
+			// Apply winning moves to get final robot positions
+			if len(winningSolution.Moves) > 0 {
+				_, winningGameState = session.CurrentGame.CheckSolution(winningSolution.Moves)
+			}
+		}
+		session.GamesPlayed++
+	}
+
 	// Generate game
 	var game *model.Game
 	if useFixedBoard {
 		game = model.Game1()
+	} else if winningGameState != nil {
+		// Continue from winning game state: same board, robots at final positions
+		game = model.NewContinuationGame(winningGameState)
 	} else if session.CurrentGame != nil {
-		// Continue from existing game: same board/robots, new target
+		// No winning solution with moves, continue from existing game
 		game = model.NewContinuationGame(session.CurrentGame)
 	} else {
 		// First game: fully random
@@ -222,8 +261,27 @@ func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, e
 	return session, nil
 }
 
+// getWinningSolution finds the winning solution (lowest moves, earliest time as tiebreaker)
+func (store *Store) getWinningSolution(solutions []PlayerSolution) *PlayerSolution {
+	if len(solutions) == 0 {
+		return nil
+	}
+
+	best := &solutions[0]
+	for i := range solutions[1:] {
+		sol := &solutions[i+1]
+		if sol.MoveCount() < best.MoveCount() {
+			best = sol
+		} else if sol.MoveCount() == best.MoveCount() && sol.SolvedAt.Before(best.SolvedAt) {
+			best = sol
+		}
+	}
+	return best
+}
+
 // SubmitSolution records a player's solution for the current game.
-func (store *Store) SubmitSolution(sessionID, playerID string, moveCount int) (*PlayerSolution, error) {
+// If moves are provided, they are verified against the current game state.
+func (store *Store) SubmitSolution(sessionID, playerID string, moves []model.BotPosition) (*PlayerSolution, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -241,18 +299,25 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moveCount int) (*
 		return nil, fmt.Errorf("player not found: %s", playerID)
 	}
 
+	// Verify the solution
+	isValid, _ := session.CurrentGame.CheckSolution(moves)
+	if !isValid {
+		return nil, fmt.Errorf("invalid solution")
+	}
+
+	moveCount := len(moves)
 	now := time.Now()
 
 	// Add to solution history
-	store.addToHistory(session, playerID, moveCount, now)
+	store.addToHistory(session, playerID, moves, now)
 
 	// Check if player already submitted a solution for this game
 	for i := range session.Solutions {
 		if session.Solutions[i].PlayerID == playerID {
 			// Update if better solution
-			if moveCount < session.Solutions[i].MoveCount {
-				session.Solutions[i].MoveCount = moveCount
+			if moveCount < session.Solutions[i].MoveCount() {
 				session.Solutions[i].SolvedAt = now
+				session.Solutions[i].Moves = moves
 				// Broadcast updated solution
 				if store.broadcaster != nil {
 					store.broadcaster.BroadcastPlayerSolved(sessionID, playerID, moveCount)
@@ -264,9 +329,9 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moveCount int) (*
 	}
 
 	solution := PlayerSolution{
-		PlayerID:  playerID,
-		MoveCount: moveCount,
-		SolvedAt:  now,
+		PlayerID: playerID,
+		SolvedAt: now,
+		Moves:    moves,
 	}
 	session.Solutions = append(session.Solutions, solution)
 
@@ -279,7 +344,7 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moveCount int) (*
 }
 
 // addToHistory adds a solution to the player's history (if not already present with same move count).
-func (store *Store) addToHistory(session *Session, playerID string, moveCount int, solvedAt time.Time) {
+func (store *Store) addToHistory(session *Session, playerID string, moves []model.BotPosition, solvedAt time.Time) {
 	// Find or create history entry for this player
 	var history *PlayerSolutionHistory
 	for i := range session.SolutionHistory {
@@ -296,19 +361,18 @@ func (store *Store) addToHistory(session *Session, playerID string, moveCount in
 	}
 
 	// Check if we already have this move count in history
+	moveCount := len(moves)
 	for _, sol := range history.Solutions {
-		if sol.MoveCount == moveCount {
+		if sol.MoveCount() == moveCount {
 			return // Already have this solution
 		}
 	}
 
 	// Add to history
-	history.Solutions = append(history.Solutions, struct {
-		MoveCount int
-		SolvedAt  time.Time
-	}{
-		MoveCount: moveCount,
-		SolvedAt:  solvedAt,
+	history.Solutions = append(history.Solutions, PlayerSolution{
+		PlayerID: playerID,
+		SolvedAt: solvedAt,
+		Moves:    moves,
 	})
 }
 
@@ -331,7 +395,7 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 	var solutionIndex int = -1
 	for i, sol := range session.Solutions {
 		if sol.PlayerID == playerID {
-			currentMoveCount = sol.MoveCount
+			currentMoveCount = sol.MoveCount()
 			solutionIndex = i
 			break
 		}
@@ -353,7 +417,7 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 	// Remove current move count from history
 	if history != nil {
 		for i, sol := range history.Solutions {
-			if sol.MoveCount == currentMoveCount {
+			if sol.MoveCount() == currentMoveCount {
 				history.Solutions = append(history.Solutions[:i], history.Solutions[i+1:]...)
 				break
 			}
@@ -363,17 +427,16 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 		if len(history.Solutions) > 0 {
 			bestIdx := 0
 			for i, sol := range history.Solutions {
-				if sol.MoveCount < history.Solutions[bestIdx].MoveCount {
+				if sol.MoveCount() < history.Solutions[bestIdx].MoveCount() {
 					bestIdx = i
 				}
 			}
 			// Restore the previous best solution
-			session.Solutions[solutionIndex].MoveCount = history.Solutions[bestIdx].MoveCount
-			session.Solutions[solutionIndex].SolvedAt = history.Solutions[bestIdx].SolvedAt
+			session.Solutions[solutionIndex] = history.Solutions[bestIdx]
 
 			// Broadcast the restored solution
 			if store.broadcaster != nil {
-				store.broadcaster.BroadcastPlayerSolved(sessionID, playerID, history.Solutions[bestIdx].MoveCount)
+				store.broadcaster.BroadcastPlayerSolved(sessionID, playerID, history.Solutions[bestIdx].MoveCount())
 			}
 			return nil
 		}
