@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useSessionStore } from '../stores/sessionStore'
-import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload, type PlayerDonePayload } from '../services/websocket'
+import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload, type PlayerDonePayload, type GameEndedPayload } from '../services/websocket'
 import type { Session, BotPos } from '../gen/bouncebot_pb'
 import { create } from '@bufbuild/protobuf'
 import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
@@ -32,6 +32,8 @@ const bestSubmittedMoveCount = ref<number | null>(null)
 const showRetractConfirm = ref(false)
 const pendingRetractAction = ref<(() => void) | null>(null)
 const useFixedBoard = ref(false)
+const gameEnded = ref(false)
+const winner = ref<{ id: string; name: string; moveCount: number } | null>(null)
 
 const hasGame = computed(() => session.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
@@ -78,6 +80,8 @@ async function startGame(useFixedBoard = false) {
     const sess = await bounceBotClient.startGame({ sessionId: props.sessionId, useFixedBoard })
     session.value = sess
     bestSubmittedMoveCount.value = null // Reset for new game
+    gameEnded.value = false // Reset game ended state
+    winner.value = null
 
     if (sess.currentGame) {
       gameStore.applyGame(sess.currentGame)
@@ -229,6 +233,8 @@ function handleWebSocketEvent(event: WebSocketEvent) {
   } else if (event.type === 'game_started') {
     // Refresh session to get the game (force apply since it's a new game)
     bestSubmittedMoveCount.value = null // Reset for new game
+    gameEnded.value = false // Reset game ended state
+    winner.value = null
     loadSession(true)
   } else if (event.type === 'player_solved') {
     const payload = event.payload as PlayerSolvedPayload
@@ -256,6 +262,19 @@ function handleWebSocketEvent(event: WebSocketEvent) {
       showNotification(`${playerName} is done`)
     }
     // Refresh session to get updated done players list
+    loadSession()
+  } else if (event.type === 'game_ended') {
+    const payload = event.payload as GameEndedPayload
+    gameEnded.value = true
+    if (payload.winnerId) {
+      winner.value = {
+        id: payload.winnerId,
+        name: payload.winnerName,
+        moveCount: payload.moveCount,
+      }
+    } else {
+      winner.value = null
+    }
     loadSession()
   }
 }
@@ -390,23 +409,33 @@ onUnmounted(() => {
       <div class="game-header">
         <PlayersPanel :players="session.players" :solutions="session.solutions" :scores="session.scores" :game-started-at="session.gameStartedAt" :done-players="session.donePlayers" compact />
         <button
-          v-if="!isPlayerDone"
+          v-if="!isPlayerDone && !gameEnded"
           class="btn done-btn"
           @click="markDone"
         >
           I'm Done
         </button>
-        <span v-else-if="isPlayerDone" class="done-indicator">Done</span>
-        <button
-          class="btn next-game-btn"
-          :disabled="isStarting"
-          @click="startGame(false)"
-        >
-          {{ isStarting ? 'Starting...' : 'Next Game' }}
-        </button>
+        <span v-else-if="isPlayerDone && !gameEnded" class="done-indicator">Done</span>
       </div>
       <div class="game-container">
         <GameBoard :on-before-retract="onBeforeRetract" />
+      </div>
+
+      <!-- Game ended overlay -->
+      <div v-if="gameEnded" class="game-ended-overlay">
+        <div class="game-ended-content">
+          <h2 v-if="winner">{{ winner.name }} wins!</h2>
+          <h2 v-else>No winner</h2>
+          <p v-if="winner">Solved in {{ winner.moveCount }} moves</p>
+          <p v-else>No one submitted a solution</p>
+          <button
+            class="btn primary"
+            :disabled="isStarting"
+            @click="startGame(false)"
+          >
+            {{ isStarting ? 'Starting...' : 'Next Game' }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -563,12 +592,6 @@ onUnmounted(() => {
   font-size: 0.85rem;
   color: #42b883;
   font-weight: 500;
-}
-
-.next-game-btn {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
-  white-space: nowrap;
 }
 
 .game-container {
@@ -804,5 +827,42 @@ onUnmounted(() => {
 
 .btn.danger:hover {
   background: #c62828;
+}
+
+.game-ended-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.game-ended-content {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 2rem 3rem;
+  text-align: center;
+}
+
+.game-ended-content h2 {
+  color: #ffd700;
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+}
+
+.game-ended-content p {
+  color: #aaa;
+  margin: 0 0 1.5rem;
+  font-size: 1.1rem;
+}
+
+.game-ended-content .btn {
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
 }
 </style>

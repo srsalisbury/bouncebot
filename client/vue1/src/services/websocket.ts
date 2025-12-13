@@ -1,6 +1,6 @@
 // WebSocket service for real-time session updates
 
-export type EventType = 'player_joined' | 'player_left' | 'game_started' | 'player_solved' | 'solution_retracted' | 'player_done'
+export type EventType = 'player_joined' | 'player_left' | 'game_started' | 'player_solved' | 'solution_retracted' | 'player_done' | 'game_ended'
 
 export interface PlayerJoinedPayload {
   playerId: string
@@ -28,9 +28,15 @@ export interface PlayerDonePayload {
   playerId: string
 }
 
+export interface GameEndedPayload {
+  winnerId: string
+  winnerName: string
+  moveCount: number
+}
+
 export interface WebSocketEvent {
   type: EventType
-  payload: PlayerJoinedPayload | PlayerLeftPayload | GameStartedPayload | PlayerSolvedPayload | SolutionRetractedPayload | PlayerDonePayload
+  payload: PlayerJoinedPayload | PlayerLeftPayload | GameStartedPayload | PlayerSolvedPayload | SolutionRetractedPayload | PlayerDonePayload | GameEndedPayload
 }
 
 type EventHandler = (event: WebSocketEvent) => void

@@ -121,6 +121,7 @@ type EventBroadcaster interface {
 	BroadcastPlayerDone(sessionID, playerID string)
 	BroadcastPlayerSolved(sessionID, playerID string, moveCount int)
 	BroadcastSolutionRetracted(sessionID, playerID string)
+	BroadcastGameEnded(sessionID, winnerID, winnerName string, moveCount int)
 }
 
 // Store manages sessions in memory.
@@ -490,5 +491,27 @@ func (store *Store) MarkDone(sessionID, playerID string) error {
 		store.broadcaster.BroadcastPlayerDone(sessionID, playerID)
 	}
 
+	// Check if all players are done
+	if len(session.DonePlayers) == len(session.Players) {
+		store.endGame(session)
+	}
+
 	return nil
+}
+
+// endGame determines the winner and broadcasts game_ended event.
+func (store *Store) endGame(session *Session) {
+	if store.broadcaster == nil {
+		return
+	}
+
+	// Find the winner
+	winner := store.getWinningSolution(session.Solutions)
+	if winner != nil {
+		winnerName := session.GetPlayerName(winner.PlayerID)
+		store.broadcaster.BroadcastGameEnded(session.ID, winner.PlayerID, winnerName, winner.MoveCount())
+	} else {
+		// No solutions submitted - no winner
+		store.broadcaster.BroadcastGameEnded(session.ID, "", "", 0)
+	}
 }
