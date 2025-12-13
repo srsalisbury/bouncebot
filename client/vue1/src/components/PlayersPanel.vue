@@ -9,6 +9,7 @@ const props = defineProps<{
   solutions?: PlayerSolution[]
   scores?: PlayerScore[]
   gameStartedAt?: Timestamp
+  donePlayers?: string[]
   compact?: boolean
 }>()
 
@@ -16,9 +17,13 @@ const props = defineProps<{
 const elapsedTime = ref<string>('0:00')
 const timerInterval = ref<number | null>(null)
 
+const MAX_TIMER_SECONDS = 30 * 60 // 30 minutes
+
 function formatElapsedTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
+  // Cap at 30 minutes
+  const cappedSeconds = Math.min(seconds, MAX_TIMER_SECONDS)
+  const mins = Math.floor(cappedSeconds / 60)
+  const secs = Math.floor(cappedSeconds % 60)
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
@@ -163,6 +168,10 @@ function isLeader(player: Player): boolean {
   return player.id === leaderPlayerId.value
 }
 
+function isDone(player: Player): boolean {
+  return props.donePlayers?.includes(player.id) ?? false
+}
+
 function getSolveTime(solution: PlayerSolution): string | null {
   if (!props.gameStartedAt || !solution.solvedAt) return null
 
@@ -207,6 +216,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
             {{ getSolveTime(getPlayerSolution(player)!) }}
           </span>
         </span>
+        <span v-if="isDone(player)" class="done-check" title="Done looking">✓</span>
       </div>
     </TransitionGroup>
     <!-- Timer display in compact mode (during game) - on right end -->
@@ -305,6 +315,12 @@ function getSolveTime(solution: PlayerSolution): string | null {
 .solve-time {
   opacity: 0.85;
   margin-left: 0.3rem;
+}
+
+.done-check {
+  color: #42b883;
+  font-weight: bold;
+  font-size: 1rem;
 }
 
 .player-item.solved {

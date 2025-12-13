@@ -648,6 +648,7 @@ type Session struct {
 	Solutions     []*PlayerSolution      `protobuf:"bytes,6,rep,name=solutions,proto3" json:"solutions,omitempty"`                                // players who have solved the current game
 	Scores        []*PlayerScore         `protobuf:"bytes,7,rep,name=scores,proto3" json:"scores,omitempty"`                                      // cumulative scores across games
 	GamesPlayed   int32                  `protobuf:"varint,8,opt,name=games_played,json=gamesPlayed,proto3" json:"games_played,omitempty"`        // total games completed in session
+	DonePlayers   []string               `protobuf:"bytes,9,rep,name=done_players,json=donePlayers,proto3" json:"done_players,omitempty"`         // player IDs who are done looking for solutions
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -736,6 +737,13 @@ func (x *Session) GetGamesPlayed() int32 {
 		return x.GamesPlayed
 	}
 	return 0
+}
+
+func (x *Session) GetDonePlayers() []string {
+	if x != nil {
+		return x.DonePlayers
+	}
+	return nil
 }
 
 type CreateSessionRequest struct {
@@ -1130,6 +1138,102 @@ func (x *RetractSolutionResponse) GetSuccess() bool {
 	return false
 }
 
+type MarkDoneRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarkDoneRequest) Reset() {
+	*x = MarkDoneRequest{}
+	mi := &file_bouncebot_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarkDoneRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarkDoneRequest) ProtoMessage() {}
+
+func (x *MarkDoneRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarkDoneRequest.ProtoReflect.Descriptor instead.
+func (*MarkDoneRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *MarkDoneRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *MarkDoneRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+type MarkDoneResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarkDoneResponse) Reset() {
+	*x = MarkDoneResponse{}
+	mi := &file_bouncebot_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarkDoneResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarkDoneResponse) ProtoMessage() {}
+
+func (x *MarkDoneResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarkDoneResponse.ProtoReflect.Descriptor instead.
+func (*MarkDoneResponse) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *MarkDoneResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_bouncebot_proto protoreflect.FileDescriptor
 
 const file_bouncebot_proto_rawDesc = "" +
@@ -1171,7 +1275,7 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x05moves\x18\x03 \x03(\v2\x11.bouncebot.BotPosR\x05moves\">\n" +
 	"\vPlayerScore\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x12\n" +
-	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\x85\x03\n" +
+	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\xa8\x03\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12+\n" +
 	"\aplayers\x18\x02 \x03(\v2\x11.bouncebot.PlayerR\aplayers\x129\n" +
@@ -1181,7 +1285,8 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x0fgame_started_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\rgameStartedAt\x127\n" +
 	"\tsolutions\x18\x06 \x03(\v2\x19.bouncebot.PlayerSolutionR\tsolutions\x12.\n" +
 	"\x06scores\x18\a \x03(\v2\x16.bouncebot.PlayerScoreR\x06scores\x12!\n" +
-	"\fgames_played\x18\b \x01(\x05R\vgamesPlayed\"7\n" +
+	"\fgames_played\x18\b \x01(\x05R\vgamesPlayed\x12!\n" +
+	"\fdone_players\x18\t \x03(\tR\vdonePlayers\"7\n" +
 	"\x14CreateSessionRequest\x12\x1f\n" +
 	"\vplayer_name\x18\x01 \x01(\tR\n" +
 	"playerName\"T\n" +
@@ -1209,7 +1314,13 @@ const file_bouncebot_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\"3\n" +
 	"\x17RetractSolutionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xdf\x04\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"M\n" +
+	"\x0fMarkDoneRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1b\n" +
+	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\",\n" +
+	"\x10MarkDoneResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xa6\x05\n" +
 	"\tBounceBot\x129\n" +
 	"\bMakeGame\x12\x1a.bouncebot.MakeGameRequest\x1a\x0f.bouncebot.Game\"\x00\x12T\n" +
 	"\rCheckSolution\x12\x1f.bouncebot.CheckSolutionRequest\x1a .bouncebot.CheckSolutionResponse\"\x00\x12F\n" +
@@ -1219,7 +1330,8 @@ const file_bouncebot_proto_rawDesc = "" +
 	"GetSession\x12\x1c.bouncebot.GetSessionRequest\x1a\x12.bouncebot.Session\"\x00\x12>\n" +
 	"\tStartGame\x12\x1b.bouncebot.StartGameRequest\x1a\x12.bouncebot.Session\"\x00\x12W\n" +
 	"\x0eSubmitSolution\x12 .bouncebot.SubmitSolutionRequest\x1a!.bouncebot.SubmitSolutionResponse\"\x00\x12Z\n" +
-	"\x0fRetractSolution\x12!.bouncebot.RetractSolutionRequest\x1a\".bouncebot.RetractSolutionResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
+	"\x0fRetractSolution\x12!.bouncebot.RetractSolutionRequest\x1a\".bouncebot.RetractSolutionResponse\"\x00\x12E\n" +
+	"\bMarkDone\x12\x1a.bouncebot.MarkDoneRequest\x1a\x1b.bouncebot.MarkDoneResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
 
 var (
 	file_bouncebot_proto_rawDescOnce sync.Once
@@ -1233,7 +1345,7 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_bouncebot_proto_goTypes = []any{
 	(*Position)(nil),                // 0: bouncebot.Position
 	(*Board)(nil),                   // 1: bouncebot.Board
@@ -1255,7 +1367,9 @@ var file_bouncebot_proto_goTypes = []any{
 	(*SubmitSolutionResponse)(nil),  // 17: bouncebot.SubmitSolutionResponse
 	(*RetractSolutionRequest)(nil),  // 18: bouncebot.RetractSolutionRequest
 	(*RetractSolutionResponse)(nil), // 19: bouncebot.RetractSolutionResponse
-	(*timestamppb.Timestamp)(nil),   // 20: google.protobuf.Timestamp
+	(*MarkDoneRequest)(nil),         // 20: bouncebot.MarkDoneRequest
+	(*MarkDoneResponse)(nil),        // 21: bouncebot.MarkDoneResponse
+	(*timestamppb.Timestamp)(nil),   // 22: google.protobuf.Timestamp
 }
 var file_bouncebot_proto_depIdxs = []int32{
 	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
@@ -1269,12 +1383,12 @@ var file_bouncebot_proto_depIdxs = []int32{
 	3,  // 8: bouncebot.CheckSolutionResponse.resulting_game:type_name -> bouncebot.Game
 	7,  // 9: bouncebot.CheckSolutionResponse.first_bad_move:type_name -> bouncebot.MoveError
 	2,  // 10: bouncebot.MoveError.move:type_name -> bouncebot.BotPos
-	20, // 11: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
+	22, // 11: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
 	2,  // 12: bouncebot.PlayerSolution.moves:type_name -> bouncebot.BotPos
 	8,  // 13: bouncebot.Session.players:type_name -> bouncebot.Player
-	20, // 14: bouncebot.Session.created_at:type_name -> google.protobuf.Timestamp
+	22, // 14: bouncebot.Session.created_at:type_name -> google.protobuf.Timestamp
 	3,  // 15: bouncebot.Session.current_game:type_name -> bouncebot.Game
-	20, // 16: bouncebot.Session.game_started_at:type_name -> google.protobuf.Timestamp
+	22, // 16: bouncebot.Session.game_started_at:type_name -> google.protobuf.Timestamp
 	9,  // 17: bouncebot.Session.solutions:type_name -> bouncebot.PlayerSolution
 	10, // 18: bouncebot.Session.scores:type_name -> bouncebot.PlayerScore
 	2,  // 19: bouncebot.SubmitSolutionRequest.moves:type_name -> bouncebot.BotPos
@@ -1287,16 +1401,18 @@ var file_bouncebot_proto_depIdxs = []int32{
 	15, // 26: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
 	16, // 27: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
 	18, // 28: bouncebot.BounceBot.RetractSolution:input_type -> bouncebot.RetractSolutionRequest
-	3,  // 29: bouncebot.BounceBot.MakeGame:output_type -> bouncebot.Game
-	6,  // 30: bouncebot.BounceBot.CheckSolution:output_type -> bouncebot.CheckSolutionResponse
-	11, // 31: bouncebot.BounceBot.CreateSession:output_type -> bouncebot.Session
-	11, // 32: bouncebot.BounceBot.JoinSession:output_type -> bouncebot.Session
-	11, // 33: bouncebot.BounceBot.GetSession:output_type -> bouncebot.Session
-	11, // 34: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Session
-	17, // 35: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
-	19, // 36: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
-	29, // [29:37] is the sub-list for method output_type
-	21, // [21:29] is the sub-list for method input_type
+	20, // 29: bouncebot.BounceBot.MarkDone:input_type -> bouncebot.MarkDoneRequest
+	3,  // 30: bouncebot.BounceBot.MakeGame:output_type -> bouncebot.Game
+	6,  // 31: bouncebot.BounceBot.CheckSolution:output_type -> bouncebot.CheckSolutionResponse
+	11, // 32: bouncebot.BounceBot.CreateSession:output_type -> bouncebot.Session
+	11, // 33: bouncebot.BounceBot.JoinSession:output_type -> bouncebot.Session
+	11, // 34: bouncebot.BounceBot.GetSession:output_type -> bouncebot.Session
+	11, // 35: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Session
+	17, // 36: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
+	19, // 37: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
+	21, // 38: bouncebot.BounceBot.MarkDone:output_type -> bouncebot.MarkDoneResponse
+	30, // [30:39] is the sub-list for method output_type
+	21, // [21:30] is the sub-list for method input_type
 	21, // [21:21] is the sub-list for extension type_name
 	21, // [21:21] is the sub-list for extension extendee
 	0,  // [0:21] is the sub-list for field type_name
@@ -1313,7 +1429,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

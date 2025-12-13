@@ -51,6 +51,8 @@ const (
 	// BounceBotRetractSolutionProcedure is the fully-qualified name of the BounceBot's RetractSolution
 	// RPC.
 	BounceBotRetractSolutionProcedure = "/bouncebot.BounceBot/RetractSolution"
+	// BounceBotMarkDoneProcedure is the fully-qualified name of the BounceBot's MarkDone RPC.
+	BounceBotMarkDoneProcedure = "/bouncebot.BounceBot/MarkDone"
 )
 
 // BounceBotClient is a client for the bouncebot.BounceBot service.
@@ -64,6 +66,7 @@ type BounceBotClient interface {
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
 	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
+	MarkDone(context.Context, *connect.Request[proto.MarkDoneRequest]) (*connect.Response[proto.MarkDoneResponse], error)
 }
 
 // NewBounceBotClient constructs a client for the bouncebot.BounceBot service. By default, it uses
@@ -125,6 +128,12 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("RetractSolution")),
 			connect.WithClientOptions(opts...),
 		),
+		markDone: connect.NewClient[proto.MarkDoneRequest, proto.MarkDoneResponse](
+			httpClient,
+			baseURL+BounceBotMarkDoneProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("MarkDone")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -138,6 +147,7 @@ type bounceBotClient struct {
 	startGame       *connect.Client[proto.StartGameRequest, proto.Session]
 	submitSolution  *connect.Client[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse]
 	retractSolution *connect.Client[proto.RetractSolutionRequest, proto.RetractSolutionResponse]
+	markDone        *connect.Client[proto.MarkDoneRequest, proto.MarkDoneResponse]
 }
 
 // MakeGame calls bouncebot.BounceBot.MakeGame.
@@ -180,6 +190,11 @@ func (c *bounceBotClient) RetractSolution(ctx context.Context, req *connect.Requ
 	return c.retractSolution.CallUnary(ctx, req)
 }
 
+// MarkDone calls bouncebot.BounceBot.MarkDone.
+func (c *bounceBotClient) MarkDone(ctx context.Context, req *connect.Request[proto.MarkDoneRequest]) (*connect.Response[proto.MarkDoneResponse], error) {
+	return c.markDone.CallUnary(ctx, req)
+}
+
 // BounceBotHandler is an implementation of the bouncebot.BounceBot service.
 type BounceBotHandler interface {
 	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
@@ -191,6 +206,7 @@ type BounceBotHandler interface {
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
 	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
+	MarkDone(context.Context, *connect.Request[proto.MarkDoneRequest]) (*connect.Response[proto.MarkDoneResponse], error)
 }
 
 // NewBounceBotHandler builds an HTTP handler from the service implementation. It returns the path
@@ -248,6 +264,12 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("RetractSolution")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bounceBotMarkDoneHandler := connect.NewUnaryHandler(
+		BounceBotMarkDoneProcedure,
+		svc.MarkDone,
+		connect.WithSchema(bounceBotMethods.ByName("MarkDone")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/bouncebot.BounceBot/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case BounceBotMakeGameProcedure:
@@ -266,6 +288,8 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 			bounceBotSubmitSolutionHandler.ServeHTTP(w, r)
 		case BounceBotRetractSolutionProcedure:
 			bounceBotRetractSolutionHandler.ServeHTTP(w, r)
+		case BounceBotMarkDoneProcedure:
+			bounceBotMarkDoneHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -305,4 +329,8 @@ func (UnimplementedBounceBotHandler) SubmitSolution(context.Context, *connect.Re
 
 func (UnimplementedBounceBotHandler) RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.RetractSolution is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) MarkDone(context.Context, *connect.Request[proto.MarkDoneRequest]) (*connect.Response[proto.MarkDoneResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.MarkDone is not implemented"))
 }

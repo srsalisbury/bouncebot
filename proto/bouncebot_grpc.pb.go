@@ -27,6 +27,7 @@ const (
 	BounceBot_StartGame_FullMethodName       = "/bouncebot.BounceBot/StartGame"
 	BounceBot_SubmitSolution_FullMethodName  = "/bouncebot.BounceBot/SubmitSolution"
 	BounceBot_RetractSolution_FullMethodName = "/bouncebot.BounceBot/RetractSolution"
+	BounceBot_MarkDone_FullMethodName        = "/bouncebot.BounceBot/MarkDone"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -44,6 +45,7 @@ type BounceBotClient interface {
 	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Session, error)
 	SubmitSolution(ctx context.Context, in *SubmitSolutionRequest, opts ...grpc.CallOption) (*SubmitSolutionResponse, error)
 	RetractSolution(ctx context.Context, in *RetractSolutionRequest, opts ...grpc.CallOption) (*RetractSolutionResponse, error)
+	MarkDone(ctx context.Context, in *MarkDoneRequest, opts ...grpc.CallOption) (*MarkDoneResponse, error)
 }
 
 type bounceBotClient struct {
@@ -134,6 +136,16 @@ func (c *bounceBotClient) RetractSolution(ctx context.Context, in *RetractSoluti
 	return out, nil
 }
 
+func (c *bounceBotClient) MarkDone(ctx context.Context, in *MarkDoneRequest, opts ...grpc.CallOption) (*MarkDoneResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MarkDoneResponse)
+	err := c.cc.Invoke(ctx, BounceBot_MarkDone_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BounceBotServer is the server API for BounceBot service.
 // All implementations must embed UnimplementedBounceBotServer
 // for forward compatibility.
@@ -149,6 +161,7 @@ type BounceBotServer interface {
 	StartGame(context.Context, *StartGameRequest) (*Session, error)
 	SubmitSolution(context.Context, *SubmitSolutionRequest) (*SubmitSolutionResponse, error)
 	RetractSolution(context.Context, *RetractSolutionRequest) (*RetractSolutionResponse, error)
+	MarkDone(context.Context, *MarkDoneRequest) (*MarkDoneResponse, error)
 	mustEmbedUnimplementedBounceBotServer()
 }
 
@@ -182,6 +195,9 @@ func (UnimplementedBounceBotServer) SubmitSolution(context.Context, *SubmitSolut
 }
 func (UnimplementedBounceBotServer) RetractSolution(context.Context, *RetractSolutionRequest) (*RetractSolutionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetractSolution not implemented")
+}
+func (UnimplementedBounceBotServer) MarkDone(context.Context, *MarkDoneRequest) (*MarkDoneResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkDone not implemented")
 }
 func (UnimplementedBounceBotServer) mustEmbedUnimplementedBounceBotServer() {}
 func (UnimplementedBounceBotServer) testEmbeddedByValue()                   {}
@@ -348,6 +364,24 @@ func _BounceBot_RetractSolution_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BounceBot_MarkDone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkDoneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).MarkDone(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_MarkDone_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).MarkDone(ctx, req.(*MarkDoneRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BounceBot_ServiceDesc is the grpc.ServiceDesc for BounceBot service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -386,6 +420,10 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RetractSolution",
 			Handler:    _BounceBot_RetractSolution_Handler,
+		},
+		{
+			MethodName: "MarkDone",
+			Handler:    _BounceBot_MarkDone_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

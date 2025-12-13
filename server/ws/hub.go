@@ -51,6 +51,11 @@ type SolutionRetractedPayload struct {
 	PlayerID string `json:"playerId"`
 }
 
+// PlayerDonePayload is the payload for player_done events.
+type PlayerDonePayload struct {
+	PlayerID string `json:"playerId"`
+}
+
 // Client represents a WebSocket client connection.
 type Client struct {
 	hub       *Hub
@@ -136,6 +141,16 @@ func (h *Hub) BroadcastSolutionRetracted(sessionID, playerID string) {
 	h.Broadcast(sessionID, Event{
 		Type: "solution_retracted",
 		Payload: SolutionRetractedPayload{
+			PlayerID: playerID,
+		},
+	})
+}
+
+// BroadcastPlayerDone broadcasts a player_done event to all clients in a session.
+func (h *Hub) BroadcastPlayerDone(sessionID, playerID string) {
+	h.Broadcast(sessionID, Event{
+		Type: "player_done",
+		Payload: PlayerDonePayload{
 			PlayerID: playerID,
 		},
 	})

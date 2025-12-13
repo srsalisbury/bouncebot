@@ -753,10 +753,39 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ## In Progress
 
-_None currently_
+### Step 29.8: End of Game Experience (Step 1 - I'm Done)
+**Status:** In Progress
+
+**What was done so far:**
+- Added "I'm Done" button available during game (regardless of solution status)
+- Added done_players field to Session proto
+- Added MarkDone RPC to mark player as done looking for solutions
+- Server broadcasts player_done WebSocket event
+- PlayersPanel shows checkmark (✓) next to done players
+- Done state cleared when new game starts
+- Timer capped at 30 minutes maximum display
+
+**Files modified:**
+- `proto/bouncebot.proto` - Added done_players, MarkDone RPC
+- `server/session/session.go` - Added DonePlayers field, MarkDone method
+- `server/ws/hub.go` - Added PlayerDonePayload, BroadcastPlayerDone
+- `server/main.go` - Added MarkDone RPC handler
+- `src/services/websocket.ts` - Added player_done event type
+- `src/views/SessionView.vue` - Added I'm Done button, handler, WebSocket event
+- `src/components/PlayersPanel.vue` - Added donePlayers prop, checkmark display, timer cap
+
+**Remaining steps for End of Game Experience:**
+- Step 2: Game end detection (when all players are done)
+- Step 3: Winner announcement UI
+- Step 4: Solution replay (step through winning moves slowly, no move counter)
+- Step 5: "Ready for Next Game" flow with waiting indicators
 
 ---
 
 ## Up Next
 
 - Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
+
+## Future Considerations
+
+- Handle abandoned players: Players who disconnect or go idle shouldn't block the game. Consider auto-marking players as "done" after extended inactivity, or allowing remaining players to proceed without them.
