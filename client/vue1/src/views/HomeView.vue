@@ -7,7 +7,7 @@ import { useSessionStore } from '../stores/sessionStore'
 const router = useRouter()
 const sessionStore = useSessionStore()
 
-const playerName = ref('')
+const playerName = ref(sessionStore.currentPlayerName ?? '')
 const joinSessionId = ref('')
 const isCreating = ref(false)
 const isJoining = ref(false)

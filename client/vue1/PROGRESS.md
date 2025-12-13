@@ -782,6 +782,20 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Remember Player Name
+**Status:** Complete
+
+**What was done:**
+- HomeView now pre-fills player name input with last used name from localStorage
+- SessionView join form also pre-fills with last used name
+- Name was already being persisted when creating/joining sessions
+
+**Files modified:**
+- `src/views/HomeView.vue` - Initialize playerName ref from sessionStore
+- `src/views/SessionView.vue` - Initialize joinName ref from sessionStore
+
+---
+
 ## Up Next
 
 - Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
