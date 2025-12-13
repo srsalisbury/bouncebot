@@ -72,14 +72,22 @@ func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.S
 }
 
 func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request[pb.SubmitSolutionRequest]) (*connect.Response[pb.SubmitSolutionResponse], error) {
-	solution, err := s.sessions.SubmitSolution(req.Msg.SessionId, req.Msg.PlayerId, int(req.Msg.MoveCount))
+	moves := model.NewBotPositionsFromProto(req.Msg.Moves)
+	solution, err := s.sessions.SubmitSolution(req.Msg.SessionId, req.Msg.PlayerId, moves)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
+
+	// Convert moves back to proto for response
+	protoMoves := make([]*pb.BotPos, len(solution.Moves))
+	for i, move := range solution.Moves {
+		protoMoves[i] = move.ToProto()
+	}
+
 	return connect.NewResponse(&pb.SubmitSolutionResponse{
 		Solution: &pb.PlayerSolution{
-			PlayerId:  solution.PlayerID,
-			MoveCount: int32(solution.MoveCount),
+			PlayerId: solution.PlayerID,
+			Moves:    protoMoves,
 		},
 	}), nil
 }

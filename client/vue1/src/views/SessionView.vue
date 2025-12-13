@@ -5,7 +5,9 @@ import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useSessionStore } from '../stores/sessionStore'
 import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload } from '../services/websocket'
-import type { Session } from '../gen/bouncebot_pb'
+import type { Session, BotPos } from '../gen/bouncebot_pb'
+import { create } from '@bufbuild/protobuf'
+import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
 
@@ -40,14 +42,14 @@ function getPlayerName(playerId: string): string {
   return player?.name ?? 'Unknown'
 }
 
-async function loadSession() {
+async function loadSession(forceApplyGame = false) {
   try {
     const sess = await bounceBotClient.getSession({ sessionId: props.sessionId })
     const hadGame = hasGame.value
     session.value = sess
 
-    // Only apply game when it first appears (not on every poll)
-    if (sess.currentGame && !hadGame) {
+    // Apply game when it first appears or when forced (e.g., game_started event)
+    if (sess.currentGame && (!hadGame || forceApplyGame)) {
       gameStore.applyGame(sess.currentGame)
       // Stop polling once game starts
       if (pollInterval.value) {
@@ -129,16 +131,25 @@ function showNotification(message: string) {
   }, 4000)
 }
 
-async function submitSolution(moveCount: number) {
+async function submitSolution() {
   if (!sessionStore.currentPlayerId) return
+  const moveCount = gameStore.moveCount
   // Only submit if this is better than our previous best (or first submission)
   if (bestSubmittedMoveCount.value !== null && moveCount >= bestSubmittedMoveCount.value) return
+
+  // Convert moves to BotPos format (each move is: robotId + destination position)
+  const moves: BotPos[] = gameStore.moves.map(move =>
+    create(BotPosSchema, {
+      id: move.robotId,
+      pos: create(PositionSchema, { x: move.toX, y: move.toY }),
+    })
+  )
 
   try {
     await bounceBotClient.submitSolution({
       sessionId: props.sessionId,
       playerId: sessionStore.currentPlayerId,
-      moveCount,
+      moves,
     })
     bestSubmittedMoveCount.value = moveCount
     // Reload session to get updated solutions list
@@ -197,9 +208,9 @@ function handleWebSocketEvent(event: WebSocketEvent) {
     // Refresh session to get updated player list
     loadSession()
   } else if (event.type === 'game_started') {
-    // Refresh session to get the game
+    // Refresh session to get the game (force apply since it's a new game)
     bestSubmittedMoveCount.value = null // Reset for new game
-    loadSession()
+    loadSession(true)
   } else if (event.type === 'player_solved') {
     const payload = event.payload as PlayerSolvedPayload
     // Show notification for other players' solutions
@@ -244,7 +255,7 @@ watch(
   () => gameStore.isSolved,
   (solved) => {
     if (solved && hasGame.value) {
-      submitSolution(gameStore.moveCount)
+      submitSolution()
     }
   }
 )
@@ -349,7 +360,7 @@ onUnmounted(() => {
     <!-- Game in progress -->
     <div v-else-if="hasGame && session" class="game-wrapper">
       <div class="game-header">
-        <PlayersPanel :players="session.players" :solutions="session.solutions" :game-started-at="session.gameStartedAt" compact />
+        <PlayersPanel :players="session.players" :solutions="session.solutions" :scores="session.scores" :game-started-at="session.gameStartedAt" compact />
         <button
           class="btn next-game-btn"
           :disabled="isStarting"

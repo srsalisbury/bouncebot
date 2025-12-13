@@ -716,6 +716,41 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.7b: Scoring & Results
+**Status:** Complete
+
+**What was done:**
+- Added cumulative wins tracking across games in a session
+- Added PlayerScore message to proto (player_id, wins)
+- Session stores scores map tracking wins per player
+- Winner is determined when starting next game (lowest moves, earliest time wins ties)
+- PlayersPanel shows wins badges next to player names (e.g. "2 wins")
+
+**Server-side solution verification:**
+- SubmitSolution now requires moves (BotPos array) to be sent with request
+- Server verifies solution is valid using existing CheckSolution logic
+- Moves are stored with PlayerSolution for replay/continuation
+- When starting next game, winning solution's final robot positions are used
+- Robots now continue from where they ended up after winning moves
+
+**Cleanup:**
+- Removed redundant move_count field from PlayerSolution and SubmitSolutionRequest
+- Move count is now derived from len(moves) / moves.length
+- PlayerSolutionHistory now stores full PlayerSolution objects for proper retraction
+
+**Bug fix:**
+- Fixed "Next Game" not updating for other players - game_started event now forces game reload
+
+**Files modified:**
+- `proto/bouncebot.proto` - Added PlayerScore, moves to PlayerSolution and SubmitSolutionRequest
+- `server/session/session.go` - Added wins tracking, server-side verification, getWinningSolution, MoveCount() method
+- `server/main.go` - Updated SubmitSolution to pass moves and return them in response
+- `server/ws/hub.go` - BroadcastGameStarted for next game notifications
+- `src/views/SessionView.vue` - Send moves array when submitting, loadSession(forceApplyGame) parameter
+- `src/components/PlayersPanel.vue` - Added scores prop, wins badge, use moves.length for count
+
+---
+
 ## In Progress
 
 _None currently_
@@ -724,4 +759,4 @@ _None currently_
 
 ## Up Next
 
-- Step 29.7b: Scoring & Results (cumulative scores, winner announcement, leaderboard)
+- Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
