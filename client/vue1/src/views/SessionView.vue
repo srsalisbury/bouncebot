@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useSessionStore } from '../stores/sessionStore'
-import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload } from '../services/websocket'
+import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload, type PlayerDonePayload } from '../services/websocket'
 import type { Session, BotPos } from '../gen/bouncebot_pb'
 import { create } from '@bufbuild/protobuf'
 import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
@@ -36,6 +36,10 @@ const useFixedBoard = ref(false)
 const hasGame = computed(() => session.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
 const hasJoined = computed(() => sessionStore.currentPlayerId != null)
+const isPlayerDone = computed(() => {
+  if (!sessionStore.currentPlayerId || !session.value) return false
+  return session.value.donePlayers.includes(sessionStore.currentPlayerId)
+})
 
 function getPlayerName(playerId: string): string {
   const player = session.value?.players.find(p => p.id === playerId)
@@ -174,6 +178,21 @@ async function retractSolution() {
   }
 }
 
+async function markDone() {
+  if (!sessionStore.currentPlayerId) return
+
+  try {
+    await bounceBotClient.markDone({
+      sessionId: props.sessionId,
+      playerId: sessionStore.currentPlayerId,
+    })
+    // Reload session to get updated done players list
+    await loadSession()
+  } catch (e) {
+    console.error('Failed to mark done:', e)
+  }
+}
+
 // Called by GameBoard before undoing/deleting a solved solution
 function onBeforeRetract(action: () => void) {
   if (bestSubmittedMoveCount.value !== null) {
@@ -228,6 +247,15 @@ function handleWebSocketEvent(event: WebSocketEvent) {
       showNotification(`${playerName} retracted their solution`)
     }
     // Refresh session to get updated solutions list
+    loadSession()
+  } else if (event.type === 'player_done') {
+    const payload = event.payload as PlayerDonePayload
+    // Show notification for other players marking done
+    if (payload.playerId !== sessionStore.currentPlayerId) {
+      const playerName = getPlayerName(payload.playerId)
+      showNotification(`${playerName} is done`)
+    }
+    // Refresh session to get updated done players list
     loadSession()
   }
 }
@@ -360,7 +388,15 @@ onUnmounted(() => {
     <!-- Game in progress -->
     <div v-else-if="hasGame && session" class="game-wrapper">
       <div class="game-header">
-        <PlayersPanel :players="session.players" :solutions="session.solutions" :scores="session.scores" :game-started-at="session.gameStartedAt" compact />
+        <PlayersPanel :players="session.players" :solutions="session.solutions" :scores="session.scores" :game-started-at="session.gameStartedAt" :done-players="session.donePlayers" compact />
+        <button
+          v-if="!isPlayerDone"
+          class="btn done-btn"
+          @click="markDone"
+        >
+          I'm Done
+        </button>
+        <span v-else-if="isPlayerDone" class="done-indicator">Done</span>
         <button
           class="btn next-game-btn"
           :disabled="isStarting"
@@ -509,8 +545,27 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-.next-game-btn {
+.done-btn {
   margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  background: #42b883;
+}
+
+.done-btn:hover {
+  background: #3aa876;
+}
+
+.done-indicator {
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  color: #42b883;
+  font-weight: 500;
+}
+
+.next-game-btn {
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;

@@ -102,6 +102,16 @@ func (s *bounceBotServer) RetractSolution(_ context.Context, req *connect.Reques
 	}), nil
 }
 
+func (s *bounceBotServer) MarkDone(_ context.Context, req *connect.Request[pb.MarkDoneRequest]) (*connect.Response[pb.MarkDoneResponse], error) {
+	err := s.sessions.MarkDone(req.Msg.SessionId, req.Msg.PlayerId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&pb.MarkDoneResponse{
+		Success: true,
+	}), nil
+}
+
 func main() {
 	flag.Parse()
 

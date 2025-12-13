@@ -48,6 +48,7 @@ type Session struct {
 	SolutionHistory []PlayerSolutionHistory // All solutions per player (for retraction)
 	Wins            map[string]int          // Wins per player ID
 	GamesPlayed     int                     // Total games completed in session
+	DonePlayers     []string                // Player IDs who are done looking for solutions
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -99,6 +100,7 @@ func (s *Session) ToProto() *pb.Session {
 		Solutions:   solutions,
 		Scores:      scores,
 		GamesPlayed: int32(s.GamesPlayed),
+		DonePlayers: s.DonePlayers,
 	}
 
 	if s.CurrentGame != nil {
@@ -116,6 +118,7 @@ func (s *Session) ToProto() *pb.Session {
 type EventBroadcaster interface {
 	BroadcastPlayerJoined(sessionID, playerID, playerName string)
 	BroadcastGameStarted(sessionID string)
+	BroadcastPlayerDone(sessionID, playerID string)
 	BroadcastPlayerSolved(sessionID, playerID string, moveCount int)
 	BroadcastSolutionRetracted(sessionID, playerID string)
 }
@@ -252,6 +255,7 @@ func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, e
 	session.GameStartedAt = &now
 	session.Solutions = nil        // Clear solutions for new game
 	session.SolutionHistory = nil  // Clear history for new game
+	session.DonePlayers = nil      // Clear done players for new game
 
 	// Broadcast game started event
 	if store.broadcaster != nil {
@@ -448,6 +452,42 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 	// Broadcast solution retracted event
 	if store.broadcaster != nil {
 		store.broadcaster.BroadcastSolutionRetracted(sessionID, playerID)
+	}
+
+	return nil
+}
+
+// MarkDone marks a player as done looking for solutions.
+func (store *Store) MarkDone(sessionID, playerID string) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	session, ok := store.sessions[sessionID]
+	if !ok {
+		return fmt.Errorf("session not found: %s", sessionID)
+	}
+
+	if session.CurrentGame == nil {
+		return fmt.Errorf("no game in progress")
+	}
+
+	// Verify player exists
+	if session.GetPlayerName(playerID) == "" {
+		return fmt.Errorf("player not found: %s", playerID)
+	}
+
+	// Check if already done
+	for _, id := range session.DonePlayers {
+		if id == playerID {
+			return nil // Already done
+		}
+	}
+
+	session.DonePlayers = append(session.DonePlayers, playerID)
+
+	// Broadcast player done event
+	if store.broadcaster != nil {
+		store.broadcaster.BroadcastPlayerDone(sessionID, playerID)
 	}
 
 	return nil
