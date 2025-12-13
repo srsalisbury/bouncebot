@@ -42,7 +42,7 @@ func TestRenderPanel(t *testing.T) {
 		+    +    +----+
 		`)
 	got := renderBoard(board)
-	if got != want {
+	if !boardStringsEqual(got, want) {
 		t.Errorf(`String()
 got:
 %v
@@ -103,7 +103,7 @@ func TestParseBoardString(t *testing.T) {
 			"Valid Panel - Size 3", true, true,
 			`
 			+----+----+----+
-			|               
+			|
 			+    +    +    +
 			|    |          
 			+    +----+    +
@@ -169,9 +169,9 @@ func TestParseBoardString(t *testing.T) {
 				t.Errorf("Unexpected error parsing valid board string: %v", err)
 			}
 			gotBoardStr := board.String()
-			wantBoardStr := dedentBoardString(tc.boardStr)
+			wantBoardStr := tc.boardStr
 			// Assume that if we can re-serialize to the same string, parsing was correct.
-			if gotBoardStr != wantBoardStr {
+			if !boardStringsEqual(gotBoardStr, wantBoardStr) {
 				t.Errorf("Reserialized board string mismatch:\ngot:\n%v\nwant:\n%v", gotBoardStr, wantBoardStr)
 			}
 		})

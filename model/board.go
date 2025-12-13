@@ -63,7 +63,7 @@ func NewBoardFromProto(bp *pb.Board) Board {
 }
 
 func NewBoard(size BoardDim, vWalls, hWalls []Position) Board {
-	return &board{size: size, vWallPos: vWalls, hWallPos: hWalls, isPanel: false}
+	return NewBoardWithTargets(size, vWalls, hWalls, nil)
 }
 
 func NewBoardWithTargets(size BoardDim, vWalls, hWalls, possibleTargets []Position) Board {
@@ -71,7 +71,7 @@ func NewBoardWithTargets(size BoardDim, vWalls, hWalls, possibleTargets []Positi
 }
 
 func NewPanel(size BoardDim, vWalls, hWalls []Position) Board {
-	return &board{size: size, vWallPos: vWalls, hWallPos: hWalls, isPanel: true}
+	return NewPanelWithTargets(size, vWalls, hWalls, nil)
 }
 
 func NewPanelWithTargets(size BoardDim, vWalls, hWalls, possibleTargets []Position) Board {
@@ -190,10 +190,12 @@ func (b *board) HasHWallAt(pos Position) bool {
 }
 
 func (b *board) Rotate90cw() Board {
+	// Rotate hWalls(x, y) -> vWalls(size - 2 - y, x)
 	newVWalls := make([]Position, len(b.hWallPos))
 	for i, pos := range b.hWallPos {
 		newVWalls[i] = Position{X: b.size - 2 - pos.Y, Y: pos.X}
 	}
+	// Rotate vWalls(x, y) -> hWalls(size - 1 - y, x)
 	newHWalls := make([]Position, len(b.vWallPos))
 	for i, pos := range b.vWallPos {
 		newHWalls[i] = Position{X: b.size - 1 - pos.Y, Y: pos.X}

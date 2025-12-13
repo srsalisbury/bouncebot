@@ -32,15 +32,15 @@ func TestPanel_String(t *testing.T) {
 	board := NewPanel(3, vW, hW)
 	want := dedentBoardString(`
 		+----+----+----+
-		|               
+		|
 		+    +    +    +
-		|    |          
+		|    |
 		+    +----+    +
 		|              |
 		+    +    +----+
 		`)
 	got := board.String()
-	if got != want {
+	if !boardStringsEqual(got, want) {
 		t.Errorf(`String()
 got:
 %v
@@ -61,20 +61,20 @@ func TestRotate90cw(t *testing.T) {
 			"Case 1",
 			`
 			+----+----+----+
-			|               
+			|
 			+    +    +----+
 			|    |         |
 			+    +----+    +
-			|    |          
+			|    |
 			+----+    +----+
 			`,
 			`
 			+----+----+----+
-			|               
+			|
 			+----+----+    +
-			|    |          
+			|    |
 			+    +    +    +
-			|         |     
+			|         |
 			+    +----+    +
 			`,
 		},
@@ -102,11 +102,11 @@ func TestRotate90cw(t *testing.T) {
 func TestParsePanelString_PossibleTargets(t *testing.T) {
 	panelStr := `
 		+----+----+----+
-		| []            
+		| []
 		+    +    +    +
-		|    |          
+		|    |
 		+    +----+    +
-		|           []  
+		|           []
 		+    +    +    +
 		`
 	panel, err := ParsePanelString(panelStr)
@@ -148,7 +148,6 @@ func TestRotate90cw_PossibleTargets(t *testing.T) {
 	if len(targets) != 1 {
 		t.Fatalf("Expected 1 target, got %d", len(targets))
 	}
-	// (x,y) -> (size-1-y, x) = (3-1-0, 0) = (2, 0)
 	expected := Position{2, 0}
 	if targets[0] != expected {
 		t.Errorf("Expected target at %v after rotation, got %v", expected, targets[0])

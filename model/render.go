@@ -109,11 +109,19 @@ func ParseGenericBoardString(bs string, isPanel bool) (Board, error) {
 		// For panels, we need to check for explicit walls on the right and bottom edges.
 		scanSize++
 	}
+	// Helper to get substring with bounds checking. Allows panels to avoid padding spaces.
+	getSubstr := func(s string, start, length int) string {
+		if start < 0 || start+length > len(s) {
+			return ""
+		}
+		return s[start : start+length]
+	}
 
-	// Check that board is square
+	// Check that board is square by checking hwall line lengths.
 	expectedLineLength := int(size)*5 + 1
 	for i, line := range lines {
-		if len(line) != expectedLineLength {
+		// hWalls are on the even lines.
+		if i%2 == 0 && len(line) != expectedLineLength {
 			return nil, fmt.Errorf("line %d length %d does not match expected %d for size %d", i, len(line), expectedLineLength, size)
 		}
 	}
@@ -123,8 +131,7 @@ func ParseGenericBoardString(bs string, isPanel bool) (Board, error) {
 		lineIdx := (y + 1) * 2
 		line := lines[lineIdx]
 		for x := range size {
-			charIdx := int(x)*5 + 2
-			if line[charIdx:charIdx+2] == "--" {
+			if getSubstr(line, int(x)*5+1, 4) == "----" {
 				hWalls = append(hWalls, Position{x, y})
 			}
 		}
@@ -135,8 +142,7 @@ func ParseGenericBoardString(bs string, isPanel bool) (Board, error) {
 		lineIdx := y*2 + 1
 		line := lines[lineIdx]
 		for x := range scanSize - 1 {
-			charIdx := int(x+1) * 5
-			if line[charIdx:charIdx+1] == "|" {
+			if getSubstr(line, int(x+1)*5, 1) == "|" {
 				vWalls = append(vWalls, Position{x, y})
 			}
 		}
@@ -147,9 +153,7 @@ func ParseGenericBoardString(bs string, isPanel bool) (Board, error) {
 		lineIdx := y*2 + 1
 		line := lines[lineIdx]
 		for x := range size {
-			charIdx := int(x)*5 + 1
-			cellContent := line[charIdx : charIdx+4]
-			if strings.Contains(cellContent, "[]") {
+			if getSubstr(line, int(x)*5+2, 2) == "[]" {
 				possibleTargets = append(possibleTargets, Position{x, y})
 			}
 		}
@@ -246,4 +250,18 @@ func MustParseGameString(bs string) *Game {
 // Dedent and remove leading/trailing blank lines for easier parsing and test comparison.
 func dedentBoardString(s string) string {
 	return strings.TrimSpace(dedent.Dedent(s))
+}
+
+// Compares board strings after removing irrelevant whitespace. Assumes full wall on left.
+func boardStringsEqual(got, want string) bool {
+	return trimSpaceMultiline(got) == trimSpaceMultiline(want)
+}
+
+func trimSpaceMultiline(s string) string {
+	s = strings.TrimSpace(s) // remove leading/trailing blank lines
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(line)
+	}
+	return strings.Join(lines, "\n")
 }
