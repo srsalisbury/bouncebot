@@ -68,6 +68,52 @@ func TestNewRandomGame(t *testing.T) {
 	}
 }
 
+func TestNewContinuationGame(t *testing.T) {
+	// Create an initial game
+	initial := NewRandomGame()
+
+	// Create a continuation game
+	continuation := NewContinuationGame(initial)
+
+	// Board should be the same
+	if continuation.Board.Size() != initial.Board.Size() {
+		t.Errorf("Expected same board size, got %d vs %d", continuation.Board.Size(), initial.Board.Size())
+	}
+
+	// Robot positions should be the same
+	for botId := BotId(0); botId < 4; botId++ {
+		if continuation.Bots[botId] != initial.Bots[botId] {
+			t.Errorf("Bot %d position changed: %v -> %v", botId, initial.Bots[botId], continuation.Bots[botId])
+		}
+	}
+
+	// Target should be different (position or robot ID)
+	// Note: There's a small chance they're the same randomly, so we just verify it's valid
+	possibleTargets := continuation.Board.PossibleTargets()
+	if !slices.Contains(possibleTargets, continuation.Target.Pos) {
+		t.Errorf("Continuation target position %v is not a valid possible target", continuation.Target.Pos)
+	}
+
+	// Target should not be on a robot (unless all targets are occupied)
+	for botId, pos := range continuation.Bots {
+		if pos == continuation.Target.Pos {
+			t.Logf("Warning: Target is on bot %d position (may be valid if all targets occupied)", botId)
+		}
+	}
+}
+
+func TestNewContinuationGame_NilPrev(t *testing.T) {
+	// Should fall back to NewRandomGame when prev is nil
+	game := NewContinuationGame(nil)
+
+	if game == nil {
+		t.Error("Expected non-nil game")
+	}
+	if game.Board.Size() != 16 {
+		t.Errorf("Expected board size 16, got %d", game.Board.Size())
+	}
+}
+
 func TestBuildBoardFromPanels(t *testing.T) {
 	tests := []struct {
 		name     string

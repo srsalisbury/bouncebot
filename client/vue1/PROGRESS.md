@@ -697,6 +697,25 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 29.7a: Next Game Button
+**Status:** Complete
+
+**What was done:**
+- Added "Next Game" button to game header (right side of players bar)
+- Button starts a new puzzle in the same session
+- Continuation games keep same board and robot positions, only target changes
+- Added NewContinuationGame() function to model
+- First game in session is fully random, subsequent games are continuations
+- Added tests for continuation game logic
+
+**Files modified:**
+- `src/views/SessionView.vue` - Added Next Game button and styling
+- `model/games.go` - Added NewContinuationGame() function
+- `model/games_test.go` - Added tests for continuation games
+- `server/session/session.go` - Updated StartGame to use continuation when game exists
+
+---
+
 ## In Progress
 
 _None currently_
@@ -705,4 +724,4 @@ _None currently_
 
 ## Up Next
 
-- Step 29.7: Scoring & Results
+- Step 29.7b: Scoring & Results (cumulative scores, winner announcement, leaderboard)
