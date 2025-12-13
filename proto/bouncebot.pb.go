@@ -812,6 +812,7 @@ func (x *GetSessionRequest) GetSessionId() string {
 type StartGameRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	UseFixedBoard bool                   `protobuf:"varint,2,opt,name=use_fixed_board,json=useFixedBoard,proto3" json:"use_fixed_board,omitempty"` // If true, use Game1() instead of random
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -851,6 +852,13 @@ func (x *StartGameRequest) GetSessionId() string {
 		return x.SessionId
 	}
 	return ""
+}
+
+func (x *StartGameRequest) GetUseFixedBoard() bool {
+	if x != nil {
+		return x.UseFixedBoard
+	}
+	return false
 }
 
 type SubmitSolutionRequest struct {
@@ -1111,10 +1119,11 @@ const file_bouncebot_proto_rawDesc = "" +
 	"playerName\"2\n" +
 	"\x11GetSessionRequest\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId\"1\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"Y\n" +
 	"\x10StartGameRequest\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId\"r\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12&\n" +
+	"\x0fuse_fixed_board\x18\x02 \x01(\bR\ruseFixedBoard\"r\n" +
 	"\x15SubmitSolutionRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1b\n" +

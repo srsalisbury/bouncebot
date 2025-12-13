@@ -64,7 +64,7 @@ func (s *bounceBotServer) GetSession(_ context.Context, req *connect.Request[pb.
 }
 
 func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.StartGameRequest]) (*connect.Response[pb.Session], error) {
-	sess, err := s.sessions.StartGame(req.Msg.SessionId)
+	sess, err := s.sessions.StartGame(req.Msg.SessionId, req.Msg.UseFixedBoard)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}

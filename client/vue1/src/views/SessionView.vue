@@ -29,6 +29,7 @@ const notificationTimeout = ref<number | null>(null)
 const bestSubmittedMoveCount = ref<number | null>(null)
 const showRetractConfirm = ref(false)
 const pendingRetractAction = ref<(() => void) | null>(null)
+const useFixedBoard = ref(false)
 
 const hasGame = computed(() => session.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
@@ -63,12 +64,12 @@ async function loadSession() {
   }
 }
 
-async function startGame() {
+async function startGame(useFixedBoard = false) {
   isStarting.value = true
   error.value = null
 
   try {
-    const sess = await bounceBotClient.startGame({ sessionId: props.sessionId })
+    const sess = await bounceBotClient.startGame({ sessionId: props.sessionId, useFixedBoard })
     session.value = sess
 
     if (sess.currentGame) {
@@ -375,13 +376,20 @@ onUnmounted(() => {
 
         <div v-if="error" class="error">{{ error }}</div>
 
-        <button
-          class="btn primary start-btn"
-          :disabled="isStarting"
-          @click="startGame"
-        >
-          {{ isStarting ? 'Starting...' : 'Start Game' }}
-        </button>
+        <div class="start-options">
+          <button
+            class="btn primary start-btn"
+            :disabled="isStarting"
+            @click="startGame(useFixedBoard)"
+          >
+            {{ isStarting ? 'Starting...' : 'Start Game' }}
+          </button>
+
+          <label class="fixed-board-option">
+            <input type="checkbox" v-model="useFixedBoard" />
+            Use fixed board (for testing)
+          </label>
+        </div>
 
         <p class="hint">Share the link above with friends to play together!</p>
       </div>
@@ -635,10 +643,29 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
+.start-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .start-btn {
   width: 100%;
   padding: 1rem;
   font-size: 1.1rem;
+}
+
+.fixed-board-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #888;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.fixed-board-option input {
+  cursor: pointer;
 }
 
 .hint {

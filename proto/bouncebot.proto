@@ -111,6 +111,7 @@ message GetSessionRequest {
 
 message StartGameRequest {
   string session_id = 1;
+  bool use_fixed_board = 2;  // If true, use Game1() instead of random
 }
 
 message SubmitSolutionRequest {
