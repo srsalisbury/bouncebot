@@ -82,9 +82,8 @@ message Player {
 // Player's solution result
 message PlayerSolution {
   string player_id = 1;
-  string player_name = 2;
-  int32 move_count = 3;
-  google.protobuf.Timestamp solved_at = 4;
+  int32 move_count = 2;
+  google.protobuf.Timestamp solved_at = 3;
 }
 
 // Game session for multiplayer

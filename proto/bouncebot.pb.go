@@ -527,9 +527,8 @@ func (x *Player) GetName() string {
 type PlayerSolution struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	PlayerName    string                 `protobuf:"bytes,2,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
-	MoveCount     int32                  `protobuf:"varint,3,opt,name=move_count,json=moveCount,proto3" json:"move_count,omitempty"`
-	SolvedAt      *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=solved_at,json=solvedAt,proto3" json:"solved_at,omitempty"`
+	MoveCount     int32                  `protobuf:"varint,2,opt,name=move_count,json=moveCount,proto3" json:"move_count,omitempty"`
+	SolvedAt      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=solved_at,json=solvedAt,proto3" json:"solved_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -567,13 +566,6 @@ func (*PlayerSolution) Descriptor() ([]byte, []int) {
 func (x *PlayerSolution) GetPlayerId() string {
 	if x != nil {
 		return x.PlayerId
-	}
-	return ""
-}
-
-func (x *PlayerSolution) GetPlayerName() string {
-	if x != nil {
-		return x.PlayerName
 	}
 	return ""
 }
@@ -1095,14 +1087,12 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x11error_description\x18\x02 \x01(\tR\x10errorDescription\",\n" +
 	"\x06Player\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"\xa6\x01\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\x85\x01\n" +
 	"\x0ePlayerSolution\x12\x1b\n" +
-	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x1f\n" +
-	"\vplayer_name\x18\x02 \x01(\tR\n" +
-	"playerName\x12\x1d\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x1d\n" +
 	"\n" +
-	"move_count\x18\x03 \x01(\x05R\tmoveCount\x127\n" +
-	"\tsolved_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bsolvedAt\"\xb2\x02\n" +
+	"move_count\x18\x02 \x01(\x05R\tmoveCount\x127\n" +
+	"\tsolved_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\bsolvedAt\"\xb2\x02\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12+\n" +
 	"\aplayers\x18\x02 \x03(\v2\x11.bouncebot.PlayerR\aplayers\x129\n" +

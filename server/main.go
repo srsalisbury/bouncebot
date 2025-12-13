@@ -78,9 +78,8 @@ func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request
 	}
 	return connect.NewResponse(&pb.SubmitSolutionResponse{
 		Solution: &pb.PlayerSolution{
-			PlayerId:   solution.PlayerID,
-			PlayerName: solution.PlayerName,
-			MoveCount:  int32(solution.MoveCount),
+			PlayerId:  solution.PlayerID,
+			MoveCount: int32(solution.MoveCount),
 		},
 	}), nil
 }
