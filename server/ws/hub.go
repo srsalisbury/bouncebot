@@ -56,6 +56,13 @@ type PlayerDonePayload struct {
 	PlayerID string `json:"playerId"`
 }
 
+// GameEndedPayload is the payload for game_ended events.
+type GameEndedPayload struct {
+	WinnerID   string `json:"winnerId"`
+	WinnerName string `json:"winnerName"`
+	MoveCount  int    `json:"moveCount"`
+}
+
 // Client represents a WebSocket client connection.
 type Client struct {
 	hub       *Hub
@@ -152,6 +159,18 @@ func (h *Hub) BroadcastPlayerDone(sessionID, playerID string) {
 		Type: "player_done",
 		Payload: PlayerDonePayload{
 			PlayerID: playerID,
+		},
+	})
+}
+
+// BroadcastGameEnded broadcasts a game_ended event to all clients in a session.
+func (h *Hub) BroadcastGameEnded(sessionID, winnerID, winnerName string, moveCount int) {
+	h.Broadcast(sessionID, Event{
+		Type: "game_ended",
+		Payload: GameEndedPayload{
+			WinnerID:   winnerID,
+			WinnerName: winnerName,
+			MoveCount:  moveCount,
 		},
 	})
 }
