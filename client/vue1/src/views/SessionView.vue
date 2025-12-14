@@ -4,12 +4,13 @@ import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useSessionStore } from '../stores/sessionStore'
-import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload, type PlayerFinishedSolvingPayload } from '../services/websocket'
+import { websocketService, type WebSocketEvent } from '../services/websocket'
 import type { Session, BotPos } from '../gen/bouncebot_pb'
 import { create } from '@bufbuild/protobuf'
 import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
+import LeaderboardModal from '../components/LeaderboardModal.vue'
 
 const props = defineProps<{
   sessionId: string
@@ -26,13 +27,12 @@ const isJoining = ref(false)
 const error = ref<string | null>(null)
 const pollInterval = ref<number | null>(null)
 const joinName = ref(sessionStore.currentPlayerName ?? '')
-const notification = ref<string | null>(null)
-const notificationTimeout = ref<number | null>(null)
 const bestSubmittedMoveCount = ref<number | null>(null)
 const showRetractConfirm = ref(false)
 const pendingRetractAction = ref<(() => void) | null>(null)
 const useFixedBoard = ref(false)
 const gameEnded = ref(false)
+const showLeaderboard = ref(false)
 
 const hasGame = computed(() => session.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
@@ -148,16 +148,6 @@ function goHome() {
   router.push('/')
 }
 
-function showNotification(message: string) {
-  notification.value = message
-  if (notificationTimeout.value) {
-    clearTimeout(notificationTimeout.value)
-  }
-  notificationTimeout.value = window.setTimeout(() => {
-    notification.value = null
-  }, 4000)
-}
-
 async function submitSolution() {
   if (!sessionStore.currentPlayerId) return
   const moveCount = gameStore.moveCount
@@ -270,31 +260,10 @@ function handleWebSocketEvent(event: WebSocketEvent) {
     gameEnded.value = false // Reset game ended state
     loadSession(true)
   } else if (event.type === 'player_solved') {
-    const payload = event.payload as PlayerSolvedPayload
-    // Show notification for other players' solutions
-    if (payload.playerId !== sessionStore.currentPlayerId) {
-      const playerName = getPlayerName(payload.playerId)
-      showNotification(`${playerName} solved in ${payload.moveCount} moves!`)
-    }
-    // Refresh session to get updated solutions list
     loadSession()
   } else if (event.type === 'solution_retracted') {
-    const payload = event.payload as SolutionRetractedPayload
-    // Show notification for other players' retractions
-    if (payload.playerId !== sessionStore.currentPlayerId) {
-      const playerName = getPlayerName(payload.playerId)
-      showNotification(`${playerName} retracted their solution`)
-    }
-    // Refresh session to get updated solutions list
     loadSession()
   } else if (event.type === 'player_finished_solving') {
-    const payload = event.payload as PlayerFinishedSolvingPayload
-    // Show notification for other players marking finished
-    if (payload.playerId !== sessionStore.currentPlayerId) {
-      const playerName = getPlayerName(payload.playerId)
-      showNotification(`${playerName} is finished`)
-    }
-    // Refresh session to get updated finished players list
     loadSession()
   } else if (event.type === 'player_ready_for_next') {
     // Refresh session to get updated ready players list (no notification needed)
@@ -356,7 +325,21 @@ watch(showRetractConfirm, (show) => {
   }
 })
 
+// Leaderboard toggle
+function toggleLeaderboard() {
+  showLeaderboard.value = !showLeaderboard.value
+}
+
+function leaderboardKeydownHandler(event: KeyboardEvent) {
+  // Handle 'l' key when game is active (including game-end review) and no other modal is open
+  if (event.key === 'l' && (hasGame.value || gameEnded.value) && !showRetractConfirm.value) {
+    event.preventDefault()
+    toggleLeaderboard()
+  }
+}
+
 onMounted(() => {
+  window.addEventListener('keydown', leaderboardKeydownHandler)
   loadSession()
   // If already joined, connect WebSocket immediately
   if (hasJoined.value) {
@@ -368,11 +351,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', leaderboardKeydownHandler)
   if (pollInterval.value) {
     clearInterval(pollInterval.value)
-  }
-  if (notificationTimeout.value) {
-    clearTimeout(notificationTimeout.value)
   }
   websocketService.disconnect()
 })
@@ -380,11 +361,6 @@ onUnmounted(() => {
 
 <template>
   <div class="session-view">
-    <!-- Notification toast -->
-    <div v-if="notification" class="notification">
-      {{ notification }}
-    </div>
-
     <!-- Loading state -->
     <div v-if="isLoading" class="loading">Loading session...</div>
 
@@ -446,6 +422,12 @@ onUnmounted(() => {
         </template>
         <template v-else>
           <button
+            class="btn leaderboard-btn"
+            @click="toggleLeaderboard"
+          >
+            Leaderboard
+          </button>
+          <button
             class="btn ready-btn"
             :class="{ pressed: isPlayerReady }"
             :disabled="isPlayerReady"
@@ -463,6 +445,7 @@ onUnmounted(() => {
           :get-player-name="getPlayerName"
           :game-started-at="session.gameStartedAt"
           :game-number="session.gamesPlayed + 1"
+          :input-blocked="showLeaderboard"
         />
       </div>
     </div>
@@ -521,6 +504,15 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Leaderboard modal -->
+    <LeaderboardModal
+      :show="showLeaderboard"
+      :players="session?.players ?? []"
+      :scores="session?.scores ?? []"
+      :games-played="session?.gamesPlayed ?? 0"
+      @close="showLeaderboard = false"
+    />
   </div>
 </template>
 
@@ -528,33 +520,6 @@ onUnmounted(() => {
 .session-view {
   min-height: 100vh;
   position: relative;
-}
-
-.notification {
-  position: fixed;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #42b883;
-  color: #fff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 }
 
 .loading {
@@ -622,8 +587,22 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-.ready-btn {
+.leaderboard-btn {
   margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  background: #333;
+  color: #ddd;
+  border: 1px solid #555;
+}
+
+.leaderboard-btn:hover {
+  background: #444;
+  border-color: #666;
+}
+
+.ready-btn {
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
   white-space: nowrap;

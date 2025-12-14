@@ -207,7 +207,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
         <span class="player-dot" :style="{ backgroundColor: getPlayerColor(player) }" />
         <span class="player-name">{{ player.name }}</span>
         <span v-if="isCurrentPlayer(player)" class="you-label">(you)</span>
-        <span v-if="getPlayerWins(player) > 0" class="wins-badge">
+        <span v-if="!compact && getPlayerWins(player) > 0" class="wins-badge">
           {{ getPlayerWins(player) }} {{ getPlayerWins(player) === 1 ? 'win' : 'wins' }}
         </span>
         <span v-if="getPlayerSolution(player)" class="solution-badge">
