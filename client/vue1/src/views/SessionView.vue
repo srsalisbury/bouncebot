@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useSessionStore } from '../stores/sessionStore'
-import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload, type PlayerDonePayload } from '../services/websocket'
+import { websocketService, type WebSocketEvent, type PlayerSolvedPayload, type SolutionRetractedPayload, type PlayerFinishedSolvingPayload } from '../services/websocket'
 import type { Session, BotPos } from '../gen/bouncebot_pb'
 import { create } from '@bufbuild/protobuf'
 import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
@@ -37,10 +37,18 @@ const gameEnded = ref(false)
 const hasGame = computed(() => session.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
 const hasJoined = computed(() => sessionStore.currentPlayerId != null)
-const isPlayerDone = computed(() => {
+const isPlayerFinished = computed(() => {
   if (!sessionStore.currentPlayerId || !session.value) return false
-  return session.value.donePlayers.includes(sessionStore.currentPlayerId)
+  return session.value.finishedSolving.includes(sessionStore.currentPlayerId)
 })
+
+const isPlayerReady = computed(() => {
+  if (!sessionStore.currentPlayerId || !session.value) return false
+  return session.value.readyForNext.includes(sessionStore.currentPlayerId)
+})
+
+const readyCount = computed(() => session.value?.readyForNext.length ?? 0)
+const playerCount = computed(() => session.value?.players.length ?? 0)
 
 const sortedSolutions = computed(() => {
   if (!session.value) return []
@@ -193,18 +201,33 @@ async function retractSolution() {
   }
 }
 
-async function markDone() {
+async function markFinishedSolving() {
   if (!sessionStore.currentPlayerId) return
 
   try {
-    await bounceBotClient.markDone({
+    await bounceBotClient.markFinishedSolving({
       sessionId: props.sessionId,
       playerId: sessionStore.currentPlayerId,
     })
-    // Reload session to get updated done players list
+    // Reload session to get updated finished players list
     await loadSession()
   } catch (e) {
-    console.error('Failed to mark done:', e)
+    console.error('Failed to mark finished:', e)
+  }
+}
+
+async function markReadyForNext() {
+  if (!sessionStore.currentPlayerId) return
+
+  try {
+    await bounceBotClient.markReadyForNext({
+      sessionId: props.sessionId,
+      playerId: sessionStore.currentPlayerId,
+    })
+    // Reload session to get updated ready players list
+    await loadSession()
+  } catch (e) {
+    console.error('Failed to mark ready:', e)
   }
 }
 
@@ -264,14 +287,17 @@ function handleWebSocketEvent(event: WebSocketEvent) {
     }
     // Refresh session to get updated solutions list
     loadSession()
-  } else if (event.type === 'player_done') {
-    const payload = event.payload as PlayerDonePayload
-    // Show notification for other players marking done
+  } else if (event.type === 'player_finished_solving') {
+    const payload = event.payload as PlayerFinishedSolvingPayload
+    // Show notification for other players marking finished
     if (payload.playerId !== sessionStore.currentPlayerId) {
       const playerName = getPlayerName(payload.playerId)
-      showNotification(`${playerName} is done`)
+      showNotification(`${playerName} is finished`)
     }
-    // Refresh session to get updated done players list
+    // Refresh session to get updated finished players list
+    loadSession()
+  } else if (event.type === 'player_ready_for_next') {
+    // Refresh session to get updated ready players list (no notification needed)
     loadSession()
   } else if (event.type === 'game_ended') {
     gameEnded.value = true
@@ -408,24 +434,26 @@ onUnmounted(() => {
     <div v-else-if="hasGame && session" class="game-wrapper">
       <div class="game-header">
         <template v-if="!gameEnded">
-          <PlayersPanel :players="session.players" :solutions="session.solutions" :scores="session.scores" :game-started-at="session.gameStartedAt" :done-players="session.donePlayers" compact />
+          <PlayersPanel :players="session.players" :solutions="session.solutions" :scores="session.scores" :game-started-at="session.gameStartedAt" :finished-solving="session.finishedSolving" compact />
           <button
-            v-if="!isPlayerDone"
+            v-if="!isPlayerFinished"
             class="btn done-btn"
-            @click="markDone"
+            @click="markFinishedSolving"
           >
-            I'm Done
+            I'm Finished
           </button>
-          <span v-else class="done-indicator">Done</span>
+          <span v-else class="done-indicator">Finished</span>
         </template>
-        <button
-          v-else
-          class="btn primary next-game-btn"
-          :disabled="isStarting"
-          @click="startGame(false)"
-        >
-          {{ isStarting ? 'Starting...' : 'Next Game' }}
-        </button>
+        <template v-else>
+          <button
+            class="btn ready-btn"
+            :class="{ pressed: isPlayerReady }"
+            :disabled="isPlayerReady"
+            @click="markReadyForNext"
+          >
+            I'm Ready For Next Game ({{ readyCount }}/{{ playerCount }})
+          </button>
+        </template>
       </div>
       <div class="game-container">
         <GameBoard
@@ -434,6 +462,7 @@ onUnmounted(() => {
           :player-solutions="sortedSolutions"
           :get-player-name="getPlayerName"
           :game-started-at="session.gameStartedAt"
+          :game-number="session.gamesPlayed + 1"
         />
       </div>
     </div>
@@ -591,6 +620,29 @@ onUnmounted(() => {
   font-size: 0.85rem;
   color: #42b883;
   font-weight: 500;
+}
+
+.ready-btn {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  background: #42b883;
+  color: white;
+  border: 2px solid #42b883;
+}
+
+.ready-btn:hover:not(.pressed) {
+  background: #3aa876;
+  border-color: #3aa876;
+}
+
+.ready-btn.pressed {
+  background: #1a2e1a;
+  color: #42b883;
+  border-color: #42b883;
+  cursor: default;
+  opacity: 1;
 }
 
 .next-game-btn {

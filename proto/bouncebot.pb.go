@@ -639,18 +639,19 @@ func (x *PlayerScore) GetWins() int32 {
 
 // Game session for multiplayer
 type Session struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Players       []*Player              `protobuf:"bytes,2,rep,name=players,proto3" json:"players,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	CurrentGame   *Game                  `protobuf:"bytes,4,opt,name=current_game,json=currentGame,proto3" json:"current_game,omitempty"`         // null if no game started yet
-	GameStartedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=game_started_at,json=gameStartedAt,proto3" json:"game_started_at,omitempty"` // when current game started
-	Solutions     []*PlayerSolution      `protobuf:"bytes,6,rep,name=solutions,proto3" json:"solutions,omitempty"`                                // players who have solved the current game
-	Scores        []*PlayerScore         `protobuf:"bytes,7,rep,name=scores,proto3" json:"scores,omitempty"`                                      // cumulative scores across games
-	GamesPlayed   int32                  `protobuf:"varint,8,opt,name=games_played,json=gamesPlayed,proto3" json:"games_played,omitempty"`        // total games completed in session
-	DonePlayers   []string               `protobuf:"bytes,9,rep,name=done_players,json=donePlayers,proto3" json:"done_players,omitempty"`         // player IDs who are done looking for solutions
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Players         []*Player              `protobuf:"bytes,2,rep,name=players,proto3" json:"players,omitempty"`
+	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CurrentGame     *Game                  `protobuf:"bytes,4,opt,name=current_game,json=currentGame,proto3" json:"current_game,omitempty"`             // null if no game started yet
+	GameStartedAt   *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=game_started_at,json=gameStartedAt,proto3" json:"game_started_at,omitempty"`     // when current game started
+	Solutions       []*PlayerSolution      `protobuf:"bytes,6,rep,name=solutions,proto3" json:"solutions,omitempty"`                                    // players who have solved the current game
+	Scores          []*PlayerScore         `protobuf:"bytes,7,rep,name=scores,proto3" json:"scores,omitempty"`                                          // cumulative scores across games
+	GamesPlayed     int32                  `protobuf:"varint,8,opt,name=games_played,json=gamesPlayed,proto3" json:"games_played,omitempty"`            // total games completed in session
+	FinishedSolving []string               `protobuf:"bytes,9,rep,name=finished_solving,json=finishedSolving,proto3" json:"finished_solving,omitempty"` // player IDs who are finished solving (triggers game end)
+	ReadyForNext    []string               `protobuf:"bytes,10,rep,name=ready_for_next,json=readyForNext,proto3" json:"ready_for_next,omitempty"`       // player IDs who are ready for next game
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Session) Reset() {
@@ -739,9 +740,16 @@ func (x *Session) GetGamesPlayed() int32 {
 	return 0
 }
 
-func (x *Session) GetDonePlayers() []string {
+func (x *Session) GetFinishedSolving() []string {
 	if x != nil {
-		return x.DonePlayers
+		return x.FinishedSolving
+	}
+	return nil
+}
+
+func (x *Session) GetReadyForNext() []string {
+	if x != nil {
+		return x.ReadyForNext
 	}
 	return nil
 }
@@ -1138,7 +1146,7 @@ func (x *RetractSolutionResponse) GetSuccess() bool {
 	return false
 }
 
-type MarkDoneRequest struct {
+type MarkFinishedSolvingRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
@@ -1146,20 +1154,20 @@ type MarkDoneRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *MarkDoneRequest) Reset() {
-	*x = MarkDoneRequest{}
+func (x *MarkFinishedSolvingRequest) Reset() {
+	*x = MarkFinishedSolvingRequest{}
 	mi := &file_bouncebot_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *MarkDoneRequest) String() string {
+func (x *MarkFinishedSolvingRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MarkDoneRequest) ProtoMessage() {}
+func (*MarkFinishedSolvingRequest) ProtoMessage() {}
 
-func (x *MarkDoneRequest) ProtoReflect() protoreflect.Message {
+func (x *MarkFinishedSolvingRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_bouncebot_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1171,46 +1179,46 @@ func (x *MarkDoneRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use MarkDoneRequest.ProtoReflect.Descriptor instead.
-func (*MarkDoneRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MarkFinishedSolvingRequest.ProtoReflect.Descriptor instead.
+func (*MarkFinishedSolvingRequest) Descriptor() ([]byte, []int) {
 	return file_bouncebot_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *MarkDoneRequest) GetSessionId() string {
+func (x *MarkFinishedSolvingRequest) GetSessionId() string {
 	if x != nil {
 		return x.SessionId
 	}
 	return ""
 }
 
-func (x *MarkDoneRequest) GetPlayerId() string {
+func (x *MarkFinishedSolvingRequest) GetPlayerId() string {
 	if x != nil {
 		return x.PlayerId
 	}
 	return ""
 }
 
-type MarkDoneResponse struct {
+type MarkFinishedSolvingResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *MarkDoneResponse) Reset() {
-	*x = MarkDoneResponse{}
+func (x *MarkFinishedSolvingResponse) Reset() {
+	*x = MarkFinishedSolvingResponse{}
 	mi := &file_bouncebot_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *MarkDoneResponse) String() string {
+func (x *MarkFinishedSolvingResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MarkDoneResponse) ProtoMessage() {}
+func (*MarkFinishedSolvingResponse) ProtoMessage() {}
 
-func (x *MarkDoneResponse) ProtoReflect() protoreflect.Message {
+func (x *MarkFinishedSolvingResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_bouncebot_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1222,12 +1230,108 @@ func (x *MarkDoneResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use MarkDoneResponse.ProtoReflect.Descriptor instead.
-func (*MarkDoneResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MarkFinishedSolvingResponse.ProtoReflect.Descriptor instead.
+func (*MarkFinishedSolvingResponse) Descriptor() ([]byte, []int) {
 	return file_bouncebot_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *MarkDoneResponse) GetSuccess() bool {
+func (x *MarkFinishedSolvingResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type MarkReadyForNextRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarkReadyForNextRequest) Reset() {
+	*x = MarkReadyForNextRequest{}
+	mi := &file_bouncebot_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarkReadyForNextRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarkReadyForNextRequest) ProtoMessage() {}
+
+func (x *MarkReadyForNextRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarkReadyForNextRequest.ProtoReflect.Descriptor instead.
+func (*MarkReadyForNextRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *MarkReadyForNextRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *MarkReadyForNextRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+type MarkReadyForNextResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarkReadyForNextResponse) Reset() {
+	*x = MarkReadyForNextResponse{}
+	mi := &file_bouncebot_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarkReadyForNextResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarkReadyForNextResponse) ProtoMessage() {}
+
+func (x *MarkReadyForNextResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarkReadyForNextResponse.ProtoReflect.Descriptor instead.
+func (*MarkReadyForNextResponse) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *MarkReadyForNextResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
@@ -1275,7 +1379,7 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x05moves\x18\x03 \x03(\v2\x11.bouncebot.BotPosR\x05moves\">\n" +
 	"\vPlayerScore\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x12\n" +
-	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\xa8\x03\n" +
+	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\xd6\x03\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12+\n" +
 	"\aplayers\x18\x02 \x03(\v2\x11.bouncebot.PlayerR\aplayers\x129\n" +
@@ -1285,8 +1389,10 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x0fgame_started_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\rgameStartedAt\x127\n" +
 	"\tsolutions\x18\x06 \x03(\v2\x19.bouncebot.PlayerSolutionR\tsolutions\x12.\n" +
 	"\x06scores\x18\a \x03(\v2\x16.bouncebot.PlayerScoreR\x06scores\x12!\n" +
-	"\fgames_played\x18\b \x01(\x05R\vgamesPlayed\x12!\n" +
-	"\fdone_players\x18\t \x03(\tR\vdonePlayers\"7\n" +
+	"\fgames_played\x18\b \x01(\x05R\vgamesPlayed\x12)\n" +
+	"\x10finished_solving\x18\t \x03(\tR\x0ffinishedSolving\x12$\n" +
+	"\x0eready_for_next\x18\n" +
+	" \x03(\tR\freadyForNext\"7\n" +
 	"\x14CreateSessionRequest\x12\x1f\n" +
 	"\vplayer_name\x18\x01 \x01(\tR\n" +
 	"playerName\"T\n" +
@@ -1314,13 +1420,19 @@ const file_bouncebot_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\"3\n" +
 	"\x17RetractSolutionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"M\n" +
-	"\x0fMarkDoneRequest\x12\x1d\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"X\n" +
+	"\x1aMarkFinishedSolvingRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1b\n" +
-	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\",\n" +
-	"\x10MarkDoneResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xa6\x05\n" +
+	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\"7\n" +
+	"\x1bMarkFinishedSolvingResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"U\n" +
+	"\x17MarkReadyForNextRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1b\n" +
+	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\"4\n" +
+	"\x18MarkReadyForNextResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xa6\x06\n" +
 	"\tBounceBot\x129\n" +
 	"\bMakeGame\x12\x1a.bouncebot.MakeGameRequest\x1a\x0f.bouncebot.Game\"\x00\x12T\n" +
 	"\rCheckSolution\x12\x1f.bouncebot.CheckSolutionRequest\x1a .bouncebot.CheckSolutionResponse\"\x00\x12F\n" +
@@ -1330,8 +1442,9 @@ const file_bouncebot_proto_rawDesc = "" +
 	"GetSession\x12\x1c.bouncebot.GetSessionRequest\x1a\x12.bouncebot.Session\"\x00\x12>\n" +
 	"\tStartGame\x12\x1b.bouncebot.StartGameRequest\x1a\x12.bouncebot.Session\"\x00\x12W\n" +
 	"\x0eSubmitSolution\x12 .bouncebot.SubmitSolutionRequest\x1a!.bouncebot.SubmitSolutionResponse\"\x00\x12Z\n" +
-	"\x0fRetractSolution\x12!.bouncebot.RetractSolutionRequest\x1a\".bouncebot.RetractSolutionResponse\"\x00\x12E\n" +
-	"\bMarkDone\x12\x1a.bouncebot.MarkDoneRequest\x1a\x1b.bouncebot.MarkDoneResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
+	"\x0fRetractSolution\x12!.bouncebot.RetractSolutionRequest\x1a\".bouncebot.RetractSolutionResponse\"\x00\x12f\n" +
+	"\x13MarkFinishedSolving\x12%.bouncebot.MarkFinishedSolvingRequest\x1a&.bouncebot.MarkFinishedSolvingResponse\"\x00\x12]\n" +
+	"\x10MarkReadyForNext\x12\".bouncebot.MarkReadyForNextRequest\x1a#.bouncebot.MarkReadyForNextResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
 
 var (
 	file_bouncebot_proto_rawDescOnce sync.Once
@@ -1345,31 +1458,33 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_bouncebot_proto_goTypes = []any{
-	(*Position)(nil),                // 0: bouncebot.Position
-	(*Board)(nil),                   // 1: bouncebot.Board
-	(*BotPos)(nil),                  // 2: bouncebot.BotPos
-	(*Game)(nil),                    // 3: bouncebot.Game
-	(*MakeGameRequest)(nil),         // 4: bouncebot.MakeGameRequest
-	(*CheckSolutionRequest)(nil),    // 5: bouncebot.CheckSolutionRequest
-	(*CheckSolutionResponse)(nil),   // 6: bouncebot.CheckSolutionResponse
-	(*MoveError)(nil),               // 7: bouncebot.MoveError
-	(*Player)(nil),                  // 8: bouncebot.Player
-	(*PlayerSolution)(nil),          // 9: bouncebot.PlayerSolution
-	(*PlayerScore)(nil),             // 10: bouncebot.PlayerScore
-	(*Session)(nil),                 // 11: bouncebot.Session
-	(*CreateSessionRequest)(nil),    // 12: bouncebot.CreateSessionRequest
-	(*JoinSessionRequest)(nil),      // 13: bouncebot.JoinSessionRequest
-	(*GetSessionRequest)(nil),       // 14: bouncebot.GetSessionRequest
-	(*StartGameRequest)(nil),        // 15: bouncebot.StartGameRequest
-	(*SubmitSolutionRequest)(nil),   // 16: bouncebot.SubmitSolutionRequest
-	(*SubmitSolutionResponse)(nil),  // 17: bouncebot.SubmitSolutionResponse
-	(*RetractSolutionRequest)(nil),  // 18: bouncebot.RetractSolutionRequest
-	(*RetractSolutionResponse)(nil), // 19: bouncebot.RetractSolutionResponse
-	(*MarkDoneRequest)(nil),         // 20: bouncebot.MarkDoneRequest
-	(*MarkDoneResponse)(nil),        // 21: bouncebot.MarkDoneResponse
-	(*timestamppb.Timestamp)(nil),   // 22: google.protobuf.Timestamp
+	(*Position)(nil),                    // 0: bouncebot.Position
+	(*Board)(nil),                       // 1: bouncebot.Board
+	(*BotPos)(nil),                      // 2: bouncebot.BotPos
+	(*Game)(nil),                        // 3: bouncebot.Game
+	(*MakeGameRequest)(nil),             // 4: bouncebot.MakeGameRequest
+	(*CheckSolutionRequest)(nil),        // 5: bouncebot.CheckSolutionRequest
+	(*CheckSolutionResponse)(nil),       // 6: bouncebot.CheckSolutionResponse
+	(*MoveError)(nil),                   // 7: bouncebot.MoveError
+	(*Player)(nil),                      // 8: bouncebot.Player
+	(*PlayerSolution)(nil),              // 9: bouncebot.PlayerSolution
+	(*PlayerScore)(nil),                 // 10: bouncebot.PlayerScore
+	(*Session)(nil),                     // 11: bouncebot.Session
+	(*CreateSessionRequest)(nil),        // 12: bouncebot.CreateSessionRequest
+	(*JoinSessionRequest)(nil),          // 13: bouncebot.JoinSessionRequest
+	(*GetSessionRequest)(nil),           // 14: bouncebot.GetSessionRequest
+	(*StartGameRequest)(nil),            // 15: bouncebot.StartGameRequest
+	(*SubmitSolutionRequest)(nil),       // 16: bouncebot.SubmitSolutionRequest
+	(*SubmitSolutionResponse)(nil),      // 17: bouncebot.SubmitSolutionResponse
+	(*RetractSolutionRequest)(nil),      // 18: bouncebot.RetractSolutionRequest
+	(*RetractSolutionResponse)(nil),     // 19: bouncebot.RetractSolutionResponse
+	(*MarkFinishedSolvingRequest)(nil),  // 20: bouncebot.MarkFinishedSolvingRequest
+	(*MarkFinishedSolvingResponse)(nil), // 21: bouncebot.MarkFinishedSolvingResponse
+	(*MarkReadyForNextRequest)(nil),     // 22: bouncebot.MarkReadyForNextRequest
+	(*MarkReadyForNextResponse)(nil),    // 23: bouncebot.MarkReadyForNextResponse
+	(*timestamppb.Timestamp)(nil),       // 24: google.protobuf.Timestamp
 }
 var file_bouncebot_proto_depIdxs = []int32{
 	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
@@ -1383,12 +1498,12 @@ var file_bouncebot_proto_depIdxs = []int32{
 	3,  // 8: bouncebot.CheckSolutionResponse.resulting_game:type_name -> bouncebot.Game
 	7,  // 9: bouncebot.CheckSolutionResponse.first_bad_move:type_name -> bouncebot.MoveError
 	2,  // 10: bouncebot.MoveError.move:type_name -> bouncebot.BotPos
-	22, // 11: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
+	24, // 11: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
 	2,  // 12: bouncebot.PlayerSolution.moves:type_name -> bouncebot.BotPos
 	8,  // 13: bouncebot.Session.players:type_name -> bouncebot.Player
-	22, // 14: bouncebot.Session.created_at:type_name -> google.protobuf.Timestamp
+	24, // 14: bouncebot.Session.created_at:type_name -> google.protobuf.Timestamp
 	3,  // 15: bouncebot.Session.current_game:type_name -> bouncebot.Game
-	22, // 16: bouncebot.Session.game_started_at:type_name -> google.protobuf.Timestamp
+	24, // 16: bouncebot.Session.game_started_at:type_name -> google.protobuf.Timestamp
 	9,  // 17: bouncebot.Session.solutions:type_name -> bouncebot.PlayerSolution
 	10, // 18: bouncebot.Session.scores:type_name -> bouncebot.PlayerScore
 	2,  // 19: bouncebot.SubmitSolutionRequest.moves:type_name -> bouncebot.BotPos
@@ -1401,18 +1516,20 @@ var file_bouncebot_proto_depIdxs = []int32{
 	15, // 26: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
 	16, // 27: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
 	18, // 28: bouncebot.BounceBot.RetractSolution:input_type -> bouncebot.RetractSolutionRequest
-	20, // 29: bouncebot.BounceBot.MarkDone:input_type -> bouncebot.MarkDoneRequest
-	3,  // 30: bouncebot.BounceBot.MakeGame:output_type -> bouncebot.Game
-	6,  // 31: bouncebot.BounceBot.CheckSolution:output_type -> bouncebot.CheckSolutionResponse
-	11, // 32: bouncebot.BounceBot.CreateSession:output_type -> bouncebot.Session
-	11, // 33: bouncebot.BounceBot.JoinSession:output_type -> bouncebot.Session
-	11, // 34: bouncebot.BounceBot.GetSession:output_type -> bouncebot.Session
-	11, // 35: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Session
-	17, // 36: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
-	19, // 37: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
-	21, // 38: bouncebot.BounceBot.MarkDone:output_type -> bouncebot.MarkDoneResponse
-	30, // [30:39] is the sub-list for method output_type
-	21, // [21:30] is the sub-list for method input_type
+	20, // 29: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
+	22, // 30: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
+	3,  // 31: bouncebot.BounceBot.MakeGame:output_type -> bouncebot.Game
+	6,  // 32: bouncebot.BounceBot.CheckSolution:output_type -> bouncebot.CheckSolutionResponse
+	11, // 33: bouncebot.BounceBot.CreateSession:output_type -> bouncebot.Session
+	11, // 34: bouncebot.BounceBot.JoinSession:output_type -> bouncebot.Session
+	11, // 35: bouncebot.BounceBot.GetSession:output_type -> bouncebot.Session
+	11, // 36: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Session
+	17, // 37: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
+	19, // 38: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
+	21, // 39: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
+	23, // 40: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
+	31, // [31:41] is the sub-list for method output_type
+	21, // [21:31] is the sub-list for method input_type
 	21, // [21:21] is the sub-list for extension type_name
 	21, // [21:21] is the sub-list for extension extendee
 	0,  // [0:21] is the sub-list for field type_name
@@ -1429,7 +1546,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

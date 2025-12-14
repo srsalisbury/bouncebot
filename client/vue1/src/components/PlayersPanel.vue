@@ -9,7 +9,7 @@ const props = defineProps<{
   solutions?: PlayerSolution[]
   scores?: PlayerScore[]
   gameStartedAt?: Timestamp
-  donePlayers?: string[]
+  finishedSolving?: string[]
   compact?: boolean
 }>()
 
@@ -168,8 +168,8 @@ function isLeader(player: Player): boolean {
   return player.id === leaderPlayerId.value
 }
 
-function isDone(player: Player): boolean {
-  return props.donePlayers?.includes(player.id) ?? false
+function isFinishedSolving(player: Player): boolean {
+  return props.finishedSolving?.includes(player.id) ?? false
 }
 
 function getSolveTime(solution: PlayerSolution): string | null {
@@ -216,7 +216,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
             {{ getSolveTime(getPlayerSolution(player)!) }}
           </span>
         </span>
-        <span v-if="isDone(player)" class="done-check" title="Done looking">✓</span>
+        <span v-if="isFinishedSolving(player)" class="done-check" title="Finished solving">✓</span>
       </div>
     </TransitionGroup>
     <!-- Timer display in compact mode (during game) - on right end -->

@@ -18,7 +18,8 @@ service BounceBot {
   rpc StartGame (StartGameRequest) returns (Session) {}
   rpc SubmitSolution (SubmitSolutionRequest) returns (SubmitSolutionResponse) {}
   rpc RetractSolution (RetractSolutionRequest) returns (RetractSolutionResponse) {}
-  rpc MarkDone (MarkDoneRequest) returns (MarkDoneResponse) {}
+  rpc MarkFinishedSolving (MarkFinishedSolvingRequest) returns (MarkFinishedSolvingResponse) {}
+  rpc MarkReadyForNext (MarkReadyForNextRequest) returns (MarkReadyForNextResponse) {}
 }
 
 // Board grid position.
@@ -103,7 +104,8 @@ message Session {
   repeated PlayerSolution solutions = 6;  // players who have solved the current game
   repeated PlayerScore scores = 7;  // cumulative scores across games
   int32 games_played = 8;  // total games completed in session
-  repeated string done_players = 9;  // player IDs who are done looking for solutions
+  repeated string finished_solving = 9;  // player IDs who are finished solving (triggers game end)
+  repeated string ready_for_next = 10;  // player IDs who are ready for next game
 }
 
 message CreateSessionRequest {
@@ -143,12 +145,21 @@ message RetractSolutionResponse {
   bool success = 1;
 }
 
-message MarkDoneRequest {
+message MarkFinishedSolvingRequest {
   string session_id = 1;
   string player_id = 2;
 }
 
-message MarkDoneResponse {
+message MarkFinishedSolvingResponse {
+  bool success = 1;
+}
+
+message MarkReadyForNextRequest {
+  string session_id = 1;
+  string player_id = 2;
+}
+
+message MarkReadyForNextResponse {
   bool success = 1;
 }
 
