@@ -549,18 +549,16 @@ func (store *Store) MarkReadyForNext(sessionID, playerID string) error {
 
 // startNextGame starts the next game when all players are ready.
 func (store *Store) startNextGame(session *Session) {
-	// Determine winner from current game
+	// Get winning game state for continuation (wins already credited in endGame)
 	var winningGameState *model.Game
 	if session.CurrentGame != nil && len(session.Solutions) > 0 {
 		winningSolution := store.getWinningSolution(session.Solutions)
 		if winningSolution != nil {
-			session.Wins[winningSolution.PlayerID]++
 			// Apply winning moves to get final robot positions
 			if len(winningSolution.Moves) > 0 {
 				_, winningGameState = session.CurrentGame.CheckSolution(winningSolution.Moves)
 			}
 		}
-		session.GamesPlayed++
 	}
 
 	// Generate next game
@@ -587,14 +585,20 @@ func (store *Store) startNextGame(session *Session) {
 	}
 }
 
-// endGame determines the winner and broadcasts game_ended event.
+// endGame determines the winner, credits the win, and broadcasts game_ended event.
 func (store *Store) endGame(session *Session) {
+	// Credit the win and increment games played
+	winner := store.getWinningSolution(session.Solutions)
+	if winner != nil {
+		session.Wins[winner.PlayerID]++
+	}
+	session.GamesPlayed++
+
 	if store.broadcaster == nil {
 		return
 	}
 
-	// Find the winner
-	winner := store.getWinningSolution(session.Solutions)
+	// Broadcast game ended
 	if winner != nil {
 		winnerName := session.GetPlayerName(winner.PlayerID)
 		// Convert moves to MovePayload format
