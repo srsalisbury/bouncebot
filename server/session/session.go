@@ -114,6 +114,13 @@ func (s *Session) ToProto() *pb.Session {
 	return session
 }
 
+// MovePayload represents a single move for WebSocket broadcast.
+type MovePayload struct {
+	RobotId int `json:"robotId"`
+	X       int `json:"x"`
+	Y       int `json:"y"`
+}
+
 // EventBroadcaster is an interface for broadcasting session events.
 type EventBroadcaster interface {
 	BroadcastPlayerJoined(sessionID, playerID, playerName string)
@@ -121,7 +128,7 @@ type EventBroadcaster interface {
 	BroadcastPlayerDone(sessionID, playerID string)
 	BroadcastPlayerSolved(sessionID, playerID string, moveCount int)
 	BroadcastSolutionRetracted(sessionID, playerID string)
-	BroadcastGameEnded(sessionID, winnerID, winnerName string, moveCount int)
+	BroadcastGameEnded(sessionID, winnerID, winnerName string, moves []MovePayload)
 }
 
 // Store manages sessions in memory.
@@ -509,9 +516,18 @@ func (store *Store) endGame(session *Session) {
 	winner := store.getWinningSolution(session.Solutions)
 	if winner != nil {
 		winnerName := session.GetPlayerName(winner.PlayerID)
-		store.broadcaster.BroadcastGameEnded(session.ID, winner.PlayerID, winnerName, winner.MoveCount())
+		// Convert moves to MovePayload format
+		moves := make([]MovePayload, len(winner.Moves))
+		for i, move := range winner.Moves {
+			moves[i] = MovePayload{
+				RobotId: int(move.Id),
+				X:       int(move.Pos.X),
+				Y:       int(move.Pos.Y),
+			}
+		}
+		store.broadcaster.BroadcastGameEnded(session.ID, winner.PlayerID, winnerName, moves)
 	} else {
 		// No solutions submitted - no winner
-		store.broadcaster.BroadcastGameEnded(session.ID, "", "", 0)
+		store.broadcaster.BroadcastGameEnded(session.ID, "", "", nil)
 	}
 }

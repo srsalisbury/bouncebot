@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/srsalisbury/bouncebot/server/session"
 )
 
 var upgrader = websocket.Upgrader{
@@ -58,9 +59,9 @@ type PlayerDonePayload struct {
 
 // GameEndedPayload is the payload for game_ended events.
 type GameEndedPayload struct {
-	WinnerID   string `json:"winnerId"`
-	WinnerName string `json:"winnerName"`
-	MoveCount  int    `json:"moveCount"`
+	WinnerID   string                `json:"winnerId"`
+	WinnerName string                `json:"winnerName"`
+	Moves      []session.MovePayload `json:"moves"`
 }
 
 // Client represents a WebSocket client connection.
@@ -164,13 +165,13 @@ func (h *Hub) BroadcastPlayerDone(sessionID, playerID string) {
 }
 
 // BroadcastGameEnded broadcasts a game_ended event to all clients in a session.
-func (h *Hub) BroadcastGameEnded(sessionID, winnerID, winnerName string, moveCount int) {
+func (h *Hub) BroadcastGameEnded(sessionID, winnerID, winnerName string, moves []session.MovePayload) {
 	h.Broadcast(sessionID, Event{
 		Type: "game_ended",
 		Payload: GameEndedPayload{
 			WinnerID:   winnerID,
 			WinnerName: winnerName,
-			MoveCount:  moveCount,
+			Moves:      moves,
 		},
 	})
 }

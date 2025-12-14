@@ -341,6 +341,21 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  // Reset board to initial robot positions (for replay)
+  function resetBoard() {
+    robots.value = initialRobots.value.map(r => ({ ...r }))
+    selectedRobotId.value = null
+  }
+
+  // Apply a single replay move (robot id + destination)
+  function applyReplayMove(robotId: number, x: number, y: number) {
+    const robot = robots.value.find(r => r.id === robotId)
+    if (robot) {
+      robot.x = x
+      robot.y = y
+    }
+  }
+
   return {
     // State
     robots,
@@ -370,5 +385,7 @@ export const useGameStore = defineStore('game', () => {
     switchSolution,
     startNewSolution,
     deleteSolution,
+    resetBoard,
+    applyReplayMove,
   }
 })
