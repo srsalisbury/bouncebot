@@ -28,10 +28,16 @@ export interface PlayerDonePayload {
   playerId: string
 }
 
+export interface MovePayload {
+  robotId: number
+  x: number
+  y: number
+}
+
 export interface GameEndedPayload {
   winnerId: string
   winnerName: string
-  moveCount: number
+  moves: MovePayload[]
 }
 
 export interface WebSocketEvent {

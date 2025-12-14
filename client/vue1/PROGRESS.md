@@ -751,10 +751,8 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
-## In Progress
-
-### Step 29.8: End of Game Experience (Steps 1-3)
-**Status:** In Progress
+### Step 29.8: End of Game Experience (Steps 1-4)
+**Status:** Complete
 
 **Step 1 - I'm Done Button:**
 - Added "I'm Done" button available during game (regardless of solution status)
@@ -767,28 +765,47 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 **Step 2 - Game End Detection:**
 - Server detects when all players are done
-- Added game_ended WebSocket event with winner info (id, name, moveCount)
-- Client shows game ended overlay with "Board Solved" heading
-- Removed redundant "Next Game" button from header (only in overlay now)
+- Added game_ended WebSocket event with winner info (id, name, moves array)
+- Client tracks gameEnded state for UI transitions
 
 **Step 3 - Results Display:**
-- Game ended overlay shows ranked list of all solvers
-- Each solver shows name and move count
+- Game ended view shows all player solutions in solution panel area (replacing in-game solutions)
+- Solutions sorted best to worst (left to right) by move count, then solve time
+- Each solution shows player name, move count, and solve time (relative to game start)
 - Winner (best solution) highlighted with gold border
-- Sorted by move count, then solve time
+- Click or Shift+←→ to switch between solutions and replay them
+
+**Step 4 - Solution Replay:**
+- Server sends full moves array with game_ended event (MovePayload: robotId, x, y)
+- Client computes direction arrows from position changes
+- Replay starts automatically when game ends with 600ms delay before first move
+- Solution replay at slow speed (600ms per move)
+- Switching solutions unwinds current solution one-by-one in reverse order (150ms per move)
+- Board properly tracks which solution is displayed for correct unwinding
+- Keyboard hints show only "Shift+←→ switch solutions" in game-ended mode
+
+**UI Changes for Game-Ended Mode:**
+- Leaderboard bar shows only "Next Game" button (no player boxes or timer)
+- Next Game button positioned on right side
+- No help hint in keyboard hints (instructions don't apply)
 
 **Files modified:**
 - `proto/bouncebot.proto` - Added done_players, MarkDone RPC
-- `server/session/session.go` - Added DonePlayers, MarkDone, endGame, BroadcastGameEnded interface
-- `server/ws/hub.go` - Added PlayerDonePayload, GameEndedPayload, BroadcastPlayerDone, BroadcastGameEnded
+- `server/session/session.go` - Added DonePlayers, MarkDone, endGame with moves, BroadcastGameEnded interface, MovePayload type
+- `server/ws/hub.go` - Added PlayerDonePayload, GameEndedPayload with moves array, BroadcastPlayerDone, BroadcastGameEnded
 - `server/main.go` - Added MarkDone RPC handler
-- `src/services/websocket.ts` - Added player_done, game_ended event types
-- `src/views/SessionView.vue` - I'm Done button, game ended overlay with results, WebSocket handlers
+- `src/services/websocket.ts` - Added player_done, game_ended event types, MovePayload interface
+- `src/views/SessionView.vue` - I'm Done button, gameEnded state, game header shows only Next Game when ended
 - `src/components/PlayersPanel.vue` - donePlayers prop, checkmark display, timer cap
+- `src/components/GameBoard.vue` - Full replay system with unwind/replay animations, player solutions panel, gameStartedAt prop for solve times
+- `src/stores/gameStore.ts` - Added resetBoard() and applyReplayMove() for replay
+
+---
+
+## In Progress
 
 **Remaining steps for End of Game Experience:**
-- Step 4: Solution replay (step through winning moves slowly, no move counter)
-- Step 5: "Ready for Next Game" flow with waiting indicators
+- Step 5: "Ready for Next Game" flow with waiting indicators (consensus logic)
 
 **Future UI improvements:**
 - Add a separate session scoreboard overlay showing players and their cumulative win counts
