@@ -48,7 +48,8 @@ type Session struct {
 	SolutionHistory []PlayerSolutionHistory // All solutions per player (for retraction)
 	Wins            map[string]int          // Wins per player ID
 	GamesPlayed     int                     // Total games completed in session
-	DonePlayers     []string                // Player IDs who are done looking for solutions
+	FinishedSolving []string                // Player IDs who are finished solving (triggers game end)
+	ReadyForNext    []string                // Player IDs who are ready for next game
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -94,13 +95,14 @@ func (s *Session) ToProto() *pb.Session {
 	}
 
 	session := &pb.Session{
-		Id:          s.ID,
-		Players:     players,
-		CreatedAt:   timestamppb.New(s.CreatedAt),
-		Solutions:   solutions,
-		Scores:      scores,
-		GamesPlayed: int32(s.GamesPlayed),
-		DonePlayers: s.DonePlayers,
+		Id:              s.ID,
+		Players:         players,
+		CreatedAt:       timestamppb.New(s.CreatedAt),
+		Solutions:       solutions,
+		Scores:          scores,
+		GamesPlayed:     int32(s.GamesPlayed),
+		FinishedSolving: s.FinishedSolving,
+		ReadyForNext:    s.ReadyForNext,
 	}
 
 	if s.CurrentGame != nil {
@@ -125,7 +127,8 @@ type MovePayload struct {
 type EventBroadcaster interface {
 	BroadcastPlayerJoined(sessionID, playerID, playerName string)
 	BroadcastGameStarted(sessionID string)
-	BroadcastPlayerDone(sessionID, playerID string)
+	BroadcastPlayerFinishedSolving(sessionID, playerID string)
+	BroadcastPlayerReadyForNext(sessionID, playerID string)
 	BroadcastPlayerSolved(sessionID, playerID string, moveCount int)
 	BroadcastSolutionRetracted(sessionID, playerID string)
 	BroadcastGameEnded(sessionID, winnerID, winnerName string, moves []MovePayload)
@@ -261,9 +264,10 @@ func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, e
 
 	session.CurrentGame = game
 	session.GameStartedAt = &now
-	session.Solutions = nil        // Clear solutions for new game
-	session.SolutionHistory = nil  // Clear history for new game
-	session.DonePlayers = nil      // Clear done players for new game
+	session.Solutions = nil         // Clear solutions for new game
+	session.SolutionHistory = nil   // Clear history for new game
+	session.FinishedSolving = nil   // Clear finished players for new game
+	session.ReadyForNext = nil      // Clear ready players for new game
 
 	// Broadcast game started event
 	if store.broadcaster != nil {
@@ -465,8 +469,8 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 	return nil
 }
 
-// MarkDone marks a player as done looking for solutions.
-func (store *Store) MarkDone(sessionID, playerID string) error {
+// MarkFinishedSolving marks a player as finished looking for solutions.
+func (store *Store) MarkFinishedSolving(sessionID, playerID string) error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -484,26 +488,103 @@ func (store *Store) MarkDone(sessionID, playerID string) error {
 		return fmt.Errorf("player not found: %s", playerID)
 	}
 
-	// Check if already done
-	for _, id := range session.DonePlayers {
+	// Check if already finished
+	for _, id := range session.FinishedSolving {
 		if id == playerID {
-			return nil // Already done
+			return nil // Already finished
 		}
 	}
 
-	session.DonePlayers = append(session.DonePlayers, playerID)
+	session.FinishedSolving = append(session.FinishedSolving, playerID)
 
-	// Broadcast player done event
+	// Broadcast player finished solving event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastPlayerDone(sessionID, playerID)
+		store.broadcaster.BroadcastPlayerFinishedSolving(sessionID, playerID)
 	}
 
-	// Check if all players are done
-	if len(session.DonePlayers) == len(session.Players) {
+	// Check if all players are finished
+	if len(session.FinishedSolving) == len(session.Players) {
 		store.endGame(session)
 	}
 
 	return nil
+}
+
+// MarkReadyForNext marks a player as ready for the next game.
+func (store *Store) MarkReadyForNext(sessionID, playerID string) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	session, ok := store.sessions[sessionID]
+	if !ok {
+		return fmt.Errorf("session not found: %s", sessionID)
+	}
+
+	// Verify player exists
+	if session.GetPlayerName(playerID) == "" {
+		return fmt.Errorf("player not found: %s", playerID)
+	}
+
+	// Check if already ready
+	for _, id := range session.ReadyForNext {
+		if id == playerID {
+			return nil // Already ready
+		}
+	}
+
+	session.ReadyForNext = append(session.ReadyForNext, playerID)
+
+	// Broadcast player ready for next event
+	if store.broadcaster != nil {
+		store.broadcaster.BroadcastPlayerReadyForNext(sessionID, playerID)
+	}
+
+	// Check if all players are ready - auto-start next game
+	if len(session.ReadyForNext) == len(session.Players) {
+		store.startNextGame(session)
+	}
+
+	return nil
+}
+
+// startNextGame starts the next game when all players are ready.
+func (store *Store) startNextGame(session *Session) {
+	// Determine winner from current game
+	var winningGameState *model.Game
+	if session.CurrentGame != nil && len(session.Solutions) > 0 {
+		winningSolution := store.getWinningSolution(session.Solutions)
+		if winningSolution != nil {
+			session.Wins[winningSolution.PlayerID]++
+			// Apply winning moves to get final robot positions
+			if len(winningSolution.Moves) > 0 {
+				_, winningGameState = session.CurrentGame.CheckSolution(winningSolution.Moves)
+			}
+		}
+		session.GamesPlayed++
+	}
+
+	// Generate next game
+	var game *model.Game
+	if winningGameState != nil {
+		game = model.NewContinuationGame(winningGameState)
+	} else if session.CurrentGame != nil {
+		game = model.NewContinuationGame(session.CurrentGame)
+	} else {
+		game = model.NewRandomGame()
+	}
+	now := time.Now()
+
+	session.CurrentGame = game
+	session.GameStartedAt = &now
+	session.Solutions = nil
+	session.SolutionHistory = nil
+	session.FinishedSolving = nil
+	session.ReadyForNext = nil
+
+	// Broadcast game started event
+	if store.broadcaster != nil {
+		store.broadcaster.BroadcastGameStarted(session.ID)
+	}
 }
 
 // endGame determines the winner and broadcasts game_ended event.

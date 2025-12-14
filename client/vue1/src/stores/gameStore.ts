@@ -167,15 +167,16 @@ export const useGameStore = defineStore('game', () => {
       const moveIndex = movesToUnwind.length - 1 - i
       setTimeout(() => {
         animatingMoveIndex.value = moveIndex
+        // Remove dot first (before robot moves)
+        const idx = committedMoves.value.indexOf(move)
+        if (idx !== -1) {
+          committedMoves.value.splice(idx, 1)
+        }
+        // Then move robot
         const robot = robots.value.find(r => r.id === move.robotId)
         if (robot) {
           robot.x = move.fromX
           robot.y = move.fromY
-        }
-        // Remove from committedMoves
-        const idx = committedMoves.value.indexOf(move)
-        if (idx !== -1) {
-          committedMoves.value.splice(idx, 1)
         }
       }, i * 150)
     })
@@ -347,10 +348,55 @@ export const useGameStore = defineStore('game', () => {
     selectedRobotId.value = null
   }
 
-  // Apply a single replay move (robot id + destination)
+  // Compute direction from position change
+  function computeDirection(fromX: number, fromY: number, toX: number, toY: number): Direction {
+    if (toX > fromX) return 'right'
+    if (toX < fromX) return 'left'
+    if (toY > fromY) return 'down'
+    return 'up'
+  }
+
+  // Apply a single replay move (robot id + destination) with dot trail
   function applyReplayMove(robotId: number, x: number, y: number) {
     const robot = robots.value.find(r => r.id === robotId)
     if (robot) {
+      const fromX = robot.x
+      const fromY = robot.y
+      robot.x = x
+      robot.y = y
+
+      // Add to committedMoves after animation delay (150ms) so dot appears after robot arrives
+      const direction = computeDirection(fromX, fromY, x, y)
+      const move: Move = { robotId, direction, fromX, fromY, toX: x, toY: y }
+      setTimeout(() => {
+        committedMoves.value.push(move)
+      }, 150)
+    }
+  }
+
+  // Clear committed moves (for replay reset)
+  function clearCommittedMoves() {
+    committedMoves.value = []
+  }
+
+  // Unwind a replay move (remove dot first, then move robot)
+  function unwindReplayMove(robotId: number, x: number, y: number) {
+    const robot = robots.value.find(r => r.id === robotId)
+    if (robot) {
+      // Remove the dot immediately (before robot moves)
+      let lastIndex = -1
+      for (let i = committedMoves.value.length - 1; i >= 0; i--) {
+        const move = committedMoves.value[i]
+        if (move && move.robotId === robotId) {
+          lastIndex = i
+          break
+        }
+      }
+      if (lastIndex !== -1) {
+        committedMoves.value.splice(lastIndex, 1)
+      }
+
+      // Then move the robot
       robot.x = x
       robot.y = y
     }
@@ -387,5 +433,7 @@ export const useGameStore = defineStore('game', () => {
     deleteSolution,
     resetBoard,
     applyReplayMove,
+    clearCommittedMoves,
+    unwindReplayMove,
   }
 })

@@ -12,6 +12,7 @@ const props = defineProps<{
   playerSolutions?: PlayerSolution[]
   getPlayerName?: (playerId: string) => string
   gameStartedAt?: Timestamp
+  gameNumber?: number
 }>()
 
 const store = useGameStore()
@@ -96,6 +97,7 @@ function unwindThenReplay() {
   // If no solution is currently displayed, just start replay
   if (displayedSolutionIndex.value < 0 || !props.playerSolutions?.[displayedSolutionIndex.value]) {
     store.resetBoard()
+    store.clearCommittedMoves()
     startReplayWithDelay()
     return
   }
@@ -103,6 +105,7 @@ function unwindThenReplay() {
   const displayedSolution = props.playerSolutions[displayedSolutionIndex.value]
   if (!displayedSolution || displayedSolution.moves.length === 0) {
     store.resetBoard()
+    store.clearCommittedMoves()
     startReplayWithDelay()
     return
   }
@@ -158,7 +161,7 @@ function unwindStep(moves: BotPos[], positionHistory: Map<number, { x: number; y
   const beforePos = beforePositions?.get(move.id)
 
   if (beforePos) {
-    store.applyReplayMove(move.id, beforePos.x, beforePos.y)
+    store.unwindReplayMove(move.id, beforePos.x, beforePos.y)
   }
 
   unwindMoveIndex.value--
@@ -233,6 +236,7 @@ watch(() => props.gameEnded, (ended) => {
   if (ended && props.playerSolutions?.length) {
     activePlayerSolutionIndex.value = 0
     store.resetBoard()
+    store.clearCommittedMoves()
     startReplayWithDelay()
   }
 })
@@ -419,7 +423,7 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
     <div v-else class="game-content">
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
-        <h1 class="title">BounceBot</h1>
+        <h1 class="title">BounceBot<span v-if="props.gameNumber" class="game-number"> - Game #{{ props.gameNumber }}</span></h1>
         <!-- Board area (board + hints) -->
         <div class="board-area">
           <!-- Game board -->
@@ -599,6 +603,12 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
   margin: 0;
   font-size: 1.8rem;
   text-align: center;
+}
+
+.game-number {
+  font-size: 1.2rem;
+  font-weight: normal;
+  color: #333;
 }
 
 .board-area {

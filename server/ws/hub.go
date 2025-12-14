@@ -52,8 +52,13 @@ type SolutionRetractedPayload struct {
 	PlayerID string `json:"playerId"`
 }
 
-// PlayerDonePayload is the payload for player_done events.
-type PlayerDonePayload struct {
+// PlayerFinishedSolvingPayload is the payload for player_finished_solving events.
+type PlayerFinishedSolvingPayload struct {
+	PlayerID string `json:"playerId"`
+}
+
+// PlayerReadyForNextPayload is the payload for player_ready_for_next events.
+type PlayerReadyForNextPayload struct {
 	PlayerID string `json:"playerId"`
 }
 
@@ -154,11 +159,21 @@ func (h *Hub) BroadcastSolutionRetracted(sessionID, playerID string) {
 	})
 }
 
-// BroadcastPlayerDone broadcasts a player_done event to all clients in a session.
-func (h *Hub) BroadcastPlayerDone(sessionID, playerID string) {
+// BroadcastPlayerFinishedSolving broadcasts a player_finished_solving event to all clients in a session.
+func (h *Hub) BroadcastPlayerFinishedSolving(sessionID, playerID string) {
 	h.Broadcast(sessionID, Event{
-		Type: "player_done",
-		Payload: PlayerDonePayload{
+		Type: "player_finished_solving",
+		Payload: PlayerFinishedSolvingPayload{
+			PlayerID: playerID,
+		},
+	})
+}
+
+// BroadcastPlayerReadyForNext broadcasts a player_ready_for_next event to all clients in a session.
+func (h *Hub) BroadcastPlayerReadyForNext(sessionID, playerID string) {
+	h.Broadcast(sessionID, Event{
+		Type: "player_ready_for_next",
+		Payload: PlayerReadyForNextPayload{
 			PlayerID: playerID,
 		},
 	})

@@ -19,15 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BounceBot_MakeGame_FullMethodName        = "/bouncebot.BounceBot/MakeGame"
-	BounceBot_CheckSolution_FullMethodName   = "/bouncebot.BounceBot/CheckSolution"
-	BounceBot_CreateSession_FullMethodName   = "/bouncebot.BounceBot/CreateSession"
-	BounceBot_JoinSession_FullMethodName     = "/bouncebot.BounceBot/JoinSession"
-	BounceBot_GetSession_FullMethodName      = "/bouncebot.BounceBot/GetSession"
-	BounceBot_StartGame_FullMethodName       = "/bouncebot.BounceBot/StartGame"
-	BounceBot_SubmitSolution_FullMethodName  = "/bouncebot.BounceBot/SubmitSolution"
-	BounceBot_RetractSolution_FullMethodName = "/bouncebot.BounceBot/RetractSolution"
-	BounceBot_MarkDone_FullMethodName        = "/bouncebot.BounceBot/MarkDone"
+	BounceBot_MakeGame_FullMethodName            = "/bouncebot.BounceBot/MakeGame"
+	BounceBot_CheckSolution_FullMethodName       = "/bouncebot.BounceBot/CheckSolution"
+	BounceBot_CreateSession_FullMethodName       = "/bouncebot.BounceBot/CreateSession"
+	BounceBot_JoinSession_FullMethodName         = "/bouncebot.BounceBot/JoinSession"
+	BounceBot_GetSession_FullMethodName          = "/bouncebot.BounceBot/GetSession"
+	BounceBot_StartGame_FullMethodName           = "/bouncebot.BounceBot/StartGame"
+	BounceBot_SubmitSolution_FullMethodName      = "/bouncebot.BounceBot/SubmitSolution"
+	BounceBot_RetractSolution_FullMethodName     = "/bouncebot.BounceBot/RetractSolution"
+	BounceBot_MarkFinishedSolving_FullMethodName = "/bouncebot.BounceBot/MarkFinishedSolving"
+	BounceBot_MarkReadyForNext_FullMethodName    = "/bouncebot.BounceBot/MarkReadyForNext"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -45,7 +46,8 @@ type BounceBotClient interface {
 	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Session, error)
 	SubmitSolution(ctx context.Context, in *SubmitSolutionRequest, opts ...grpc.CallOption) (*SubmitSolutionResponse, error)
 	RetractSolution(ctx context.Context, in *RetractSolutionRequest, opts ...grpc.CallOption) (*RetractSolutionResponse, error)
-	MarkDone(ctx context.Context, in *MarkDoneRequest, opts ...grpc.CallOption) (*MarkDoneResponse, error)
+	MarkFinishedSolving(ctx context.Context, in *MarkFinishedSolvingRequest, opts ...grpc.CallOption) (*MarkFinishedSolvingResponse, error)
+	MarkReadyForNext(ctx context.Context, in *MarkReadyForNextRequest, opts ...grpc.CallOption) (*MarkReadyForNextResponse, error)
 }
 
 type bounceBotClient struct {
@@ -136,10 +138,20 @@ func (c *bounceBotClient) RetractSolution(ctx context.Context, in *RetractSoluti
 	return out, nil
 }
 
-func (c *bounceBotClient) MarkDone(ctx context.Context, in *MarkDoneRequest, opts ...grpc.CallOption) (*MarkDoneResponse, error) {
+func (c *bounceBotClient) MarkFinishedSolving(ctx context.Context, in *MarkFinishedSolvingRequest, opts ...grpc.CallOption) (*MarkFinishedSolvingResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MarkDoneResponse)
-	err := c.cc.Invoke(ctx, BounceBot_MarkDone_FullMethodName, in, out, cOpts...)
+	out := new(MarkFinishedSolvingResponse)
+	err := c.cc.Invoke(ctx, BounceBot_MarkFinishedSolving_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) MarkReadyForNext(ctx context.Context, in *MarkReadyForNextRequest, opts ...grpc.CallOption) (*MarkReadyForNextResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MarkReadyForNextResponse)
+	err := c.cc.Invoke(ctx, BounceBot_MarkReadyForNext_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +173,8 @@ type BounceBotServer interface {
 	StartGame(context.Context, *StartGameRequest) (*Session, error)
 	SubmitSolution(context.Context, *SubmitSolutionRequest) (*SubmitSolutionResponse, error)
 	RetractSolution(context.Context, *RetractSolutionRequest) (*RetractSolutionResponse, error)
-	MarkDone(context.Context, *MarkDoneRequest) (*MarkDoneResponse, error)
+	MarkFinishedSolving(context.Context, *MarkFinishedSolvingRequest) (*MarkFinishedSolvingResponse, error)
+	MarkReadyForNext(context.Context, *MarkReadyForNextRequest) (*MarkReadyForNextResponse, error)
 	mustEmbedUnimplementedBounceBotServer()
 }
 
@@ -196,8 +209,11 @@ func (UnimplementedBounceBotServer) SubmitSolution(context.Context, *SubmitSolut
 func (UnimplementedBounceBotServer) RetractSolution(context.Context, *RetractSolutionRequest) (*RetractSolutionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetractSolution not implemented")
 }
-func (UnimplementedBounceBotServer) MarkDone(context.Context, *MarkDoneRequest) (*MarkDoneResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MarkDone not implemented")
+func (UnimplementedBounceBotServer) MarkFinishedSolving(context.Context, *MarkFinishedSolvingRequest) (*MarkFinishedSolvingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkFinishedSolving not implemented")
+}
+func (UnimplementedBounceBotServer) MarkReadyForNext(context.Context, *MarkReadyForNextRequest) (*MarkReadyForNextResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkReadyForNext not implemented")
 }
 func (UnimplementedBounceBotServer) mustEmbedUnimplementedBounceBotServer() {}
 func (UnimplementedBounceBotServer) testEmbeddedByValue()                   {}
@@ -364,20 +380,38 @@ func _BounceBot_RetractSolution_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BounceBot_MarkDone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MarkDoneRequest)
+func _BounceBot_MarkFinishedSolving_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkFinishedSolvingRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BounceBotServer).MarkDone(ctx, in)
+		return srv.(BounceBotServer).MarkFinishedSolving(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BounceBot_MarkDone_FullMethodName,
+		FullMethod: BounceBot_MarkFinishedSolving_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BounceBotServer).MarkDone(ctx, req.(*MarkDoneRequest))
+		return srv.(BounceBotServer).MarkFinishedSolving(ctx, req.(*MarkFinishedSolvingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_MarkReadyForNext_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkReadyForNextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).MarkReadyForNext(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_MarkReadyForNext_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).MarkReadyForNext(ctx, req.(*MarkReadyForNextRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -422,8 +456,12 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _BounceBot_RetractSolution_Handler,
 		},
 		{
-			MethodName: "MarkDone",
-			Handler:    _BounceBot_MarkDone_Handler,
+			MethodName: "MarkFinishedSolving",
+			Handler:    _BounceBot_MarkFinishedSolving_Handler,
+		},
+		{
+			MethodName: "MarkReadyForNext",
+			Handler:    _BounceBot_MarkReadyForNext_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

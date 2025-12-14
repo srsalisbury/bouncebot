@@ -102,12 +102,22 @@ func (s *bounceBotServer) RetractSolution(_ context.Context, req *connect.Reques
 	}), nil
 }
 
-func (s *bounceBotServer) MarkDone(_ context.Context, req *connect.Request[pb.MarkDoneRequest]) (*connect.Response[pb.MarkDoneResponse], error) {
-	err := s.sessions.MarkDone(req.Msg.SessionId, req.Msg.PlayerId)
+func (s *bounceBotServer) MarkFinishedSolving(_ context.Context, req *connect.Request[pb.MarkFinishedSolvingRequest]) (*connect.Response[pb.MarkFinishedSolvingResponse], error) {
+	err := s.sessions.MarkFinishedSolving(req.Msg.SessionId, req.Msg.PlayerId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(&pb.MarkDoneResponse{
+	return connect.NewResponse(&pb.MarkFinishedSolvingResponse{
+		Success: true,
+	}), nil
+}
+
+func (s *bounceBotServer) MarkReadyForNext(_ context.Context, req *connect.Request[pb.MarkReadyForNextRequest]) (*connect.Response[pb.MarkReadyForNextResponse], error) {
+	err := s.sessions.MarkReadyForNext(req.Msg.SessionId, req.Msg.PlayerId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&pb.MarkReadyForNextResponse{
 		Success: true,
 	}), nil
 }
