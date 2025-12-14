@@ -13,6 +13,7 @@ const props = defineProps<{
   getPlayerName?: (playerId: string) => string
   gameStartedAt?: Timestamp
   gameNumber?: number
+  inputBlocked?: boolean
 }>()
 
 const store = useGameStore()
@@ -275,6 +276,11 @@ function handleKeydown(event: KeyboardEvent) {
   // Help toggle (works in all modes)
   if (key === '?') {
     showHowToPlay.value = !showHowToPlay.value
+    return
+  }
+
+  // Block all other input when a modal is open
+  if (props.inputBlocked) {
     return
   }
 
