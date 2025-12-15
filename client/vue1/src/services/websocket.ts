@@ -51,7 +51,9 @@ export interface WebSocketEvent {
 
 type EventHandler = (event: WebSocketEvent) => void
 
-const WS_URL = 'ws://localhost:8080/ws'
+// Use current hostname so it works from other devices on the network
+const serverHost = window.location.hostname || 'localhost'
+const WS_URL = `ws://${serverHost}:8080/ws`
 const RECONNECT_DELAY = 3000
 
 class WebSocketService {
