@@ -11,6 +11,7 @@ import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
 import LeaderboardModal from '../components/LeaderboardModal.vue'
+import { getPlayerColor } from '../constants'
 
 const props = defineProps<{
   sessionId: string
@@ -66,6 +67,11 @@ const sortedSolutions = computed(() => {
 function getPlayerName(playerId: string): string {
   const player = session.value?.players.find(p => p.id === playerId)
   return player?.name ?? 'Unknown'
+}
+
+function getPlayerColorById(playerId: string): string {
+  const index = session.value?.players.findIndex(p => p.id === playerId) ?? -1
+  return index >= 0 ? getPlayerColor(index) : '#888888'
 }
 
 async function loadSession(forceApplyGame = false) {
@@ -469,6 +475,7 @@ onUnmounted(() => {
           :game-ended="gameEnded"
           :player-solutions="sortedSolutions"
           :get-player-name="getPlayerName"
+          :get-player-color="getPlayerColorById"
           :game-started-at="session.gameStartedAt"
           :game-number="session.gamesPlayed + 1"
           :input-blocked="showLeaderboard"
