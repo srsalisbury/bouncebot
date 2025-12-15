@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Player, PlayerScore } from '../gen/bouncebot_pb'
+import { getPlayerColor } from '../constants'
 
 const props = defineProps<{
   show: boolean
@@ -13,28 +14,18 @@ const emit = defineEmits<{
   close: []
 }>()
 
-// Player colors matching PlayersPanel
-const PLAYER_COLORS = [
-  '#e53935', // red
-  '#1e88e5', // blue
-  '#43a047', // green
-  '#fdd835', // yellow
-  '#8e24aa', // purple
-  '#fb8c00', // orange
-  '#00acc1', // cyan
-  '#d81b60', // pink
-]
-
+// Map player IDs to their color index (based on join order)
 const playerColorMap = computed(() => {
-  const map = new Map<string, string>()
+  const map = new Map<string, number>()
   props.players.forEach((player, index) => {
-    map.set(player.id, PLAYER_COLORS[index % PLAYER_COLORS.length] ?? '#888888')
+    map.set(player.id, index)
   })
   return map
 })
 
-function getPlayerColor(playerId: string): string {
-  return playerColorMap.value.get(playerId) ?? '#888888'
+function getPlayerColorById(playerId: string): string {
+  const index = playerColorMap.value.get(playerId) ?? 0
+  return getPlayerColor(index)
 }
 
 function getPlayerWins(playerId: string): number {
@@ -75,7 +66,7 @@ function handleBackdropClick(event: MouseEvent) {
             :class="{ winner: index === 0 && getPlayerWins(player.id) > 0 }"
           >
             <span class="rank">{{ index + 1 }}</span>
-            <span class="player-dot" :style="{ backgroundColor: getPlayerColor(player.id) }" />
+            <span class="player-dot" :style="{ backgroundColor: getPlayerColorById(player.id) }" />
             <span class="player-name">{{ player.name }}</span>
             <span class="wins">{{ getPlayerWins(player.id) }} {{ getPlayerWins(player.id) === 1 ? 'win' : 'wins' }}</span>
           </div>
