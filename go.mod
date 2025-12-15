@@ -7,7 +7,7 @@ replace github.com/srsalisbury/bouncebot/model => ./model
 replace github.com/srsalisbury/bouncebot/proto => ./proto
 
 require (
-	connectrpc.com/connect v1.18.1
+	connectrpc.com/connect v1.19.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/lithammer/dedent v1.1.0
 	github.com/rs/cors v1.11.1
