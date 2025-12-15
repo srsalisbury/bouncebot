@@ -3,6 +3,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { Player, PlayerSolution, PlayerScore } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import { useSessionStore } from '../stores/sessionStore'
+import { getPlayerColor } from '../constants'
 
 const props = defineProps<{
   players: Player[]
@@ -77,23 +78,11 @@ onUnmounted(() => {
 
 const sessionStore = useSessionStore()
 
-// Player colors matching robot colors from constants
-const PLAYER_COLORS = [
-  '#e53935', // red
-  '#1e88e5', // blue
-  '#43a047', // green
-  '#fdd835', // yellow
-  '#8e24aa', // purple
-  '#fb8c00', // orange
-  '#00acc1', // cyan
-  '#d81b60', // pink
-]
-
-// Create a map of original player index to color (so colors stay stable when sorting)
+// Map player IDs to their color index (based on join order, so colors stay stable when sorting)
 const playerColorMap = computed(() => {
-  const map = new Map<string, string>()
+  const map = new Map<string, number>()
   props.players.forEach((player, index) => {
-    map.set(player.id, PLAYER_COLORS[index % PLAYER_COLORS.length] ?? '#888888')
+    map.set(player.id, index)
   })
   return map
 })
@@ -156,8 +145,9 @@ function getPlayerWins(player: Player): number {
   return score?.wins ?? 0
 }
 
-function getPlayerColor(player: Player): string {
-  return playerColorMap.value.get(player.id) ?? '#888888'
+function getPlayerColorFor(player: Player): string {
+  const index = playerColorMap.value.get(player.id) ?? 0
+  return getPlayerColor(index)
 }
 
 function isCurrentPlayer(player: Player): boolean {
@@ -204,7 +194,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
         class="player-item"
         :class="{ current: isCurrentPlayer(player), solved: getPlayerSolution(player), leader: isLeader(player) }"
       >
-        <span class="player-dot" :style="{ backgroundColor: getPlayerColor(player) }" />
+        <span class="player-dot" :style="{ backgroundColor: getPlayerColorFor(player) }" />
         <span class="player-name">{{ player.name }}</span>
         <span v-if="isCurrentPlayer(player)" class="you-label">(you)</span>
         <span v-if="!compact && getPlayerWins(player) > 0" class="wins-badge">

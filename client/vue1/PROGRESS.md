@@ -833,6 +833,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Step 34: Code Refactoring
+**Status:** Complete
+
+**What was done:**
+- Consolidated duplicate PLAYER_COLORS to constants.ts with getPlayerColor() helper
+- Updated LeaderboardModal.vue to import getPlayerColor from constants
+- Updated PlayersPanel.vue to import getPlayerColor from constants
+- Removed unused re-exports from gameStore.ts (BOARD_SIZE, MAX_SOLUTIONS, Direction, getRobotColor, ROBOT_COLORS were re-exported but never imported from there)
+
+**Files modified:**
+- `src/constants.ts` - Added PLAYER_COLORS array and getPlayerColor() function
+- `src/components/LeaderboardModal.vue` - Import getPlayerColor from constants, remove local PLAYER_COLORS
+- `src/components/PlayersPanel.vue` - Import getPlayerColor from constants, remove local PLAYER_COLORS
+- `src/stores/gameStore.ts` - Removed unused re-exports
+
+---
+
 ## Up Next
 
 - Step 30: Share Game Configuration (allow sharing specific puzzle configurations)

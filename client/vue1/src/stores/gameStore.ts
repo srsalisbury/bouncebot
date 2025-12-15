@@ -5,10 +5,6 @@ import type { Game } from '../gen/bouncebot_pb'
 import { BOARD_SIZE, MAX_SOLUTIONS, type Direction } from '../constants'
 import { calculateDestination } from '../gamePhysics'
 
-// Re-export for backward compatibility
-export { BOARD_SIZE, MAX_SOLUTIONS, type Direction } from '../constants'
-export { getRobotColor, ROBOT_COLORS } from '../constants'
-
 export type Robot = {
   id: number
   x: number

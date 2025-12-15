@@ -25,6 +25,22 @@ export function getRobotColor(robotId: number): string {
   return ROBOT_COLORS[index]!
 }
 
+// Color palette for players - assigned by join order (index)
+export const PLAYER_COLORS = [
+  '#e53935', // red
+  '#1e88e5', // blue
+  '#43a047', // green
+  '#fdd835', // yellow
+  '#8e24aa', // purple
+  '#fb8c00', // orange
+  '#00acc1', // cyan
+  '#d81b60', // pink
+]
+
+export function getPlayerColor(index: number): string {
+  return PLAYER_COLORS[index % PLAYER_COLORS.length] ?? '#888888'
+}
+
 // Game limits
 export const MAX_SOLUTIONS = 4
 
