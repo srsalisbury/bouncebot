@@ -1,0 +1,25 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# Build artifacts
+server/server
+server/bouncebot-server
+
+# Client (not needed for server build)
+client/
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+*_test.go
+
+# CI
+.github/
