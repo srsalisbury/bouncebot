@@ -11,6 +11,7 @@ const props = defineProps<{
   gameEnded?: boolean
   playerSolutions?: PlayerSolution[]
   getPlayerName?: (playerId: string) => string
+  getPlayerColor?: (playerId: string) => string
   gameStartedAt?: Timestamp
   gameNumber?: number
   inputBlocked?: boolean
@@ -522,7 +523,10 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
               @click="switchToPlayerSolution(index)"
             >
               <div class="player-solution-header">
-                <span class="player-name">{{ props.getPlayerName?.(solution.playerId) ?? 'Unknown' }}</span>
+                <div class="player-name-row">
+                  <span class="player-dot" :style="{ backgroundColor: props.getPlayerColor?.(solution.playerId) ?? '#888888' }"></span>
+                  <span class="player-name">{{ props.getPlayerName?.(solution.playerId) ?? 'Unknown' }}</span>
+                </div>
                 <span class="solution-moves">{{ solution.moves.length }}</span>
                 <span class="solution-time">{{ formatSolveTime(solution.solvedAt) }}</span>
               </div>
@@ -745,6 +749,19 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
   padding-bottom: 0.4rem;
   margin-bottom: 0.25rem;
   border-bottom: 1px solid #999;
+}
+
+.player-solution-header .player-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.player-solution-header .player-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .player-solution-header .player-name {
