@@ -802,17 +802,6 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
-## In Progress
-
-**Remaining steps for End of Game Experience:**
-- Step 5: "Ready for Next Game" flow with waiting indicators (consensus logic)
-
-**Future UI improvements:**
-- Add a separate session scoreboard overlay showing players and their cumulative win counts
-- Remove win counts from the in-game leaderboard (PlayersPanel) to reduce clutter
-
----
-
 ### Remember Player Name
 **Status:** Complete
 
@@ -824,6 +813,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 **Files modified:**
 - `src/views/HomeView.vue` - Initialize playerName ref from sessionStore
 - `src/views/SessionView.vue` - Initialize joinName ref from sessionStore
+
+---
+
+### Step 33: Gameplay Robustness
+**Status:** Complete
+
+**What was done:**
+- Page reloads during gameplay or game-end review now work seamlessly
+- Player ID already persisted in localStorage - auto-detected on reload
+- Added stale player detection - if player ID not in session, localStorage is cleared so they can rejoin
+- Game-ended state derived from server - if all players are in finishedSolving, gameEnded = true
+- Player's submitted solution restored from session.solutions on reload
+- WebSocket auto-reconnection already in place (3s delay)
+- Await loadSession() before connecting WebSocket to ensure player is still valid
+
+**Files modified:**
+- `src/views/SessionView.vue` - Added state restoration logic in loadSession(), async onMounted
 
 ---
 
