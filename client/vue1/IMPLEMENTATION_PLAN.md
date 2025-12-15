@@ -530,6 +530,36 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
+#### Step 33: Gameplay Robustness
+**Goal:** Page reloads and edge cases don't break the game.
+
+**Tasks:**
+- Player state lost on reload - persist playerId in localStorage and auto-rejoin
+- Solutions lost on reload - restore from server state
+- WebSocket reconnection - handle reconnecting gracefully
+- Mid-game reload - restore game state properly
+- Game-end state lost - restore gameEnded flag from server state
+
+**Visible result:** Reloading the page during gameplay or game-end review works seamlessly.
+
+---
+
+#### Step 34: Code Refactoring
+**Goal:** Improve code clarity and maintainability.
+
+**Tasks:**
+- Review codebase for opportunities to simplify
+- Extract shared logic into reusable functions/composables
+- Improve naming for clarity
+- Remove dead code and unused imports
+- Consolidate duplicate patterns (e.g., player colors defined in multiple places)
+- Consider splitting large components if needed
+- Add comments where logic is non-obvious
+
+**Visible result:** Cleaner, more maintainable codebase.
+
+---
+
 ## Reference
 
 The implementation in `/Users/mike/dev/bouncebot/cmd/vue1/` can be used as reference for:
