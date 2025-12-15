@@ -138,7 +138,7 @@ func main() {
 
 	// CORS configuration for browser access
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173", "http://localhost:3000"},
+		AllowedOrigins: []string{"http://localhost:5173", "http://guido.local:5173"},
 		AllowedMethods: []string{
 			http.MethodGet,
 			http.MethodPost,

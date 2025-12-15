@@ -854,6 +854,28 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 - Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
 
+## Network Configuration
+
+To expose the app on a different host (e.g., local network access), update these files:
+
+1. **`client/vue1/vite.config.ts`** - Already configured:
+   - `server.host: true` - Listen on all interfaces
+   - `server.allowedHosts: true` - Allow any hostname
+
+2. **`server/main.go`** - CORS allowed origins:
+   - Add new origin to `AllowedOrigins` array (e.g., `"http://newhost:5173"`)
+   - Location: ~line 141
+
+3. **`server/ws/hub.go`** - WebSocket origin check:
+   - Add new origin to `CheckOrigin` function (e.g., `origin == "http://newhost:5173"`)
+   - Location: ~line 18
+
+4. **Client connects dynamically** - No changes needed:
+   - `src/services/connectClient.ts` uses `window.location.hostname`
+   - `src/services/websocket.ts` uses `window.location.hostname`
+
+---
+
 ## Future Considerations
 
 - Handle abandoned players: Players who disconnect or go idle shouldn't block the game. Consider auto-marking players as "done" after extended inactivity, or allowing remaining players to proceed without them.

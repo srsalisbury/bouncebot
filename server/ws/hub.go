@@ -13,9 +13,9 @@ import (
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// Allow connections from localhost dev servers
+		// Allow connections from localhost and local network dev servers
 		origin := r.Header.Get("Origin")
-		return origin == "http://localhost:5173" || origin == "http://localhost:3000"
+		return origin == "http://localhost:5173" || origin == "http://guido.local:5173"
 	},
 }
 
