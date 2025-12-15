@@ -74,6 +74,15 @@ async function loadSession(forceApplyGame = false) {
     const hadGame = hasGame.value
     session.value = sess
 
+    // Check if current player is still in the session (handle stale localStorage)
+    if (sessionStore.currentPlayerId) {
+      const isPlayerInSession = sess.players.some(p => p.id === sessionStore.currentPlayerId)
+      if (!isPlayerInSession) {
+        // Player ID is stale - clear it so they can rejoin
+        sessionStore.clear()
+      }
+    }
+
     // Apply game when it first appears or when forced (e.g., game_started event)
     if (sess.currentGame && (!hadGame || forceApplyGame)) {
       gameStore.applyGame(sess.currentGame)
@@ -81,6 +90,20 @@ async function loadSession(forceApplyGame = false) {
       if (pollInterval.value) {
         clearInterval(pollInterval.value)
         pollInterval.value = null
+      }
+    }
+
+    // Restore gameEnded state from server
+    // Game is ended if all players are finished solving
+    if (sess.currentGame && sess.finishedSolving.length === sess.players.length && sess.players.length > 0) {
+      gameEnded.value = true
+    }
+
+    // Restore bestSubmittedMoveCount from player's solution
+    if (sessionStore.currentPlayerId && bestSubmittedMoveCount.value === null) {
+      const mySolution = sess.solutions.find(s => s.playerId === sessionStore.currentPlayerId)
+      if (mySolution) {
+        bestSubmittedMoveCount.value = mySolution.moves.length
       }
     }
 
@@ -338,10 +361,13 @@ function leaderboardKeydownHandler(event: KeyboardEvent) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', leaderboardKeydownHandler)
-  loadSession()
-  // If already joined, connect WebSocket immediately
+
+  // Load session first to verify player is still valid
+  await loadSession()
+
+  // After loading, check if player is still joined (may have been cleared if stale)
   if (hasJoined.value) {
     connectWebSocket()
   } else {
