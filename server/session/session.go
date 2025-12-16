@@ -2,9 +2,8 @@
 package session
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
+	"math/rand/v2"
 	"strings"
 	"sync"
 	"time"
@@ -159,20 +158,16 @@ const sessionIDChars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 
 // generateSessionID creates a random 4-character session ID.
 func generateSessionID() string {
-	bytes := make([]byte, 4)
-	rand.Read(bytes)
 	result := make([]byte, 4)
-	for i := 0; i < 4; i++ {
-		result[i] = sessionIDChars[int(bytes[i])%len(sessionIDChars)]
+	for i := range result {
+		result[i] = sessionIDChars[rand.IntN(len(sessionIDChars))]
 	}
 	return string(result)
 }
 
 // generatePlayerID creates a random player ID.
 func generatePlayerID() string {
-	bytes := make([]byte, 8)
-	rand.Read(bytes)
-	return hex.EncodeToString(bytes)
+	return fmt.Sprintf("%016x", rand.Uint64())
 }
 
 // Create creates a new session with the given player.
