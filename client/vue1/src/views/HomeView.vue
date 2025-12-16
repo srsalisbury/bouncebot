@@ -62,7 +62,7 @@ async function joinSession() {
     if (player) {
       sessionStore.setCurrentPlayer(player.id, player.name)
     }
-    router.push(`/session/${joinSessionId.value.trim()}`)
+    router.push(`/session/${session.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to join session'
   } finally {

@@ -850,25 +850,64 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Docker Build Infrastructure
+**Status:** Complete
+
+**What was done:**
+- Added Dockerfile for Go server (multi-stage Alpine build)
+- Added Dockerfile for Vue client (Node.js build + nginx serve)
+- Added GitHub Actions workflow for Docker build and publish
+- Workflow builds on every push/PR, publishes to ghcr.io on release
+- Added docker-compose.yml for local container deployment
+
+**Files added:**
+- `server/Dockerfile` - Go server container build
+- `client/vue1/Dockerfile` - Vue client container build
+- `client/vue1/nginx.conf` - nginx config for SPA routing
+- `.github/workflows/docker.yml` - CI/CD workflow
+- `.dockerignore`, `client/vue1/.dockerignore` - Build exclusions
+- `docker-compose.yml` - Local multi-container setup
+
+**Container images:**
+- `ghcr.io/srsalisbury/bouncebot-server`
+- `ghcr.io/srsalisbury/bouncebot-client`
+
+---
+
+### Simplified Session IDs
+**Status:** Complete
+
+**What was done:**
+- Changed session IDs from 16-char hex to 4-char alphanumeric
+- Uses character set "23456789ABCDEFGHJKLMNPQRSTUVWXYZ" (no 0/1/I/O to avoid confusion)
+- Session IDs are case-insensitive (normalized to uppercase on join)
+- Fixed client to use normalized session ID from server response in URL
+
+**Files modified:**
+- `server/session/session.go` - New generateSessionID(), case-insensitive Join/Get
+- `src/views/HomeView.vue` - Use session.id from response for URL routing
+
+---
+
 ## Up Next
 
 - Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
 
 ## Network Configuration
 
-To expose the app on a different host (e.g., local network access), update these files:
+**Localhost access (any port):** Works automatically - CORS and WebSocket allow any `localhost:*` origin.
+
+**Local network access:** To expose on a different hostname (e.g., `guido.local`):
 
 1. **`client/vue1/vite.config.ts`** - Already configured:
    - `server.host: true` - Listen on all interfaces
    - `server.allowedHosts: true` - Allow any hostname
 
-2. **`server/main.go`** - CORS allowed origins:
-   - Add new origin to `AllowedOrigins` array (e.g., `"http://newhost:5173"`)
-   - Location: ~line 141
+2. **`server/main.go`** - CORS AllowOriginFunc (~line 142):
+   - Add new hostname check (e.g., `strings.HasPrefix(origin, "http://newhost:")`)
 
-3. **`server/ws/hub.go`** - WebSocket origin check:
-   - Add new origin to `CheckOrigin` function (e.g., `origin == "http://newhost:5173"`)
-   - Location: ~line 18
+3. **`server/ws/hub.go`** - WebSocket CheckOrigin (~line 16):
+   - Add new hostname check (same pattern as CORS)
 
 4. **Client connects dynamically** - No changes needed:
    - `src/services/connectClient.ts` uses `window.location.hostname`
