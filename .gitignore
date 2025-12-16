@@ -1,2 +1,6 @@
 # Binaries
 server/server
+
+# Session data
+sessions.json
+sessions.json.tmp
