@@ -491,8 +491,8 @@ onUnmounted(() => {
       <div class="card">
         <div class="session-info">
           <div class="info-row">
-            <span class="label">Session ID:</span>
-            <code class="session-id">{{ session.id }}</code>
+            <span class="label">Room ID:</span>
+            <code class="room-id">{{ session.id }}</code>
           </div>
           <button class="btn-small" @click="copyShareUrl">Copy Link</button>
         </div>
@@ -750,7 +750,7 @@ onUnmounted(() => {
   font-size: 0.9rem;
 }
 
-.session-id {
+.room-id {
   background: #242424;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;

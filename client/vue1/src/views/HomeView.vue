@@ -45,7 +45,7 @@ async function joinSession() {
     return
   }
   if (!joinSessionId.value.trim()) {
-    error.value = 'Please enter a session ID'
+    error.value = 'Please enter a Room ID'
     return
   }
 
@@ -104,12 +104,12 @@ async function joinSession() {
       </div>
 
       <div class="form-group">
-        <label for="sessionId">Session ID</label>
+        <label for="sessionId">Room ID</label>
         <input
           id="sessionId"
           v-model="joinSessionId"
           type="text"
-          placeholder="Enter session ID"
+          placeholder="Enter room ID"
           @keyup.enter="joinSession"
         />
       </div>
