@@ -56,6 +56,26 @@ Generates types to `src/gen/bouncebot_pb.ts`
 - **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** - Step-by-step build plan
 - **[PROGRESS.md](./PROGRESS.md)** - Completed steps and PR history
 
+## Docker Deployment
+
+**Pull from GitHub Container Registry:**
+```bash
+docker pull ghcr.io/srsalisbury/bouncebot-server:latest
+docker pull ghcr.io/srsalisbury/bouncebot-client:latest
+```
+
+**Run with docker-compose** (from repo root):
+```bash
+docker compose up
+```
+- Client: http://localhost (port 80)
+- Server: http://localhost:8080
+
+**Build locally:**
+```bash
+docker compose up --build
+```
+
 ## Tech Stack
 
 - Vue 3 (Composition API)
