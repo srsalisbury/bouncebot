@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"connectrpc.com/connect"
 	"github.com/rs/cors"
@@ -20,7 +23,8 @@ import (
 )
 
 var (
-	port = flag.Int("port", 8080, "The server port")
+	port     = flag.Int("port", 8080, "The server port")
+	dataFile = flag.String("data", session.DefaultDataFile, "Path to session data file")
 )
 
 type bounceBotServer struct {
@@ -127,6 +131,25 @@ func main() {
 	flag.Parse()
 
 	sessions := session.NewStore()
+
+	// Load existing sessions from disk
+	if err := sessions.Load(*dataFile); err != nil {
+		log.Fatalf("Failed to load sessions: %v", err)
+	}
+
+	// Start auto-save goroutine
+	stopAutoSave := sessions.StartAutoSave(*dataFile)
+
+	// Handle graceful shutdown
+	shutdownChan := make(chan os.Signal, 1)
+	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-shutdownChan
+		log.Println("Shutting down, saving sessions...")
+		close(stopAutoSave) // This triggers final save
+		os.Exit(0)
+	}()
+
 	wsHub := ws.NewHub()
 	sessions.SetBroadcaster(wsHub)
 

@@ -64,6 +64,27 @@ The game is played on a 16x16 grid with walls. The objective is to move a design
 -   **Ricochet Mechanic**: Once a robot starts moving, it continues in a straight line until it hits an obstacle (another robot, a wall, or the edge of the board). It does not stop on an empty square.
 -   **Solving**: Players find a sequence of moves (e.g., "Red Up, Blue Left, Red Right") and submit it. The server validates if the solution is correct and if it's the shortest one found so far.
 
+## Session Persistence
+
+Sessions are persisted to a JSON file (`sessions.json` by default) to survive server restarts. The server:
+- Loads existing sessions on startup
+- Auto-saves every 30 seconds
+- Saves on graceful shutdown (SIGINT/SIGTERM)
+
+```sh
+# Use a custom data file path
+go run ./server -data /path/to/sessions.json
+```
+
+### Scaling to Multiple Servers
+
+The current JSON file persistence works well for single-server deployments. For multi-server deployments (e.g., Kubernetes with multiple replicas), you'll need a shared session store like Redis:
+
+1. **Add Redis dependency**: `go get github.com/redis/go-redis/v9`
+2. **Implement a Redis-backed Store**: Replace the file-based `Load`/`Save` methods with Redis operations
+3. **Use Redis pub/sub**: Replace the in-memory WebSocket hub with Redis pub/sub for cross-server broadcasting
+4. **Session affinity**: Alternatively, use sticky sessions to route players to the same server instance
+
 ## How to Run
 
 ### Option 1: Docker (Recommended)
