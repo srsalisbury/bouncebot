@@ -91,26 +91,47 @@ docker compose up
 - Node.js & npm
 - `protoc-gen-go` and `protoc-gen-connect-go` (for compiling protos)
 
-### 1. Compile Protobuf Definitions
-
-If you make changes to `proto/bouncebot.proto`, you must regenerate the Go and TypeScript code.
+#### 1. Run the Backend Server
 
 ```sh
-./proto/compile_protos.sh
-```
-
-### 2. Run the Backend Server
-
-```sh
-go run ./server/main.go
+go run ./server
 ```
 The server will start on `localhost:8080`.
 
-### 3. Run the Frontend Client
+```sh
+# Or with custom port
+go run ./server -port 9000
+
+# Or build and run
+go build -o bouncebot-server ./server
+./bouncebot-server
+```
+
+#### 2. Run the Frontend Client
 
 ```sh
 cd client/vue1
 npm install
 npm run dev
 ```
-The frontend development server will start, typically on `localhost:5173`. Open this URL in your browser to play.
+The frontend development server will start on `localhost:5173`. Open this URL in your browser to play.
+
+#### 3. Compile Protobuf Definitions
+
+If you make changes to `proto/bouncebot.proto`, regenerate the Go and TypeScript code:
+
+**Go (from repo root):**
+```sh
+./proto/compile_protos.sh
+```
+
+**TypeScript (from client/vue1):**
+```sh
+npm run generate
+```
+
+## Documentation
+
+- **[client/vue1/CONTEXT.md](./client/vue1/CONTEXT.md)** - Project overview and key decisions
+- **[client/vue1/IMPLEMENTATION_PLAN.md](./client/vue1/IMPLEMENTATION_PLAN.md)** - Step-by-step build plan
+- **[client/vue1/PROGRESS.md](./client/vue1/PROGRESS.md)** - Completed steps and PR history
