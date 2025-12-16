@@ -29,6 +29,24 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+func TestCreate_UniqueIDs(t *testing.T) {
+	store := NewStore()
+
+	// Create multiple sessions and verify all IDs are unique
+	ids := make(map[string]bool)
+	for i := 0; i < 100; i++ {
+		session := store.Create("Player")
+		if ids[session.ID] {
+			t.Errorf("duplicate session ID generated: %s", session.ID)
+		}
+		ids[session.ID] = true
+	}
+
+	if len(store.sessions) != 100 {
+		t.Errorf("expected 100 sessions, got %d", len(store.sessions))
+	}
+}
+
 func TestJoin(t *testing.T) {
 	store := NewStore()
 

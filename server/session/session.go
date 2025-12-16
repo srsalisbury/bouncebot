@@ -176,7 +176,12 @@ func (store *Store) Create(playerName string) *Session {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
+	// Generate unique session ID (retry if collision)
 	sessionID := generateSessionID()
+	for store.sessions[sessionID] != nil {
+		sessionID = generateSessionID()
+	}
+
 	playerID := generatePlayerID()
 	now := time.Now()
 
