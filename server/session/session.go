@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -153,8 +154,22 @@ func (store *Store) SetBroadcaster(b EventBroadcaster) {
 	store.broadcaster = b
 }
 
-// generateID creates a random session or player ID.
-func generateID() string {
+// sessionIDChars is the character set for session IDs (no 0, 1, I, O to avoid confusion)
+const sessionIDChars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+
+// generateSessionID creates a random 4-character session ID.
+func generateSessionID() string {
+	bytes := make([]byte, 4)
+	rand.Read(bytes)
+	result := make([]byte, 4)
+	for i := 0; i < 4; i++ {
+		result[i] = sessionIDChars[int(bytes[i])%len(sessionIDChars)]
+	}
+	return string(result)
+}
+
+// generatePlayerID creates a random player ID.
+func generatePlayerID() string {
 	bytes := make([]byte, 8)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
@@ -165,8 +180,8 @@ func (store *Store) Create(playerName string) *Session {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	sessionID := generateID()
-	playerID := generateID()
+	sessionID := generateSessionID()
+	playerID := generatePlayerID()
 
 	session := &Session{
 		ID: sessionID,
@@ -186,12 +201,14 @@ func (store *Store) Join(sessionID, playerName string) (*Session, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	// Normalize session ID to uppercase for case-insensitive matching
+	normalizedID := strings.ToUpper(sessionID)
+	session, ok := store.sessions[normalizedID]
 	if !ok {
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
 
-	playerID := generateID()
+	playerID := generatePlayerID()
 	session.Players = append(session.Players, Player{
 		ID:   playerID,
 		Name: playerName,
@@ -210,7 +227,9 @@ func (store *Store) Get(sessionID string) (*Session, error) {
 	store.mu.RLock()
 	defer store.mu.RUnlock()
 
-	session, ok := store.sessions[sessionID]
+	// Normalize session ID to uppercase for case-insensitive matching
+	normalizedID := strings.ToUpper(sessionID)
+	session, ok := store.sessions[normalizedID]
 	if !ok {
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
