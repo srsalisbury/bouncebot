@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/rs/cors"
@@ -138,7 +139,17 @@ func main() {
 
 	// CORS configuration for browser access
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173", "http://guido.local:5173"},
+		AllowOriginFunc: func(origin string) bool {
+			// Allow any localhost port
+			if strings.HasPrefix(origin, "http://localhost:") || origin == "http://localhost" {
+				return true
+			}
+			// Allow guido.local for local network dev
+			if strings.HasPrefix(origin, "http://guido.local:") || origin == "http://guido.local" {
+				return true
+			}
+			return false
+		},
 		AllowedMethods: []string{
 			http.MethodGet,
 			http.MethodPost,

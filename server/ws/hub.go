@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -13,9 +14,16 @@ import (
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// Allow connections from localhost and local network dev servers
 		origin := r.Header.Get("Origin")
-		return origin == "http://localhost:5173" || origin == "http://guido.local:5173"
+		// Allow any localhost port
+		if strings.HasPrefix(origin, "http://localhost:") || origin == "http://localhost" {
+			return true
+		}
+		// Allow guido.local for local network dev
+		if strings.HasPrefix(origin, "http://guido.local:") || origin == "http://guido.local" {
+			return true
+		}
+		return false
 	},
 }
 
