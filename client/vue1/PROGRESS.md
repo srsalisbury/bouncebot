@@ -874,18 +874,21 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
-### Simplified Session IDs
+### Simplified Room IDs
 **Status:** Complete
 
 **What was done:**
-- Changed session IDs from 16-char hex to 4-char alphanumeric
+- Changed Room IDs from 16-char hex to 4-char alphanumeric
 - Uses character set "23456789ABCDEFGHJKLMNPQRSTUVWXYZ" (no 0/1/I/O to avoid confusion)
-- Session IDs are case-insensitive (normalized to uppercase on join)
-- Fixed client to use normalized session ID from server response in URL
+- Room IDs are case-insensitive (normalized to uppercase on join)
+- Fixed client to use normalized Room ID from server response in URL
+- Switched from crypto/rand to math/rand/v2 for ID generation
+- Renamed "Session ID" to "Room ID" throughout UI
 
 **Files modified:**
-- `server/session/session.go` - New generateSessionID(), case-insensitive Join/Get
-- `src/views/HomeView.vue` - Use session.id from response for URL routing
+- `server/session/session.go` - New generateSessionID(), case-insensitive Join/Get, math/rand/v2
+- `src/views/HomeView.vue` - Use session.id from response for URL routing, "Room ID" labels
+- `src/views/SessionView.vue` - "Room ID" label
 
 ---
 
