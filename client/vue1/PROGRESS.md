@@ -916,6 +916,23 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Session Cleanup
+**Status:** Complete
+
+**What was done:**
+- Added `LastActivityAt` field to Session, updated on all user actions
+- Sessions inactive for >24 hours are automatically removed
+- Cleanup runs immediately on server startup, then hourly
+- Backward compatible: old sessions without `LastActivityAt` use `CreatedAt`
+
+**Files modified:**
+- `server/session/session.go` - Added LastActivityAt field, update on Create/Join/StartGame/SubmitSolution/RetractSolution/MarkFinishedSolving/MarkReadyForNext
+- `server/session/persistence.go` - Added CleanupStaleSessions(), StartCleanup(), constants for intervals
+- `server/session/persistence_test.go` - Added 6 tests for cleanup and LastActivityAt
+- `server/main.go` - Run cleanup on startup, start cleanup goroutine
+
+---
+
 ## Up Next
 
 - Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
