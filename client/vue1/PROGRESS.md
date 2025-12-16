@@ -892,6 +892,30 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Session Persistence
+**Status:** Complete
+
+**What was done:**
+- Added JSON file persistence for sessions to survive server restarts
+- Sessions auto-save every 30 seconds
+- Sessions save on graceful shutdown (SIGINT/SIGTERM)
+- Sessions load on startup from data file
+- Added `-data` flag to specify custom data file path (default: sessions.json)
+- Atomic writes using temp file + rename
+- Added sessions.json and sessions.json.tmp to .gitignore
+- Documented Redis upgrade path for multi-server scaling in README
+
+**Files added:**
+- `server/session/persistence.go` - Load/Save/StartAutoSave functions
+- `server/session/persistence_test.go` - 9 tests covering all persistence scenarios
+
+**Files modified:**
+- `server/main.go` - Added persistence loading, auto-save, graceful shutdown
+- `.gitignore` - Added sessions.json exclusions
+- `README.md` - Added Session Persistence section with scaling docs
+
+---
+
 ## Up Next
 
 - Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
