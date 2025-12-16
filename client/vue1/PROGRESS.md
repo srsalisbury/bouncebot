@@ -933,10 +933,6 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
-## Up Next
-
-- Step 30: Share Game Configuration (allow sharing specific puzzle configurations)
-
 ## Network Configuration
 
 **Localhost access (any port):** Works automatically - CORS and WebSocket allow any `localhost:*` origin.

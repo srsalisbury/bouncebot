@@ -486,21 +486,6 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 ---
 
-#### Step 30: Share Game Configuration
-**Goal:** Share interesting puzzles with others.
-
-**Tasks:**
-- Design compact encoding for game state (walls, robots, target)
-- Server/model: Encode game to short URL-safe string
-- Server/model: Decode string back to game state
-- Client: Add "Copy Puzzle Code" button to generate share code
-- Client: Add "Import Puzzle" input/button to load a shared puzzle
-- Validate imported puzzles before applying
-
-**Visible result:** Copy a short code like "ABC123..." and share it; others can paste to play same puzzle
-
----
-
 #### Step 31: Track available robot target locations
 **Goal:** Panels and Boards know where it's okay to place a target location.
 
