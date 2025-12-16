@@ -140,12 +140,17 @@ func main() {
 	// Start auto-save goroutine
 	stopAutoSave := sessions.StartAutoSave(*dataFile)
 
+	// Clean up stale sessions immediately, then start hourly cleanup
+	sessions.CleanupStaleSessions(session.SessionMaxAge)
+	stopCleanup := sessions.StartCleanup(session.CleanupInterval, session.SessionMaxAge)
+
 	// Handle graceful shutdown
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-shutdownChan
 		log.Println("Shutting down, saving sessions...")
+		close(stopCleanup)
 		close(stopAutoSave) // This triggers final save
 		os.Exit(0)
 	}()

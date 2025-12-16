@@ -276,3 +276,173 @@ func TestStartAutoSave_SavesOnStop(t *testing.T) {
 		t.Error("Expected session TEST to be persisted")
 	}
 }
+
+func TestCleanupStaleSessions_RemovesOldSessions(t *testing.T) {
+	store := NewStore()
+	now := time.Now()
+
+	// Create a stale session (2 days old)
+	store.sessions["STALE"] = &Session{
+		ID:             "STALE",
+		Players:        []Player{{ID: "p1", Name: "Old"}},
+		CreatedAt:      now.Add(-48 * time.Hour),
+		LastActivityAt: now.Add(-48 * time.Hour),
+		Wins:           map[string]int{},
+	}
+
+	// Create a recent session (1 hour old)
+	store.sessions["RECENT"] = &Session{
+		ID:             "RECENT",
+		Players:        []Player{{ID: "p2", Name: "New"}},
+		CreatedAt:      now.Add(-1 * time.Hour),
+		LastActivityAt: now.Add(-1 * time.Hour),
+		Wins:           map[string]int{},
+	}
+
+	// Cleanup sessions older than 24 hours
+	removed := store.CleanupStaleSessions(24 * time.Hour)
+
+	if removed != 1 {
+		t.Errorf("Expected 1 session removed, got %d", removed)
+	}
+	if len(store.sessions) != 1 {
+		t.Errorf("Expected 1 session remaining, got %d", len(store.sessions))
+	}
+	if store.sessions["STALE"] != nil {
+		t.Error("Expected STALE session to be removed")
+	}
+	if store.sessions["RECENT"] == nil {
+		t.Error("Expected RECENT session to remain")
+	}
+}
+
+func TestCleanupStaleSessions_KeepsAllRecentSessions(t *testing.T) {
+	store := NewStore()
+	now := time.Now()
+
+	// Create two recent sessions
+	store.sessions["A"] = &Session{
+		ID:             "A",
+		LastActivityAt: now.Add(-1 * time.Hour),
+		Wins:           map[string]int{},
+	}
+	store.sessions["B"] = &Session{
+		ID:             "B",
+		LastActivityAt: now.Add(-12 * time.Hour),
+		Wins:           map[string]int{},
+	}
+
+	removed := store.CleanupStaleSessions(24 * time.Hour)
+
+	if removed != 0 {
+		t.Errorf("Expected 0 sessions removed, got %d", removed)
+	}
+	if len(store.sessions) != 2 {
+		t.Errorf("Expected 2 sessions remaining, got %d", len(store.sessions))
+	}
+}
+
+func TestCleanupStaleSessions_RemovesAllStaleSessions(t *testing.T) {
+	store := NewStore()
+	now := time.Now()
+
+	// Create three stale sessions
+	store.sessions["A"] = &Session{
+		ID:             "A",
+		LastActivityAt: now.Add(-25 * time.Hour),
+		Wins:           map[string]int{},
+	}
+	store.sessions["B"] = &Session{
+		ID:             "B",
+		LastActivityAt: now.Add(-48 * time.Hour),
+		Wins:           map[string]int{},
+	}
+	store.sessions["C"] = &Session{
+		ID:             "C",
+		LastActivityAt: now.Add(-72 * time.Hour),
+		Wins:           map[string]int{},
+	}
+
+	removed := store.CleanupStaleSessions(24 * time.Hour)
+
+	if removed != 3 {
+		t.Errorf("Expected 3 sessions removed, got %d", removed)
+	}
+	if len(store.sessions) != 0 {
+		t.Errorf("Expected 0 sessions remaining, got %d", len(store.sessions))
+	}
+}
+
+func TestLoad_InitializesZeroLastActivityAt(t *testing.T) {
+	tmpDir := t.TempDir()
+	filename := filepath.Join(tmpDir, "sessions.json")
+
+	createdAt := time.Now().Add(-1 * time.Hour)
+
+	// Create session data with zero LastActivityAt (simulates old data)
+	pd := persistedData{
+		Sessions: map[string]*Session{
+			"TEST": {
+				ID:             "TEST",
+				Players:        []Player{{ID: "player1", Name: "Alice"}},
+				CreatedAt:      createdAt,
+				LastActivityAt: time.Time{}, // Zero value
+				Wins:           map[string]int{},
+			},
+		},
+		SavedAt: time.Now(),
+		Version: 1,
+	}
+	data, _ := json.Marshal(pd)
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	store := NewStore()
+	err := store.Load(filename)
+	if err != nil {
+		t.Errorf("Load should not error, got: %v", err)
+	}
+
+	sess := store.sessions["TEST"]
+	if sess.LastActivityAt.IsZero() {
+		t.Error("Expected LastActivityAt to be initialized")
+	}
+	if !sess.LastActivityAt.Equal(createdAt) {
+		t.Errorf("Expected LastActivityAt to equal CreatedAt, got %v vs %v", sess.LastActivityAt, createdAt)
+	}
+}
+
+func TestCreate_SetsLastActivityAt(t *testing.T) {
+	store := NewStore()
+	before := time.Now()
+
+	sess := store.Create("TestPlayer")
+
+	after := time.Now()
+
+	if sess.LastActivityAt.Before(before) || sess.LastActivityAt.After(after) {
+		t.Errorf("LastActivityAt should be between %v and %v, got %v", before, after, sess.LastActivityAt)
+	}
+	if !sess.LastActivityAt.Equal(sess.CreatedAt) {
+		t.Error("LastActivityAt should equal CreatedAt for new sessions")
+	}
+}
+
+func TestJoin_UpdatesLastActivityAt(t *testing.T) {
+	store := NewStore()
+	sess := store.Create("Player1")
+	originalActivity := sess.LastActivityAt
+
+	// Small delay to ensure time difference
+	time.Sleep(10 * time.Millisecond)
+
+	sess, err := store.Join(sess.ID, "Player2")
+	if err != nil {
+		t.Fatalf("Join failed: %v", err)
+	}
+
+	if !sess.LastActivityAt.After(originalActivity) {
+		t.Error("LastActivityAt should be updated after Join")
+	}
+}

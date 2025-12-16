@@ -42,6 +42,7 @@ type Session struct {
 	ID              string
 	Players         []Player
 	CreatedAt       time.Time
+	LastActivityAt  time.Time               // Last user action timestamp (for cleanup)
 	CurrentGame     *model.Game
 	GameStartedAt   *time.Time
 	Solutions       []PlayerSolution        // Current best solution per player
@@ -177,14 +178,16 @@ func (store *Store) Create(playerName string) *Session {
 
 	sessionID := generateSessionID()
 	playerID := generatePlayerID()
+	now := time.Now()
 
 	session := &Session{
 		ID: sessionID,
 		Players: []Player{
 			{ID: playerID, Name: playerName},
 		},
-		CreatedAt: time.Now(),
-		Wins:      make(map[string]int),
+		CreatedAt:      now,
+		LastActivityAt: now,
+		Wins:           make(map[string]int),
 	}
 
 	store.sessions[sessionID] = session
@@ -208,6 +211,7 @@ func (store *Store) Join(sessionID, playerName string) (*Session, error) {
 		ID:   playerID,
 		Name: playerName,
 	})
+	session.LastActivityAt = time.Now()
 
 	// Broadcast player joined event
 	if store.broadcaster != nil {
@@ -278,6 +282,7 @@ func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, e
 
 	session.CurrentGame = game
 	session.GameStartedAt = &now
+	session.LastActivityAt = now
 	session.Solutions = nil         // Clear solutions for new game
 	session.SolutionHistory = nil   // Clear history for new game
 	session.FinishedSolving = nil   // Clear finished players for new game
@@ -337,6 +342,7 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moves []model.Bot
 
 	moveCount := len(moves)
 	now := time.Now()
+	session.LastActivityAt = now
 
 	// Add to solution history
 	store.addToHistory(session, playerID, moves, now)
@@ -420,6 +426,8 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 		return fmt.Errorf("no game in progress")
 	}
 
+	session.LastActivityAt = time.Now()
+
 	// Find the player's current solution
 	var currentMoveCount int
 	var solutionIndex int = -1
@@ -502,6 +510,8 @@ func (store *Store) MarkFinishedSolving(sessionID, playerID string) error {
 		return fmt.Errorf("player not found: %s", playerID)
 	}
 
+	session.LastActivityAt = time.Now()
+
 	// Check if already finished
 	for _, id := range session.FinishedSolving {
 		if id == playerID {
@@ -538,6 +548,8 @@ func (store *Store) MarkReadyForNext(sessionID, playerID string) error {
 	if session.GetPlayerName(playerID) == "" {
 		return fmt.Errorf("player not found: %s", playerID)
 	}
+
+	session.LastActivityAt = time.Now()
 
 	// Check if already ready
 	for _, id := range session.ReadyForNext {

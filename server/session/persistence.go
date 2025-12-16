@@ -13,6 +13,10 @@ const (
 	DefaultDataFile = "sessions.json"
 	// AutoSaveInterval is how often sessions are automatically saved.
 	AutoSaveInterval = 30 * time.Second
+	// CleanupInterval is how often stale sessions are cleaned up.
+	CleanupInterval = 1 * time.Hour
+	// SessionMaxAge is how long a session can be inactive before cleanup.
+	SessionMaxAge = 24 * time.Hour
 )
 
 // persistedData is the JSON structure for saving sessions.
@@ -52,10 +56,14 @@ func (store *Store) Load(filename string) error {
 		store.sessions = make(map[string]*Session)
 	}
 
-	// Ensure Wins maps are initialized
+	// Ensure Wins maps and LastActivityAt are initialized
 	for _, sess := range store.sessions {
 		if sess.Wins == nil {
 			sess.Wins = make(map[string]int)
+		}
+		// For backward compatibility: if LastActivityAt is zero, use CreatedAt
+		if sess.LastActivityAt.IsZero() {
+			sess.LastActivityAt = sess.CreatedAt
 		}
 	}
 
@@ -114,6 +122,51 @@ func (store *Store) StartAutoSave(filename string) chan struct{} {
 				if err := store.Save(filename); err != nil {
 					log.Printf("Final save failed: %v", err)
 				}
+				return
+			}
+		}
+	}()
+
+	return stop
+}
+
+// CleanupStaleSessions removes sessions that have been inactive for longer than maxAge.
+// Returns the number of sessions removed.
+func (store *Store) CleanupStaleSessions(maxAge time.Duration) int {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	cutoff := time.Now().Add(-maxAge)
+	removed := 0
+
+	for id, sess := range store.sessions {
+		if sess.LastActivityAt.Before(cutoff) {
+			delete(store.sessions, id)
+			removed++
+		}
+	}
+
+	if removed > 0 {
+		log.Printf("Cleaned up %d stale sessions (inactive for >%v)", removed, maxAge)
+	}
+
+	return removed
+}
+
+// StartCleanup starts a goroutine that periodically removes stale sessions.
+// Returns a channel that should be closed to stop cleanup.
+func (store *Store) StartCleanup(interval, maxAge time.Duration) chan struct{} {
+	stop := make(chan struct{})
+
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				store.CleanupStaleSessions(maxAge)
+			case <-stop:
 				return
 			}
 		}
