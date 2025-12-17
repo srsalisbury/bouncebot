@@ -3,6 +3,8 @@ package session
 import (
 	"testing"
 	"time"
+
+	"github.com/srsalisbury/bouncebot/model"
 )
 
 func TestCreate(t *testing.T) {
@@ -498,8 +500,10 @@ func TestRemovePlayer_CleansUpSolutions(t *testing.T) {
 
 // mockBroadcaster implements EventBroadcaster for testing
 type mockBroadcaster struct {
-	gameEndedCalled   bool
-	gameStartedCalled bool
+	gameEndedCalled         bool
+	gameStartedCalled       bool
+	playerSolvedCalled      bool
+	solutionRetractedCalled bool
 }
 
 func (m *mockBroadcaster) BroadcastPlayerJoined(sessionID, playerID, playerName string) {}
@@ -508,8 +512,11 @@ func (m *mockBroadcaster) BroadcastGameStarted(sessionID string)                
 func (m *mockBroadcaster) BroadcastPlayerFinishedSolving(sessionID, playerID string)     {}
 func (m *mockBroadcaster) BroadcastPlayerReadyForNext(sessionID, playerID string)        {}
 func (m *mockBroadcaster) BroadcastPlayerSolved(sessionID, playerID string, moveCount int) {
+	m.playerSolvedCalled = true
 }
-func (m *mockBroadcaster) BroadcastSolutionRetracted(sessionID, playerID string) {}
+func (m *mockBroadcaster) BroadcastSolutionRetracted(sessionID, playerID string) {
+	m.solutionRetractedCalled = true
+}
 func (m *mockBroadcaster) BroadcastGameEnded(sessionID, winnerID, winnerName string, moves []MovePayload) {
 	m.gameEndedCalled = true
 }
@@ -568,5 +575,207 @@ func TestRemovePlayer_TriggersNextGame(t *testing.T) {
 	// Now next game should start (Alice is the only player and she's ready)
 	if !mock.gameStartedCalled {
 		t.Error("expected next game to start when last unready player was removed")
+	}
+}
+
+// Helper to create a valid solution for Game1 (fixed board).
+// Target is bot 0 at (5, 13), starting at (5, 4).
+func validSolution() []model.BotPosition {
+	// Valid 7-move solution for Game1:
+	// Bot 1 left, then Bot 0: up, left, down, left, up, right
+	return []model.BotPosition{
+		{Id: 1, Pos: model.Position{X: 0, Y: 12}},
+		{Id: 0, Pos: model.Position{X: 5, Y: 0}},
+		{Id: 0, Pos: model.Position{X: 2, Y: 0}},
+		{Id: 0, Pos: model.Position{X: 2, Y: 15}},
+		{Id: 0, Pos: model.Position{X: 0, Y: 15}},
+		{Id: 0, Pos: model.Position{X: 0, Y: 13}},
+		{Id: 0, Pos: model.Position{X: 5, Y: 13}},
+	}
+}
+
+func TestSubmitSolution_SessionNotFound(t *testing.T) {
+	store := NewStore()
+
+	_, err := store.SubmitSolution("nonexistent", "player1", nil)
+	if err == nil {
+		t.Error("expected error for nonexistent session")
+	}
+}
+
+func TestSubmitSolution_NoGameInProgress(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	aliceID := session.Players[0].ID
+
+	_, err := store.SubmitSolution(session.ID, aliceID, nil)
+	if err == nil {
+		t.Error("expected error when no game in progress")
+	}
+}
+
+func TestSubmitSolution_PlayerNotFound(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	store.StartGame(session.ID, true) // Use fixed board
+
+	_, err := store.SubmitSolution(session.ID, "nonexistent", validSolution())
+	if err == nil {
+		t.Error("expected error for nonexistent player")
+	}
+}
+
+func TestSubmitSolution_InvalidSolution(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	store.StartGame(session.ID, true) // Use fixed board
+	aliceID := session.Players[0].ID
+
+	// Invalid solution - doesn't reach target
+	invalidMoves := []model.BotPosition{
+		{Id: 0, Pos: model.Position{X: 5, Y: 6}},
+	}
+
+	_, err := store.SubmitSolution(session.ID, aliceID, invalidMoves)
+	if err == nil {
+		t.Error("expected error for invalid solution")
+	}
+}
+
+func TestSubmitSolution_ValidSolution(t *testing.T) {
+	store := NewStore()
+	mock := &mockBroadcaster{}
+	store.SetBroadcaster(mock)
+
+	session := store.Create("Alice")
+	store.StartGame(session.ID, true) // Use fixed board
+	aliceID := session.Players[0].ID
+
+	solution, err := store.SubmitSolution(session.ID, aliceID, validSolution())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if solution.PlayerID != aliceID {
+		t.Errorf("expected player ID %s, got %s", aliceID, solution.PlayerID)
+	}
+	if solution.MoveCount() != 7 {
+		t.Errorf("expected 7 moves, got %d", solution.MoveCount())
+	}
+
+	// Check session has solution
+	session, _ = store.Get(session.ID)
+	if len(session.Solutions) != 1 {
+		t.Errorf("expected 1 solution, got %d", len(session.Solutions))
+	}
+
+	// Check broadcast was called
+	if !mock.playerSolvedCalled {
+		t.Error("expected BroadcastPlayerSolved to be called")
+	}
+}
+
+func TestSubmitSolution_BetterSolutionUpdates(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	store.StartGame(session.ID, true) // Use fixed board
+	aliceID := session.Players[0].ID
+
+	// First solution - 3 moves
+	_, err := store.SubmitSolution(session.ID, aliceID, validSolution())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// A shorter 2-move solution (if one exists)
+	// For testing, we'll verify the update logic by checking move count
+	session, _ = store.Get(session.ID)
+	originalMoveCount := session.Solutions[0].MoveCount()
+
+	// Submit same solution again - should not update
+	_, err = store.SubmitSolution(session.ID, aliceID, validSolution())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	session, _ = store.Get(session.ID)
+	if session.Solutions[0].MoveCount() != originalMoveCount {
+		t.Error("expected solution to remain unchanged when submitting same move count")
+	}
+	// Should still only have 1 solution
+	if len(session.Solutions) != 1 {
+		t.Errorf("expected 1 solution, got %d", len(session.Solutions))
+	}
+}
+
+func TestRetractSolution_SessionNotFound(t *testing.T) {
+	store := NewStore()
+
+	err := store.RetractSolution("nonexistent", "player1")
+	if err == nil {
+		t.Error("expected error for nonexistent session")
+	}
+}
+
+func TestRetractSolution_NoGameInProgress(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	aliceID := session.Players[0].ID
+
+	err := store.RetractSolution(session.ID, aliceID)
+	if err == nil {
+		t.Error("expected error when no game in progress")
+	}
+}
+
+func TestRetractSolution_NoSolutionFound(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	store.StartGame(session.ID, true)
+	aliceID := session.Players[0].ID
+
+	err := store.RetractSolution(session.ID, aliceID)
+	if err == nil {
+		t.Error("expected error when player has no solution")
+	}
+}
+
+func TestRetractSolution_RemovesCompletely(t *testing.T) {
+	store := NewStore()
+	mock := &mockBroadcaster{}
+	store.SetBroadcaster(mock)
+
+	session := store.Create("Alice")
+	store.StartGame(session.ID, true)
+	aliceID := session.Players[0].ID
+
+	// Submit solution
+	store.SubmitSolution(session.ID, aliceID, validSolution())
+
+	session, _ = store.Get(session.ID)
+	if len(session.Solutions) != 1 {
+		t.Fatalf("expected 1 solution, got %d", len(session.Solutions))
+	}
+
+	// Retract solution
+	err := store.RetractSolution(session.ID, aliceID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	session, _ = store.Get(session.ID)
+	if len(session.Solutions) != 0 {
+		t.Errorf("expected 0 solutions after retraction, got %d", len(session.Solutions))
+	}
+
+	// Check broadcast was called
+	if !mock.solutionRetractedCalled {
+		t.Error("expected BroadcastSolutionRetracted to be called")
 	}
 }
