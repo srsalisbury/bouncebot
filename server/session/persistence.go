@@ -11,12 +11,12 @@ import (
 const (
 	// DefaultDataFile is the default path for session data persistence.
 	DefaultDataFile = "sessions.json"
-	// AutoSaveInterval is how often sessions are automatically saved.
-	AutoSaveInterval = 30 * time.Second
-	// CleanupInterval is how often stale sessions are cleaned up.
-	CleanupInterval = 1 * time.Hour
-	// SessionMaxAge is how long a session can be inactive before cleanup.
-	SessionMaxAge = 24 * time.Hour
+	// DefaultAutoSaveInterval is the default interval for auto-saving sessions.
+	DefaultAutoSaveInterval = 30 * time.Second
+	// DefaultCleanupInterval is the default interval for cleaning up stale sessions.
+	DefaultCleanupInterval = 1 * time.Hour
+	// DefaultSessionMaxAge is the default max age before a session is cleaned up.
+	DefaultSessionMaxAge = 24 * time.Hour
 )
 
 // persistedData is the JSON structure for saving sessions.
@@ -104,11 +104,11 @@ func (store *Store) Save(filename string) error {
 
 // StartAutoSave starts a goroutine that periodically saves sessions.
 // Returns a channel that should be closed to stop auto-saving.
-func (store *Store) StartAutoSave(filename string) chan struct{} {
+func (store *Store) StartAutoSave(filename string, interval time.Duration) chan struct{} {
 	stop := make(chan struct{})
 
 	go func() {
-		ticker := time.NewTicker(AutoSaveInterval)
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
 		for {

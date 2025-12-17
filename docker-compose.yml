@@ -5,6 +5,15 @@ services:
       dockerfile: server/Dockerfile
     ports:
       - "8080:8080"
+    environment:
+      # Comma-separated list of allowed origins for CORS/WebSocket
+      # Add your domain here, e.g., localhost,myserver.com
+      - ALLOWED_ORIGINS=localhost
+      # Path to session data file (persisted via volume)
+      - DATA_FILE=/data/sessions.json
+    volumes:
+      # Persist session data across container restarts
+      - bouncebot-data:/data
     restart: unless-stopped
 
   client:
@@ -16,3 +25,6 @@ services:
     depends_on:
       - server
     restart: unless-stopped
+
+volumes:
+  bouncebot-data:

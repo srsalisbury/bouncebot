@@ -256,7 +256,7 @@ func TestStartAutoSave_SavesOnStop(t *testing.T) {
 	}
 
 	// Start auto-save and immediately stop it
-	stop := store.StartAutoSave(filename)
+	stop := store.StartAutoSave(filename, DefaultAutoSaveInterval)
 	close(stop)
 
 	// Give it a moment to complete the final save

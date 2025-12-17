@@ -16,14 +16,14 @@ This document outlines the current refactoring tasks being undertaken by the Gem
             - [x] Handle the "player left" event in the websocket service.
             - [x] Update the Pinia store to remove the player from the game state.
             - [x] Ensure the UI correctly reflects the player's removal.
-    - [ ] Externalize Configuration:
-        - [ ] Scan the Go codebase (starting with `server/main.go`) to identify all hardcoded configuration values (e.g., CORS policy, server port).
-        - [ ] Choose and implement a configuration library (e.g., `godotenv`) to load settings from a `.env` file.
-        - [ ] Create a `Config` struct in the `server` directory to hold all application configuration in a type-safe manner.
-        - [ ] Implement logic in `server/main.go` to load configuration from the `.env` file at startup.
-        - [ ] Create a `.env.example` file to document available configuration options.
-        - [ ] Replace all identified hardcoded values with the corresponding fields from the `Config` struct.
-        - [ ] Update `server/Dockerfile` and `docker-compose.yml` to ensure configuration is passed correctly when running in Docker.
+    - [x] Externalize Configuration:
+        - [x] Scan the Go codebase (starting with `server/main.go`) to identify all hardcoded configuration values (e.g., CORS policy, server port).
+        - [x] Choose and implement a configuration library (e.g., `godotenv`) to load settings from a `.env` file.
+        - [x] Create a `Config` struct in the `server` directory to hold all application configuration in a type-safe manner.
+        - [x] Implement logic in `server/main.go` to load configuration from the `.env` file at startup.
+        - [x] Create a `.env.example` file to document available configuration options.
+        - [x] Replace all identified hardcoded values with the corresponding fields from the `Config` struct.
+        - [x] Update `server/Dockerfile` and `docker-compose.yml` to ensure configuration is passed correctly when running in Docker.
 - [ ] **Refactor Core Game Logic:**
     - [ ] Refactor `ValidateMove` and Improve Test Coverage:
         - [ ] Analyze the existing `ValidateMove` and `checkPathAlongAxis` functions in `model/game.go` to fully understand the current logic.

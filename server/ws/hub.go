@@ -5,26 +5,16 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/srsalisbury/bouncebot/server/config"
 	"github.com/srsalisbury/bouncebot/server/session"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		origin := r.Header.Get("Origin")
-		// Allow any localhost port
-		if strings.HasPrefix(origin, "http://localhost:") || origin == "http://localhost" {
-			return true
-		}
-		// Allow guido.local for local network dev
-		if strings.HasPrefix(origin, "http://guido.local:") || origin == "http://guido.local" {
-			return true
-		}
-		return false
-	},
+// OriginChecker is an interface for checking if origins are allowed.
+type OriginChecker interface {
+	IsOriginAllowed(origin string) bool
 }
 
 // Event represents a WebSocket event sent to clients.
@@ -91,14 +81,24 @@ type Hub struct {
 	mu       sync.RWMutex
 	sessions map[string]map[*Client]bool // sessionID -> clients
 	store    *session.Store
+	config   *config.Config
+	upgrader websocket.Upgrader
 }
 
 // NewHub creates a new WebSocket hub.
-func NewHub(store *session.Store) *Hub {
-	return &Hub{
+func NewHub(store *session.Store, cfg *config.Config) *Hub {
+	h := &Hub{
 		sessions: make(map[string]map[*Client]bool),
 		store:    store,
+		config:   cfg,
 	}
+	h.upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			return cfg.IsOriginAllowed(origin)
+		},
+	}
+	return h
 }
 
 // register adds a client to a session.
@@ -282,7 +282,7 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WebSocket: player %s reconnected to session %s", playerID, sessionID)
 	}
 
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("WebSocket: upgrade failed: %v", err)
 		return
