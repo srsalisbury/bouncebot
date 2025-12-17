@@ -708,6 +708,14 @@ func (store *Store) RemovePlayer(sessionID, playerID string) {
 				}
 			}
 
+			// Remove from Solutions
+			for i, sol := range session.Solutions {
+				if sol.PlayerID == playerID {
+					session.Solutions = append(session.Solutions[:i], session.Solutions[i+1:]...)
+					break
+				}
+			}
+
 			if store.broadcaster != nil {
 				store.broadcaster.BroadcastPlayerLeft(sessionID, playerID)
 			}

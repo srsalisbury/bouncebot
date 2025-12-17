@@ -465,6 +465,37 @@ func TestRemovePlayer_CleansUpReadyForNext(t *testing.T) {
 	}
 }
 
+func TestRemovePlayer_CleansUpSolutions(t *testing.T) {
+	store := NewStore()
+
+	session := store.Create("Alice")
+	store.Join(session.ID, "Bob")
+	store.StartGame(session.ID, false)
+
+	aliceID := session.Players[0].ID
+
+	// Directly add a solution for Alice (bypassing validation for test purposes)
+	session, _ = store.Get(session.ID)
+	session.Solutions = append(session.Solutions, PlayerSolution{
+		PlayerID: aliceID,
+		SolvedAt: time.Now(),
+		Moves:    nil,
+	})
+
+	if len(session.Solutions) != 1 {
+		t.Fatalf("expected 1 solution, got %d", len(session.Solutions))
+	}
+
+	// Alice disconnects and is removed
+	store.DisconnectPlayer(session.ID, aliceID)
+	store.RemovePlayer(session.ID, aliceID)
+
+	session, _ = store.Get(session.ID)
+	if len(session.Solutions) != 0 {
+		t.Errorf("expected 0 solutions after removal, got %d", len(session.Solutions))
+	}
+}
+
 // mockBroadcaster implements EventBroadcaster for testing
 type mockBroadcaster struct {
 	gameEndedCalled   bool
