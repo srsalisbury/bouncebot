@@ -82,6 +82,7 @@ type Client struct {
 	hub       *Hub
 	conn      *websocket.Conn
 	sessionID string
+	playerID  string
 	send      chan []byte
 }
 
@@ -89,12 +90,14 @@ type Client struct {
 type Hub struct {
 	mu       sync.RWMutex
 	sessions map[string]map[*Client]bool // sessionID -> clients
+	store    *session.Store
 }
 
 // NewHub creates a new WebSocket hub.
-func NewHub() *Hub {
+func NewHub(store *session.Store) *Hub {
 	return &Hub{
 		sessions: make(map[string]map[*Client]bool),
+		store:    store,
 	}
 }
 
@@ -112,6 +115,10 @@ func (h *Hub) register(client *Client) {
 
 // unregister removes a client from a session.
 func (h *Hub) unregister(client *Client) {
+	if client.playerID != "" {
+		h.store.DisconnectPlayer(client.sessionID, client.playerID)
+	}
+
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -134,6 +141,16 @@ func (h *Hub) BroadcastPlayerJoined(sessionID, playerID, playerName string) {
 		Payload: PlayerJoinedPayload{
 			PlayerID:   playerID,
 			PlayerName: playerName,
+		},
+	})
+}
+
+// BroadcastPlayerLeft broadcasts a player_left event to all clients in a session.
+func (h *Hub) BroadcastPlayerLeft(sessionID, playerID string) {
+	h.Broadcast(sessionID, Event{
+		Type: "player_left",
+		Payload: PlayerLeftPayload{
+			PlayerID: playerID,
 		},
 	})
 }
@@ -228,6 +245,42 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "sessionId required", http.StatusBadRequest)
 		return
 	}
+	playerID := r.URL.Query().Get("playerId")
+	if playerID == "" {
+		http.Error(w, "playerId required", http.StatusBadRequest)
+		return
+	}
+
+	// Check if player can reconnect
+	sess, err := h.store.Get(sessionID)
+	if err != nil {
+		http.Error(w, "session not found", http.StatusNotFound)
+		return
+	}
+
+	var player session.Player
+	found := false
+	for _, p := range sess.Players {
+		if p.ID == playerID {
+			player = p
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		http.Error(w, "player not found", http.StatusForbidden)
+		return
+	}
+
+	if player.Status == session.PlayerStatusDisconnected {
+		if err := h.store.ReconnectPlayer(sessionID, playerID); err != nil {
+			log.Printf("WebSocket: failed to reconnect player %s in session %s: %v", playerID, sessionID, err)
+			http.Error(w, "failed to reconnect", http.StatusInternalServerError)
+			return
+		}
+		log.Printf("WebSocket: player %s reconnected to session %s", playerID, sessionID)
+	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -239,6 +292,7 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		hub:       h,
 		conn:      conn,
 		sessionID: sessionID,
+		playerID:  playerID,
 		send:      make(chan []byte, 256),
 	}
 

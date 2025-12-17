@@ -15,9 +15,21 @@ import (
 
 // Player represents a player in a session.
 type Player struct {
-	ID   string
-	Name string
+	ID             string
+	Name           string
+	Status         PlayerStatus
+	DisconnectedAt time.Time
 }
+
+// PlayerStatus represents the connection status of a player.
+type PlayerStatus string
+
+const (
+	// PlayerStatusConnected means the player is actively connected.
+	PlayerStatusConnected PlayerStatus = "connected"
+	// PlayerStatusDisconnected means the player has disconnected but is within the grace period.
+	PlayerStatusDisconnected PlayerStatus = "disconnected"
+)
 
 // PlayerSolution represents a player's solution to the current game.
 type PlayerSolution struct {
@@ -127,6 +139,7 @@ type MovePayload struct {
 // EventBroadcaster is an interface for broadcasting session events.
 type EventBroadcaster interface {
 	BroadcastPlayerJoined(sessionID, playerID, playerName string)
+	BroadcastPlayerLeft(sessionID, playerID string)
 	BroadcastGameStarted(sessionID string)
 	BroadcastPlayerFinishedSolving(sessionID, playerID string)
 	BroadcastPlayerReadyForNext(sessionID, playerID string)
@@ -140,12 +153,14 @@ type Store struct {
 	mu          sync.RWMutex
 	sessions    map[string]*Session
 	broadcaster EventBroadcaster
+	timers      map[string]*time.Timer // playerID -> timer
 }
 
 // NewStore creates a new session store.
 func NewStore() *Store {
 	return &Store{
 		sessions: make(map[string]*Session),
+		timers:   make(map[string]*time.Timer),
 	}
 }
 
@@ -188,7 +203,7 @@ func (store *Store) Create(playerName string) *Session {
 	session := &Session{
 		ID: sessionID,
 		Players: []Player{
-			{ID: playerID, Name: playerName},
+			{ID: playerID, Name: playerName, Status: PlayerStatusConnected},
 		},
 		CreatedAt:      now,
 		LastActivityAt: now,
@@ -213,8 +228,9 @@ func (store *Store) Join(sessionID, playerName string) (*Session, error) {
 
 	playerID := generatePlayerID()
 	session.Players = append(session.Players, Player{
-		ID:   playerID,
-		Name: playerName,
+		ID:     playerID,
+		Name:   playerName,
+		Status: PlayerStatusConnected,
 	})
 	session.LastActivityAt = time.Now()
 
@@ -577,6 +593,140 @@ func (store *Store) MarkReadyForNext(sessionID, playerID string) error {
 
 	return nil
 }
+
+// DisconnectPlayer marks a player as disconnected and starts a timer to remove them.
+func (store *Store) DisconnectPlayer(sessionID, playerID string) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	session, ok := store.sessions[sessionID]
+	if !ok {
+		return fmt.Errorf("session not found: %s", sessionID)
+	}
+
+	var player *Player
+	for i := range session.Players {
+		if session.Players[i].ID == playerID {
+			player = &session.Players[i]
+			break
+		}
+	}
+
+	if player == nil {
+		// Player might have been removed already, which is fine
+		return nil
+	}
+
+	player.Status = PlayerStatusDisconnected
+	player.DisconnectedAt = time.Now()
+
+	// Clean up any existing timer for this player
+	if oldTimer, ok := store.timers[playerID]; ok {
+		oldTimer.Stop()
+		delete(store.timers, playerID)
+	}
+
+	const gracePeriod = 30 * time.Second
+	timer := time.AfterFunc(gracePeriod, func() {
+		store.RemovePlayer(sessionID, playerID)
+	})
+	store.timers[playerID] = timer
+
+	return nil
+}
+
+// ReconnectPlayer marks a player as connected and cancels their removal timer.
+func (store *Store) ReconnectPlayer(sessionID, playerID string) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	session, ok := store.sessions[sessionID]
+	if !ok {
+		return fmt.Errorf("session not found: %s", sessionID)
+	}
+
+	var player *Player
+	for i := range session.Players {
+		if session.Players[i].ID == playerID {
+			player = &session.Players[i]
+			break
+		}
+	}
+
+	if player == nil {
+		return fmt.Errorf("player not found: %s", playerID)
+	}
+
+	if player.Status == PlayerStatusDisconnected {
+		player.Status = PlayerStatusConnected
+		if timer, ok := store.timers[playerID]; ok {
+			timer.Stop()
+			delete(store.timers, playerID)
+		}
+	}
+
+	return nil
+}
+
+// RemovePlayer removes a player from a session if they are still disconnected.
+func (store *Store) RemovePlayer(sessionID, playerID string) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	session, ok := store.sessions[sessionID]
+	if !ok {
+		return // session already gone
+	}
+
+	var playerIndex = -1
+	for i, p := range session.Players {
+		if p.ID == playerID {
+			playerIndex = i
+			break
+		}
+	}
+
+	if playerIndex != -1 {
+		// Only remove if still disconnected
+		if session.Players[playerIndex].Status == PlayerStatusDisconnected {
+			session.Players = append(session.Players[:playerIndex], session.Players[playerIndex+1:]...)
+			delete(store.timers, playerID)
+
+			// Remove from FinishedSolving
+			for i, id := range session.FinishedSolving {
+				if id == playerID {
+					session.FinishedSolving = append(session.FinishedSolving[:i], session.FinishedSolving[i+1:]...)
+					break
+				}
+			}
+
+			// Remove from ReadyForNext
+			for i, id := range session.ReadyForNext {
+				if id == playerID {
+					session.ReadyForNext = append(session.ReadyForNext[:i], session.ReadyForNext[i+1:]...)
+					break
+				}
+			}
+
+			if store.broadcaster != nil {
+				store.broadcaster.BroadcastPlayerLeft(sessionID, playerID)
+			}
+
+			// Check if remaining players now satisfy conditions
+			if len(session.Players) > 0 {
+				// If game is active and all remaining players are finished, end the game
+				if session.CurrentGame != nil && len(session.FinishedSolving) == len(session.Players) {
+					store.endGame(session)
+				}
+				// If all remaining players are ready for next, start next game
+				if len(session.ReadyForNext) == len(session.Players) {
+					store.startNextGame(session)
+				}
+			}
+		}
+	}
+}
+
 
 // startNextGame starts the next game when all players are ready.
 func (store *Store) startNextGame(session *Session) {

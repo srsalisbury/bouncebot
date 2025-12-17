@@ -59,21 +59,23 @@ const RECONNECT_DELAY = 3000
 class WebSocketService {
   private ws: WebSocket | null = null
   private sessionId: string | null = null
+  private playerId: string | null = null
   private eventHandler: EventHandler | null = null
   private reconnectTimeout: number | null = null
   private shouldReconnect = false
 
-  connect(sessionId: string, onEvent: EventHandler): void {
+  connect(sessionId: string, playerId: string, onEvent: EventHandler): void {
     this.sessionId = sessionId
+    this.playerId = playerId
     this.eventHandler = onEvent
     this.shouldReconnect = true
     this.doConnect()
   }
 
   private doConnect(): void {
-    if (!this.sessionId) return
+    if (!this.sessionId || !this.playerId) return
 
-    const url = `${WS_URL}?sessionId=${this.sessionId}`
+    const url = `${WS_URL}?sessionId=${this.sessionId}&playerId=${this.playerId}`
     console.log('WebSocket: connecting to', url)
 
     this.ws = new WebSocket(url)
@@ -126,6 +128,7 @@ class WebSocketService {
       this.ws = null
     }
     this.sessionId = null
+    this.playerId = null
     this.eventHandler = null
   }
 }
