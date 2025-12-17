@@ -31,3 +31,10 @@ lsof -ti:5173 | xargs kill -9
 
 ## Docker (for deployment only)
 Docker is for CI/CD and deployment, not local development. Use native binaries locally.
+
+## Workflow
+
+- Always submit new changes via PRs (not direct pushes to main)
+- Always update progress documentation before making PRs:
+  - `client/vue1/PROGRESS.md` for implementation progress
+  - `planning/REFACTORING_PLAN.md` for refactoring tasks
