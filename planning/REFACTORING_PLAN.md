@@ -5,17 +5,17 @@ This document outlines the current refactoring tasks being undertaken by the Gem
 ## Backend Refactoring (Go)
 
 - [ ] **Address Critical Bugs and Configuration:**
-    - [ ] Implement Player Disconnection Events with Grace Period:
-        - [ ] **Backend:**
-            - [ ] Add a `PlayerID` to the `Client` struct in `server/ws/hub.go` to track players.
-            - [ ] Add a `Status` field (e.g., `Connected`, `Disconnected`) to the `Player` struct in `server/session/session.go`.
-            - [ ] When a player disconnects, set their `Status` to `Disconnected` and start a grace period timer (e.g., 30 seconds).
-            - [ ] On reconnection, if a player with the same ID exists and is `Disconnected`, update their `Status` to `Connected` and cancel the timer.
-            - [ ] If the grace period timer expires, remove the player from the session and broadcast a "player left" event to all clients.
-        - [ ] **Frontend:**
-            - [ ] Handle the "player left" event in the websocket service.
-            - [ ] Update the Pinia store to remove the player from the game state.
-            - [ ] Ensure the UI correctly reflects the player's removal.
+    - [x] Implement Player Disconnection Events with Grace Period:
+        - [x] **Backend:**
+            - [x] Add a `PlayerID` to the `Client` struct in `server/ws/hub.go` to track players.
+            - [x] Add a `Status` field (e.g., `Connected`, `Disconnected`) to the `Player` struct in `server/session/session.go`.
+            - [x] When a player disconnects, set their `Status` to `Disconnected` and start a grace period timer (e.g., 30 seconds).
+            - [x] On reconnection, if a player with the same ID exists and is `Disconnected`, update their `Status` to `Connected` and cancel the timer.
+            - [x] If the grace period timer expires, remove the player from the session and broadcast a "player left" event to all clients.
+        - [x] **Frontend:**
+            - [x] Handle the "player left" event in the websocket service.
+            - [x] Update the Pinia store to remove the player from the game state.
+            - [x] Ensure the UI correctly reflects the player's removal.
     - [ ] Externalize Configuration:
         - [ ] Scan the Go codebase (starting with `server/main.go`) to identify all hardcoded configuration values (e.g., CORS policy, server port).
         - [ ] Choose and implement a configuration library (e.g., `godotenv`) to load settings from a `.env` file.

@@ -300,12 +300,14 @@ function handleWebSocketEvent(event: WebSocketEvent) {
   } else if (event.type === 'game_ended') {
     gameEnded.value = true
     loadSession()
+  } else if (event.type === 'player_left') {
+    loadSession() // Refresh session to remove the player from the list
   }
 }
 
 function connectWebSocket() {
-  if (hasJoined.value) {
-    websocketService.connect(props.sessionId, handleWebSocketEvent)
+  if (hasJoined.value && sessionStore.currentPlayerId) {
+    websocketService.connect(props.sessionId, sessionStore.currentPlayerId, handleWebSocketEvent)
   }
 }
 

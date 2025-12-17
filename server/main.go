@@ -155,7 +155,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	wsHub := ws.NewHub()
+	wsHub := ws.NewHub(sessions)
 	sessions.SetBroadcaster(wsHub)
 
 	mux := http.NewServeMux()
