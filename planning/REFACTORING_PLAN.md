@@ -75,15 +75,15 @@ This document outlines the current refactoring tasks being undertaken by the Gem
         - [ ] Create a `client/vue1/src/types.ts` file to define a canonical `Move` type.
         - [ ] Update all components and stores (e.g., `gameStore.ts`, `GameBoard.vue`) to import and use the canonical `Move` type.
         - [ ] If the backend changes are not made, create a data transformation layer to convert server data into the canonical frontend `Move` type.
-- [ ] **Dependency and CI/CD Audit:**
-    - [ ] Update Dependencies:
-        - [ ] **Backend (Go):**
-            - [ ] Run `go list -u -m all` in the root directory to list available updates.
-            - [ ] Run `go get -u` to update dependencies to their latest versions.
-            - [ ] Run `go mod tidy` to clean up the `go.mod` file.
-            - [ ] Run backend tests and manually test the application to ensure no breaking changes.
-        - [ ] **Frontend (npm):**
-            - [ ] Run `npm outdated` in the `client/vue1` directory to check for outdated packages.
-            - [ ] Run `npm update` to update the dependencies.
-            - [ ] Manually test the frontend to ensure no breaking changes were introduced.
+- [x] **Dependency and CI/CD Audit:**
+    - [x] Update Dependencies:
+        - [x] **Backend (Go):**
+            - [x] Run `go list -u -m all` in the root directory to list available updates.
+            - [x] Run `go get -u` to update dependencies to their latest versions.
+            - [x] Run `go mod tidy` to clean up the `go.mod` file.
+            - [x] Run backend tests and manually test the application to ensure no breaking changes.
+        - [x] **Frontend (npm):**
+            - [x] Run `npm outdated` in the `client/vue1` directory to check for outdated packages.
+            - [x] Run `npm update` to update the dependencies.
+            - [x] Manually test the frontend to ensure no breaking changes were introduced.
     - [x] Establish CI/CD Pipeline (Docker build & publish to ghcr.io)
