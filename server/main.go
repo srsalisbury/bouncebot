@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"connectrpc.com/connect"
@@ -16,6 +15,7 @@ import (
 	"github.com/srsalisbury/bouncebot/model"
 	pb "github.com/srsalisbury/bouncebot/proto"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
+	"github.com/srsalisbury/bouncebot/server/config"
 	"github.com/srsalisbury/bouncebot/server/session"
 	"github.com/srsalisbury/bouncebot/server/ws"
 	"golang.org/x/net/http2"
@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	port     = flag.Int("port", 8080, "The server port")
-	dataFile = flag.String("data", session.DefaultDataFile, "Path to session data file")
+	port     = flag.Int("port", 0, "The server port (overrides PORT env var)")
+	dataFile = flag.String("data", "", "Path to session data file (overrides DATA_FILE env var)")
 )
 
 type bounceBotServer struct {
@@ -130,19 +130,33 @@ func (s *bounceBotServer) MarkReadyForNext(_ context.Context, req *connect.Reque
 func main() {
 	flag.Parse()
 
+	// Load configuration from environment variables
+	cfg := config.LoadFromEnv()
+
+	// Allow flags to override env vars
+	if *port != 0 {
+		cfg.Port = *port
+	}
+	if *dataFile != "" {
+		cfg.DataFile = *dataFile
+	}
+
+	log.Printf("Configuration: port=%d, data=%s, origins=%v", cfg.Port, cfg.DataFile, cfg.AllowedOrigins)
+
 	sessions := session.NewStore()
+	sessions.SetDisconnectGracePeriod(cfg.DisconnectGracePeriod)
 
 	// Load existing sessions from disk
-	if err := sessions.Load(*dataFile); err != nil {
+	if err := sessions.Load(cfg.DataFile); err != nil {
 		log.Fatalf("Failed to load sessions: %v", err)
 	}
 
 	// Start auto-save goroutine
-	stopAutoSave := sessions.StartAutoSave(*dataFile)
+	stopAutoSave := sessions.StartAutoSave(cfg.DataFile, cfg.AutoSaveInterval)
 
-	// Clean up stale sessions immediately, then start hourly cleanup
-	sessions.CleanupStaleSessions(session.SessionMaxAge)
-	stopCleanup := sessions.StartCleanup(session.CleanupInterval, session.SessionMaxAge)
+	// Clean up stale sessions immediately, then start periodic cleanup
+	sessions.CleanupStaleSessions(cfg.SessionMaxAge)
+	stopCleanup := sessions.StartCleanup(cfg.CleanupInterval, cfg.SessionMaxAge)
 
 	// Handle graceful shutdown
 	shutdownChan := make(chan os.Signal, 1)
@@ -155,7 +169,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	wsHub := ws.NewHub(sessions)
+	wsHub := ws.NewHub(sessions, cfg)
 	sessions.SetBroadcaster(wsHub)
 
 	mux := http.NewServeMux()
@@ -167,17 +181,7 @@ func main() {
 
 	// CORS configuration for browser access
 	corsHandler := cors.New(cors.Options{
-		AllowOriginFunc: func(origin string) bool {
-			// Allow any localhost port
-			if strings.HasPrefix(origin, "http://localhost:") || origin == "http://localhost" {
-				return true
-			}
-			// Allow guido.local for local network dev
-			if strings.HasPrefix(origin, "http://guido.local:") || origin == "http://guido.local" {
-				return true
-			}
-			return false
-		},
+		AllowOriginFunc: cfg.IsOriginAllowed,
 		AllowedMethods: []string{
 			http.MethodGet,
 			http.MethodPost,
@@ -197,7 +201,7 @@ func main() {
 		},
 	})
 
-	addr := fmt.Sprintf(":%d", *port)
+	addr := fmt.Sprintf(":%d", cfg.Port)
 	log.Printf("BounceBot Connect server listening at %s", addr)
 
 	// Use h2c to support HTTP/2 without TLS (needed for gRPC clients)

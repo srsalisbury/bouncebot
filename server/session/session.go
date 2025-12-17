@@ -150,23 +150,30 @@ type EventBroadcaster interface {
 
 // Store manages sessions in memory.
 type Store struct {
-	mu          sync.RWMutex
-	sessions    map[string]*Session
-	broadcaster EventBroadcaster
-	timers      map[string]*time.Timer // playerID -> timer
+	mu                    sync.RWMutex
+	sessions              map[string]*Session
+	broadcaster           EventBroadcaster
+	timers                map[string]*time.Timer // playerID -> timer
+	disconnectGracePeriod time.Duration
 }
 
 // NewStore creates a new session store.
 func NewStore() *Store {
 	return &Store{
-		sessions: make(map[string]*Session),
-		timers:   make(map[string]*time.Timer),
+		sessions:              make(map[string]*Session),
+		timers:                make(map[string]*time.Timer),
+		disconnectGracePeriod: 30 * time.Second, // default
 	}
 }
 
 // SetBroadcaster sets the event broadcaster for the store.
 func (store *Store) SetBroadcaster(b EventBroadcaster) {
 	store.broadcaster = b
+}
+
+// SetDisconnectGracePeriod sets the grace period for player disconnection.
+func (store *Store) SetDisconnectGracePeriod(d time.Duration) {
+	store.disconnectGracePeriod = d
 }
 
 // sessionIDChars is the character set for session IDs (no 0, 1, I, O to avoid confusion)
@@ -626,8 +633,7 @@ func (store *Store) DisconnectPlayer(sessionID, playerID string) error {
 		delete(store.timers, playerID)
 	}
 
-	const gracePeriod = 30 * time.Second
-	timer := time.AfterFunc(gracePeriod, func() {
+	timer := time.AfterFunc(store.disconnectGracePeriod, func() {
 		store.RemovePlayer(sessionID, playerID)
 	})
 	store.timers[playerID] = timer
