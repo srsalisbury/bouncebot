@@ -1,5 +1,7 @@
 // WebSocket service for real-time session updates
 
+import { config } from '../config'
+
 export type EventType = 'player_joined' | 'player_left' | 'game_started' | 'player_solved' | 'solution_retracted' | 'player_finished_solving' | 'player_ready_for_next' | 'game_ended'
 
 export interface PlayerJoinedPayload {
@@ -51,9 +53,6 @@ export interface WebSocketEvent {
 
 type EventHandler = (event: WebSocketEvent) => void
 
-// Use current hostname so it works from other devices on the network
-const serverHost = window.location.hostname || 'localhost'
-const WS_URL = `ws://${serverHost}:8080/ws`
 const RECONNECT_DELAY = 3000
 
 class WebSocketService {
@@ -75,7 +74,7 @@ class WebSocketService {
   private doConnect(): void {
     if (!this.sessionId || !this.playerId) return
 
-    const url = `${WS_URL}?sessionId=${this.sessionId}&playerId=${this.playerId}`
+    const url = `${config.wsUrl}?sessionId=${this.sessionId}&playerId=${this.playerId}`
     console.log('WebSocket: connecting to', url)
 
     this.ws = new WebSocket(url)
