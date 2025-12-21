@@ -38,3 +38,4 @@ Docker is for CI/CD and deployment, not local development. Use native binaries l
 - Always update progress documentation before making PRs:
   - `client/vue1/PROGRESS.md` for implementation progress
   - `planning/REFACTORING_PLAN.md` for refactoring tasks
+- When merging PRs, use `gh pr merge --merge --delete-branch` to clean up remote branches
