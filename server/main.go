@@ -146,9 +146,9 @@ func main() {
 	sessions := session.NewStore()
 	sessions.SetDisconnectGracePeriod(cfg.DisconnectGracePeriod)
 
-	// Load existing sessions from disk
+	// Load existing sessions from disk (continue with empty list on failure)
 	if err := sessions.Load(cfg.DataFile); err != nil {
-		log.Fatalf("Failed to load sessions: %v", err)
+		log.Printf("Warning: Failed to load sessions from %s: %v (starting with empty session list)", cfg.DataFile, err)
 	}
 
 	// Start auto-save goroutine
