@@ -21,6 +21,9 @@ const router = useRouter()
 const gameStore = useGameStore()
 const roomStore = useRoomStore()
 
+// Normalize roomId to uppercase (room IDs are case-insensitive)
+const normalizedRoomId = computed(() => props.roomId.toUpperCase())
+
 const room = ref<Room | null>(null)
 const isLoading = ref(true)
 const isStarting = ref(false)
@@ -76,7 +79,7 @@ function getPlayerColorById(playerId: string): string {
 
 async function loadRoom(forceApplyGame = false) {
   try {
-    const rm = await bounceBotClient.getRoom({ roomId: props.roomId })
+    const rm = await bounceBotClient.getRoom({ roomId: normalizedRoomId.value })
     const hadGame = hasGame.value
     room.value = rm
 
@@ -126,7 +129,7 @@ async function startGame(useFixedBoard = false) {
   error.value = null
 
   try {
-    const rm = await bounceBotClient.startGame({ roomId: props.roomId, useFixedBoard })
+    const rm = await bounceBotClient.startGame({ roomId: normalizedRoomId.value, useFixedBoard })
     room.value = rm
     bestSubmittedMoveCount.value = null // Reset for new game
     gameEnded.value = false // Reset game ended state
@@ -152,7 +155,7 @@ async function joinRoom() {
 
   try {
     const rm = await bounceBotClient.joinRoom({
-      roomId: props.roomId,
+      roomId: normalizedRoomId.value,
       playerName: joinName.value.trim(),
     })
     // Find ourselves in the players list (we're the last one added)
@@ -193,7 +196,7 @@ async function submitSolution() {
 
   try {
     await bounceBotClient.submitSolution({
-      roomId: props.roomId,
+      roomId: normalizedRoomId.value,
       playerId: roomStore.currentPlayerId,
       moves,
     })
@@ -210,7 +213,7 @@ async function retractSolution() {
 
   try {
     await bounceBotClient.retractSolution({
-      roomId: props.roomId,
+      roomId: normalizedRoomId.value,
       playerId: roomStore.currentPlayerId,
     })
     // Reload room to get updated solutions list
@@ -225,7 +228,7 @@ async function markFinishedSolving() {
 
   try {
     await bounceBotClient.markFinishedSolving({
-      roomId: props.roomId,
+      roomId: normalizedRoomId.value,
       playerId: roomStore.currentPlayerId,
     })
     // Reload room to get updated finished players list
@@ -240,7 +243,7 @@ async function markReadyForNext() {
 
   try {
     await bounceBotClient.markReadyForNext({
-      roomId: props.roomId,
+      roomId: normalizedRoomId.value,
       playerId: roomStore.currentPlayerId,
     })
     // Reload room to get updated ready players list
@@ -307,7 +310,7 @@ function handleWebSocketEvent(event: WebSocketEvent) {
 
 function connectWebSocket() {
   if (hasJoined.value && roomStore.currentPlayerId) {
-    websocketService.connect(props.roomId, roomStore.currentPlayerId, handleWebSocketEvent)
+    websocketService.connect(normalizedRoomId.value, roomStore.currentPlayerId, handleWebSocketEvent)
   }
 }
 
