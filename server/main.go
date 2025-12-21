@@ -16,7 +16,7 @@ import (
 	pb "github.com/srsalisbury/bouncebot/proto"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
 	"github.com/srsalisbury/bouncebot/server/config"
-	"github.com/srsalisbury/bouncebot/server/session"
+	"github.com/srsalisbury/bouncebot/server/room"
 	"github.com/srsalisbury/bouncebot/server/ws"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -24,11 +24,11 @@ import (
 
 var (
 	port     = flag.Int("port", 0, "The server port (overrides PORT env var)")
-	dataFile = flag.String("data", "", "Path to session data file (overrides DATA_FILE env var)")
+	dataFile = flag.String("data", "", "Path to room data file (overrides DATA_FILE env var)")
 )
 
 type bounceBotServer struct {
-	sessions *session.Store
+	rooms *room.Store
 }
 
 func (s *bounceBotServer) MakeGame(_ context.Context, req *connect.Request[pb.MakeGameRequest]) (*connect.Response[pb.Game], error) {
@@ -47,38 +47,38 @@ func (s *bounceBotServer) CheckSolution(_ context.Context, req *connect.Request[
 	}), nil
 }
 
-func (s *bounceBotServer) CreateSession(_ context.Context, req *connect.Request[pb.CreateSessionRequest]) (*connect.Response[pb.Session], error) {
-	sess := s.sessions.Create(req.Msg.PlayerName)
-	return connect.NewResponse(sess.ToProto()), nil
+func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.Room], error) {
+	r := s.rooms.Create(req.Msg.PlayerName)
+	return connect.NewResponse(r.ToProto()), nil
 }
 
-func (s *bounceBotServer) JoinSession(_ context.Context, req *connect.Request[pb.JoinSessionRequest]) (*connect.Response[pb.Session], error) {
-	sess, err := s.sessions.Join(req.Msg.SessionId, req.Msg.PlayerName)
+func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.JoinRoomRequest]) (*connect.Response[pb.Room], error) {
+	r, err := s.rooms.Join(req.Msg.RoomId, req.Msg.PlayerName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(sess.ToProto()), nil
+	return connect.NewResponse(r.ToProto()), nil
 }
 
-func (s *bounceBotServer) GetSession(_ context.Context, req *connect.Request[pb.GetSessionRequest]) (*connect.Response[pb.Session], error) {
-	sess, err := s.sessions.Get(req.Msg.SessionId)
+func (s *bounceBotServer) GetRoom(_ context.Context, req *connect.Request[pb.GetRoomRequest]) (*connect.Response[pb.Room], error) {
+	r, err := s.rooms.Get(req.Msg.RoomId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(sess.ToProto()), nil
+	return connect.NewResponse(r.ToProto()), nil
 }
 
-func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.StartGameRequest]) (*connect.Response[pb.Session], error) {
-	sess, err := s.sessions.StartGame(req.Msg.SessionId, req.Msg.UseFixedBoard)
+func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.StartGameRequest]) (*connect.Response[pb.Room], error) {
+	r, err := s.rooms.StartGame(req.Msg.RoomId, req.Msg.UseFixedBoard)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(sess.ToProto()), nil
+	return connect.NewResponse(r.ToProto()), nil
 }
 
 func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request[pb.SubmitSolutionRequest]) (*connect.Response[pb.SubmitSolutionResponse], error) {
 	moves := model.NewBotPositionsFromProto(req.Msg.Moves)
-	solution, err := s.sessions.SubmitSolution(req.Msg.SessionId, req.Msg.PlayerId, moves)
+	solution, err := s.rooms.SubmitSolution(req.Msg.RoomId, req.Msg.PlayerId, moves)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
@@ -98,7 +98,7 @@ func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request
 }
 
 func (s *bounceBotServer) RetractSolution(_ context.Context, req *connect.Request[pb.RetractSolutionRequest]) (*connect.Response[pb.RetractSolutionResponse], error) {
-	err := s.sessions.RetractSolution(req.Msg.SessionId, req.Msg.PlayerId)
+	err := s.rooms.RetractSolution(req.Msg.RoomId, req.Msg.PlayerId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
@@ -108,7 +108,7 @@ func (s *bounceBotServer) RetractSolution(_ context.Context, req *connect.Reques
 }
 
 func (s *bounceBotServer) MarkFinishedSolving(_ context.Context, req *connect.Request[pb.MarkFinishedSolvingRequest]) (*connect.Response[pb.MarkFinishedSolvingResponse], error) {
-	err := s.sessions.MarkFinishedSolving(req.Msg.SessionId, req.Msg.PlayerId)
+	err := s.rooms.MarkFinishedSolving(req.Msg.RoomId, req.Msg.PlayerId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
@@ -118,7 +118,7 @@ func (s *bounceBotServer) MarkFinishedSolving(_ context.Context, req *connect.Re
 }
 
 func (s *bounceBotServer) MarkReadyForNext(_ context.Context, req *connect.Request[pb.MarkReadyForNextRequest]) (*connect.Response[pb.MarkReadyForNextResponse], error) {
-	err := s.sessions.MarkReadyForNext(req.Msg.SessionId, req.Msg.PlayerId)
+	err := s.rooms.MarkReadyForNext(req.Msg.RoomId, req.Msg.PlayerId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
@@ -143,37 +143,37 @@ func main() {
 
 	log.Printf("Configuration: port=%d, data=%s, origins=%v", cfg.Port, cfg.DataFile, cfg.AllowedOrigins)
 
-	sessions := session.NewStore()
-	sessions.SetDisconnectGracePeriod(cfg.DisconnectGracePeriod)
+	rooms := room.NewStore()
+	rooms.SetDisconnectGracePeriod(cfg.DisconnectGracePeriod)
 
-	// Load existing sessions from disk (continue with empty list on failure)
-	if err := sessions.Load(cfg.DataFile); err != nil {
-		log.Printf("Warning: Failed to load sessions from %s: %v (starting with empty session list)", cfg.DataFile, err)
+	// Load existing rooms from disk (continue with empty list on failure)
+	if err := rooms.Load(cfg.DataFile); err != nil {
+		log.Printf("Warning: Failed to load rooms from %s: %v (starting with empty room list)", cfg.DataFile, err)
 	}
 
 	// Start auto-save goroutine
-	stopAutoSave := sessions.StartAutoSave(cfg.DataFile, cfg.AutoSaveInterval)
+	stopAutoSave := rooms.StartAutoSave(cfg.DataFile, cfg.AutoSaveInterval)
 
-	// Clean up stale sessions immediately, then start periodic cleanup
-	sessions.CleanupStaleSessions(cfg.SessionMaxAge)
-	stopCleanup := sessions.StartCleanup(cfg.CleanupInterval, cfg.SessionMaxAge)
+	// Clean up stale rooms immediately, then start periodic cleanup
+	rooms.CleanupStaleRooms(cfg.RoomMaxAge)
+	stopCleanup := rooms.StartCleanup(cfg.CleanupInterval, cfg.RoomMaxAge)
 
 	// Handle graceful shutdown
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-shutdownChan
-		log.Println("Shutting down, saving sessions...")
+		log.Println("Shutting down, saving rooms...")
 		close(stopCleanup)
 		close(stopAutoSave) // This triggers final save
 		os.Exit(0)
 	}()
 
-	wsHub := ws.NewHub(sessions, cfg)
-	sessions.SetBroadcaster(wsHub)
+	wsHub := ws.NewHub(rooms, cfg)
+	rooms.SetBroadcaster(wsHub)
 
 	mux := http.NewServeMux()
-	path, handler := protoconnect.NewBounceBotHandler(&bounceBotServer{sessions: sessions})
+	path, handler := protoconnect.NewBounceBotHandler(&bounceBotServer{rooms: rooms})
 	mux.Handle(path, handler)
 
 	// WebSocket endpoint

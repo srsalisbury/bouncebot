@@ -1005,6 +1005,34 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Terminology Refactoring: Session → Room
+**Status:** Complete
+
+**What was done:**
+- Renamed all "session" terminology to "room" throughout the entire codebase
+- Proto: Session message → Room, CreateSession/JoinSession/GetSession RPCs → CreateRoom/JoinRoom/GetRoom
+- Go server: Renamed server/session/ package to server/room/, all types/variables/functions updated
+- Vue client: Renamed sessionStore.ts → roomStore.ts, SessionView.vue → RoomView.vue
+- Router: /session/:sessionId → /room/:roomId
+- WebSocket: sessionId query param → roomId
+- Config: sessions.json → rooms.json default data file, SESSION_MAX_AGE → ROOM_MAX_AGE env var
+- Documentation: Updated README.md, NOTES.md
+
+**Files renamed:**
+- `server/session/` → `server/room/`
+- `server/session/session.go` → `server/room/room.go`
+- `server/session/persistence.go` → `server/room/persistence.go`
+- `src/stores/sessionStore.ts` → `src/stores/roomStore.ts`
+- `src/views/SessionView.vue` → `src/views/RoomView.vue`
+
+**Files modified:**
+- All proto files regenerated with new types
+- All Go server files updated with room terminology
+- All Vue client files updated with room terminology
+- Router, WebSocket service, config updated
+
+---
+
 ## Future Considerations
 
 - Handle abandoned players: Players who disconnect or go idle shouldn't block the game. Consider auto-marking players as "done" after extended inactivity, or allowing remaining players to proceed without them.

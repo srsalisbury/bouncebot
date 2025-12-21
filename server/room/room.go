@@ -1,5 +1,5 @@
-// Package session provides multiplayer game session management.
-package session
+// Package room provides multiplayer game room management.
+package room
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Player represents a player in a session.
+// Player represents a player in a room.
 type Player struct {
 	ID             string
 	Name           string
@@ -49,8 +49,8 @@ type PlayerSolutionHistory struct {
 	Solutions []PlayerSolution
 }
 
-// Session represents a multiplayer game session.
-type Session struct {
+// Room represents a multiplayer game room.
+type Room struct {
 	ID              string
 	Players         []Player
 	CreatedAt       time.Time
@@ -60,14 +60,14 @@ type Session struct {
 	Solutions       []PlayerSolution        // Current best solution per player
 	SolutionHistory []PlayerSolutionHistory // All solutions per player (for retraction)
 	Wins            map[string]int          // Wins per player ID
-	GamesPlayed     int                     // Total games completed in session
+	GamesPlayed     int                     // Total games completed in room
 	FinishedSolving []string                // Player IDs who are finished solving (triggers game end)
 	ReadyForNext    []string                // Player IDs who are ready for next game
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
-func (s *Session) GetPlayerName(playerID string) string {
-	for _, p := range s.Players {
+func (r *Room) GetPlayerName(playerID string) string {
+	for _, p := range r.Players {
 		if p.ID == playerID {
 			return p.Name
 		}
@@ -75,18 +75,18 @@ func (s *Session) GetPlayerName(playerID string) string {
 	return ""
 }
 
-// ToProto converts a Session to its protobuf representation.
-func (s *Session) ToProto() *pb.Session {
-	players := make([]*pb.Player, len(s.Players))
-	for i, p := range s.Players {
+// ToProto converts a Room to its protobuf representation.
+func (r *Room) ToProto() *pb.Room {
+	players := make([]*pb.Player, len(r.Players))
+	for i, p := range r.Players {
 		players[i] = &pb.Player{
 			Id:   p.ID,
 			Name: p.Name,
 		}
 	}
 
-	solutions := make([]*pb.PlayerSolution, len(s.Solutions))
-	for i, sol := range s.Solutions {
+	solutions := make([]*pb.PlayerSolution, len(r.Solutions))
+	for i, sol := range r.Solutions {
 		moves := make([]*pb.BotPos, len(sol.Moves))
 		for j, move := range sol.Moves {
 			moves[j] = move.ToProto()
@@ -99,34 +99,34 @@ func (s *Session) ToProto() *pb.Session {
 	}
 
 	// Convert wins map to proto
-	scores := make([]*pb.PlayerScore, 0, len(s.Wins))
-	for playerID, wins := range s.Wins {
+	scores := make([]*pb.PlayerScore, 0, len(r.Wins))
+	for playerID, wins := range r.Wins {
 		scores = append(scores, &pb.PlayerScore{
 			PlayerId: playerID,
 			Wins:     int32(wins),
 		})
 	}
 
-	session := &pb.Session{
-		Id:              s.ID,
+	room := &pb.Room{
+		Id:              r.ID,
 		Players:         players,
-		CreatedAt:       timestamppb.New(s.CreatedAt),
+		CreatedAt:       timestamppb.New(r.CreatedAt),
 		Solutions:       solutions,
 		Scores:          scores,
-		GamesPlayed:     int32(s.GamesPlayed),
-		FinishedSolving: s.FinishedSolving,
-		ReadyForNext:    s.ReadyForNext,
+		GamesPlayed:     int32(r.GamesPlayed),
+		FinishedSolving: r.FinishedSolving,
+		ReadyForNext:    r.ReadyForNext,
 	}
 
-	if s.CurrentGame != nil {
-		session.CurrentGame = s.CurrentGame.ToProto()
+	if r.CurrentGame != nil {
+		room.CurrentGame = r.CurrentGame.ToProto()
 	}
 
-	if s.GameStartedAt != nil {
-		session.GameStartedAt = timestamppb.New(*s.GameStartedAt)
+	if r.GameStartedAt != nil {
+		room.GameStartedAt = timestamppb.New(*r.GameStartedAt)
 	}
 
-	return session
+	return room
 }
 
 // MovePayload represents a single move for WebSocket broadcast.
@@ -136,31 +136,31 @@ type MovePayload struct {
 	Y       int `json:"y"`
 }
 
-// EventBroadcaster is an interface for broadcasting session events.
+// EventBroadcaster is an interface for broadcasting room events.
 type EventBroadcaster interface {
-	BroadcastPlayerJoined(sessionID, playerID, playerName string)
-	BroadcastPlayerLeft(sessionID, playerID string)
-	BroadcastGameStarted(sessionID string)
-	BroadcastPlayerFinishedSolving(sessionID, playerID string)
-	BroadcastPlayerReadyForNext(sessionID, playerID string)
-	BroadcastPlayerSolved(sessionID, playerID string, moveCount int)
-	BroadcastSolutionRetracted(sessionID, playerID string)
-	BroadcastGameEnded(sessionID, winnerID, winnerName string, moves []MovePayload)
+	BroadcastPlayerJoined(roomID, playerID, playerName string)
+	BroadcastPlayerLeft(roomID, playerID string)
+	BroadcastGameStarted(roomID string)
+	BroadcastPlayerFinishedSolving(roomID, playerID string)
+	BroadcastPlayerReadyForNext(roomID, playerID string)
+	BroadcastPlayerSolved(roomID, playerID string, moveCount int)
+	BroadcastSolutionRetracted(roomID, playerID string)
+	BroadcastGameEnded(roomID, winnerID, winnerName string, moves []MovePayload)
 }
 
-// Store manages sessions in memory.
+// Store manages rooms in memory.
 type Store struct {
 	mu                    sync.RWMutex
-	sessions              map[string]*Session
+	rooms                 map[string]*Room
 	broadcaster           EventBroadcaster
 	timers                map[string]*time.Timer // playerID -> timer
 	disconnectGracePeriod time.Duration
 }
 
-// NewStore creates a new session store.
+// NewStore creates a new room store.
 func NewStore() *Store {
 	return &Store{
-		sessions:              make(map[string]*Session),
+		rooms:                 make(map[string]*Room),
 		timers:                make(map[string]*time.Timer),
 		disconnectGracePeriod: 30 * time.Second, // default
 	}
@@ -176,14 +176,14 @@ func (store *Store) SetDisconnectGracePeriod(d time.Duration) {
 	store.disconnectGracePeriod = d
 }
 
-// sessionIDChars is the character set for session IDs (no 0, 1, I, O to avoid confusion)
-const sessionIDChars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+// roomIDChars is the character set for room IDs (no 0, 1, I, O to avoid confusion)
+const roomIDChars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 
-// generateSessionID creates a random 4-character session ID.
-func generateSessionID() string {
+// generateRoomID creates a random 4-character room ID.
+func generateRoomID() string {
 	result := make([]byte, 4)
 	for i := range result {
-		result[i] = sessionIDChars[rand.IntN(len(sessionIDChars))]
+		result[i] = roomIDChars[rand.IntN(len(roomIDChars))]
 	}
 	return string(result)
 }
@@ -193,22 +193,22 @@ func generatePlayerID() string {
 	return fmt.Sprintf("%016x", rand.Uint64())
 }
 
-// Create creates a new session with the given player.
-func (store *Store) Create(playerName string) *Session {
+// Create creates a new room with the given player.
+func (store *Store) Create(playerName string) *Room {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	// Generate unique session ID (retry if collision)
-	sessionID := generateSessionID()
-	for store.sessions[sessionID] != nil {
-		sessionID = generateSessionID()
+	// Generate unique room ID (retry if collision)
+	roomID := generateRoomID()
+	for store.rooms[roomID] != nil {
+		roomID = generateRoomID()
 	}
 
 	playerID := generatePlayerID()
 	now := time.Now()
 
-	session := &Session{
-		ID: sessionID,
+	room := &Room{
+		ID: roomID,
 		Players: []Player{
 			{ID: playerID, Name: playerName, Status: PlayerStatusConnected},
 		},
@@ -217,79 +217,79 @@ func (store *Store) Create(playerName string) *Session {
 		Wins:           make(map[string]int),
 	}
 
-	store.sessions[sessionID] = session
-	return session
+	store.rooms[roomID] = room
+	return room
 }
 
-// Join adds a player to an existing session.
-func (store *Store) Join(sessionID, playerName string) (*Session, error) {
+// Join adds a player to an existing room.
+func (store *Store) Join(roomID, playerName string) (*Room, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	// Normalize session ID to uppercase for case-insensitive matching
-	normalizedID := strings.ToUpper(sessionID)
-	session, ok := store.sessions[normalizedID]
+	// Normalize room ID to uppercase for case-insensitive matching
+	normalizedID := strings.ToUpper(roomID)
+	room, ok := store.rooms[normalizedID]
 	if !ok {
-		return nil, fmt.Errorf("session not found: %s", sessionID)
+		return nil, fmt.Errorf("room not found: %s", roomID)
 	}
 
 	playerID := generatePlayerID()
-	session.Players = append(session.Players, Player{
+	room.Players = append(room.Players, Player{
 		ID:     playerID,
 		Name:   playerName,
 		Status: PlayerStatusConnected,
 	})
-	session.LastActivityAt = time.Now()
+	room.LastActivityAt = time.Now()
 
 	// Broadcast player joined event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastPlayerJoined(sessionID, playerID, playerName)
+		store.broadcaster.BroadcastPlayerJoined(roomID, playerID, playerName)
 	}
 
-	return session, nil
+	return room, nil
 }
 
-// Get retrieves a session by ID.
-func (store *Store) Get(sessionID string) (*Session, error) {
+// Get retrieves a room by ID.
+func (store *Store) Get(roomID string) (*Room, error) {
 	store.mu.RLock()
 	defer store.mu.RUnlock()
 
-	// Normalize session ID to uppercase for case-insensitive matching
-	normalizedID := strings.ToUpper(sessionID)
-	session, ok := store.sessions[normalizedID]
+	// Normalize room ID to uppercase for case-insensitive matching
+	normalizedID := strings.ToUpper(roomID)
+	room, ok := store.rooms[normalizedID]
 	if !ok {
-		return nil, fmt.Errorf("session not found: %s", sessionID)
+		return nil, fmt.Errorf("room not found: %s", roomID)
 	}
 
-	return session, nil
+	return room, nil
 }
 
-// StartGame starts a new game in the session.
+// StartGame starts a new game in the room.
 // If useFixedBoard is true, uses the fixed Game1() configuration instead of random.
 // If there's an existing game, continues with same board/robots but new target.
 // Robot positions are taken from the winning solution's final state.
-func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, error) {
+func (store *Store) StartGame(roomID string, useFixedBoard bool) (*Room, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return nil, fmt.Errorf("session not found: %s", sessionID)
+		return nil, fmt.Errorf("room not found: %s", roomID)
 	}
 
 	// If there was a previous game with solutions, determine and record the winner
 	// and get the final game state from the winning solution
 	var winningGameState *model.Game
-	if session.CurrentGame != nil && len(session.Solutions) > 0 {
-		winningSolution := store.getWinningSolution(session.Solutions)
+	if room.CurrentGame != nil && len(room.Solutions) > 0 {
+		winningSolution := store.getWinningSolution(room.Solutions)
 		if winningSolution != nil {
-			session.Wins[winningSolution.PlayerID]++
+			room.Wins[winningSolution.PlayerID]++
 			// Apply winning moves to get final robot positions
 			if len(winningSolution.Moves) > 0 {
-				_, winningGameState = session.CurrentGame.CheckSolution(winningSolution.Moves)
+				_, winningGameState = room.CurrentGame.CheckSolution(winningSolution.Moves)
 			}
 		}
-		session.GamesPlayed++
+		room.GamesPlayed++
 	}
 
 	// Generate game
@@ -299,29 +299,29 @@ func (store *Store) StartGame(sessionID string, useFixedBoard bool) (*Session, e
 	} else if winningGameState != nil {
 		// Continue from winning game state: same board, robots at final positions
 		game = model.NewContinuationGame(winningGameState)
-	} else if session.CurrentGame != nil {
+	} else if room.CurrentGame != nil {
 		// No winning solution with moves, continue from existing game
-		game = model.NewContinuationGame(session.CurrentGame)
+		game = model.NewContinuationGame(room.CurrentGame)
 	} else {
 		// First game: fully random
 		game = model.NewRandomGame()
 	}
 	now := time.Now()
 
-	session.CurrentGame = game
-	session.GameStartedAt = &now
-	session.LastActivityAt = now
-	session.Solutions = nil         // Clear solutions for new game
-	session.SolutionHistory = nil   // Clear history for new game
-	session.FinishedSolving = nil   // Clear finished players for new game
-	session.ReadyForNext = nil      // Clear ready players for new game
+	room.CurrentGame = game
+	room.GameStartedAt = &now
+	room.LastActivityAt = now
+	room.Solutions = nil         // Clear solutions for new game
+	room.SolutionHistory = nil   // Clear history for new game
+	room.FinishedSolving = nil   // Clear finished players for new game
+	room.ReadyForNext = nil      // Clear ready players for new game
 
 	// Broadcast game started event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastGameStarted(sessionID)
+		store.broadcaster.BroadcastGameStarted(roomID)
 	}
 
-	return session, nil
+	return room, nil
 }
 
 // getWinningSolution finds the winning solution (lowest moves, earliest time as tiebreaker)
@@ -344,51 +344,51 @@ func (store *Store) getWinningSolution(solutions []PlayerSolution) *PlayerSoluti
 
 // SubmitSolution records a player's solution for the current game.
 // If moves are provided, they are verified against the current game state.
-func (store *Store) SubmitSolution(sessionID, playerID string, moves []model.BotPosition) (*PlayerSolution, error) {
+func (store *Store) SubmitSolution(roomID, playerID string, moves []model.BotPosition) (*PlayerSolution, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return nil, fmt.Errorf("session not found: %s", sessionID)
+		return nil, fmt.Errorf("room not found: %s", roomID)
 	}
 
-	if session.CurrentGame == nil {
+	if room.CurrentGame == nil {
 		return nil, fmt.Errorf("no game in progress")
 	}
 
 	// Verify player exists
-	if session.GetPlayerName(playerID) == "" {
+	if room.GetPlayerName(playerID) == "" {
 		return nil, fmt.Errorf("player not found: %s", playerID)
 	}
 
 	// Verify the solution
-	isValid, _ := session.CurrentGame.CheckSolution(moves)
+	isValid, _ := room.CurrentGame.CheckSolution(moves)
 	if !isValid {
 		return nil, fmt.Errorf("invalid solution")
 	}
 
 	moveCount := len(moves)
 	now := time.Now()
-	session.LastActivityAt = now
+	room.LastActivityAt = now
 
 	// Add to solution history
-	store.addToHistory(session, playerID, moves, now)
+	store.addToHistory(room, playerID, moves, now)
 
 	// Check if player already submitted a solution for this game
-	for i := range session.Solutions {
-		if session.Solutions[i].PlayerID == playerID {
+	for i := range room.Solutions {
+		if room.Solutions[i].PlayerID == playerID {
 			// Update if better solution
-			if moveCount < session.Solutions[i].MoveCount() {
-				session.Solutions[i].SolvedAt = now
-				session.Solutions[i].Moves = moves
+			if moveCount < room.Solutions[i].MoveCount() {
+				room.Solutions[i].SolvedAt = now
+				room.Solutions[i].Moves = moves
 				// Broadcast updated solution
 				if store.broadcaster != nil {
-					store.broadcaster.BroadcastPlayerSolved(sessionID, playerID, moveCount)
+					store.broadcaster.BroadcastPlayerSolved(roomID, playerID, moveCount)
 				}
 			}
 			// Return existing (possibly updated) solution
-			return &session.Solutions[i], nil
+			return &room.Solutions[i], nil
 		}
 	}
 
@@ -397,31 +397,31 @@ func (store *Store) SubmitSolution(sessionID, playerID string, moves []model.Bot
 		SolvedAt: now,
 		Moves:    moves,
 	}
-	session.Solutions = append(session.Solutions, solution)
+	room.Solutions = append(room.Solutions, solution)
 
 	// Broadcast player solved event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastPlayerSolved(sessionID, playerID, moveCount)
+		store.broadcaster.BroadcastPlayerSolved(roomID, playerID, moveCount)
 	}
 
 	return &solution, nil
 }
 
 // addToHistory adds a solution to the player's history (if not already present with same move count).
-func (store *Store) addToHistory(session *Session, playerID string, moves []model.BotPosition, solvedAt time.Time) {
+func (store *Store) addToHistory(room *Room, playerID string, moves []model.BotPosition, solvedAt time.Time) {
 	// Find or create history entry for this player
 	var history *PlayerSolutionHistory
-	for i := range session.SolutionHistory {
-		if session.SolutionHistory[i].PlayerID == playerID {
-			history = &session.SolutionHistory[i]
+	for i := range room.SolutionHistory {
+		if room.SolutionHistory[i].PlayerID == playerID {
+			history = &room.SolutionHistory[i]
 			break
 		}
 	}
 	if history == nil {
-		session.SolutionHistory = append(session.SolutionHistory, PlayerSolutionHistory{
+		room.SolutionHistory = append(room.SolutionHistory, PlayerSolutionHistory{
 			PlayerID: playerID,
 		})
-		history = &session.SolutionHistory[len(session.SolutionHistory)-1]
+		history = &room.SolutionHistory[len(room.SolutionHistory)-1]
 	}
 
 	// Check if we already have this move count in history
@@ -441,25 +441,25 @@ func (store *Store) addToHistory(session *Session, playerID string, moves []mode
 }
 
 // RetractSolution removes a player's current best solution and restores the previous one from history.
-func (store *Store) RetractSolution(sessionID, playerID string) error {
+func (store *Store) RetractSolution(roomID, playerID string) error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return fmt.Errorf("session not found: %s", sessionID)
+		return fmt.Errorf("room not found: %s", roomID)
 	}
 
-	if session.CurrentGame == nil {
+	if room.CurrentGame == nil {
 		return fmt.Errorf("no game in progress")
 	}
 
-	session.LastActivityAt = time.Now()
+	room.LastActivityAt = time.Now()
 
 	// Find the player's current solution
 	var currentMoveCount int
 	var solutionIndex int = -1
-	for i, sol := range session.Solutions {
+	for i, sol := range room.Solutions {
 		if sol.PlayerID == playerID {
 			currentMoveCount = sol.MoveCount()
 			solutionIndex = i
@@ -473,9 +473,9 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 
 	// Find the player's history and remove the current solution from it
 	var history *PlayerSolutionHistory
-	for i := range session.SolutionHistory {
-		if session.SolutionHistory[i].PlayerID == playerID {
-			history = &session.SolutionHistory[i]
+	for i := range room.SolutionHistory {
+		if room.SolutionHistory[i].PlayerID == playerID {
+			history = &room.SolutionHistory[i]
 			break
 		}
 	}
@@ -498,123 +498,123 @@ func (store *Store) RetractSolution(sessionID, playerID string) error {
 				}
 			}
 			// Restore the previous best solution
-			session.Solutions[solutionIndex] = history.Solutions[bestIdx]
+			room.Solutions[solutionIndex] = history.Solutions[bestIdx]
 
 			// Broadcast the restored solution
 			if store.broadcaster != nil {
-				store.broadcaster.BroadcastPlayerSolved(sessionID, playerID, history.Solutions[bestIdx].MoveCount())
+				store.broadcaster.BroadcastPlayerSolved(roomID, playerID, history.Solutions[bestIdx].MoveCount())
 			}
 			return nil
 		}
 	}
 
 	// No previous solution to restore - remove completely
-	session.Solutions = append(session.Solutions[:solutionIndex], session.Solutions[solutionIndex+1:]...)
+	room.Solutions = append(room.Solutions[:solutionIndex], room.Solutions[solutionIndex+1:]...)
 
 	// Broadcast solution retracted event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastSolutionRetracted(sessionID, playerID)
+		store.broadcaster.BroadcastSolutionRetracted(roomID, playerID)
 	}
 
 	return nil
 }
 
 // MarkFinishedSolving marks a player as finished looking for solutions.
-func (store *Store) MarkFinishedSolving(sessionID, playerID string) error {
+func (store *Store) MarkFinishedSolving(roomID, playerID string) error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return fmt.Errorf("session not found: %s", sessionID)
+		return fmt.Errorf("room not found: %s", roomID)
 	}
 
-	if session.CurrentGame == nil {
+	if room.CurrentGame == nil {
 		return fmt.Errorf("no game in progress")
 	}
 
 	// Verify player exists
-	if session.GetPlayerName(playerID) == "" {
+	if room.GetPlayerName(playerID) == "" {
 		return fmt.Errorf("player not found: %s", playerID)
 	}
 
-	session.LastActivityAt = time.Now()
+	room.LastActivityAt = time.Now()
 
 	// Check if already finished
-	for _, id := range session.FinishedSolving {
+	for _, id := range room.FinishedSolving {
 		if id == playerID {
 			return nil // Already finished
 		}
 	}
 
-	session.FinishedSolving = append(session.FinishedSolving, playerID)
+	room.FinishedSolving = append(room.FinishedSolving, playerID)
 
 	// Broadcast player finished solving event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastPlayerFinishedSolving(sessionID, playerID)
+		store.broadcaster.BroadcastPlayerFinishedSolving(roomID, playerID)
 	}
 
 	// Check if all players are finished
-	if len(session.FinishedSolving) == len(session.Players) {
-		store.endGame(session)
+	if len(room.FinishedSolving) == len(room.Players) {
+		store.endGame(room)
 	}
 
 	return nil
 }
 
 // MarkReadyForNext marks a player as ready for the next game.
-func (store *Store) MarkReadyForNext(sessionID, playerID string) error {
+func (store *Store) MarkReadyForNext(roomID, playerID string) error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return fmt.Errorf("session not found: %s", sessionID)
+		return fmt.Errorf("room not found: %s", roomID)
 	}
 
 	// Verify player exists
-	if session.GetPlayerName(playerID) == "" {
+	if room.GetPlayerName(playerID) == "" {
 		return fmt.Errorf("player not found: %s", playerID)
 	}
 
-	session.LastActivityAt = time.Now()
+	room.LastActivityAt = time.Now()
 
 	// Check if already ready
-	for _, id := range session.ReadyForNext {
+	for _, id := range room.ReadyForNext {
 		if id == playerID {
 			return nil // Already ready
 		}
 	}
 
-	session.ReadyForNext = append(session.ReadyForNext, playerID)
+	room.ReadyForNext = append(room.ReadyForNext, playerID)
 
 	// Broadcast player ready for next event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastPlayerReadyForNext(sessionID, playerID)
+		store.broadcaster.BroadcastPlayerReadyForNext(roomID, playerID)
 	}
 
 	// Check if all players are ready - auto-start next game
-	if len(session.ReadyForNext) == len(session.Players) {
-		store.startNextGame(session)
+	if len(room.ReadyForNext) == len(room.Players) {
+		store.startNextGame(room)
 	}
 
 	return nil
 }
 
 // DisconnectPlayer marks a player as disconnected and starts a timer to remove them.
-func (store *Store) DisconnectPlayer(sessionID, playerID string) error {
+func (store *Store) DisconnectPlayer(roomID, playerID string) error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return fmt.Errorf("session not found: %s", sessionID)
+		return fmt.Errorf("room not found: %s", roomID)
 	}
 
 	var player *Player
-	for i := range session.Players {
-		if session.Players[i].ID == playerID {
-			player = &session.Players[i]
+	for i := range room.Players {
+		if room.Players[i].ID == playerID {
+			player = &room.Players[i]
 			break
 		}
 	}
@@ -634,7 +634,7 @@ func (store *Store) DisconnectPlayer(sessionID, playerID string) error {
 	}
 
 	timer := time.AfterFunc(store.disconnectGracePeriod, func() {
-		store.RemovePlayer(sessionID, playerID)
+		store.RemovePlayer(roomID, playerID)
 	})
 	store.timers[playerID] = timer
 
@@ -642,19 +642,19 @@ func (store *Store) DisconnectPlayer(sessionID, playerID string) error {
 }
 
 // ReconnectPlayer marks a player as connected and cancels their removal timer.
-func (store *Store) ReconnectPlayer(sessionID, playerID string) error {
+func (store *Store) ReconnectPlayer(roomID, playerID string) error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return fmt.Errorf("session not found: %s", sessionID)
+		return fmt.Errorf("room not found: %s", roomID)
 	}
 
 	var player *Player
-	for i := range session.Players {
-		if session.Players[i].ID == playerID {
-			player = &session.Players[i]
+	for i := range room.Players {
+		if room.Players[i].ID == playerID {
+			player = &room.Players[i]
 			break
 		}
 	}
@@ -674,18 +674,18 @@ func (store *Store) ReconnectPlayer(sessionID, playerID string) error {
 	return nil
 }
 
-// RemovePlayer removes a player from a session if they are still disconnected.
-func (store *Store) RemovePlayer(sessionID, playerID string) {
+// RemovePlayer removes a player from a room if they are still disconnected.
+func (store *Store) RemovePlayer(roomID, playerID string) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	session, ok := store.sessions[sessionID]
+	room, ok := store.rooms[roomID]
 	if !ok {
-		return // session already gone
+		return // room already gone
 	}
 
 	var playerIndex = -1
-	for i, p := range session.Players {
+	for i, p := range room.Players {
 		if p.ID == playerID {
 			playerIndex = i
 			break
@@ -694,47 +694,47 @@ func (store *Store) RemovePlayer(sessionID, playerID string) {
 
 	if playerIndex != -1 {
 		// Only remove if still disconnected
-		if session.Players[playerIndex].Status == PlayerStatusDisconnected {
-			session.Players = append(session.Players[:playerIndex], session.Players[playerIndex+1:]...)
+		if room.Players[playerIndex].Status == PlayerStatusDisconnected {
+			room.Players = append(room.Players[:playerIndex], room.Players[playerIndex+1:]...)
 			delete(store.timers, playerID)
 
 			// Remove from FinishedSolving
-			for i, id := range session.FinishedSolving {
+			for i, id := range room.FinishedSolving {
 				if id == playerID {
-					session.FinishedSolving = append(session.FinishedSolving[:i], session.FinishedSolving[i+1:]...)
+					room.FinishedSolving = append(room.FinishedSolving[:i], room.FinishedSolving[i+1:]...)
 					break
 				}
 			}
 
 			// Remove from ReadyForNext
-			for i, id := range session.ReadyForNext {
+			for i, id := range room.ReadyForNext {
 				if id == playerID {
-					session.ReadyForNext = append(session.ReadyForNext[:i], session.ReadyForNext[i+1:]...)
+					room.ReadyForNext = append(room.ReadyForNext[:i], room.ReadyForNext[i+1:]...)
 					break
 				}
 			}
 
 			// Remove from Solutions
-			for i, sol := range session.Solutions {
+			for i, sol := range room.Solutions {
 				if sol.PlayerID == playerID {
-					session.Solutions = append(session.Solutions[:i], session.Solutions[i+1:]...)
+					room.Solutions = append(room.Solutions[:i], room.Solutions[i+1:]...)
 					break
 				}
 			}
 
 			if store.broadcaster != nil {
-				store.broadcaster.BroadcastPlayerLeft(sessionID, playerID)
+				store.broadcaster.BroadcastPlayerLeft(roomID, playerID)
 			}
 
 			// Check if remaining players now satisfy conditions
-			if len(session.Players) > 0 {
+			if len(room.Players) > 0 {
 				// If game is active and all remaining players are finished, end the game
-				if session.CurrentGame != nil && len(session.FinishedSolving) == len(session.Players) {
-					store.endGame(session)
+				if room.CurrentGame != nil && len(room.FinishedSolving) == len(room.Players) {
+					store.endGame(room)
 				}
 				// If all remaining players are ready for next, start next game
-				if len(session.ReadyForNext) == len(session.Players) {
-					store.startNextGame(session)
+				if len(room.ReadyForNext) == len(room.Players) {
+					store.startNextGame(room)
 				}
 			}
 		}
@@ -743,15 +743,15 @@ func (store *Store) RemovePlayer(sessionID, playerID string) {
 
 
 // startNextGame starts the next game when all players are ready.
-func (store *Store) startNextGame(session *Session) {
+func (store *Store) startNextGame(room *Room) {
 	// Get winning game state for continuation (wins already credited in endGame)
 	var winningGameState *model.Game
-	if session.CurrentGame != nil && len(session.Solutions) > 0 {
-		winningSolution := store.getWinningSolution(session.Solutions)
+	if room.CurrentGame != nil && len(room.Solutions) > 0 {
+		winningSolution := store.getWinningSolution(room.Solutions)
 		if winningSolution != nil {
 			// Apply winning moves to get final robot positions
 			if len(winningSolution.Moves) > 0 {
-				_, winningGameState = session.CurrentGame.CheckSolution(winningSolution.Moves)
+				_, winningGameState = room.CurrentGame.CheckSolution(winningSolution.Moves)
 			}
 		}
 	}
@@ -760,34 +760,34 @@ func (store *Store) startNextGame(session *Session) {
 	var game *model.Game
 	if winningGameState != nil {
 		game = model.NewContinuationGame(winningGameState)
-	} else if session.CurrentGame != nil {
-		game = model.NewContinuationGame(session.CurrentGame)
+	} else if room.CurrentGame != nil {
+		game = model.NewContinuationGame(room.CurrentGame)
 	} else {
 		game = model.NewRandomGame()
 	}
 	now := time.Now()
 
-	session.CurrentGame = game
-	session.GameStartedAt = &now
-	session.Solutions = nil
-	session.SolutionHistory = nil
-	session.FinishedSolving = nil
-	session.ReadyForNext = nil
+	room.CurrentGame = game
+	room.GameStartedAt = &now
+	room.Solutions = nil
+	room.SolutionHistory = nil
+	room.FinishedSolving = nil
+	room.ReadyForNext = nil
 
 	// Broadcast game started event
 	if store.broadcaster != nil {
-		store.broadcaster.BroadcastGameStarted(session.ID)
+		store.broadcaster.BroadcastGameStarted(room.ID)
 	}
 }
 
 // endGame determines the winner, credits the win, and broadcasts game_ended event.
-func (store *Store) endGame(session *Session) {
+func (store *Store) endGame(room *Room) {
 	// Credit the win and increment games played
-	winner := store.getWinningSolution(session.Solutions)
+	winner := store.getWinningSolution(room.Solutions)
 	if winner != nil {
-		session.Wins[winner.PlayerID]++
+		room.Wins[winner.PlayerID]++
 	}
-	session.GamesPlayed++
+	room.GamesPlayed++
 
 	if store.broadcaster == nil {
 		return
@@ -795,7 +795,7 @@ func (store *Store) endGame(session *Session) {
 
 	// Broadcast game ended
 	if winner != nil {
-		winnerName := session.GetPlayerName(winner.PlayerID)
+		winnerName := room.GetPlayerName(winner.PlayerID)
 		// Convert moves to MovePayload format
 		moves := make([]MovePayload, len(winner.Moves))
 		for i, move := range winner.Moves {
@@ -805,9 +805,9 @@ func (store *Store) endGame(session *Session) {
 				Y:       int(move.Pos.Y),
 			}
 		}
-		store.broadcaster.BroadcastGameEnded(session.ID, winner.PlayerID, winnerName, moves)
+		store.broadcaster.BroadcastGameEnded(room.ID, winner.PlayerID, winnerName, moves)
 	} else {
 		// No solutions submitted - no winner
-		store.broadcaster.BroadcastGameEnded(session.ID, "", "", nil)
+		store.broadcaster.BroadcastGameEnded(room.ID, "", "", nil)
 	}
 }

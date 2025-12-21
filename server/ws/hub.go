@@ -1,4 +1,4 @@
-// Package ws provides WebSocket functionality for real-time session updates.
+// Package ws provides WebSocket functionality for real-time room updates.
 package ws
 
 import (
@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/srsalisbury/bouncebot/server/config"
-	"github.com/srsalisbury/bouncebot/server/session"
+	"github.com/srsalisbury/bouncebot/server/room"
 )
 
 // OriginChecker is an interface for checking if origins are allowed.
@@ -36,7 +36,7 @@ type PlayerLeftPayload struct {
 
 // GameStartedPayload is the payload for game_started events.
 type GameStartedPayload struct {
-	// Game data is sent via session refresh
+	// Game data is sent via room refresh
 }
 
 // PlayerSolvedPayload is the payload for player_solved events.
@@ -62,35 +62,35 @@ type PlayerReadyForNextPayload struct {
 
 // GameEndedPayload is the payload for game_ended events.
 type GameEndedPayload struct {
-	WinnerID   string                `json:"winnerId"`
-	WinnerName string                `json:"winnerName"`
-	Moves      []session.MovePayload `json:"moves"`
+	WinnerID   string             `json:"winnerId"`
+	WinnerName string             `json:"winnerName"`
+	Moves      []room.MovePayload `json:"moves"`
 }
 
 // Client represents a WebSocket client connection.
 type Client struct {
-	hub       *Hub
-	conn      *websocket.Conn
-	sessionID string
-	playerID  string
-	send      chan []byte
+	hub      *Hub
+	conn     *websocket.Conn
+	roomID   string
+	playerID string
+	send     chan []byte
 }
 
-// Hub manages WebSocket connections for all sessions.
+// Hub manages WebSocket connections for all rooms.
 type Hub struct {
 	mu       sync.RWMutex
-	sessions map[string]map[*Client]bool // sessionID -> clients
-	store    *session.Store
+	rooms    map[string]map[*Client]bool // roomID -> clients
+	store    *room.Store
 	config   *config.Config
 	upgrader websocket.Upgrader
 }
 
 // NewHub creates a new WebSocket hub.
-func NewHub(store *session.Store, cfg *config.Config) *Hub {
+func NewHub(store *room.Store, cfg *config.Config) *Hub {
 	h := &Hub{
-		sessions: make(map[string]map[*Client]bool),
-		store:    store,
-		config:   cfg,
+		rooms:  make(map[string]map[*Client]bool),
+		store:  store,
+		config: cfg,
 	}
 	h.upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -101,42 +101,42 @@ func NewHub(store *session.Store, cfg *config.Config) *Hub {
 	return h
 }
 
-// register adds a client to a session.
+// register adds a client to a room.
 func (h *Hub) register(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if h.sessions[client.sessionID] == nil {
-		h.sessions[client.sessionID] = make(map[*Client]bool)
+	if h.rooms[client.roomID] == nil {
+		h.rooms[client.roomID] = make(map[*Client]bool)
 	}
-	h.sessions[client.sessionID][client] = true
-	log.Printf("WebSocket: client connected to session %s (total: %d)", client.sessionID, len(h.sessions[client.sessionID]))
+	h.rooms[client.roomID][client] = true
+	log.Printf("WebSocket: client connected to room %s (total: %d)", client.roomID, len(h.rooms[client.roomID]))
 }
 
-// unregister removes a client from a session.
+// unregister removes a client from a room.
 func (h *Hub) unregister(client *Client) {
 	if client.playerID != "" {
-		h.store.DisconnectPlayer(client.sessionID, client.playerID)
+		h.store.DisconnectPlayer(client.roomID, client.playerID)
 	}
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if clients, ok := h.sessions[client.sessionID]; ok {
+	if clients, ok := h.rooms[client.roomID]; ok {
 		if _, ok := clients[client]; ok {
 			delete(clients, client)
 			close(client.send)
-			log.Printf("WebSocket: client disconnected from session %s (remaining: %d)", client.sessionID, len(clients))
+			log.Printf("WebSocket: client disconnected from room %s (remaining: %d)", client.roomID, len(clients))
 			if len(clients) == 0 {
-				delete(h.sessions, client.sessionID)
+				delete(h.rooms, client.roomID)
 			}
 		}
 	}
 }
 
-// BroadcastPlayerJoined broadcasts a player_joined event to all clients in a session.
-func (h *Hub) BroadcastPlayerJoined(sessionID, playerID, playerName string) {
-	h.Broadcast(sessionID, Event{
+// BroadcastPlayerJoined broadcasts a player_joined event to all clients in a room.
+func (h *Hub) BroadcastPlayerJoined(roomID, playerID, playerName string) {
+	h.Broadcast(roomID, Event{
 		Type: "player_joined",
 		Payload: PlayerJoinedPayload{
 			PlayerID:   playerID,
@@ -145,9 +145,9 @@ func (h *Hub) BroadcastPlayerJoined(sessionID, playerID, playerName string) {
 	})
 }
 
-// BroadcastPlayerLeft broadcasts a player_left event to all clients in a session.
-func (h *Hub) BroadcastPlayerLeft(sessionID, playerID string) {
-	h.Broadcast(sessionID, Event{
+// BroadcastPlayerLeft broadcasts a player_left event to all clients in a room.
+func (h *Hub) BroadcastPlayerLeft(roomID, playerID string) {
+	h.Broadcast(roomID, Event{
 		Type: "player_left",
 		Payload: PlayerLeftPayload{
 			PlayerID: playerID,
@@ -155,17 +155,17 @@ func (h *Hub) BroadcastPlayerLeft(sessionID, playerID string) {
 	})
 }
 
-// BroadcastGameStarted broadcasts a game_started event to all clients in a session.
-func (h *Hub) BroadcastGameStarted(sessionID string) {
-	h.Broadcast(sessionID, Event{
+// BroadcastGameStarted broadcasts a game_started event to all clients in a room.
+func (h *Hub) BroadcastGameStarted(roomID string) {
+	h.Broadcast(roomID, Event{
 		Type:    "game_started",
 		Payload: GameStartedPayload{},
 	})
 }
 
-// BroadcastPlayerSolved broadcasts a player_solved event to all clients in a session.
-func (h *Hub) BroadcastPlayerSolved(sessionID, playerID string, moveCount int) {
-	h.Broadcast(sessionID, Event{
+// BroadcastPlayerSolved broadcasts a player_solved event to all clients in a room.
+func (h *Hub) BroadcastPlayerSolved(roomID, playerID string, moveCount int) {
+	h.Broadcast(roomID, Event{
 		Type: "player_solved",
 		Payload: PlayerSolvedPayload{
 			PlayerID:  playerID,
@@ -174,9 +174,9 @@ func (h *Hub) BroadcastPlayerSolved(sessionID, playerID string, moveCount int) {
 	})
 }
 
-// BroadcastSolutionRetracted broadcasts a solution_retracted event to all clients in a session.
-func (h *Hub) BroadcastSolutionRetracted(sessionID, playerID string) {
-	h.Broadcast(sessionID, Event{
+// BroadcastSolutionRetracted broadcasts a solution_retracted event to all clients in a room.
+func (h *Hub) BroadcastSolutionRetracted(roomID, playerID string) {
+	h.Broadcast(roomID, Event{
 		Type: "solution_retracted",
 		Payload: SolutionRetractedPayload{
 			PlayerID: playerID,
@@ -184,9 +184,9 @@ func (h *Hub) BroadcastSolutionRetracted(sessionID, playerID string) {
 	})
 }
 
-// BroadcastPlayerFinishedSolving broadcasts a player_finished_solving event to all clients in a session.
-func (h *Hub) BroadcastPlayerFinishedSolving(sessionID, playerID string) {
-	h.Broadcast(sessionID, Event{
+// BroadcastPlayerFinishedSolving broadcasts a player_finished_solving event to all clients in a room.
+func (h *Hub) BroadcastPlayerFinishedSolving(roomID, playerID string) {
+	h.Broadcast(roomID, Event{
 		Type: "player_finished_solving",
 		Payload: PlayerFinishedSolvingPayload{
 			PlayerID: playerID,
@@ -194,9 +194,9 @@ func (h *Hub) BroadcastPlayerFinishedSolving(sessionID, playerID string) {
 	})
 }
 
-// BroadcastPlayerReadyForNext broadcasts a player_ready_for_next event to all clients in a session.
-func (h *Hub) BroadcastPlayerReadyForNext(sessionID, playerID string) {
-	h.Broadcast(sessionID, Event{
+// BroadcastPlayerReadyForNext broadcasts a player_ready_for_next event to all clients in a room.
+func (h *Hub) BroadcastPlayerReadyForNext(roomID, playerID string) {
+	h.Broadcast(roomID, Event{
 		Type: "player_ready_for_next",
 		Payload: PlayerReadyForNextPayload{
 			PlayerID: playerID,
@@ -204,9 +204,9 @@ func (h *Hub) BroadcastPlayerReadyForNext(sessionID, playerID string) {
 	})
 }
 
-// BroadcastGameEnded broadcasts a game_ended event to all clients in a session.
-func (h *Hub) BroadcastGameEnded(sessionID, winnerID, winnerName string, moves []session.MovePayload) {
-	h.Broadcast(sessionID, Event{
+// BroadcastGameEnded broadcasts a game_ended event to all clients in a room.
+func (h *Hub) BroadcastGameEnded(roomID, winnerID, winnerName string, moves []room.MovePayload) {
+	h.Broadcast(roomID, Event{
 		Type: "game_ended",
 		Payload: GameEndedPayload{
 			WinnerID:   winnerID,
@@ -216,8 +216,8 @@ func (h *Hub) BroadcastGameEnded(sessionID, winnerID, winnerName string, moves [
 	})
 }
 
-// Broadcast sends an event to all clients in a session.
-func (h *Hub) Broadcast(sessionID string, event Event) {
+// Broadcast sends an event to all clients in a room.
+func (h *Hub) Broadcast(roomID string, event Event) {
 	data, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("WebSocket: failed to marshal event: %v", err)
@@ -225,7 +225,7 @@ func (h *Hub) Broadcast(sessionID string, event Event) {
 	}
 
 	h.mu.RLock()
-	clients := h.sessions[sessionID]
+	clients := h.rooms[roomID]
 	h.mu.RUnlock()
 
 	for client := range clients {
@@ -240,9 +240,9 @@ func (h *Hub) Broadcast(sessionID string, event Event) {
 
 // HandleWebSocket handles WebSocket connections.
 func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	sessionID := r.URL.Query().Get("sessionId")
-	if sessionID == "" {
-		http.Error(w, "sessionId required", http.StatusBadRequest)
+	roomID := r.URL.Query().Get("roomId")
+	if roomID == "" {
+		http.Error(w, "roomId required", http.StatusBadRequest)
 		return
 	}
 	playerID := r.URL.Query().Get("playerId")
@@ -252,15 +252,15 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if player can reconnect
-	sess, err := h.store.Get(sessionID)
+	rm, err := h.store.Get(roomID)
 	if err != nil {
-		http.Error(w, "session not found", http.StatusNotFound)
+		http.Error(w, "room not found", http.StatusNotFound)
 		return
 	}
 
-	var player session.Player
+	var player room.Player
 	found := false
-	for _, p := range sess.Players {
+	for _, p := range rm.Players {
 		if p.ID == playerID {
 			player = p
 			found = true
@@ -273,13 +273,13 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if player.Status == session.PlayerStatusDisconnected {
-		if err := h.store.ReconnectPlayer(sessionID, playerID); err != nil {
-			log.Printf("WebSocket: failed to reconnect player %s in session %s: %v", playerID, sessionID, err)
+	if player.Status == room.PlayerStatusDisconnected {
+		if err := h.store.ReconnectPlayer(roomID, playerID); err != nil {
+			log.Printf("WebSocket: failed to reconnect player %s in room %s: %v", playerID, roomID, err)
 			http.Error(w, "failed to reconnect", http.StatusInternalServerError)
 			return
 		}
-		log.Printf("WebSocket: player %s reconnected to session %s", playerID, sessionID)
+		log.Printf("WebSocket: player %s reconnected to room %s", playerID, roomID)
 	}
 
 	conn, err := h.upgrader.Upgrade(w, r, nil)
@@ -289,11 +289,11 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{
-		hub:       h,
-		conn:      conn,
-		sessionID: sessionID,
-		playerID:  playerID,
-		send:      make(chan []byte, 256),
+		hub:      h,
+		conn:     conn,
+		roomID:   roomID,
+		playerID: playerID,
+		send:     make(chan []byte, 256),
 	}
 
 	h.register(client)

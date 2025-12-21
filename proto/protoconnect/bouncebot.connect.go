@@ -37,12 +37,12 @@ const (
 	BounceBotMakeGameProcedure = "/bouncebot.BounceBot/MakeGame"
 	// BounceBotCheckSolutionProcedure is the fully-qualified name of the BounceBot's CheckSolution RPC.
 	BounceBotCheckSolutionProcedure = "/bouncebot.BounceBot/CheckSolution"
-	// BounceBotCreateSessionProcedure is the fully-qualified name of the BounceBot's CreateSession RPC.
-	BounceBotCreateSessionProcedure = "/bouncebot.BounceBot/CreateSession"
-	// BounceBotJoinSessionProcedure is the fully-qualified name of the BounceBot's JoinSession RPC.
-	BounceBotJoinSessionProcedure = "/bouncebot.BounceBot/JoinSession"
-	// BounceBotGetSessionProcedure is the fully-qualified name of the BounceBot's GetSession RPC.
-	BounceBotGetSessionProcedure = "/bouncebot.BounceBot/GetSession"
+	// BounceBotCreateRoomProcedure is the fully-qualified name of the BounceBot's CreateRoom RPC.
+	BounceBotCreateRoomProcedure = "/bouncebot.BounceBot/CreateRoom"
+	// BounceBotJoinRoomProcedure is the fully-qualified name of the BounceBot's JoinRoom RPC.
+	BounceBotJoinRoomProcedure = "/bouncebot.BounceBot/JoinRoom"
+	// BounceBotGetRoomProcedure is the fully-qualified name of the BounceBot's GetRoom RPC.
+	BounceBotGetRoomProcedure = "/bouncebot.BounceBot/GetRoom"
 	// BounceBotStartGameProcedure is the fully-qualified name of the BounceBot's StartGame RPC.
 	BounceBotStartGameProcedure = "/bouncebot.BounceBot/StartGame"
 	// BounceBotSubmitSolutionProcedure is the fully-qualified name of the BounceBot's SubmitSolution
@@ -63,11 +63,11 @@ const (
 type BounceBotClient interface {
 	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
 	CheckSolution(context.Context, *connect.Request[proto.CheckSolutionRequest]) (*connect.Response[proto.CheckSolutionResponse], error)
-	// Session management
-	CreateSession(context.Context, *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error)
-	JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error)
-	GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error)
-	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
+	// Room management
+	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
+	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error)
+	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
+	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
 	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
 	MarkFinishedSolving(context.Context, *connect.Request[proto.MarkFinishedSolvingRequest]) (*connect.Response[proto.MarkFinishedSolvingResponse], error)
@@ -97,25 +97,25 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("CheckSolution")),
 			connect.WithClientOptions(opts...),
 		),
-		createSession: connect.NewClient[proto.CreateSessionRequest, proto.Session](
+		createRoom: connect.NewClient[proto.CreateRoomRequest, proto.Room](
 			httpClient,
-			baseURL+BounceBotCreateSessionProcedure,
-			connect.WithSchema(bounceBotMethods.ByName("CreateSession")),
+			baseURL+BounceBotCreateRoomProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("CreateRoom")),
 			connect.WithClientOptions(opts...),
 		),
-		joinSession: connect.NewClient[proto.JoinSessionRequest, proto.Session](
+		joinRoom: connect.NewClient[proto.JoinRoomRequest, proto.Room](
 			httpClient,
-			baseURL+BounceBotJoinSessionProcedure,
-			connect.WithSchema(bounceBotMethods.ByName("JoinSession")),
+			baseURL+BounceBotJoinRoomProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("JoinRoom")),
 			connect.WithClientOptions(opts...),
 		),
-		getSession: connect.NewClient[proto.GetSessionRequest, proto.Session](
+		getRoom: connect.NewClient[proto.GetRoomRequest, proto.Room](
 			httpClient,
-			baseURL+BounceBotGetSessionProcedure,
-			connect.WithSchema(bounceBotMethods.ByName("GetSession")),
+			baseURL+BounceBotGetRoomProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("GetRoom")),
 			connect.WithClientOptions(opts...),
 		),
-		startGame: connect.NewClient[proto.StartGameRequest, proto.Session](
+		startGame: connect.NewClient[proto.StartGameRequest, proto.Room](
 			httpClient,
 			baseURL+BounceBotStartGameProcedure,
 			connect.WithSchema(bounceBotMethods.ByName("StartGame")),
@@ -152,10 +152,10 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 type bounceBotClient struct {
 	makeGame            *connect.Client[proto.MakeGameRequest, proto.Game]
 	checkSolution       *connect.Client[proto.CheckSolutionRequest, proto.CheckSolutionResponse]
-	createSession       *connect.Client[proto.CreateSessionRequest, proto.Session]
-	joinSession         *connect.Client[proto.JoinSessionRequest, proto.Session]
-	getSession          *connect.Client[proto.GetSessionRequest, proto.Session]
-	startGame           *connect.Client[proto.StartGameRequest, proto.Session]
+	createRoom          *connect.Client[proto.CreateRoomRequest, proto.Room]
+	joinRoom            *connect.Client[proto.JoinRoomRequest, proto.Room]
+	getRoom             *connect.Client[proto.GetRoomRequest, proto.Room]
+	startGame           *connect.Client[proto.StartGameRequest, proto.Room]
 	submitSolution      *connect.Client[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse]
 	retractSolution     *connect.Client[proto.RetractSolutionRequest, proto.RetractSolutionResponse]
 	markFinishedSolving *connect.Client[proto.MarkFinishedSolvingRequest, proto.MarkFinishedSolvingResponse]
@@ -172,23 +172,23 @@ func (c *bounceBotClient) CheckSolution(ctx context.Context, req *connect.Reques
 	return c.checkSolution.CallUnary(ctx, req)
 }
 
-// CreateSession calls bouncebot.BounceBot.CreateSession.
-func (c *bounceBotClient) CreateSession(ctx context.Context, req *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error) {
-	return c.createSession.CallUnary(ctx, req)
+// CreateRoom calls bouncebot.BounceBot.CreateRoom.
+func (c *bounceBotClient) CreateRoom(ctx context.Context, req *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error) {
+	return c.createRoom.CallUnary(ctx, req)
 }
 
-// JoinSession calls bouncebot.BounceBot.JoinSession.
-func (c *bounceBotClient) JoinSession(ctx context.Context, req *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error) {
-	return c.joinSession.CallUnary(ctx, req)
+// JoinRoom calls bouncebot.BounceBot.JoinRoom.
+func (c *bounceBotClient) JoinRoom(ctx context.Context, req *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error) {
+	return c.joinRoom.CallUnary(ctx, req)
 }
 
-// GetSession calls bouncebot.BounceBot.GetSession.
-func (c *bounceBotClient) GetSession(ctx context.Context, req *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error) {
-	return c.getSession.CallUnary(ctx, req)
+// GetRoom calls bouncebot.BounceBot.GetRoom.
+func (c *bounceBotClient) GetRoom(ctx context.Context, req *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error) {
+	return c.getRoom.CallUnary(ctx, req)
 }
 
 // StartGame calls bouncebot.BounceBot.StartGame.
-func (c *bounceBotClient) StartGame(ctx context.Context, req *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error) {
+func (c *bounceBotClient) StartGame(ctx context.Context, req *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error) {
 	return c.startGame.CallUnary(ctx, req)
 }
 
@@ -216,11 +216,11 @@ func (c *bounceBotClient) MarkReadyForNext(ctx context.Context, req *connect.Req
 type BounceBotHandler interface {
 	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
 	CheckSolution(context.Context, *connect.Request[proto.CheckSolutionRequest]) (*connect.Response[proto.CheckSolutionResponse], error)
-	// Session management
-	CreateSession(context.Context, *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error)
-	JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error)
-	GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error)
-	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error)
+	// Room management
+	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
+	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error)
+	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
+	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
 	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
 	MarkFinishedSolving(context.Context, *connect.Request[proto.MarkFinishedSolvingRequest]) (*connect.Response[proto.MarkFinishedSolvingResponse], error)
@@ -246,22 +246,22 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("CheckSolution")),
 		connect.WithHandlerOptions(opts...),
 	)
-	bounceBotCreateSessionHandler := connect.NewUnaryHandler(
-		BounceBotCreateSessionProcedure,
-		svc.CreateSession,
-		connect.WithSchema(bounceBotMethods.ByName("CreateSession")),
+	bounceBotCreateRoomHandler := connect.NewUnaryHandler(
+		BounceBotCreateRoomProcedure,
+		svc.CreateRoom,
+		connect.WithSchema(bounceBotMethods.ByName("CreateRoom")),
 		connect.WithHandlerOptions(opts...),
 	)
-	bounceBotJoinSessionHandler := connect.NewUnaryHandler(
-		BounceBotJoinSessionProcedure,
-		svc.JoinSession,
-		connect.WithSchema(bounceBotMethods.ByName("JoinSession")),
+	bounceBotJoinRoomHandler := connect.NewUnaryHandler(
+		BounceBotJoinRoomProcedure,
+		svc.JoinRoom,
+		connect.WithSchema(bounceBotMethods.ByName("JoinRoom")),
 		connect.WithHandlerOptions(opts...),
 	)
-	bounceBotGetSessionHandler := connect.NewUnaryHandler(
-		BounceBotGetSessionProcedure,
-		svc.GetSession,
-		connect.WithSchema(bounceBotMethods.ByName("GetSession")),
+	bounceBotGetRoomHandler := connect.NewUnaryHandler(
+		BounceBotGetRoomProcedure,
+		svc.GetRoom,
+		connect.WithSchema(bounceBotMethods.ByName("GetRoom")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bounceBotStartGameHandler := connect.NewUnaryHandler(
@@ -300,12 +300,12 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 			bounceBotMakeGameHandler.ServeHTTP(w, r)
 		case BounceBotCheckSolutionProcedure:
 			bounceBotCheckSolutionHandler.ServeHTTP(w, r)
-		case BounceBotCreateSessionProcedure:
-			bounceBotCreateSessionHandler.ServeHTTP(w, r)
-		case BounceBotJoinSessionProcedure:
-			bounceBotJoinSessionHandler.ServeHTTP(w, r)
-		case BounceBotGetSessionProcedure:
-			bounceBotGetSessionHandler.ServeHTTP(w, r)
+		case BounceBotCreateRoomProcedure:
+			bounceBotCreateRoomHandler.ServeHTTP(w, r)
+		case BounceBotJoinRoomProcedure:
+			bounceBotJoinRoomHandler.ServeHTTP(w, r)
+		case BounceBotGetRoomProcedure:
+			bounceBotGetRoomHandler.ServeHTTP(w, r)
 		case BounceBotStartGameProcedure:
 			bounceBotStartGameHandler.ServeHTTP(w, r)
 		case BounceBotSubmitSolutionProcedure:
@@ -333,19 +333,19 @@ func (UnimplementedBounceBotHandler) CheckSolution(context.Context, *connect.Req
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CheckSolution is not implemented"))
 }
 
-func (UnimplementedBounceBotHandler) CreateSession(context.Context, *connect.Request[proto.CreateSessionRequest]) (*connect.Response[proto.Session], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CreateSession is not implemented"))
+func (UnimplementedBounceBotHandler) CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CreateRoom is not implemented"))
 }
 
-func (UnimplementedBounceBotHandler) JoinSession(context.Context, *connect.Request[proto.JoinSessionRequest]) (*connect.Response[proto.Session], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.JoinSession is not implemented"))
+func (UnimplementedBounceBotHandler) JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.JoinRoom is not implemented"))
 }
 
-func (UnimplementedBounceBotHandler) GetSession(context.Context, *connect.Request[proto.GetSessionRequest]) (*connect.Response[proto.Session], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.GetSession is not implemented"))
+func (UnimplementedBounceBotHandler) GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.GetRoom is not implemented"))
 }
 
-func (UnimplementedBounceBotHandler) StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Session], error) {
+func (UnimplementedBounceBotHandler) StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.StartGame is not implemented"))
 }
 

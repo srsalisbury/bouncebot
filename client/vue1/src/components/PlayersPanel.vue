@@ -2,7 +2,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { Player, PlayerSolution, PlayerScore } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
-import { useSessionStore } from '../stores/sessionStore'
+import { useRoomStore } from '../stores/roomStore'
 import { getPlayerColor } from '../constants'
 
 const props = defineProps<{
@@ -76,7 +76,7 @@ onUnmounted(() => {
   stopTimer()
 })
 
-const sessionStore = useSessionStore()
+const roomStore = useRoomStore()
 
 // Map player IDs to their color index (based on join order, so colors stay stable when sorting)
 const playerColorMap = computed(() => {
@@ -151,7 +151,7 @@ function getPlayerColorFor(player: Player): string {
 }
 
 function isCurrentPlayer(player: Player): boolean {
-  return sessionStore.currentPlayerId != null && player.id === sessionStore.currentPlayerId
+  return roomStore.currentPlayerId != null && player.id === roomStore.currentPlayerId
 }
 
 function isLeader(player: Player): boolean {

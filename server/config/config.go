@@ -19,10 +19,10 @@ type Config struct {
 	// Each hostname allows both http://hostname and http://hostname:port
 	AllowedOrigins []string
 
-	// Session timing
-	AutoSaveInterval   time.Duration
-	CleanupInterval    time.Duration
-	SessionMaxAge      time.Duration
+	// Room timing
+	AutoSaveInterval      time.Duration
+	CleanupInterval       time.Duration
+	RoomMaxAge            time.Duration
 	DisconnectGracePeriod time.Duration
 }
 
@@ -30,11 +30,11 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		Port:                  8080,
-		DataFile:              "sessions.json",
+		DataFile:              "rooms.json",
 		AllowedOrigins:        []string{"localhost"},
 		AutoSaveInterval:      30 * time.Second,
 		CleanupInterval:       1 * time.Hour,
-		SessionMaxAge:         24 * time.Hour,
+		RoomMaxAge:            24 * time.Hour,
 		DisconnectGracePeriod: 30 * time.Second,
 	}
 }
@@ -42,11 +42,11 @@ func DefaultConfig() *Config {
 // LoadFromEnv loads configuration from environment variables.
 // Environment variables override defaults. Supported variables:
 //   - PORT: Server port (default: 8080)
-//   - DATA_FILE: Path to session data file (default: sessions.json)
+//   - DATA_FILE: Path to room data file (default: rooms.json)
 //   - ALLOWED_ORIGINS: Comma-separated allowed origins (default: localhost)
 //   - AUTO_SAVE_INTERVAL: Auto-save interval in seconds (default: 30)
 //   - CLEANUP_INTERVAL: Cleanup interval in seconds (default: 3600)
-//   - SESSION_MAX_AGE: Session max age in seconds (default: 86400)
+//   - ROOM_MAX_AGE: Room max age in seconds (default: 86400)
 //   - DISCONNECT_GRACE_PERIOD: Player disconnect grace period in seconds (default: 30)
 func LoadFromEnv() *Config {
 	cfg := DefaultConfig()
@@ -84,9 +84,9 @@ func LoadFromEnv() *Config {
 		}
 	}
 
-	if v := os.Getenv("SESSION_MAX_AGE"); v != "" {
+	if v := os.Getenv("ROOM_MAX_AGE"); v != "" {
 		if secs, err := strconv.Atoi(v); err == nil {
-			cfg.SessionMaxAge = time.Duration(secs) * time.Second
+			cfg.RoomMaxAge = time.Duration(secs) * time.Second
 		}
 	}
 

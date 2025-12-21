@@ -26,13 +26,13 @@ The project follows a modern client-server architecture with a Go backend and a 
 The Go server is the authoritative source for all game logic and state.
 
 -   **Responsibilities**:
-    -   Managing game sessions (creating, joining).
+    -   Managing game rooms (creating, joining).
     -   Enforcing game rules (validating moves, checking solutions).
-    -   Persisting session state.
+    -   Persisting room state.
     -   Broadcasting state changes to clients.
 -   **Key Technologies**:
     -   **Connect**: Used to generate a type-safe gRPC-style API for client-initiated actions (e.g., `SubmitSolution`).
-    -   **WebSockets**: Used for real-time, server-to-client communication. When one player's action changes the game state, the server broadcasts the new state to all clients in the session.
+    -   **WebSockets**: Used for real-time, server-to-client communication. When one player's action changes the game state, the server broadcasts the new state to all clients in the room.
 
 ### Frontend (Vue.js)
 
@@ -53,8 +53,8 @@ The frontend is a single-page application responsible for rendering the game sta
 
 BounceBot uses a dual-channel communication model to provide a responsive user experience:
 
-1.  **RPC Actions (Client-to-Server)**: The client uses a type-safe RPC client generated from the `.proto` definition to send specific commands to the server, such as creating a session or submitting a move sequence. This is a standard request/response model.
-2.  **Real-time State Updates (Server-to-Client)**: The server uses a WebSocket to push updates to all clients in a session whenever the state changes. This ensures that all players see the same game state in real-time without needing to poll the server.
+1.  **RPC Actions (Client-to-Server)**: The client uses a type-safe RPC client generated from the `.proto` definition to send specific commands to the server, such as creating a room or submitting a move sequence. This is a standard request/response model.
+2.  **Real-time State Updates (Server-to-Client)**: The server uses a WebSocket to push updates to all clients in a room whenever the state changes. This ensures that all players see the same game state in real-time without needing to poll the server.
 
 ## Core Game Logic
 
@@ -64,26 +64,26 @@ The game is played on a 16x16 grid with walls. The objective is to move a design
 -   **Ricochet Mechanic**: Once a robot starts moving, it continues in a straight line until it hits an obstacle (another robot, a wall, or the edge of the board). It does not stop on an empty square.
 -   **Solving**: Players find a sequence of moves (e.g., "Red Up, Blue Left, Red Right") and submit it. The server validates if the solution is correct and if it's the shortest one found so far.
 
-## Session Persistence
+## Room Persistence
 
-Sessions are persisted to a JSON file (`sessions.json` by default) to survive server restarts. The server:
-- Loads existing sessions on startup
+Rooms are persisted to a JSON file (`rooms.json` by default) to survive server restarts. The server:
+- Loads existing rooms on startup
 - Auto-saves every 30 seconds
 - Saves on graceful shutdown (SIGINT/SIGTERM)
 
 ```sh
 # Use a custom data file path
-go run ./server -data /path/to/sessions.json
+go run ./server -data /path/to/rooms.json
 ```
 
 ### Scaling to Multiple Servers
 
-The current JSON file persistence works well for single-server deployments. For multi-server deployments (e.g., Kubernetes with multiple replicas), you'll need a shared session store like Redis:
+The current JSON file persistence works well for single-server deployments. For multi-server deployments (e.g., Kubernetes with multiple replicas), you'll need a shared room store like Redis:
 
 1. **Add Redis dependency**: `go get github.com/redis/go-redis/v9`
 2. **Implement a Redis-backed Store**: Replace the file-based `Load`/`Save` methods with Redis operations
 3. **Use Redis pub/sub**: Replace the in-memory WebSocket hub with Redis pub/sub for cross-server broadcasting
-4. **Session affinity**: Alternatively, use sticky sessions to route players to the same server instance
+4. **Room affinity**: Alternatively, use sticky sessions to route players to the same server instance
 
 ## How to Run
 
