@@ -3,9 +3,9 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
-import { useSessionStore } from '../stores/sessionStore'
+import { useRoomStore } from '../stores/roomStore'
 import { websocketService, type WebSocketEvent } from '../services/websocket'
-import type { Session, BotPos } from '../gen/bouncebot_pb'
+import type { Room, BotPos } from '../gen/bouncebot_pb'
 import { create } from '@bufbuild/protobuf'
 import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 import GameBoard from '../components/GameBoard.vue'
@@ -14,20 +14,20 @@ import LeaderboardModal from '../components/LeaderboardModal.vue'
 import { getPlayerColor } from '../constants'
 
 const props = defineProps<{
-  sessionId: string
+  roomId: string
 }>()
 
 const router = useRouter()
 const gameStore = useGameStore()
-const sessionStore = useSessionStore()
+const roomStore = useRoomStore()
 
-const session = ref<Session | null>(null)
+const room = ref<Room | null>(null)
 const isLoading = ref(true)
 const isStarting = ref(false)
 const isJoining = ref(false)
 const error = ref<string | null>(null)
 const pollInterval = ref<number | null>(null)
-const joinName = ref(sessionStore.currentPlayerName ?? '')
+const joinName = ref(roomStore.currentPlayerName ?? '')
 const bestSubmittedMoveCount = ref<number | null>(null)
 const showRetractConfirm = ref(false)
 const pendingRetractAction = ref<(() => void) | null>(null)
@@ -35,25 +35,25 @@ const useFixedBoard = ref(false)
 const gameEnded = ref(false)
 const showLeaderboard = ref(false)
 
-const hasGame = computed(() => session.value?.currentGame != null)
+const hasGame = computed(() => room.value?.currentGame != null)
 const shareUrl = computed(() => window.location.href)
-const hasJoined = computed(() => sessionStore.currentPlayerId != null)
+const hasJoined = computed(() => roomStore.currentPlayerId != null)
 const isPlayerFinished = computed(() => {
-  if (!sessionStore.currentPlayerId || !session.value) return false
-  return session.value.finishedSolving.includes(sessionStore.currentPlayerId)
+  if (!roomStore.currentPlayerId || !room.value) return false
+  return room.value.finishedSolving.includes(roomStore.currentPlayerId)
 })
 
 const isPlayerReady = computed(() => {
-  if (!sessionStore.currentPlayerId || !session.value) return false
-  return session.value.readyForNext.includes(sessionStore.currentPlayerId)
+  if (!roomStore.currentPlayerId || !room.value) return false
+  return room.value.readyForNext.includes(roomStore.currentPlayerId)
 })
 
-const readyCount = computed(() => session.value?.readyForNext.length ?? 0)
-const playerCount = computed(() => session.value?.players.length ?? 0)
+const readyCount = computed(() => room.value?.readyForNext.length ?? 0)
+const playerCount = computed(() => room.value?.players.length ?? 0)
 
 const sortedSolutions = computed(() => {
-  if (!session.value) return []
-  return [...session.value.solutions].sort((a, b) => {
+  if (!room.value) return []
+  return [...room.value.solutions].sort((a, b) => {
     // Sort by move count (ascending), then by solve time (earlier first)
     if (a.moves.length !== b.moves.length) {
       return a.moves.length - b.moves.length
@@ -65,33 +65,33 @@ const sortedSolutions = computed(() => {
 })
 
 function getPlayerName(playerId: string): string {
-  const player = session.value?.players.find(p => p.id === playerId)
+  const player = room.value?.players.find(p => p.id === playerId)
   return player?.name ?? 'Unknown'
 }
 
 function getPlayerColorById(playerId: string): string {
-  const index = session.value?.players.findIndex(p => p.id === playerId) ?? -1
+  const index = room.value?.players.findIndex(p => p.id === playerId) ?? -1
   return index >= 0 ? getPlayerColor(index) : '#888888'
 }
 
-async function loadSession(forceApplyGame = false) {
+async function loadRoom(forceApplyGame = false) {
   try {
-    const sess = await bounceBotClient.getSession({ sessionId: props.sessionId })
+    const rm = await bounceBotClient.getRoom({ roomId: props.roomId })
     const hadGame = hasGame.value
-    session.value = sess
+    room.value = rm
 
-    // Check if current player is still in the session (handle stale localStorage)
-    if (sessionStore.currentPlayerId) {
-      const isPlayerInSession = sess.players.some(p => p.id === sessionStore.currentPlayerId)
-      if (!isPlayerInSession) {
+    // Check if current player is still in the room (handle stale localStorage)
+    if (roomStore.currentPlayerId) {
+      const isPlayerInRoom = rm.players.some(p => p.id === roomStore.currentPlayerId)
+      if (!isPlayerInRoom) {
         // Player ID is stale - clear it so they can rejoin
-        sessionStore.clear()
+        roomStore.clear()
       }
     }
 
     // Apply game when it first appears or when forced (e.g., game_started event)
-    if (sess.currentGame && (!hadGame || forceApplyGame)) {
-      gameStore.applyGame(sess.currentGame)
+    if (rm.currentGame && (!hadGame || forceApplyGame)) {
+      gameStore.applyGame(rm.currentGame)
       // Stop polling once game starts
       if (pollInterval.value) {
         clearInterval(pollInterval.value)
@@ -101,13 +101,13 @@ async function loadSession(forceApplyGame = false) {
 
     // Restore gameEnded state from server
     // Game is ended if all players are finished solving
-    if (sess.currentGame && sess.finishedSolving.length === sess.players.length && sess.players.length > 0) {
+    if (rm.currentGame && rm.finishedSolving.length === rm.players.length && rm.players.length > 0) {
       gameEnded.value = true
     }
 
     // Restore bestSubmittedMoveCount from player's solution
-    if (sessionStore.currentPlayerId && bestSubmittedMoveCount.value === null) {
-      const mySolution = sess.solutions.find(s => s.playerId === sessionStore.currentPlayerId)
+    if (roomStore.currentPlayerId && bestSubmittedMoveCount.value === null) {
+      const mySolution = rm.solutions.find(s => s.playerId === roomStore.currentPlayerId)
       if (mySolution) {
         bestSubmittedMoveCount.value = mySolution.moves.length
       }
@@ -115,7 +115,7 @@ async function loadSession(forceApplyGame = false) {
 
     error.value = null
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to load session'
+    error.value = e instanceof Error ? e.message : 'Failed to load room'
   } finally {
     isLoading.value = false
   }
@@ -126,13 +126,13 @@ async function startGame(useFixedBoard = false) {
   error.value = null
 
   try {
-    const sess = await bounceBotClient.startGame({ sessionId: props.sessionId, useFixedBoard })
-    session.value = sess
+    const rm = await bounceBotClient.startGame({ roomId: props.roomId, useFixedBoard })
+    room.value = rm
     bestSubmittedMoveCount.value = null // Reset for new game
     gameEnded.value = false // Reset game ended state
 
-    if (sess.currentGame) {
-      gameStore.applyGame(sess.currentGame)
+    if (rm.currentGame) {
+      gameStore.applyGame(rm.currentGame)
     }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to start game'
@@ -141,7 +141,7 @@ async function startGame(useFixedBoard = false) {
   }
 }
 
-async function joinSession() {
+async function joinRoom() {
   if (!joinName.value.trim()) {
     error.value = 'Please enter your name'
     return
@@ -151,19 +151,19 @@ async function joinSession() {
   error.value = null
 
   try {
-    const sess = await bounceBotClient.joinSession({
-      sessionId: props.sessionId,
+    const rm = await bounceBotClient.joinRoom({
+      roomId: props.roomId,
       playerName: joinName.value.trim(),
     })
     // Find ourselves in the players list (we're the last one added)
-    const player = sess.players[sess.players.length - 1]
+    const player = rm.players[rm.players.length - 1]
     if (player) {
-      sessionStore.setCurrentPlayer(player.id, player.name)
+      roomStore.setCurrentPlayer(player.id, player.name)
     }
-    // Reload session to get updated player list
-    await loadSession()
+    // Reload room to get updated player list
+    await loadRoom()
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to join session'
+    error.value = e instanceof Error ? e.message : 'Failed to join room'
   } finally {
     isJoining.value = false
   }
@@ -178,7 +178,7 @@ function goHome() {
 }
 
 async function submitSolution() {
-  if (!sessionStore.currentPlayerId) return
+  if (!roomStore.currentPlayerId) return
   const moveCount = gameStore.moveCount
   // Only submit if this is better than our previous best (or first submission)
   if (bestSubmittedMoveCount.value !== null && moveCount >= bestSubmittedMoveCount.value) return
@@ -193,58 +193,58 @@ async function submitSolution() {
 
   try {
     await bounceBotClient.submitSolution({
-      sessionId: props.sessionId,
-      playerId: sessionStore.currentPlayerId,
+      roomId: props.roomId,
+      playerId: roomStore.currentPlayerId,
       moves,
     })
     bestSubmittedMoveCount.value = moveCount
-    // Reload session to get updated solutions list
-    await loadSession()
+    // Reload room to get updated solutions list
+    await loadRoom()
   } catch (e) {
     console.error('Failed to submit solution:', e)
   }
 }
 
 async function retractSolution() {
-  if (!sessionStore.currentPlayerId) return
+  if (!roomStore.currentPlayerId) return
 
   try {
     await bounceBotClient.retractSolution({
-      sessionId: props.sessionId,
-      playerId: sessionStore.currentPlayerId,
+      roomId: props.roomId,
+      playerId: roomStore.currentPlayerId,
     })
-    // Reload session to get updated solutions list
-    await loadSession()
+    // Reload room to get updated solutions list
+    await loadRoom()
   } catch (e) {
     console.error('Failed to retract solution:', e)
   }
 }
 
 async function markFinishedSolving() {
-  if (!sessionStore.currentPlayerId) return
+  if (!roomStore.currentPlayerId) return
 
   try {
     await bounceBotClient.markFinishedSolving({
-      sessionId: props.sessionId,
-      playerId: sessionStore.currentPlayerId,
+      roomId: props.roomId,
+      playerId: roomStore.currentPlayerId,
     })
-    // Reload session to get updated finished players list
-    await loadSession()
+    // Reload room to get updated finished players list
+    await loadRoom()
   } catch (e) {
     console.error('Failed to mark finished:', e)
   }
 }
 
 async function markReadyForNext() {
-  if (!sessionStore.currentPlayerId) return
+  if (!roomStore.currentPlayerId) return
 
   try {
     await bounceBotClient.markReadyForNext({
-      sessionId: props.sessionId,
-      playerId: sessionStore.currentPlayerId,
+      roomId: props.roomId,
+      playerId: roomStore.currentPlayerId,
     })
-    // Reload session to get updated ready players list
-    await loadSession()
+    // Reload room to get updated ready players list
+    await loadRoom()
   } catch (e) {
     console.error('Failed to mark ready:', e)
   }
@@ -281,33 +281,33 @@ function cancelRetract() {
 
 function handleWebSocketEvent(event: WebSocketEvent) {
   if (event.type === 'player_joined') {
-    // Refresh session to get updated player list
-    loadSession()
+    // Refresh room to get updated player list
+    loadRoom()
   } else if (event.type === 'game_started') {
-    // Refresh session to get the game (force apply since it's a new game)
+    // Refresh room to get the game (force apply since it's a new game)
     bestSubmittedMoveCount.value = null // Reset for new game
     gameEnded.value = false // Reset game ended state
-    loadSession(true)
+    loadRoom(true)
   } else if (event.type === 'player_solved') {
-    loadSession()
+    loadRoom()
   } else if (event.type === 'solution_retracted') {
-    loadSession()
+    loadRoom()
   } else if (event.type === 'player_finished_solving') {
-    loadSession()
+    loadRoom()
   } else if (event.type === 'player_ready_for_next') {
-    // Refresh session to get updated ready players list (no notification needed)
-    loadSession()
+    // Refresh room to get updated ready players list (no notification needed)
+    loadRoom()
   } else if (event.type === 'game_ended') {
     gameEnded.value = true
-    loadSession()
+    loadRoom()
   } else if (event.type === 'player_left') {
-    loadSession() // Refresh session to remove the player from the list
+    loadRoom() // Refresh room to remove the player from the list
   }
 }
 
 function connectWebSocket() {
-  if (hasJoined.value && sessionStore.currentPlayerId) {
-    websocketService.connect(props.sessionId, sessionStore.currentPlayerId, handleWebSocketEvent)
+  if (hasJoined.value && roomStore.currentPlayerId) {
+    websocketService.connect(props.roomId, roomStore.currentPlayerId, handleWebSocketEvent)
   }
 }
 
@@ -372,15 +372,15 @@ function leaderboardKeydownHandler(event: KeyboardEvent) {
 onMounted(async () => {
   window.addEventListener('keydown', leaderboardKeydownHandler)
 
-  // Load session first to verify player is still valid
-  await loadSession()
+  // Load room first to verify player is still valid
+  await loadRoom()
 
   // After loading, check if player is still joined (may have been cleared if stale)
   if (hasJoined.value) {
     connectWebSocket()
   } else {
     // Poll until joined (for users who haven't joined yet)
-    pollInterval.value = window.setInterval(loadSession, 3000)
+    pollInterval.value = window.setInterval(loadRoom, 3000)
   }
 })
 
@@ -394,26 +394,26 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="session-view">
+  <div class="room-view">
     <!-- Loading state -->
-    <div v-if="isLoading" class="loading">Loading session...</div>
+    <div v-if="isLoading" class="loading">Loading room...</div>
 
     <!-- Error state -->
-    <div v-else-if="error && !session" class="error-container">
+    <div v-else-if="error && !room" class="error-container">
       <div class="error-icon">⚠</div>
       <div class="error-message">{{ error }}</div>
       <button class="btn" @click="goHome">Back to Home</button>
     </div>
 
-    <!-- Join form (for users who navigated directly to session URL) -->
-    <div v-else-if="session && !hasJoined" class="join-view">
+    <!-- Join form (for users who navigated directly to room URL) -->
+    <div v-else-if="room && !hasJoined" class="join-view">
       <h1 class="title">BounceBot</h1>
-      <p class="subtitle">Join Session</p>
+      <p class="subtitle">Join Room</p>
 
       <div class="card">
         <div class="players-section">
-          <h3>Players in session ({{ session.players.length }})</h3>
-          <PlayersPanel :players="session.players" />
+          <h3>Players in room ({{ room.players.length }})</h3>
+          <PlayersPanel :players="room.players" />
         </div>
 
         <div class="form-group">
@@ -424,7 +424,7 @@ onUnmounted(() => {
             type="text"
             placeholder="Enter your name"
             maxlength="20"
-            @keyup.enter="joinSession"
+            @keyup.enter="joinRoom"
           />
         </div>
 
@@ -433,18 +433,18 @@ onUnmounted(() => {
         <button
           class="btn primary join-btn"
           :disabled="isJoining"
-          @click="joinSession"
+          @click="joinRoom"
         >
-          {{ isJoining ? 'Joining...' : 'Join Session' }}
+          {{ isJoining ? 'Joining...' : 'Join Room' }}
         </button>
       </div>
     </div>
 
     <!-- Game in progress -->
-    <div v-else-if="hasGame && session" class="game-wrapper">
+    <div v-else-if="hasGame && room" class="game-wrapper">
       <div class="game-header">
         <template v-if="!gameEnded">
-          <PlayersPanel :players="session.players" :solutions="session.solutions" :scores="session.scores" :game-started-at="session.gameStartedAt" :finished-solving="session.finishedSolving" compact />
+          <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
           <button
             v-if="!isPlayerFinished"
             class="btn done-btn"
@@ -478,30 +478,30 @@ onUnmounted(() => {
           :player-solutions="sortedSolutions"
           :get-player-name="getPlayerName"
           :get-player-color="getPlayerColorById"
-          :game-started-at="session.gameStartedAt"
-          :game-number="session.gamesPlayed + 1"
+          :game-started-at="room.gameStartedAt"
+          :game-number="room.gamesPlayed + 1"
           :input-blocked="showLeaderboard"
         />
       </div>
     </div>
 
     <!-- Waiting room -->
-    <div v-else-if="session && hasJoined" class="waiting-room">
+    <div v-else-if="room && hasJoined" class="waiting-room">
       <h1 class="title">BounceBot</h1>
       <p class="subtitle">Waiting Room</p>
 
       <div class="card">
-        <div class="session-info">
+        <div class="room-info">
           <div class="info-row">
             <span class="label">Room ID:</span>
-            <code class="room-id">{{ session.id }}</code>
+            <code class="room-id">{{ room.id }}</code>
           </div>
           <button class="btn-small" @click="copyShareUrl">Copy Link</button>
         </div>
 
         <div class="players-section">
-          <h3>Players ({{ session.players.length }})</h3>
-          <PlayersPanel :players="session.players" />
+          <h3>Players ({{ room.players.length }})</h3>
+          <PlayersPanel :players="room.players" />
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
@@ -543,16 +543,16 @@ onUnmounted(() => {
     <!-- Leaderboard modal -->
     <LeaderboardModal
       :show="showLeaderboard"
-      :players="session?.players ?? []"
-      :scores="session?.scores ?? []"
-      :games-played="session?.gamesPlayed ?? 0"
+      :players="room?.players ?? []"
+      :scores="room?.scores ?? []"
+      :games-played="room?.gamesPlayed ?? 0"
       @close="showLeaderboard = false"
     />
   </div>
 </template>
 
 <style scoped>
-.session-view {
+.room-view {
   min-height: 100vh;
   position: relative;
 }
@@ -731,7 +731,7 @@ onUnmounted(() => {
   max-width: 400px;
 }
 
-.session-info {
+.room-info {
   display: flex;
   align-items: center;
   justify-content: space-between;

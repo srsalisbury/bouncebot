@@ -21,9 +21,9 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	BounceBot_MakeGame_FullMethodName            = "/bouncebot.BounceBot/MakeGame"
 	BounceBot_CheckSolution_FullMethodName       = "/bouncebot.BounceBot/CheckSolution"
-	BounceBot_CreateSession_FullMethodName       = "/bouncebot.BounceBot/CreateSession"
-	BounceBot_JoinSession_FullMethodName         = "/bouncebot.BounceBot/JoinSession"
-	BounceBot_GetSession_FullMethodName          = "/bouncebot.BounceBot/GetSession"
+	BounceBot_CreateRoom_FullMethodName          = "/bouncebot.BounceBot/CreateRoom"
+	BounceBot_JoinRoom_FullMethodName            = "/bouncebot.BounceBot/JoinRoom"
+	BounceBot_GetRoom_FullMethodName             = "/bouncebot.BounceBot/GetRoom"
 	BounceBot_StartGame_FullMethodName           = "/bouncebot.BounceBot/StartGame"
 	BounceBot_SubmitSolution_FullMethodName      = "/bouncebot.BounceBot/SubmitSolution"
 	BounceBot_RetractSolution_FullMethodName     = "/bouncebot.BounceBot/RetractSolution"
@@ -39,11 +39,11 @@ const (
 type BounceBotClient interface {
 	MakeGame(ctx context.Context, in *MakeGameRequest, opts ...grpc.CallOption) (*Game, error)
 	CheckSolution(ctx context.Context, in *CheckSolutionRequest, opts ...grpc.CallOption) (*CheckSolutionResponse, error)
-	// Session management
-	CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*Session, error)
-	JoinSession(ctx context.Context, in *JoinSessionRequest, opts ...grpc.CallOption) (*Session, error)
-	GetSession(ctx context.Context, in *GetSessionRequest, opts ...grpc.CallOption) (*Session, error)
-	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Session, error)
+	// Room management
+	CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error)
+	JoinRoom(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (*Room, error)
+	GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*Room, error)
+	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Room, error)
 	SubmitSolution(ctx context.Context, in *SubmitSolutionRequest, opts ...grpc.CallOption) (*SubmitSolutionResponse, error)
 	RetractSolution(ctx context.Context, in *RetractSolutionRequest, opts ...grpc.CallOption) (*RetractSolutionResponse, error)
 	MarkFinishedSolving(ctx context.Context, in *MarkFinishedSolvingRequest, opts ...grpc.CallOption) (*MarkFinishedSolvingResponse, error)
@@ -78,39 +78,39 @@ func (c *bounceBotClient) CheckSolution(ctx context.Context, in *CheckSolutionRe
 	return out, nil
 }
 
-func (c *bounceBotClient) CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*Session, error) {
+func (c *bounceBotClient) CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Session)
-	err := c.cc.Invoke(ctx, BounceBot_CreateSession_FullMethodName, in, out, cOpts...)
+	out := new(Room)
+	err := c.cc.Invoke(ctx, BounceBot_CreateRoom_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bounceBotClient) JoinSession(ctx context.Context, in *JoinSessionRequest, opts ...grpc.CallOption) (*Session, error) {
+func (c *bounceBotClient) JoinRoom(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (*Room, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Session)
-	err := c.cc.Invoke(ctx, BounceBot_JoinSession_FullMethodName, in, out, cOpts...)
+	out := new(Room)
+	err := c.cc.Invoke(ctx, BounceBot_JoinRoom_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bounceBotClient) GetSession(ctx context.Context, in *GetSessionRequest, opts ...grpc.CallOption) (*Session, error) {
+func (c *bounceBotClient) GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*Room, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Session)
-	err := c.cc.Invoke(ctx, BounceBot_GetSession_FullMethodName, in, out, cOpts...)
+	out := new(Room)
+	err := c.cc.Invoke(ctx, BounceBot_GetRoom_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bounceBotClient) StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Session, error) {
+func (c *bounceBotClient) StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*Room, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Session)
+	out := new(Room)
 	err := c.cc.Invoke(ctx, BounceBot_StartGame_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -166,11 +166,11 @@ func (c *bounceBotClient) MarkReadyForNext(ctx context.Context, in *MarkReadyFor
 type BounceBotServer interface {
 	MakeGame(context.Context, *MakeGameRequest) (*Game, error)
 	CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error)
-	// Session management
-	CreateSession(context.Context, *CreateSessionRequest) (*Session, error)
-	JoinSession(context.Context, *JoinSessionRequest) (*Session, error)
-	GetSession(context.Context, *GetSessionRequest) (*Session, error)
-	StartGame(context.Context, *StartGameRequest) (*Session, error)
+	// Room management
+	CreateRoom(context.Context, *CreateRoomRequest) (*Room, error)
+	JoinRoom(context.Context, *JoinRoomRequest) (*Room, error)
+	GetRoom(context.Context, *GetRoomRequest) (*Room, error)
+	StartGame(context.Context, *StartGameRequest) (*Room, error)
 	SubmitSolution(context.Context, *SubmitSolutionRequest) (*SubmitSolutionResponse, error)
 	RetractSolution(context.Context, *RetractSolutionRequest) (*RetractSolutionResponse, error)
 	MarkFinishedSolving(context.Context, *MarkFinishedSolvingRequest) (*MarkFinishedSolvingResponse, error)
@@ -191,16 +191,16 @@ func (UnimplementedBounceBotServer) MakeGame(context.Context, *MakeGameRequest) 
 func (UnimplementedBounceBotServer) CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckSolution not implemented")
 }
-func (UnimplementedBounceBotServer) CreateSession(context.Context, *CreateSessionRequest) (*Session, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateSession not implemented")
+func (UnimplementedBounceBotServer) CreateRoom(context.Context, *CreateRoomRequest) (*Room, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateRoom not implemented")
 }
-func (UnimplementedBounceBotServer) JoinSession(context.Context, *JoinSessionRequest) (*Session, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method JoinSession not implemented")
+func (UnimplementedBounceBotServer) JoinRoom(context.Context, *JoinRoomRequest) (*Room, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinRoom not implemented")
 }
-func (UnimplementedBounceBotServer) GetSession(context.Context, *GetSessionRequest) (*Session, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSession not implemented")
+func (UnimplementedBounceBotServer) GetRoom(context.Context, *GetRoomRequest) (*Room, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoom not implemented")
 }
-func (UnimplementedBounceBotServer) StartGame(context.Context, *StartGameRequest) (*Session, error) {
+func (UnimplementedBounceBotServer) StartGame(context.Context, *StartGameRequest) (*Room, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartGame not implemented")
 }
 func (UnimplementedBounceBotServer) SubmitSolution(context.Context, *SubmitSolutionRequest) (*SubmitSolutionResponse, error) {
@@ -272,56 +272,56 @@ func _BounceBot_CheckSolution_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BounceBot_CreateSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateSessionRequest)
+func _BounceBot_CreateRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRoomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BounceBotServer).CreateSession(ctx, in)
+		return srv.(BounceBotServer).CreateRoom(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BounceBot_CreateSession_FullMethodName,
+		FullMethod: BounceBot_CreateRoom_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BounceBotServer).CreateSession(ctx, req.(*CreateSessionRequest))
+		return srv.(BounceBotServer).CreateRoom(ctx, req.(*CreateRoomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BounceBot_JoinSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(JoinSessionRequest)
+func _BounceBot_JoinRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinRoomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BounceBotServer).JoinSession(ctx, in)
+		return srv.(BounceBotServer).JoinRoom(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BounceBot_JoinSession_FullMethodName,
+		FullMethod: BounceBot_JoinRoom_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BounceBotServer).JoinSession(ctx, req.(*JoinSessionRequest))
+		return srv.(BounceBotServer).JoinRoom(ctx, req.(*JoinRoomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BounceBot_GetSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSessionRequest)
+func _BounceBot_GetRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRoomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BounceBotServer).GetSession(ctx, in)
+		return srv.(BounceBotServer).GetRoom(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BounceBot_GetSession_FullMethodName,
+		FullMethod: BounceBot_GetRoom_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BounceBotServer).GetSession(ctx, req.(*GetSessionRequest))
+		return srv.(BounceBotServer).GetRoom(ctx, req.(*GetRoomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -432,16 +432,16 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _BounceBot_CheckSolution_Handler,
 		},
 		{
-			MethodName: "CreateSession",
-			Handler:    _BounceBot_CreateSession_Handler,
+			MethodName: "CreateRoom",
+			Handler:    _BounceBot_CreateRoom_Handler,
 		},
 		{
-			MethodName: "JoinSession",
-			Handler:    _BounceBot_JoinSession_Handler,
+			MethodName: "JoinRoom",
+			Handler:    _BounceBot_JoinRoom_Handler,
 		},
 		{
-			MethodName: "GetSession",
-			Handler:    _BounceBot_GetSession_Handler,
+			MethodName: "GetRoom",
+			Handler:    _BounceBot_GetRoom_Handler,
 		},
 		{
 			MethodName: "StartGame",

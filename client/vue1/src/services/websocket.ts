@@ -1,4 +1,4 @@
-// WebSocket service for real-time session updates
+// WebSocket service for real-time room updates
 
 import { config } from '../config'
 
@@ -14,7 +14,7 @@ export interface PlayerLeftPayload {
 }
 
 export interface GameStartedPayload {
-  // Empty - client should refresh session data
+  // Empty - client should refresh room data
 }
 
 export interface PlayerSolvedPayload {
@@ -57,14 +57,14 @@ const RECONNECT_DELAY = 3000
 
 class WebSocketService {
   private ws: WebSocket | null = null
-  private sessionId: string | null = null
+  private roomId: string | null = null
   private playerId: string | null = null
   private eventHandler: EventHandler | null = null
   private reconnectTimeout: number | null = null
   private shouldReconnect = false
 
-  connect(sessionId: string, playerId: string, onEvent: EventHandler): void {
-    this.sessionId = sessionId
+  connect(roomId: string, playerId: string, onEvent: EventHandler): void {
+    this.roomId = roomId
     this.playerId = playerId
     this.eventHandler = onEvent
     this.shouldReconnect = true
@@ -72,9 +72,9 @@ class WebSocketService {
   }
 
   private doConnect(): void {
-    if (!this.sessionId || !this.playerId) return
+    if (!this.roomId || !this.playerId) return
 
-    const url = `${config.wsUrl}?sessionId=${this.sessionId}&playerId=${this.playerId}`
+    const url = `${config.wsUrl}?roomId=${this.roomId}&playerId=${this.playerId}`
     console.log('WebSocket: connecting to', url)
 
     this.ws = new WebSocket(url)
@@ -126,7 +126,7 @@ class WebSocketService {
       this.ws.close()
       this.ws = null
     }
-    this.sessionId = null
+    this.roomId = null
     this.playerId = null
     this.eventHandler = null
   }

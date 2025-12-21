@@ -1,4 +1,4 @@
-package session
+package room
 
 import (
 	"encoding/json"
@@ -10,18 +10,18 @@ import (
 
 func TestLoad_NonExistentFile(t *testing.T) {
 	store := NewStore()
-	err := store.Load("/nonexistent/path/sessions.json")
+	err := store.Load("/nonexistent/path/rooms.json")
 	if err != nil {
 		t.Errorf("Load should not error on non-existent file, got: %v", err)
 	}
-	if len(store.sessions) != 0 {
-		t.Errorf("Expected empty sessions, got %d", len(store.sessions))
+	if len(store.rooms) != 0 {
+		t.Errorf("Expected empty rooms, got %d", len(store.rooms))
 	}
 }
 
 func TestLoad_EmptyFile(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
 	// Create empty file
 	if err := os.WriteFile(filename, []byte{}, 0644); err != nil {
@@ -33,14 +33,14 @@ func TestLoad_EmptyFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("Load should not error on empty file, got: %v", err)
 	}
-	if len(store.sessions) != 0 {
-		t.Errorf("Expected empty sessions, got %d", len(store.sessions))
+	if len(store.rooms) != 0 {
+		t.Errorf("Expected empty rooms, got %d", len(store.rooms))
 	}
 }
 
 func TestLoad_InvalidJSON(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
 	// Create file with invalid JSON
 	if err := os.WriteFile(filename, []byte("not valid json"), 0644); err != nil {
@@ -56,11 +56,11 @@ func TestLoad_InvalidJSON(t *testing.T) {
 
 func TestLoad_ValidJSON(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
-	// Create valid session data
+	// Create valid room data
 	pd := persistedData{
-		Sessions: map[string]*Session{
+		Rooms: map[string]*Room{
 			"TEST": {
 				ID:        "TEST",
 				Players:   []Player{{ID: "player1", Name: "Alice"}},
@@ -81,27 +81,27 @@ func TestLoad_ValidJSON(t *testing.T) {
 	if err != nil {
 		t.Errorf("Load should not error on valid JSON, got: %v", err)
 	}
-	if len(store.sessions) != 1 {
-		t.Errorf("Expected 1 session, got %d", len(store.sessions))
+	if len(store.rooms) != 1 {
+		t.Errorf("Expected 1 room, got %d", len(store.rooms))
 	}
-	if store.sessions["TEST"] == nil {
-		t.Error("Expected session 'TEST' to exist")
+	if store.rooms["TEST"] == nil {
+		t.Error("Expected room 'TEST' to exist")
 	}
-	if store.sessions["TEST"].Players[0].Name != "Alice" {
-		t.Errorf("Expected player name 'Alice', got '%s'", store.sessions["TEST"].Players[0].Name)
+	if store.rooms["TEST"].Players[0].Name != "Alice" {
+		t.Errorf("Expected player name 'Alice', got '%s'", store.rooms["TEST"].Players[0].Name)
 	}
-	if store.sessions["TEST"].Wins["player1"] != 3 {
-		t.Errorf("Expected 3 wins, got %d", store.sessions["TEST"].Wins["player1"])
+	if store.rooms["TEST"].Wins["player1"] != 3 {
+		t.Errorf("Expected 3 wins, got %d", store.rooms["TEST"].Wins["player1"])
 	}
 }
 
 func TestLoad_InitializesNilWins(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
-	// Create session data with nil Wins map
+	// Create room data with nil Wins map
 	pd := persistedData{
-		Sessions: map[string]*Session{
+		Rooms: map[string]*Room{
 			"TEST": {
 				ID:        "TEST",
 				Players:   []Player{{ID: "player1", Name: "Alice"}},
@@ -122,17 +122,17 @@ func TestLoad_InitializesNilWins(t *testing.T) {
 	if err != nil {
 		t.Errorf("Load should not error, got: %v", err)
 	}
-	if store.sessions["TEST"].Wins == nil {
+	if store.rooms["TEST"].Wins == nil {
 		t.Error("Expected Wins map to be initialized, got nil")
 	}
 }
 
 func TestSave_CreatesFile(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
 	store := NewStore()
-	store.sessions["TEST"] = &Session{
+	store.rooms["TEST"] = &Room{
 		ID:        "TEST",
 		Players:   []Player{{ID: "player1", Name: "Bob"}},
 		CreatedAt: time.Now(),
@@ -160,21 +160,21 @@ func TestSave_CreatesFile(t *testing.T) {
 		t.Fatalf("Failed to parse saved JSON: %v", err)
 	}
 
-	if len(pd.Sessions) != 1 {
-		t.Errorf("Expected 1 session in saved data, got %d", len(pd.Sessions))
+	if len(pd.Rooms) != 1 {
+		t.Errorf("Expected 1 room in saved data, got %d", len(pd.Rooms))
 	}
-	if pd.Sessions["TEST"].Players[0].Name != "Bob" {
-		t.Errorf("Expected player name 'Bob', got '%s'", pd.Sessions["TEST"].Players[0].Name)
+	if pd.Rooms["TEST"].Players[0].Name != "Bob" {
+		t.Errorf("Expected player name 'Bob', got '%s'", pd.Rooms["TEST"].Players[0].Name)
 	}
 }
 
 func TestSave_AtomicWrite(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 	tmpFile := filename + ".tmp"
 
 	store := NewStore()
-	store.sessions["TEST"] = &Session{
+	store.rooms["TEST"] = &Room{
 		ID:        "TEST",
 		Players:   []Player{{ID: "player1", Name: "Charlie"}},
 		CreatedAt: time.Now(),
@@ -194,18 +194,18 @@ func TestSave_AtomicWrite(t *testing.T) {
 
 func TestSaveAndLoad_RoundTrip(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
-	// Create store with sessions
+	// Create store with rooms
 	store1 := NewStore()
-	store1.sessions["ABCD"] = &Session{
+	store1.rooms["ABCD"] = &Room{
 		ID:          "ABCD",
 		Players:     []Player{{ID: "p1", Name: "Player1"}, {ID: "p2", Name: "Player2"}},
 		CreatedAt:   time.Now(),
 		Wins:        map[string]int{"p1": 5, "p2": 3},
 		GamesPlayed: 8,
 	}
-	store1.sessions["EFGH"] = &Session{
+	store1.rooms["EFGH"] = &Room{
 		ID:        "EFGH",
 		Players:   []Player{{ID: "p3", Name: "Player3"}},
 		CreatedAt: time.Now(),
@@ -224,13 +224,13 @@ func TestSaveAndLoad_RoundTrip(t *testing.T) {
 	}
 
 	// Verify
-	if len(store2.sessions) != 2 {
-		t.Errorf("Expected 2 sessions, got %d", len(store2.sessions))
+	if len(store2.rooms) != 2 {
+		t.Errorf("Expected 2 rooms, got %d", len(store2.rooms))
 	}
 
-	sess := store2.sessions["ABCD"]
+	sess := store2.rooms["ABCD"]
 	if sess == nil {
-		t.Fatal("Session ABCD not found")
+		t.Fatal("Room ABCD not found")
 	}
 	if len(sess.Players) != 2 {
 		t.Errorf("Expected 2 players, got %d", len(sess.Players))
@@ -245,10 +245,10 @@ func TestSaveAndLoad_RoundTrip(t *testing.T) {
 
 func TestStartAutoSave_SavesOnStop(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
 	store := NewStore()
-	store.sessions["TEST"] = &Session{
+	store.rooms["TEST"] = &Room{
 		ID:        "TEST",
 		Players:   []Player{{ID: "player1", Name: "Dana"}},
 		CreatedAt: time.Now(),
@@ -272,17 +272,17 @@ func TestStartAutoSave_SavesOnStop(t *testing.T) {
 	if err := store2.Load(filename); err != nil {
 		t.Fatalf("Failed to load saved data: %v", err)
 	}
-	if store2.sessions["TEST"] == nil {
-		t.Error("Expected session TEST to be persisted")
+	if store2.rooms["TEST"] == nil {
+		t.Error("Expected room TEST to be persisted")
 	}
 }
 
-func TestCleanupStaleSessions_RemovesOldSessions(t *testing.T) {
+func TestCleanupStaleRooms_RemovesOldRooms(t *testing.T) {
 	store := NewStore()
 	now := time.Now()
 
-	// Create a stale session (2 days old)
-	store.sessions["STALE"] = &Session{
+	// Create a stale room (2 days old)
+	store.rooms["STALE"] = &Room{
 		ID:             "STALE",
 		Players:        []Player{{ID: "p1", Name: "Old"}},
 		CreatedAt:      now.Add(-48 * time.Hour),
@@ -290,8 +290,8 @@ func TestCleanupStaleSessions_RemovesOldSessions(t *testing.T) {
 		Wins:           map[string]int{},
 	}
 
-	// Create a recent session (1 hour old)
-	store.sessions["RECENT"] = &Session{
+	// Create a recent room (1 hour old)
+	store.rooms["RECENT"] = &Room{
 		ID:             "RECENT",
 		Players:        []Player{{ID: "p2", Name: "New"}},
 		CreatedAt:      now.Add(-1 * time.Hour),
@@ -299,89 +299,89 @@ func TestCleanupStaleSessions_RemovesOldSessions(t *testing.T) {
 		Wins:           map[string]int{},
 	}
 
-	// Cleanup sessions older than 24 hours
-	removed := store.CleanupStaleSessions(24 * time.Hour)
+	// Cleanup rooms older than 24 hours
+	removed := store.CleanupStaleRooms(24 * time.Hour)
 
 	if removed != 1 {
-		t.Errorf("Expected 1 session removed, got %d", removed)
+		t.Errorf("Expected 1 room removed, got %d", removed)
 	}
-	if len(store.sessions) != 1 {
-		t.Errorf("Expected 1 session remaining, got %d", len(store.sessions))
+	if len(store.rooms) != 1 {
+		t.Errorf("Expected 1 room remaining, got %d", len(store.rooms))
 	}
-	if store.sessions["STALE"] != nil {
-		t.Error("Expected STALE session to be removed")
+	if store.rooms["STALE"] != nil {
+		t.Error("Expected STALE room to be removed")
 	}
-	if store.sessions["RECENT"] == nil {
-		t.Error("Expected RECENT session to remain")
+	if store.rooms["RECENT"] == nil {
+		t.Error("Expected RECENT room to remain")
 	}
 }
 
-func TestCleanupStaleSessions_KeepsAllRecentSessions(t *testing.T) {
+func TestCleanupStaleRooms_KeepsAllRecentRooms(t *testing.T) {
 	store := NewStore()
 	now := time.Now()
 
-	// Create two recent sessions
-	store.sessions["A"] = &Session{
+	// Create two recent rooms
+	store.rooms["A"] = &Room{
 		ID:             "A",
 		LastActivityAt: now.Add(-1 * time.Hour),
 		Wins:           map[string]int{},
 	}
-	store.sessions["B"] = &Session{
+	store.rooms["B"] = &Room{
 		ID:             "B",
 		LastActivityAt: now.Add(-12 * time.Hour),
 		Wins:           map[string]int{},
 	}
 
-	removed := store.CleanupStaleSessions(24 * time.Hour)
+	removed := store.CleanupStaleRooms(24 * time.Hour)
 
 	if removed != 0 {
-		t.Errorf("Expected 0 sessions removed, got %d", removed)
+		t.Errorf("Expected 0 rooms removed, got %d", removed)
 	}
-	if len(store.sessions) != 2 {
-		t.Errorf("Expected 2 sessions remaining, got %d", len(store.sessions))
+	if len(store.rooms) != 2 {
+		t.Errorf("Expected 2 rooms remaining, got %d", len(store.rooms))
 	}
 }
 
-func TestCleanupStaleSessions_RemovesAllStaleSessions(t *testing.T) {
+func TestCleanupStaleRooms_RemovesAllStaleRooms(t *testing.T) {
 	store := NewStore()
 	now := time.Now()
 
-	// Create three stale sessions
-	store.sessions["A"] = &Session{
+	// Create three stale rooms
+	store.rooms["A"] = &Room{
 		ID:             "A",
 		LastActivityAt: now.Add(-25 * time.Hour),
 		Wins:           map[string]int{},
 	}
-	store.sessions["B"] = &Session{
+	store.rooms["B"] = &Room{
 		ID:             "B",
 		LastActivityAt: now.Add(-48 * time.Hour),
 		Wins:           map[string]int{},
 	}
-	store.sessions["C"] = &Session{
+	store.rooms["C"] = &Room{
 		ID:             "C",
 		LastActivityAt: now.Add(-72 * time.Hour),
 		Wins:           map[string]int{},
 	}
 
-	removed := store.CleanupStaleSessions(24 * time.Hour)
+	removed := store.CleanupStaleRooms(24 * time.Hour)
 
 	if removed != 3 {
-		t.Errorf("Expected 3 sessions removed, got %d", removed)
+		t.Errorf("Expected 3 rooms removed, got %d", removed)
 	}
-	if len(store.sessions) != 0 {
-		t.Errorf("Expected 0 sessions remaining, got %d", len(store.sessions))
+	if len(store.rooms) != 0 {
+		t.Errorf("Expected 0 rooms remaining, got %d", len(store.rooms))
 	}
 }
 
 func TestLoad_InitializesZeroLastActivityAt(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
 	createdAt := time.Now().Add(-1 * time.Hour)
 
-	// Create session data with zero LastActivityAt (simulates old data)
+	// Create room data with zero LastActivityAt (simulates old data)
 	pd := persistedData{
-		Sessions: map[string]*Session{
+		Rooms: map[string]*Room{
 			"TEST": {
 				ID:             "TEST",
 				Players:        []Player{{ID: "player1", Name: "Alice"}},
@@ -404,7 +404,7 @@ func TestLoad_InitializesZeroLastActivityAt(t *testing.T) {
 		t.Errorf("Load should not error, got: %v", err)
 	}
 
-	sess := store.sessions["TEST"]
+	sess := store.rooms["TEST"]
 	if sess.LastActivityAt.IsZero() {
 		t.Error("Expected LastActivityAt to be initialized")
 	}
@@ -425,7 +425,7 @@ func TestCreate_SetsLastActivityAt(t *testing.T) {
 		t.Errorf("LastActivityAt should be between %v and %v, got %v", before, after, sess.LastActivityAt)
 	}
 	if !sess.LastActivityAt.Equal(sess.CreatedAt) {
-		t.Error("LastActivityAt should equal CreatedAt for new sessions")
+		t.Error("LastActivityAt should equal CreatedAt for new rooms")
 	}
 }
 
@@ -449,9 +449,9 @@ func TestJoin_UpdatesLastActivityAt(t *testing.T) {
 
 func TestSaveAndLoad_WithActiveGame(t *testing.T) {
 	tmpDir := t.TempDir()
-	filename := filepath.Join(tmpDir, "sessions.json")
+	filename := filepath.Join(tmpDir, "rooms.json")
 
-	// Create store with a session that has an active game
+	// Create store with a room that has an active game
 	store1 := NewStore()
 	sess := store1.Create("Player1")
 	store1.Join(sess.ID, "Player2")
@@ -479,10 +479,10 @@ func TestSaveAndLoad_WithActiveGame(t *testing.T) {
 		t.Fatalf("Load failed: %v", err)
 	}
 
-	// Verify session was restored
-	restoredSess := store2.sessions[sess.ID]
+	// Verify room was restored
+	restoredSess := store2.rooms[sess.ID]
 	if restoredSess == nil {
-		t.Fatalf("Session %s not found after load", sess.ID)
+		t.Fatalf("Room %s not found after load", sess.ID)
 	}
 
 	// Verify game was restored

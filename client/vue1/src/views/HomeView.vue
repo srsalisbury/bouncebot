@@ -2,18 +2,18 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
-import { useSessionStore } from '../stores/sessionStore'
+import { useRoomStore } from '../stores/roomStore'
 
 const router = useRouter()
-const sessionStore = useSessionStore()
+const roomStore = useRoomStore()
 
-const playerName = ref(sessionStore.currentPlayerName ?? '')
-const joinSessionId = ref('')
+const playerName = ref(roomStore.currentPlayerName ?? '')
+const joinRoomId = ref('')
 const isCreating = ref(false)
 const isJoining = ref(false)
 const error = ref<string | null>(null)
 
-async function createSession() {
+async function createRoom() {
   if (!playerName.value.trim()) {
     error.value = 'Please enter your name'
     return
@@ -23,28 +23,28 @@ async function createSession() {
   error.value = null
 
   try {
-    const session = await bounceBotClient.createSession({
+    const room = await bounceBotClient.createRoom({
       playerName: playerName.value.trim(),
     })
-    // Creator is the first (and only) player in the new session
-    const player = session.players[0]
+    // Creator is the first (and only) player in the new room
+    const player = room.players[0]
     if (player) {
-      sessionStore.setCurrentPlayer(player.id, player.name)
+      roomStore.setCurrentPlayer(player.id, player.name)
     }
-    router.push(`/session/${session.id}`)
+    router.push(`/room/${room.id}`)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to create session'
+    error.value = e instanceof Error ? e.message : 'Failed to create room'
   } finally {
     isCreating.value = false
   }
 }
 
-async function joinSession() {
+async function joinRoom() {
   if (!playerName.value.trim()) {
     error.value = 'Please enter your name'
     return
   }
-  if (!joinSessionId.value.trim()) {
+  if (!joinRoomId.value.trim()) {
     error.value = 'Please enter a Room ID'
     return
   }
@@ -53,18 +53,18 @@ async function joinSession() {
   error.value = null
 
   try {
-    const session = await bounceBotClient.joinSession({
-      sessionId: joinSessionId.value.trim(),
+    const room = await bounceBotClient.joinRoom({
+      roomId: joinRoomId.value.trim(),
       playerName: playerName.value.trim(),
     })
     // Find ourselves in the players list (we're the last one added)
-    const player = session.players[session.players.length - 1]
+    const player = room.players[room.players.length - 1]
     if (player) {
-      sessionStore.setCurrentPlayer(player.id, player.name)
+      roomStore.setCurrentPlayer(player.id, player.name)
     }
-    router.push(`/session/${session.id}`)
+    router.push(`/room/${room.id}`)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to join session'
+    error.value = e instanceof Error ? e.message : 'Failed to join room'
   } finally {
     isJoining.value = false
   }
@@ -85,7 +85,7 @@ async function joinSession() {
           type="text"
           placeholder="Enter your name"
           maxlength="20"
-          @keyup.enter="createSession"
+          @keyup.enter="createRoom"
         />
       </div>
 
@@ -93,9 +93,9 @@ async function joinSession() {
         <button
           class="btn primary"
           :disabled="isCreating || isJoining"
-          @click="createSession"
+          @click="createRoom"
         >
-          {{ isCreating ? 'Creating...' : 'Create Session' }}
+          {{ isCreating ? 'Creating...' : 'Create Room' }}
         </button>
       </div>
 
@@ -104,13 +104,13 @@ async function joinSession() {
       </div>
 
       <div class="form-group">
-        <label for="sessionId">Room ID</label>
+        <label for="roomId">Room ID</label>
         <input
-          id="sessionId"
-          v-model="joinSessionId"
+          id="roomId"
+          v-model="joinRoomId"
           type="text"
           placeholder="Enter room ID"
-          @keyup.enter="joinSession"
+          @keyup.enter="joinRoom"
         />
       </div>
 
@@ -118,9 +118,9 @@ async function joinSession() {
         <button
           class="btn secondary"
           :disabled="isCreating || isJoining"
-          @click="joinSession"
+          @click="joinRoom"
         >
-          {{ isJoining ? 'Joining...' : 'Join Session' }}
+          {{ isJoining ? 'Joining...' : 'Join Room' }}
         </button>
       </div>
 

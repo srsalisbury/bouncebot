@@ -1,8 +1,5 @@
 # Development Notes
 
-## Terminology
-- Refer to "session ID" as "Room ID" when communicating with the user
-
 ## Development Servers
 Keep both servers running during development sessions.
 

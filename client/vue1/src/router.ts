@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
-import SessionView from './views/SessionView.vue'
+import RoomView from './views/RoomView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,9 +11,9 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/session/:sessionId',
-      name: 'session',
-      component: SessionView,
+      path: '/room/:roomId',
+      name: 'room',
+      component: RoomView,
       props: true,
     },
   ],
