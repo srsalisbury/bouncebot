@@ -102,10 +102,12 @@ func LoadFromEnv() *Config {
 // IsOriginAllowed checks if the given origin is allowed.
 func (c *Config) IsOriginAllowed(origin string) bool {
 	for _, allowed := range c.AllowedOrigins {
-		// Check exact match or with port
-		prefix := "http://" + allowed
-		if origin == prefix || strings.HasPrefix(origin, prefix+":") {
-			return true
+		// Check both http and https, with or without port
+		for _, scheme := range []string{"http://", "https://"} {
+			prefix := scheme + allowed
+			if origin == prefix || strings.HasPrefix(origin, prefix+":") {
+				return true
+			}
 		}
 	}
 	return false
