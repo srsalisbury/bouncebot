@@ -446,3 +446,53 @@ func TestJoin_UpdatesLastActivityAt(t *testing.T) {
 		t.Error("LastActivityAt should be updated after Join")
 	}
 }
+
+func TestSaveAndLoad_WithActiveGame(t *testing.T) {
+	tmpDir := t.TempDir()
+	filename := filepath.Join(tmpDir, "sessions.json")
+
+	// Create store with a session that has an active game
+	store1 := NewStore()
+	sess := store1.Create("Player1")
+	store1.Join(sess.ID, "Player2")
+
+	// Start a game
+	sess, err := store1.StartGame(sess.ID, true) // use fixed board for deterministic test
+	if err != nil {
+		t.Fatalf("StartGame failed: %v", err)
+	}
+
+	if sess.CurrentGame == nil {
+		t.Fatal("Expected CurrentGame to be set after StartGame")
+	}
+
+	originalGame := sess.CurrentGame
+
+	// Save
+	if err := store1.Save(filename); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+
+	// Load into new store
+	store2 := NewStore()
+	if err := store2.Load(filename); err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+
+	// Verify session was restored
+	restoredSess := store2.sessions[sess.ID]
+	if restoredSess == nil {
+		t.Fatalf("Session %s not found after load", sess.ID)
+	}
+
+	// Verify game was restored
+	if restoredSess.CurrentGame == nil {
+		t.Fatal("Expected CurrentGame to be restored")
+	}
+
+	// Use Game.Equals for complete comparison (board including walls, bots, target)
+	if !restoredSess.CurrentGame.Equals(originalGame) {
+		t.Errorf("Game mismatch after persistence round-trip:\noriginal:\n%s\nrestored:\n%s",
+			originalGame.String(), restoredSess.CurrentGame.String())
+	}
+}
