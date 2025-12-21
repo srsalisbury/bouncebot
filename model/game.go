@@ -1,9 +1,9 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"maps"
-	"reflect"
 	"slices"
 
 	pb "github.com/srsalisbury/bouncebot/proto"
@@ -78,6 +78,24 @@ func (g *Game) ToProto() *pb.Game {
 		Bots:   bots,
 		Target: g.Target.ToProto(),
 	}
+}
+
+// MarshalJSON implements json.Marshaler for Game.
+// Converts to proto format for serialization since Board is an interface.
+func (g *Game) MarshalJSON() ([]byte, error) {
+	return json.Marshal(g.ToProto())
+}
+
+// UnmarshalJSON implements json.Unmarshaler for Game.
+// Converts from proto format since Board is an interface.
+func (g *Game) UnmarshalJSON(data []byte) error {
+	var gp pb.Game
+	if err := json.Unmarshal(data, &gp); err != nil {
+		return err
+	}
+	game := NewGameFromProto(&gp)
+	*g = *game
+	return nil
 }
 
 // Creates a new Game instance, validating the inputs.
@@ -266,7 +284,42 @@ func (g *Game) IsWin() bool {
 }
 
 func (g *Game) Equals(o *Game) bool {
-	return reflect.DeepEqual(g, o)
+	if g.Board.Size() != o.Board.Size() {
+		return false
+	}
+	if !positionsEqualUnordered(g.Board.VWalls(), o.Board.VWalls()) {
+		return false
+	}
+	if !positionsEqualUnordered(g.Board.HWalls(), o.Board.HWalls()) {
+		return false
+	}
+	if !maps.Equal(g.Bots, o.Bots) {
+		return false
+	}
+	if g.Target != o.Target {
+		return false
+	}
+	return true
+}
+
+// positionsEqualUnordered returns true if two position slices contain the same elements,
+// regardless of order.
+func positionsEqualUnordered(a, b []Position) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	aSorted := slices.Clone(a)
+	bSorted := slices.Clone(b)
+	slices.SortFunc(aSorted, comparePositions)
+	slices.SortFunc(bSorted, comparePositions)
+	return slices.Equal(aSorted, bSorted)
+}
+
+func comparePositions(a, b Position) int {
+	if a.X != b.X {
+		return int(a.X - b.X)
+	}
+	return int(a.Y - b.Y)
 }
 
 func (g *Game) String() string {

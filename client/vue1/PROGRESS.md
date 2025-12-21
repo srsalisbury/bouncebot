@@ -985,6 +985,26 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Persistence Layer Fix: Game JSON Serialization
+**Status:** Complete
+
+**What was done:**
+- Fixed sessions with active games failing to load on server restart
+- Root cause: `Board` is an interface type, and Go's JSON cannot unmarshal interfaces
+- Solution: Added custom `MarshalJSON` and `UnmarshalJSON` methods to `Game` struct
+- Serialization uses proto conversion (ToProto/NewGameFromProto) which works correctly
+- Improved `Game.Equals` to do semantic comparison (board size, walls, bots, target) instead of `reflect.DeepEqual` which failed on interface types
+- Wall comparison is order-independent using sorted slice comparison
+- Added table-driven test for Game JSON round-trips with both Game1() and NewRandomGame()
+- Added persistence test that creates a session with an active game, saves, loads, and verifies restoration
+
+**Files modified:**
+- `model/game.go` - Added MarshalJSON/UnmarshalJSON, improved Equals with semantic comparison
+- `model/game_test.go` - Added TestGame_JSONRoundTrip table-driven test
+- `server/session/persistence_test.go` - Added TestSaveAndLoad_WithActiveGame test
+
+---
+
 ## Future Considerations
 
 - Handle abandoned players: Players who disconnect or go idle shouldn't block the game. Consider auto-marking players as "done" after extended inactivity, or allowing remaining players to proceed without them.

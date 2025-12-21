@@ -214,3 +214,37 @@ want:
 %v`, got, want)
 	}
 }
+
+func TestGame_JSONRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		game *Game
+	}{
+		{"Game1", Game1()},
+		{"RandomGame", NewRandomGame()},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			original := tt.game
+
+			// Marshal to JSON
+			data, err := original.MarshalJSON()
+			if err != nil {
+				t.Fatalf("MarshalJSON failed: %v", err)
+			}
+
+			// Unmarshal back
+			var restored Game
+			if err := restored.UnmarshalJSON(data); err != nil {
+				t.Fatalf("UnmarshalJSON failed: %v", err)
+			}
+
+			// Use Game.Equals for complete comparison (board, bots, target)
+			if !restored.Equals(original) {
+				t.Errorf("Game mismatch after round-trip:\noriginal:\n%s\nrestored:\n%s",
+					original.String(), restored.String())
+			}
+		})
+	}
+}
