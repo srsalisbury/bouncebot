@@ -955,6 +955,36 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Runtime Configuration for Kubernetes
+**Status:** Complete
+
+**What was done:**
+- Added runtime configuration system for containerized deployments
+- Config is now injected at container startup via environment variables
+- Supports both relative paths (/api) and absolute URLs (http://localhost:8080)
+- Works with Kubernetes deployments without rebuilding the image
+
+**How it works:**
+1. `public/config.js` - Dev-time config sets `window.APP_CONFIG`
+2. `src/config.ts` - Reads from `window.APP_CONFIG` at runtime
+3. `index.html` - Loads config.js before Vue app
+4. `docker-entrypoint.sh` - Generates config.js from env vars at container startup
+5. `Dockerfile` - Uses entrypoint to run the script before nginx
+
+**Environment variables:**
+- `API_BASE_URL` - Base URL for API calls (default: /api)
+
+**Files added:**
+- `public/config.js` - Dev-time runtime config
+- `docker-entrypoint.sh` - Generates config from env vars
+
+**Files modified:**
+- `src/config.ts` - Reads from window.APP_CONFIG
+- `index.html` - Loads config.js script
+- `Dockerfile` - Added entrypoint for runtime config generation
+
+---
+
 ## Future Considerations
 
 - Handle abandoned players: Players who disconnect or go idle shouldn't block the game. Consider auto-marking players as "done" after extended inactivity, or allowing remaining players to proceed without them.
