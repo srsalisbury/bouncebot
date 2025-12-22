@@ -48,6 +48,16 @@ func (bp BotPosition) ToProto() *pb.BotPos {
 	}
 }
 
+// Direction represents a movement direction.
+type Direction string
+
+const (
+	Up    Direction = "up"
+	Down  Direction = "down"
+	Left  Direction = "left"
+	Right Direction = "right"
+)
+
 // A full game state, including board, bot positions, and target bot position.
 type Game struct {
 	Board Board
@@ -133,6 +143,98 @@ func NewGame(board Board, bots map[BotId]Position, target BotPosition) (*Game, e
 	}, nil
 }
 
+// ComputeDestination calculates where a bot will end up when sliding in a direction.
+// The bot slides until it hits a wall, board edge, or another bot.
+func (g *Game) ComputeDestination(botId BotId, dir Direction) (Position, error) {
+	pos, ok := g.Bots[botId]
+	if !ok {
+		return Position{}, fmt.Errorf("bot with id %d not found", botId)
+	}
+
+	var dx, dy BoardDim
+	switch dir {
+	case Up:
+		dy = -1
+	case Down:
+		dy = 1
+	case Left:
+		dx = -1
+	case Right:
+		dx = 1
+	default:
+		return Position{}, fmt.Errorf("invalid direction: %s", dir)
+	}
+
+	// Slide until hitting an obstacle
+	for {
+		// Check for wall blocking movement
+		if g.hasWallBlocking(pos, dir) {
+			break
+		}
+
+		nextPos := Position{X: pos.X + dx, Y: pos.Y + dy}
+
+		// Check for other bots
+		blocked := false
+		for otherId, otherPos := range g.Bots {
+			if otherId != botId && otherPos == nextPos {
+				blocked = true
+				break
+			}
+		}
+		if blocked {
+			break
+		}
+
+		pos = nextPos
+	}
+
+	return pos, nil
+}
+
+// hasWallBlocking checks if there's a wall or board edge blocking movement from pos in dir.
+func (g *Game) hasWallBlocking(pos Position, dir Direction) bool {
+	switch dir {
+	case Up:
+		if pos.Y == 0 {
+			return true
+		}
+		for _, w := range g.Board.HWalls() {
+			if w.X == pos.X && w.Y == pos.Y-1 {
+				return true
+			}
+		}
+	case Down:
+		if pos.Y == g.Board.Size()-1 {
+			return true
+		}
+		for _, w := range g.Board.HWalls() {
+			if w.X == pos.X && w.Y == pos.Y {
+				return true
+			}
+		}
+	case Left:
+		if pos.X == 0 {
+			return true
+		}
+		for _, w := range g.Board.VWalls() {
+			if w.X == pos.X-1 && w.Y == pos.Y {
+				return true
+			}
+		}
+	case Right:
+		if pos.X == g.Board.Size()-1 {
+			return true
+		}
+		for _, w := range g.Board.VWalls() {
+			if w.X == pos.X && w.Y == pos.Y {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // ValidateMove checks if a bot's intended move is valid based on the game rules.
 // The inputs are the board state, the starting positions of all bots, and a bot's intended end position.
 func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
@@ -141,117 +243,36 @@ func (g *Game) ValidateMove(botId BotId, botEndPos Position) error {
 		return fmt.Errorf("bot with id %d not found", botId)
 	}
 
-	if !g.Board.IsBotWithin(botEndPos) {
-		return fmt.Errorf("end position %v is out of board boundaries", botEndPos)
-	}
 	if botEndPos == botPos {
 		return fmt.Errorf("end position %v is the same as start position", botEndPos)
 	}
-	isStraightLine := func(pos1, pos2 Position) bool {
-		return pos1.X == pos2.X || pos1.Y == pos2.Y
-	}
-	if !isStraightLine(botEndPos, botPos) {
+
+	// Determine direction from start to end position
+	var dir Direction
+	switch {
+	case botEndPos.X == botPos.X && botEndPos.Y < botPos.Y:
+		dir = Up
+	case botEndPos.X == botPos.X && botEndPos.Y > botPos.Y:
+		dir = Down
+	case botEndPos.Y == botPos.Y && botEndPos.X < botPos.X:
+		dir = Left
+	case botEndPos.Y == botPos.Y && botEndPos.X > botPos.X:
+		dir = Right
+	default:
 		return fmt.Errorf("move from %v to %v is not in a straight line", botPos, botEndPos)
 	}
 
-	// Extract a coordinate from a Position
-	type getCoordFunc func(Position) BoardDim
-
-	// Check path for obstacles and end position validity for one axis
-	// given start and end positions, walls, and motion/axis coordinate getters.
-	// Returns an error if path is not clear or end position is invalid.
-	// This handles the logic for either horizontal or vertical moves by
-	// extracting the relevant coordinate from the relevant positions.
-	checkPathAlongAxis := func(startPos, endPos Position, walls []Position, getMotionCoord, getAxisCoord getCoordFunc) error {
-		minCoord, maxCoord := getMotionCoord(startPos), getMotionCoord(endPos)
-		// Is bot coordinate moving in increasing direction (right or down)?
-		motionIsIncreasing := minCoord < maxCoord
-
-		// Get correct min and max coordinates for bounds checking of walls and bots in the way
-		if minCoord > maxCoord {
-			minCoord, maxCoord = maxCoord, minCoord
-		}
-
-		// Check path for walls
-		for _, wall := range walls {
-			wallCoord := getMotionCoord(wall)
-			// Check if wall in correct axis and in middle of path
-			// Note: wall at maxCoord is allowed since it only blocks further movement
-			if getAxisCoord(startPos) == getAxisCoord(wall) && wallCoord >= minCoord && wallCoord < maxCoord {
-				return fmt.Errorf("path blocked by wall at %v", wall)
-			}
-		}
-		// Check path for other bots
-		for otherBotId, otherBotPos := range g.Bots {
-			if otherBotId != botId { // only check other bots
-				botCoord := getMotionCoord(otherBotPos)
-				// Check if otherBot in correct axis and in middle of path
-				if getAxisCoord(startPos) == getAxisCoord(otherBotPos) && botCoord >= minCoord && botCoord <= maxCoord {
-					return fmt.Errorf("path blocked by bot at %v", otherBotPos)
-				}
-			}
-		}
-
-		// Check end position validity: must be against wall, border, or another bot
-		if motionIsIncreasing { // Moving towards increasing coordinate (e.g., right or down)
-			// At board edge
-			if getMotionCoord(endPos) == g.Board.Size()-1 {
-				return nil
-			}
-			// Wall just beyond end position
-			if slices.ContainsFunc(walls, func(wallPos Position) bool {
-				return getMotionCoord(wallPos) == getMotionCoord(endPos) &&
-					getAxisCoord(wallPos) == getAxisCoord(endPos)
-			}) {
-				return nil
-			}
-
-			// Bot just beyond end position
-			if slices.ContainsFunc(slices.Collect(maps.Values(g.Bots)), func(otherBotPos Position) bool {
-				return getMotionCoord(otherBotPos) == getMotionCoord(endPos)+1 &&
-					getAxisCoord(otherBotPos) == getAxisCoord(endPos)
-			}) {
-				return nil
-			}
-
-		} else { // Moving towards decreasing coordinate (e.g., left or up)
-
-			// At board edge
-			if getMotionCoord(endPos) == 0 {
-				return nil
-			}
-
-			// Wall just beyond end position
-			if slices.ContainsFunc(walls, func(wallPos Position) bool {
-				return getMotionCoord(wallPos) == getMotionCoord(endPos)-1 &&
-					getAxisCoord(wallPos) == getAxisCoord(endPos)
-			}) {
-				return nil
-			}
-
-			// Bot just beyond end position
-			if slices.ContainsFunc(slices.Collect(maps.Values(g.Bots)), func(otherBotPos Position) bool {
-				return getMotionCoord(otherBotPos) == getMotionCoord(endPos)-1 &&
-					getAxisCoord(otherBotPos) == getAxisCoord(endPos)
-			}) {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("end position %v is not against a wall, border, or another bot", endPos)
+	// Compute where the bot would actually end up
+	actualEnd, err := g.ComputeDestination(botId, dir)
+	if err != nil {
+		return err
 	}
 
-	getX := func(p Position) BoardDim { return p.X }
-	getY := func(p Position) BoardDim { return p.Y }
-
-	// Check path for obstacles and end position validity
-	if botEndPos.X == botPos.X {
-		// Vertical move
-		return checkPathAlongAxis(botPos, botEndPos, g.Board.HWalls(), getY, getX)
-	} else {
-		// Horizontal move
-		return checkPathAlongAxis(botPos, botEndPos, g.Board.VWalls(), getX, getY)
+	if actualEnd != botEndPos {
+		return fmt.Errorf("move to %v is invalid; bot would end at %v", botEndPos, actualEnd)
 	}
+
+	return nil
 }
 
 // Returns a new Game with the given bot moved to the given position,

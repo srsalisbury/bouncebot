@@ -1,0 +1,164 @@
+{
+  "cases": [
+    {
+      "name": "slide right to board edge",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 2, "y": 3}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 15, "y": 3}
+    },
+    {
+      "name": "slide left to board edge",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 5, "y": 7}],
+      "move": {"robotId": 0, "direction": "left"},
+      "expected": {"x": 0, "y": 7}
+    },
+    {
+      "name": "slide up to board edge",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 4, "y": 10}],
+      "move": {"robotId": 0, "direction": "up"},
+      "expected": {"x": 4, "y": 0}
+    },
+    {
+      "name": "slide down to board edge",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 4, "y": 3}],
+      "move": {"robotId": 0, "direction": "down"},
+      "expected": {"x": 4, "y": 15}
+    },
+    {
+      "name": "slide right to vertical wall",
+      "boardSize": 16,
+      "vWalls": [{"x": 8, "y": 3}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 2, "y": 3}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 8, "y": 3}
+    },
+    {
+      "name": "slide left to vertical wall",
+      "boardSize": 16,
+      "vWalls": [{"x": 4, "y": 7}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 10, "y": 7}],
+      "move": {"robotId": 0, "direction": "left"},
+      "expected": {"x": 5, "y": 7}
+    },
+    {
+      "name": "slide down to horizontal wall",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [{"x": 5, "y": 9}],
+      "robots": [{"id": 0, "x": 5, "y": 3}],
+      "move": {"robotId": 0, "direction": "down"},
+      "expected": {"x": 5, "y": 9}
+    },
+    {
+      "name": "slide up to horizontal wall",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [{"x": 5, "y": 4}],
+      "robots": [{"id": 0, "x": 5, "y": 10}],
+      "move": {"robotId": 0, "direction": "up"},
+      "expected": {"x": 5, "y": 5}
+    },
+    {
+      "name": "blocked by another robot going right",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 2, "y": 3},
+        {"id": 1, "x": 7, "y": 3}
+      ],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 6, "y": 3}
+    },
+    {
+      "name": "blocked by another robot going left",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 10, "y": 5},
+        {"id": 1, "x": 3, "y": 5}
+      ],
+      "move": {"robotId": 0, "direction": "left"},
+      "expected": {"x": 4, "y": 5}
+    },
+    {
+      "name": "blocked by another robot going up",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 5, "y": 12},
+        {"id": 1, "x": 5, "y": 4}
+      ],
+      "move": {"robotId": 0, "direction": "up"},
+      "expected": {"x": 5, "y": 5}
+    },
+    {
+      "name": "blocked by another robot going down",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 5, "y": 2},
+        {"id": 1, "x": 5, "y": 10}
+      ],
+      "move": {"robotId": 0, "direction": "down"},
+      "expected": {"x": 5, "y": 9}
+    },
+    {
+      "name": "wall on different row doesn't block",
+      "boardSize": 16,
+      "vWalls": [{"x": 5, "y": 4}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 2, "y": 3}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 15, "y": 3}
+    },
+    {
+      "name": "already at edge stays in place",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 0, "y": 5}],
+      "move": {"robotId": 0, "direction": "left"},
+      "expected": {"x": 0, "y": 5}
+    },
+    {
+      "name": "robot adjacent to wall stays in place",
+      "boardSize": 16,
+      "vWalls": [{"x": 5, "y": 3}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 5, "y": 3}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 5, "y": 3}
+    },
+    {
+      "name": "multiple robots - move one past another",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 2, "y": 3},
+        {"id": 1, "x": 5, "y": 5},
+        {"id": 2, "x": 10, "y": 3}
+      ],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 9, "y": 3}
+    }
+  ]
+}
