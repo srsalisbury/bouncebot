@@ -1,6 +1,10 @@
 # Binaries
 server/server
+server/bouncebot-server
 
-# Session data
-sessions.json
-sessions.json.tmp
+# Room data
+rooms.json
+rooms.json.tmp
+
+# Test coverage
+coverage.out
