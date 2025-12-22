@@ -1080,4 +1080,6 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ## Future Considerations
 
-- Allow majority vote to boot a player: If a player is idle or unresponsive, a majority of remaining players could vote to remove them from the room.
+- **Mobile/touch support**: Add swipe gestures to move robots, make board responsive to screen size (currently fixed at 512px), adjust UI for smaller screens (larger tap targets, stacked layouts). Tap to select already works.
+
+- **Majority vote to boot a player**: If a player is idle or unresponsive, a majority of remaining players could vote to remove them from the room.
