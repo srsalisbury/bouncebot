@@ -87,3 +87,32 @@ This document outlines the current refactoring tasks being undertaken by the Gem
             - [x] Run `npm update` to update the dependencies.
             - [x] Manually test the frontend to ensure no breaking changes were introduced.
     - [x] Establish CI/CD Pipeline (Docker build & publish to ghcr.io)
+
+## Proposed Additional Refactorings (New Findings)
+
+- [ ] **Unify Physics Engine & Logic:**
+    - [ ] **Backend (Go):**
+        - [ ] Implement a `ComputeMove(botId BotId, dir Direction) (Position, error)` function in `model/game.go`. This essentially "runs" the physics for one move.
+        - [ ] Refactor `ValidateMove` to use `ComputeMove` internally (i.e., calculate where it *would* go, and check if it matches the requested end position).
+    - [ ] **Cross-Language Testing:**
+        - [ ] Create a shared JSON test fixture (e.g., `tests/physics_cases.json`) containing board setups, moves, and expected outcomes.
+        - [ ] Write a Go test that executes these cases against `model/game.go`.
+        - [ ] Write a TypeScript test (Vitest) that executes these cases against `client/vue1/src/gamePhysics.ts`.
+        - [ ] This ensures identical behavior between client (prediction) and server (validation).
+
+- [ ] **Decouple Frontend Animation from State:**
+    - [ ] **Problem:** `gameStore.ts` currently contains hardcoded `setTimeout` delays (150ms) to manage animations. This mixes UI concerns with business logic and makes the store hard to test.
+    - [ ] **Solution:** Refactor `unwindMoves` and `replayMoves` into a "Playback Controller" composable (e.g., `useGamePlayback.ts`).
+        - [ ] The store should only hold the *target* state and the *current* state.
+        - [ ] The composable handles the timing and dispatching of intermediate actions to the store.
+        - [ ] Alternatively, use CSS transitions/Vue `<TransitionGroup>` more effectively and let the store just update the "current" positions instantly, or use a "command queue" that the UI consumes at its own pace.
+
+- [ ] **Strengthen Type Safety:**
+    - [ ] **Frontend:** Introduce Opaque Types (Branded Types) for `RobotId`, `RoomId`, and `PlayerId` to prevent accidental mixing of these integer values.
+    - [ ] **Backend:** Ensure `BotId` and `PlayerId` are consistently used instead of `int` or `int32` in all interfaces.
+
+- [ ] **API & Protobuf Optimization:**
+    - [ ] **State vs Stateless:** Currently `CheckSolution` requires the client to send the full `Game` object back. This is bandwidth-heavy.
+        - [ ] If `CheckSolution` is only used for local validation feedback, the client already has the logic (`gamePhysics.ts`).
+        - [ ] If it's used for server verification, it should ideally rely on a `GameID` if the server is holding state (which it is for Rooms).
+    - [ ] **Proposal:** Deprecate stateless `CheckSolution` in favor of client-side validation + server-side `SubmitSolution` (which is already stateful).
