@@ -2,6 +2,8 @@
 
 BounceBot is a real-time, multiplayer web-based implementation of the board game "Ricochet Robots". Players compete to find the shortest sequence of moves to guide a colored robot to its target location on a grid-based board with walls.
 
+![BounceBot game board mid-game](docs/screenshot.png)
+
 ## Architecture
 
 The project follows a modern client-server architecture with a Go backend and a Vue.js single-page application frontend.
