@@ -8,17 +8,6 @@ import (
 	"time"
 )
 
-const (
-	// DefaultDataFile is the default path for room data persistence.
-	DefaultDataFile = "rooms.json"
-	// DefaultAutoSaveInterval is the default interval for auto-saving rooms.
-	DefaultAutoSaveInterval = 30 * time.Second
-	// DefaultCleanupInterval is the default interval for cleaning up stale rooms.
-	DefaultCleanupInterval = 1 * time.Hour
-	// DefaultRoomMaxAge is the default max age before a room is cleaned up.
-	DefaultRoomMaxAge = 24 * time.Hour
-)
-
 // persistedData is the JSON structure for saving rooms.
 type persistedData struct {
 	Rooms   map[string]*Room `json:"rooms"`

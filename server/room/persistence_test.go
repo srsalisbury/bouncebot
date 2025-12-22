@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/srsalisbury/bouncebot/server/config"
 )
 
 func TestLoad_NonExistentFile(t *testing.T) {
@@ -256,7 +258,7 @@ func TestStartAutoSave_SavesOnStop(t *testing.T) {
 	}
 
 	// Start auto-save and immediately stop it
-	stop := store.StartAutoSave(filename, DefaultAutoSaveInterval)
+	stop := store.StartAutoSave(filename, config.DefaultConfig().AutoSaveInterval)
 	close(stop)
 
 	// Give it a moment to complete the final save
