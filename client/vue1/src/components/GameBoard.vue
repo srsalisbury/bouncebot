@@ -280,6 +280,12 @@ function handleKeydown(event: KeyboardEvent) {
     return
   }
 
+  // Close help modal with Escape
+  if (key === 'Escape' && showHowToPlay.value) {
+    showHowToPlay.value = false
+    return
+  }
+
   // Block all other input when a modal is open
   if (props.inputBlocked) {
     return
@@ -312,7 +318,6 @@ function handleKeydown(event: KeyboardEvent) {
 
   // Shift commands
   if (shiftKey) {
-    if (key === 'R') { store.resetPuzzle(); return }
     if (key === 'D') { doDelete(store.activeSolutionIndex); return }
     if (key === 'ArrowLeft') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex - 1); return }
     if (key === 'ArrowRight') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex + 1); return }

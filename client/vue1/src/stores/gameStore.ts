@@ -149,14 +149,6 @@ export const useGameStore = defineStore('game', () => {
     activeSolution.value.isSolved = false
   }
 
-  function resetPuzzle() {
-    robots.value = initialRobots.value.map(r => ({ ...r }))
-    activeSolution.value.moves.length = 0
-    activeSolution.value.isSolved = false
-    committedMoves.value = []
-    selectedRobotId.value = null
-  }
-
   // Shared function to unwind moves with animation, returns total time in ms
   function unwindMoves(movesToUnwind: Move[]): number {
     movesToUnwind.slice().reverse().forEach((move, i) => {
@@ -421,7 +413,6 @@ export const useGameStore = defineStore('game', () => {
     selectRobot,
     moveRobot,
     undoMove,
-    resetPuzzle,
     loadGame,
     applyGame,
     switchSolution,

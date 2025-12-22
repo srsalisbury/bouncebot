@@ -40,7 +40,6 @@ function handleBackdropClick(event: MouseEvent) {
             <li><kbd>n</kbd> / <kbd>+</kbd> — Start a new solution attempt</li>
             <li><kbd>Shift+←</kbd> / <kbd>Shift+→</kbd> — Switch between solutions</li>
             <li><kbd>Shift+D</kbd> — Delete current solution</li>
-            <li><kbd>Shift+R</kbd> — Reset puzzle to starting positions</li>
             <li><kbd>?</kbd> — Toggle this help</li>
           </ul>
           <p>You can also click on a robot to select it.</p>
