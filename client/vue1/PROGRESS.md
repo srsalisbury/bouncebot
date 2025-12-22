@@ -1033,6 +1033,51 @@ Tracks completed steps from IMPLEMENTATION_PLAN.md.
 
 ---
 
+### Code Cleanup (December 2025)
+**Status:** Complete
+
+**What was done:**
+- Removed unused Shift+R reset puzzle command and added Escape to close help modal
+- Removed unused vite.svg from public assets
+- Added build artifacts to .gitignore (coverage.out, server/bouncebot-server, rooms.json)
+- Updated .env.example: session → room terminology, removed unused client .env.example
+- Removed unused CheckSolution RPC (frontend validates locally, submits via SubmitSolution)
+- Removed redundant default constants from persistence.go (now in config.DefaultConfig())
+
+**Files modified:**
+- `client/vue1/src/components/GameBoard.vue` - Removed Shift+R handler, added Escape to close help
+- `client/vue1/src/components/HowToPlayModal.vue` - Removed Shift+R documentation
+- `client/vue1/src/stores/gameStore.ts` - Removed resetPuzzle function
+- `proto/bouncebot.proto` - Removed CheckSolution RPC and related messages
+- `server/main.go` - Removed CheckSolution handler
+- `server/room/persistence.go` - Removed redundant default constants
+- `.gitignore` - Added build artifacts
+
+---
+
+### Shared Physics Tests & ComputeDestination
+**Status:** Complete
+
+**What was done:**
+- Added Direction type (Up, Down, Left, Right) to model/game.go
+- Added ComputeDestination function that calculates where a robot ends up when sliding
+- Refactored ValidateMove to use ComputeDestination internally (reduced from ~120 to ~35 lines)
+- Created shared physics test fixtures (tests/physics_cases.json) with 16 test cases
+- Added Go test (model/physics_test.go) that runs fixtures against ComputeDestination
+- Added Vitest and TypeScript test (gamePhysics.test.ts) for client-side physics
+- This ensures client and server physics calculations stay in sync
+
+**Files added:**
+- `tests/physics_cases.json` - Shared test fixtures for physics
+- `model/physics_test.go` - Go physics test
+- `client/vue1/src/gamePhysics.test.ts` - TypeScript physics test
+
+**Files modified:**
+- `model/game.go` - Added Direction, ComputeDestination, hasWallBlocking, refactored ValidateMove
+- `client/vue1/package.json` - Added vitest, test scripts
+
+---
+
 ## Future Considerations
 
 - Handle abandoned players: Players who disconnect or go idle shouldn't block the game. Consider auto-marking players as "done" after extended inactivity, or allowing remaining players to proceed without them.
