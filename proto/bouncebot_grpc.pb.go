@@ -20,7 +20,6 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	BounceBot_MakeGame_FullMethodName            = "/bouncebot.BounceBot/MakeGame"
-	BounceBot_CheckSolution_FullMethodName       = "/bouncebot.BounceBot/CheckSolution"
 	BounceBot_CreateRoom_FullMethodName          = "/bouncebot.BounceBot/CreateRoom"
 	BounceBot_JoinRoom_FullMethodName            = "/bouncebot.BounceBot/JoinRoom"
 	BounceBot_GetRoom_FullMethodName             = "/bouncebot.BounceBot/GetRoom"
@@ -38,7 +37,6 @@ const (
 // Service for client to fetch a game board and return results.
 type BounceBotClient interface {
 	MakeGame(ctx context.Context, in *MakeGameRequest, opts ...grpc.CallOption) (*Game, error)
-	CheckSolution(ctx context.Context, in *CheckSolutionRequest, opts ...grpc.CallOption) (*CheckSolutionResponse, error)
 	// Room management
 	CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error)
 	JoinRoom(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (*Room, error)
@@ -62,16 +60,6 @@ func (c *bounceBotClient) MakeGame(ctx context.Context, in *MakeGameRequest, opt
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Game)
 	err := c.cc.Invoke(ctx, BounceBot_MakeGame_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *bounceBotClient) CheckSolution(ctx context.Context, in *CheckSolutionRequest, opts ...grpc.CallOption) (*CheckSolutionResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CheckSolutionResponse)
-	err := c.cc.Invoke(ctx, BounceBot_CheckSolution_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +153,6 @@ func (c *bounceBotClient) MarkReadyForNext(ctx context.Context, in *MarkReadyFor
 // Service for client to fetch a game board and return results.
 type BounceBotServer interface {
 	MakeGame(context.Context, *MakeGameRequest) (*Game, error)
-	CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error)
 	// Room management
 	CreateRoom(context.Context, *CreateRoomRequest) (*Room, error)
 	JoinRoom(context.Context, *JoinRoomRequest) (*Room, error)
@@ -187,9 +174,6 @@ type UnimplementedBounceBotServer struct{}
 
 func (UnimplementedBounceBotServer) MakeGame(context.Context, *MakeGameRequest) (*Game, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MakeGame not implemented")
-}
-func (UnimplementedBounceBotServer) CheckSolution(context.Context, *CheckSolutionRequest) (*CheckSolutionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CheckSolution not implemented")
 }
 func (UnimplementedBounceBotServer) CreateRoom(context.Context, *CreateRoomRequest) (*Room, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRoom not implemented")
@@ -250,24 +234,6 @@ func _BounceBot_MakeGame_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BounceBotServer).MakeGame(ctx, req.(*MakeGameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BounceBot_CheckSolution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckSolutionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BounceBotServer).CheckSolution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: BounceBot_CheckSolution_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BounceBotServer).CheckSolution(ctx, req.(*CheckSolutionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -426,10 +392,6 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MakeGame",
 			Handler:    _BounceBot_MakeGame_Handler,
-		},
-		{
-			MethodName: "CheckSolution",
-			Handler:    _BounceBot_CheckSolution_Handler,
 		},
 		{
 			MethodName: "CreateRoom",

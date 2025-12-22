@@ -9,7 +9,6 @@ import "google/protobuf/timestamp.proto";
 // Service for client to fetch a game board and return results.
 service BounceBot {
   rpc MakeGame (MakeGameRequest) returns (Game) {}
-  rpc CheckSolution (CheckSolutionRequest) returns (CheckSolutionResponse) {}
 
   // Room management
   rpc CreateRoom (CreateRoomRequest) returns (Room) {}
@@ -56,23 +55,6 @@ message Game {
 
 message MakeGameRequest {
   int32 size = 1;
-}
-
-message CheckSolutionRequest {
-  Game game = 1;
-  repeated BotPos moves = 2;
-}
-
-message CheckSolutionResponse {
-  bool is_valid = 1;
-  int32 num_moves = 2;
-  Game resulting_game = 3;
-  MoveError first_bad_move = 4; // If solution is not valid
-}
-
-message MoveError {
-  BotPos move = 1;
-  string error_description = 2;
 }
 
 // Player in a room

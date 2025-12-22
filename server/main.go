@@ -36,17 +36,6 @@ func (s *bounceBotServer) MakeGame(_ context.Context, req *connect.Request[pb.Ma
 	return connect.NewResponse(game.ToProto()), nil
 }
 
-func (s *bounceBotServer) CheckSolution(_ context.Context, req *connect.Request[pb.CheckSolutionRequest]) (*connect.Response[pb.CheckSolutionResponse], error) {
-	starting_game := model.NewGameFromProto(req.Msg.Game)
-	moves := model.NewBotPositionsFromProto(req.Msg.Moves)
-	is_valid, resulting_game := starting_game.CheckSolution(moves)
-	return connect.NewResponse(&pb.CheckSolutionResponse{
-		IsValid:       is_valid,
-		NumMoves:      int32(len(moves)),
-		ResultingGame: resulting_game.ToProto(),
-	}), nil
-}
-
 func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.Room], error) {
 	r := s.rooms.Create(req.Msg.PlayerName)
 	return connect.NewResponse(r.ToProto()), nil
