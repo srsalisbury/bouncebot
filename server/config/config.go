@@ -31,7 +31,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Port:                  8080,
 		DataFile:              "rooms.json",
-		AllowedOrigins:        []string{"localhost"},
+		AllowedOrigins:        []string{"localhost", "guido.local"},
 		AutoSaveInterval:      30 * time.Second,
 		CleanupInterval:       1 * time.Hour,
 		RoomMaxAge:            24 * time.Hour,
