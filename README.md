@@ -155,5 +155,6 @@ npm run generate
 
 ## Developer Documentation
 
-- **[client/vue1/CONTEXT.md](./client/vue1/CONTEXT.md)** - Frontend code layout and conventions
+- **[server/DEVELOPER.md](./server/DEVELOPER.md)** - Backend code layout, RPC endpoints, WebSocket events
+- **[client/vue1/DEVELOPER.md](./client/vue1/DEVELOPER.md)** - Frontend code layout and conventions
 - **[client/vue1/PROGRESS.md](./client/vue1/PROGRESS.md)** - Implementation history and PR links
