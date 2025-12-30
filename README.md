@@ -113,6 +113,8 @@ docker compose up
 - Go 1.24+
 - Node.js & npm
 - `protoc-gen-go` and `protoc-gen-connect-go` (for compiling protos)
+  - `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest`
+  - `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest`
 
 #### 1. Run the Backend Server
 
