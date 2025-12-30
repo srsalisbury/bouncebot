@@ -543,12 +543,3 @@ Each step is a single PR-sized change with visible progress in the browser.
 
 **Visible result:** Cleaner, more maintainable codebase.
 
----
-
-## Reference
-
-The implementation in `/Users/mike/dev/bouncebot/cmd/vue1/` can be used as reference for:
-- Connect client setup (`src/services/connectClient.ts`)
-- Game logic patterns (`src/stores/gameStore.ts`)
-- Board rendering approach (`src/components/GameBoard.vue`)
-- TypeScript types (`src/types/game.ts`)
