@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useRoomStore } from '../stores/roomStore'
-import { websocketService, type WebSocketEvent } from '../services/websocket'
-import type { Room, BotPos } from '../gen/bouncebot_pb'
-import { create } from '@bufbuild/protobuf'
-import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
+import { useRoomConnection } from '../composables/useRoomConnection'
+import { useGameActions } from '../composables/useGameActions'
 import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
 import LeaderboardModal from '../components/LeaderboardModal.vue'
@@ -21,26 +18,60 @@ const router = useRouter()
 const gameStore = useGameStore()
 const roomStore = useRoomStore()
 
-// Normalize roomId to uppercase (room IDs are case-insensitive)
-const normalizedRoomId = computed(() => props.roomId.toUpperCase())
-
-const room = ref<Room | null>(null)
-const isLoading = ref(true)
 const isStarting = ref(false)
 const isJoining = ref(false)
-const error = ref<string | null>(null)
-const pollInterval = ref<number | null>(null)
 const joinName = ref(roomStore.currentPlayerName ?? '')
-const bestSubmittedMoveCount = ref<number | null>(null)
 const showRetractConfirm = ref(false)
 const pendingRetractAction = ref<(() => void) | null>(null)
 const useFixedBoard = ref(false)
 const gameEnded = ref(false)
 const showLeaderboard = ref(false)
 
-const hasGame = computed(() => room.value?.currentGame != null)
+// Room connection composable
+const {
+  room,
+  isLoading,
+  error,
+  normalizedRoomId,
+  hasGame,
+  hasJoined,
+  loadRoom,
+  joinRoom: doJoinRoom,
+  startGame: doStartGame,
+} = useRoomConnection({
+  roomId: computed(() => props.roomId),
+  onGameStarted: () => {
+    gameActions.resetForNewGame()
+    gameEnded.value = false
+  },
+  onGameEnded: () => {
+    gameEnded.value = true
+  },
+  onRoomUpdated: (rm) => {
+    if (rm.currentGame) {
+      gameStore.applyGame(rm.currentGame)
+    }
+    // Restore gameEnded state from server
+    if (rm.currentGame && rm.finishedSolving.length === rm.players.length && rm.players.length > 0) {
+      gameEnded.value = true
+    }
+    // Restore bestSubmittedMoveCount from player's solution
+    if (roomStore.currentPlayerId && gameActions.bestSubmittedMoveCount.value === null) {
+      const mySolution = rm.solutions.find(s => s.playerId === roomStore.currentPlayerId)
+      if (mySolution) {
+        gameActions.restoreBestMoveCount(mySolution.moves.length)
+      }
+    }
+  },
+})
+
+// Game actions composable
+const gameActions = useGameActions({
+  roomId: normalizedRoomId,
+  onRoomUpdated: () => loadRoom(),
+})
+
 const shareUrl = computed(() => window.location.href)
-const hasJoined = computed(() => roomStore.currentPlayerId != null)
 const isPlayerFinished = computed(() => {
   if (!roomStore.currentPlayerId || !room.value) return false
   return room.value.finishedSolving.includes(roomStore.currentPlayerId)
@@ -57,7 +88,6 @@ const playerCount = computed(() => room.value?.players.length ?? 0)
 const sortedSolutions = computed(() => {
   if (!room.value) return []
   return [...room.value.solutions].sort((a, b) => {
-    // Sort by move count (ascending), then by solve time (earlier first)
     if (a.moves.length !== b.moves.length) {
       return a.moves.length - b.moves.length
     }
@@ -77,99 +107,18 @@ function getPlayerColorById(playerId: string): string {
   return index >= 0 ? getPlayerColor(index) : '#888888'
 }
 
-async function loadRoom(forceApplyGame = false) {
-  try {
-    const rm = await bounceBotClient.getRoom({ roomId: normalizedRoomId.value })
-    const hadGame = hasGame.value
-    room.value = rm
-
-    // Check if current player is still in the room (handle stale localStorage)
-    if (roomStore.currentPlayerId) {
-      const isPlayerInRoom = rm.players.some(p => p.id === roomStore.currentPlayerId)
-      if (!isPlayerInRoom) {
-        // Player ID is stale - clear it so they can rejoin
-        roomStore.clear()
-      }
-    }
-
-    // Apply game when it first appears or when forced (e.g., game_started event)
-    if (rm.currentGame && (!hadGame || forceApplyGame)) {
-      gameStore.applyGame(rm.currentGame)
-      // Stop polling once game starts
-      if (pollInterval.value) {
-        clearInterval(pollInterval.value)
-        pollInterval.value = null
-      }
-    }
-
-    // Restore gameEnded state from server
-    // Game is ended if all players are finished solving
-    if (rm.currentGame && rm.finishedSolving.length === rm.players.length && rm.players.length > 0) {
-      gameEnded.value = true
-    }
-
-    // Restore bestSubmittedMoveCount from player's solution
-    if (roomStore.currentPlayerId && bestSubmittedMoveCount.value === null) {
-      const mySolution = rm.solutions.find(s => s.playerId === roomStore.currentPlayerId)
-      if (mySolution) {
-        bestSubmittedMoveCount.value = mySolution.moves.length
-      }
-    }
-
-    error.value = null
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to load room'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-async function startGame(useFixedBoard = false) {
+async function startGame() {
   isStarting.value = true
-  error.value = null
-
-  try {
-    const rm = await bounceBotClient.startGame({ roomId: normalizedRoomId.value, useFixedBoard })
-    room.value = rm
-    bestSubmittedMoveCount.value = null // Reset for new game
-    gameEnded.value = false // Reset game ended state
-
-    if (rm.currentGame) {
-      gameStore.applyGame(rm.currentGame)
-    }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to start game'
-  } finally {
-    isStarting.value = false
-  }
+  gameActions.resetForNewGame()
+  gameEnded.value = false
+  await doStartGame(useFixedBoard.value)
+  isStarting.value = false
 }
 
 async function joinRoom() {
-  if (!joinName.value.trim()) {
-    error.value = 'Please enter your name'
-    return
-  }
-
   isJoining.value = true
-  error.value = null
-
-  try {
-    const rm = await bounceBotClient.joinRoom({
-      roomId: normalizedRoomId.value,
-      playerName: joinName.value.trim(),
-    })
-    // Find ourselves in the players list (we're the last one added)
-    const player = rm.players[rm.players.length - 1]
-    if (player) {
-      roomStore.setCurrentPlayer(player.id, player.name)
-    }
-    // Reload room to get updated player list
-    await loadRoom()
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to join room'
-  } finally {
-    isJoining.value = false
-  }
+  await doJoinRoom(joinName.value)
+  isJoining.value = false
 }
 
 function copyShareUrl() {
@@ -180,100 +129,24 @@ function goHome() {
   router.push('/')
 }
 
-async function submitSolution() {
-  if (!roomStore.currentPlayerId) return
-  const moveCount = gameStore.moveCount
-  // Only submit if this is better than our previous best (or first submission)
-  if (bestSubmittedMoveCount.value !== null && moveCount >= bestSubmittedMoveCount.value) return
-
-  // Convert moves to BotPos format (each move is: robotId + destination position)
-  const moves: BotPos[] = gameStore.moves.map(move =>
-    create(BotPosSchema, {
-      id: move.robotId,
-      pos: create(PositionSchema, { x: move.toX, y: move.toY }),
-    })
-  )
-
-  try {
-    await bounceBotClient.submitSolution({
-      roomId: normalizedRoomId.value,
-      playerId: roomStore.currentPlayerId,
-      moves,
-    })
-    bestSubmittedMoveCount.value = moveCount
-    // Reload room to get updated solutions list
-    await loadRoom()
-  } catch (e) {
-    console.error('Failed to submit solution:', e)
-  }
-}
-
-async function retractSolution() {
-  if (!roomStore.currentPlayerId) return
-
-  try {
-    await bounceBotClient.retractSolution({
-      roomId: normalizedRoomId.value,
-      playerId: roomStore.currentPlayerId,
-    })
-    // Reload room to get updated solutions list
-    await loadRoom()
-  } catch (e) {
-    console.error('Failed to retract solution:', e)
-  }
-}
-
-async function markFinishedSolving() {
-  if (!roomStore.currentPlayerId) return
-
-  try {
-    await bounceBotClient.markFinishedSolving({
-      roomId: normalizedRoomId.value,
-      playerId: roomStore.currentPlayerId,
-    })
-    // Reload room to get updated finished players list
-    await loadRoom()
-  } catch (e) {
-    console.error('Failed to mark finished:', e)
-  }
-}
-
-async function markReadyForNext() {
-  if (!roomStore.currentPlayerId) return
-
-  try {
-    await bounceBotClient.markReadyForNext({
-      roomId: normalizedRoomId.value,
-      playerId: roomStore.currentPlayerId,
-    })
-    // Reload room to get updated ready players list
-    await loadRoom()
-  } catch (e) {
-    console.error('Failed to mark ready:', e)
-  }
-}
-
 // Called by GameBoard before undoing/deleting a solved solution
 function onBeforeRetract(action: () => void) {
-  if (bestSubmittedMoveCount.value !== null) {
-    // User has a submitted solution - show confirmation
+  if (gameActions.bestSubmittedMoveCount.value !== null) {
     pendingRetractAction.value = action
     showRetractConfirm.value = true
   } else {
-    // No submitted solution - just proceed
     action()
   }
 }
 
 async function confirmRetract() {
   showRetractConfirm.value = false
-  await retractSolution()
+  await gameActions.retractSolution()
   if (pendingRetractAction.value) {
     pendingRetractAction.value()
     pendingRetractAction.value = null
   }
-  // Clear after the action so the watch doesn't re-submit while puzzle is still solved
-  bestSubmittedMoveCount.value = null
+  gameActions.clearBestMoveCount()
 }
 
 function cancelRetract() {
@@ -281,62 +154,17 @@ function cancelRetract() {
   pendingRetractAction.value = null
 }
 
-
-function handleWebSocketEvent(event: WebSocketEvent) {
-  if (event.type === 'player_joined') {
-    // Refresh room to get updated player list
-    loadRoom()
-  } else if (event.type === 'game_started') {
-    // Refresh room to get the game (force apply since it's a new game)
-    bestSubmittedMoveCount.value = null // Reset for new game
-    gameEnded.value = false // Reset game ended state
-    loadRoom(true)
-  } else if (event.type === 'player_solved') {
-    loadRoom()
-  } else if (event.type === 'solution_retracted') {
-    loadRoom()
-  } else if (event.type === 'player_finished_solving') {
-    loadRoom()
-  } else if (event.type === 'player_ready_for_next') {
-    // Refresh room to get updated ready players list (no notification needed)
-    loadRoom()
-  } else if (event.type === 'game_ended') {
-    gameEnded.value = true
-    loadRoom()
-  } else if (event.type === 'player_left') {
-    loadRoom() // Refresh room to remove the player from the list
-  }
-}
-
-function connectWebSocket() {
-  if (hasJoined.value && roomStore.currentPlayerId) {
-    websocketService.connect(normalizedRoomId.value, roomStore.currentPlayerId, handleWebSocketEvent)
-  }
-}
-
-// Connect to WebSocket when user joins
-watch(hasJoined, (joined) => {
-  if (joined) {
-    connectWebSocket()
-    // Stop polling once connected via WebSocket
-    if (pollInterval.value) {
-      clearInterval(pollInterval.value)
-      pollInterval.value = null
-    }
-  }
-})
-
 // Submit solution when puzzle is solved (or improved)
 watch(
   () => gameStore.isSolved,
   (solved) => {
     if (solved && hasGame.value) {
-      submitSolution()
+      gameActions.submitSolution()
     }
   }
 )
 
-// Handle dialog keyboard events at window level (capture phase) to intercept before GameBoard
+// Handle dialog keyboard events at window level
 function globalKeydownHandler(event: KeyboardEvent) {
   if (!showRetractConfirm.value) return
   if (event.key === 'Enter') {
@@ -350,10 +178,9 @@ function globalKeydownHandler(event: KeyboardEvent) {
   }
 }
 
-// Add/remove global listener when dialog opens/closes
 watch(showRetractConfirm, (show) => {
   if (show) {
-    window.addEventListener('keydown', globalKeydownHandler, true) // capture phase
+    window.addEventListener('keydown', globalKeydownHandler, true)
   } else {
     window.removeEventListener('keydown', globalKeydownHandler, true)
   }
@@ -365,34 +192,18 @@ function toggleLeaderboard() {
 }
 
 function leaderboardKeydownHandler(event: KeyboardEvent) {
-  // Handle 'l' key when game is active (including game-end review) and no other modal is open
   if (event.key === 'l' && (hasGame.value || gameEnded.value) && !showRetractConfirm.value) {
     event.preventDefault()
     toggleLeaderboard()
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
   window.addEventListener('keydown', leaderboardKeydownHandler)
-
-  // Load room first to verify player is still valid
-  await loadRoom()
-
-  // After loading, check if player is still joined (may have been cleared if stale)
-  if (hasJoined.value) {
-    connectWebSocket()
-  } else {
-    // Poll until joined (for users who haven't joined yet)
-    pollInterval.value = window.setInterval(loadRoom, 3000)
-  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', leaderboardKeydownHandler)
-  if (pollInterval.value) {
-    clearInterval(pollInterval.value)
-  }
-  websocketService.disconnect()
 })
 </script>
 
@@ -451,7 +262,7 @@ onUnmounted(() => {
           <button
             v-if="!isPlayerFinished"
             class="btn done-btn"
-            @click="markFinishedSolving"
+            @click="gameActions.markFinishedSolving"
           >
             I'm Finished
           </button>
@@ -468,7 +279,7 @@ onUnmounted(() => {
             class="btn ready-btn"
             :class="{ pressed: isPlayerReady }"
             :disabled="isPlayerReady"
-            @click="markReadyForNext"
+            @click="gameActions.markReadyForNext"
           >
             I'm Ready For Next Game ({{ readyCount }}/{{ playerCount }})
           </button>
@@ -513,7 +324,7 @@ onUnmounted(() => {
           <button
             class="btn primary start-btn"
             :disabled="isStarting"
-            @click="startGame(useFixedBoard)"
+            @click="startGame"
           >
             {{ isStarting ? 'Starting...' : 'Start Game' }}
           </button>
