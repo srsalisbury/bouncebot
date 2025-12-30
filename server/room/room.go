@@ -39,6 +39,39 @@ func (r *Room) GetPlayerName(playerID string) string {
 	return ""
 }
 
+// FindPlayerIndex returns the index of the player with the given ID, or -1 if not found.
+func (r *Room) FindPlayerIndex(playerID string) int {
+	for i, p := range r.Players {
+		if p.ID == playerID {
+			return i
+		}
+	}
+	return -1
+}
+
+// ContainsPlayer returns true if the player ID is in the given list.
+func containsString(slice []string, s string) bool {
+	for _, v := range slice {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// removeStringAt removes the element at index i from the slice.
+func removeStringAt(slice []string, i int) []string {
+	return append(slice[:i], slice[i+1:]...)
+}
+
+// ClearGameState resets the game-related state for a new game.
+func (r *Room) ClearGameState() {
+	r.Solutions = nil
+	r.SolutionHistory = nil
+	r.FinishedSolving = nil
+	r.ReadyForNext = nil
+}
+
 // ToProto converts a Room to its protobuf representation.
 func (r *Room) ToProto() *pb.Room {
 	players := make([]*pb.Player, len(r.Players))

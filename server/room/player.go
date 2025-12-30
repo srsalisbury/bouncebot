@@ -33,18 +33,12 @@ func (store *Store) DisconnectPlayer(roomID, playerID string) error {
 		return fmt.Errorf("room not found: %s", roomID)
 	}
 
-	var player *Player
-	for i := range room.Players {
-		if room.Players[i].ID == playerID {
-			player = &room.Players[i]
-			break
-		}
-	}
-
-	if player == nil {
+	idx := room.FindPlayerIndex(playerID)
+	if idx == -1 {
 		// Player might have been removed already, which is fine
 		return nil
 	}
+	player := &room.Players[idx]
 
 	player.Status = PlayerStatusDisconnected
 	player.DisconnectedAt = time.Now()
@@ -73,17 +67,11 @@ func (store *Store) ReconnectPlayer(roomID, playerID string) error {
 		return fmt.Errorf("room not found: %s", roomID)
 	}
 
-	var player *Player
-	for i := range room.Players {
-		if room.Players[i].ID == playerID {
-			player = &room.Players[i]
-			break
-		}
-	}
-
-	if player == nil {
+	idx := room.FindPlayerIndex(playerID)
+	if idx == -1 {
 		return fmt.Errorf("player not found: %s", playerID)
 	}
+	player := &room.Players[idx]
 
 	if player.Status == PlayerStatusDisconnected {
 		player.Status = PlayerStatusConnected
@@ -106,59 +94,56 @@ func (store *Store) RemovePlayer(roomID, playerID string) {
 		return // room already gone
 	}
 
-	var playerIndex = -1
-	for i, p := range room.Players {
-		if p.ID == playerID {
-			playerIndex = i
+	playerIndex := room.FindPlayerIndex(playerID)
+	if playerIndex == -1 {
+		return
+	}
+
+	// Only remove if still disconnected
+	if room.Players[playerIndex].Status != PlayerStatusDisconnected {
+		return
+	}
+
+	room.Players = append(room.Players[:playerIndex], room.Players[playerIndex+1:]...)
+	delete(store.timers, playerID)
+
+	// Remove from FinishedSolving
+	for i, id := range room.FinishedSolving {
+		if id == playerID {
+			room.FinishedSolving = removeStringAt(room.FinishedSolving, i)
 			break
 		}
 	}
 
-	if playerIndex != -1 {
-		// Only remove if still disconnected
-		if room.Players[playerIndex].Status == PlayerStatusDisconnected {
-			room.Players = append(room.Players[:playerIndex], room.Players[playerIndex+1:]...)
-			delete(store.timers, playerID)
+	// Remove from ReadyForNext
+	for i, id := range room.ReadyForNext {
+		if id == playerID {
+			room.ReadyForNext = removeStringAt(room.ReadyForNext, i)
+			break
+		}
+	}
 
-			// Remove from FinishedSolving
-			for i, id := range room.FinishedSolving {
-				if id == playerID {
-					room.FinishedSolving = append(room.FinishedSolving[:i], room.FinishedSolving[i+1:]...)
-					break
-				}
-			}
+	// Remove from Solutions
+	for i, sol := range room.Solutions {
+		if sol.PlayerID == playerID {
+			room.Solutions = append(room.Solutions[:i], room.Solutions[i+1:]...)
+			break
+		}
+	}
 
-			// Remove from ReadyForNext
-			for i, id := range room.ReadyForNext {
-				if id == playerID {
-					room.ReadyForNext = append(room.ReadyForNext[:i], room.ReadyForNext[i+1:]...)
-					break
-				}
-			}
+	if store.broadcaster != nil {
+		store.broadcaster.BroadcastPlayerLeft(roomID, playerID)
+	}
 
-			// Remove from Solutions
-			for i, sol := range room.Solutions {
-				if sol.PlayerID == playerID {
-					room.Solutions = append(room.Solutions[:i], room.Solutions[i+1:]...)
-					break
-				}
-			}
-
-			if store.broadcaster != nil {
-				store.broadcaster.BroadcastPlayerLeft(roomID, playerID)
-			}
-
-			// Check if remaining players now satisfy conditions
-			if len(room.Players) > 0 {
-				// If game is active and all remaining players are finished, end the game
-				if room.CurrentGame != nil && len(room.FinishedSolving) == len(room.Players) {
-					store.endGame(room)
-				}
-				// If all remaining players are ready for next, start next game
-				if len(room.ReadyForNext) == len(room.Players) {
-					store.startNextGame(room)
-				}
-			}
+	// Check if remaining players now satisfy conditions
+	if len(room.Players) > 0 {
+		// If game is active and all remaining players are finished, end the game
+		if room.CurrentGame != nil && len(room.FinishedSolving) == len(room.Players) {
+			store.endGame(room)
+		}
+		// If all remaining players are ready for next, start next game
+		if len(room.ReadyForNext) == len(room.Players) {
+			store.startNextGame(room)
 		}
 	}
 }

@@ -54,10 +54,7 @@ func (store *Store) StartGame(roomID string, useFixedBoard bool) (*Room, error) 
 	room.CurrentGame = game
 	room.GameStartedAt = &now
 	room.LastActivityAt = now
-	room.Solutions = nil         // Clear solutions for new game
-	room.SolutionHistory = nil   // Clear history for new game
-	room.FinishedSolving = nil   // Clear finished players for new game
-	room.ReadyForNext = nil      // Clear ready players for new game
+	room.ClearGameState()
 
 	// Broadcast game started event
 	if store.broadcaster != nil {
@@ -89,10 +86,8 @@ func (store *Store) MarkFinishedSolving(roomID, playerID string) error {
 	room.LastActivityAt = time.Now()
 
 	// Check if already finished
-	for _, id := range room.FinishedSolving {
-		if id == playerID {
-			return nil // Already finished
-		}
+	if containsString(room.FinishedSolving, playerID) {
+		return nil
 	}
 
 	room.FinishedSolving = append(room.FinishedSolving, playerID)
@@ -128,10 +123,8 @@ func (store *Store) MarkReadyForNext(roomID, playerID string) error {
 	room.LastActivityAt = time.Now()
 
 	// Check if already ready
-	for _, id := range room.ReadyForNext {
-		if id == playerID {
-			return nil // Already ready
-		}
+	if containsString(room.ReadyForNext, playerID) {
+		return nil
 	}
 
 	room.ReadyForNext = append(room.ReadyForNext, playerID)
@@ -176,10 +169,7 @@ func (store *Store) startNextGame(room *Room) {
 
 	room.CurrentGame = game
 	room.GameStartedAt = &now
-	room.Solutions = nil
-	room.SolutionHistory = nil
-	room.FinishedSolving = nil
-	room.ReadyForNext = nil
+	room.ClearGameState()
 
 	// Broadcast game started event
 	if store.broadcaster != nil {

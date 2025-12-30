@@ -67,13 +67,18 @@ export const useGameStore = defineStore('game', () => {
   // Committed moves (for history dots - delayed to match animation)
   const committedMoves = ref<Move[]>([])
 
+  // Helper to find robot by ID
+  function findRobotById(id: number): Robot | undefined {
+    return robots.value.find(r => r.id === id)
+  }
+
   // Computed
   const activeSolution = computed(() => solutions.value[activeSolutionIndex.value]!)
   const moves = computed(() => activeSolution.value.moves)
   const moveCount = computed(() => moves.value.length)
 
   const isSolved = computed(() => {
-    const targetRobot = robots.value.find(r => r.id === target.value.robotId)
+    const targetRobot = findRobotById(target.value.robotId)
     if (!targetRobot) return false
     return targetRobot.x === target.value.x && targetRobot.y === target.value.y
   })
@@ -95,7 +100,7 @@ export const useGameStore = defineStore('game', () => {
     if (selectedRobotId.value === null) return
     if (isSolved.value) return
 
-    const robot = robots.value.find(r => r.id === selectedRobotId.value)
+    const robot = findRobotById(selectedRobotId.value)
     if (!robot) return
 
     const destination = calculateDestination(robot, direction, robots.value, vWalls.value, hWalls.value)
@@ -120,7 +125,7 @@ export const useGameStore = defineStore('game', () => {
       }, ANIMATION_TIMING.MOVE_DELAY)
 
       // Check if puzzle is now solved and mark the solution
-      const targetRobot = robots.value.find(r => r.id === target.value.robotId)
+      const targetRobot = findRobotById(target.value.robotId)
       if (targetRobot && targetRobot.x === target.value.x && targetRobot.y === target.value.y) {
         activeSolution.value.isSolved = true
       }
@@ -139,7 +144,7 @@ export const useGameStore = defineStore('game', () => {
       committedMoves.value.splice(committedIndex, 1)
     }
 
-    const robot = robots.value.find(r => r.id === lastMove.robotId)
+    const robot = findRobotById(lastMove.robotId)
     if (!robot) return
 
     robot.x = lastMove.fromX
@@ -162,7 +167,7 @@ export const useGameStore = defineStore('game', () => {
           committedMoves.value.splice(idx, 1)
         }
         // Then move robot
-        const robot = robots.value.find(r => r.id === move.robotId)
+        const robot = findRobotById(move.robotId)
         if (robot) {
           robot.x = move.fromX
           robot.y = move.fromY
@@ -177,7 +182,7 @@ export const useGameStore = defineStore('game', () => {
     movesToReplay.forEach((move, i) => {
       setTimeout(() => {
         animatingMoveIndex.value = i
-        const robot = robots.value.find(r => r.id === move.robotId)
+        const robot = findRobotById(move.robotId)
         if (robot) {
           robot.x = move.toX
           robot.y = move.toY
@@ -347,7 +352,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Apply a single replay move (robot id + destination) with dot trail
   function applyReplayMove(robotId: number, x: number, y: number) {
-    const robot = robots.value.find(r => r.id === robotId)
+    const robot = findRobotById(robotId)
     if (robot) {
       const fromX = robot.x
       const fromY = robot.y
@@ -370,7 +375,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Unwind a replay move (remove dot first, then move robot)
   function unwindReplayMove(robotId: number, x: number, y: number) {
-    const robot = robots.value.find(r => r.id === robotId)
+    const robot = findRobotById(robotId)
     if (robot) {
       // Remove the dot immediately (before robot moves)
       let lastIndex = -1
