@@ -1,6 +1,7 @@
 import { ref, onUnmounted, type Ref } from 'vue'
 import type { PlayerSolution, BotPos } from '../gen/bouncebot_pb'
 import type { Direction } from '../constants'
+import { ANIMATION_TIMING } from '../services/AnimationService'
 
 export interface Robot {
   id: number
@@ -94,7 +95,7 @@ export function useReplay(
 
     replayTimeout.value = window.setTimeout(() => {
       stepReplay(solutions)
-    }, 600)
+    }, ANIMATION_TIMING.REPLAY_DELAY)
   }
 
   function stepReplay(solutions: PlayerSolution[]) {
@@ -122,7 +123,7 @@ export function useReplay(
 
     replayTimeout.value = window.setTimeout(() => {
       stepReplay(solutions)
-    }, 600)
+    }, ANIMATION_TIMING.REPLAY_DELAY)
   }
 
   function unwindStep(moves: BotPos[], positionHistory: Map<number, { x: number; y: number }>[], solutions: PlayerSolution[]) {
@@ -152,7 +153,7 @@ export function useReplay(
 
     replayTimeout.value = window.setTimeout(() => {
       unwindStep(moves, positionHistory, solutions)
-    }, 150)
+    }, ANIMATION_TIMING.UNWIND_DELAY)
   }
 
   function unwindThenReplay(solutions: PlayerSolution[]) {
