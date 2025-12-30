@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { BOARD_SIZE, CELL_SIZE, WALL_COLOR, WALL_THICKNESS, DIRECTION_ARROWS, getRobotColor, type Direction } from '../constants'
+import { BOARD_SIZE, CELL_SIZE, WALL_COLOR, WALL_THICKNESS, DIRECTION_ARROWS, getRobotColor } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
-import type { PlayerSolution, BotPos } from '../gen/bouncebot_pb'
+import { useGameInput } from '../composables/useGameInput'
+import { useReplay } from '../composables/useReplay'
+import type { PlayerSolution } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 
 const props = defineProps<{
@@ -20,56 +22,72 @@ const props = defineProps<{
 const store = useGameStore()
 const showHowToPlay = ref(false)
 
-// Replay state for game-ended mode
-const activePlayerSolutionIndex = ref(0)
-const displayedSolutionIndex = ref(-1) // Which solution is currently shown on board (-1 = none)
-const isReplaying = ref(false)
-const isUnwinding = ref(false)
-const replayMoveIndex = ref(0)
-const unwindMoveIndex = ref(0)
-const replayTimeout = ref<number | null>(null)
-const replayRobotPositions = ref<Map<number, { x: number; y: number }>>(new Map())
+const boardPixelSize = BOARD_SIZE * CELL_SIZE
 
-// Compute direction from position change
-function computeDirection(fromX: number, fromY: number, toX: number, toY: number): Direction | null {
-  if (toX > fromX) return 'right'
-  if (toX < fromX) return 'left'
-  if (toY > fromY) return 'down'
-  if (toY < fromY) return 'up'
-  return null
-}
-
-// Get moves with computed directions for a player solution
-function getPlayerSolutionMoves(solutionIndex: number) {
-  if (!props.playerSolutions?.[solutionIndex]) return []
-  const solution = props.playerSolutions[solutionIndex]
-
-  // Build a map of robot positions starting from initial positions
-  const positions = new Map<number, { x: number; y: number }>()
-  for (const robot of store.initialRobots) {
-    positions.set(robot.id, { x: robot.x, y: robot.y })
+// Replay composable
+const {
+  activePlayerSolutionIndex,
+  replayMoveIndex,
+  switchToPlayerSolution,
+  startInitialReplay,
+  getPlayerSolutionMoves,
+} = useReplay(
+  computed(() => store.initialRobots),
+  {
+    resetBoard: () => store.resetBoard(),
+    clearCommittedMoves: () => store.clearCommittedMoves(),
+    applyReplayMove: (robotId, x, y) => store.applyReplayMove(robotId, x, y),
+    unwindReplayMove: (robotId, x, y) => store.unwindReplayMove(robotId, x, y),
   }
+)
 
-  return solution.moves.map(move => {
-    const robotId = move.id
-    const toX = move.pos?.x ?? 0
-    const toY = move.pos?.y ?? 0
-    const from = positions.get(robotId) ?? { x: 0, y: 0 }
-    const direction = computeDirection(from.x, from.y, toX, toY)
-
-    // Update position for next move
-    positions.set(robotId, { x: toX, y: toY })
-
-    return {
-      robotId,
-      direction: direction ?? 'right' as Direction,
-      toX,
-      toY,
-    }
-  })
+// Wrap actions that could retract a solution
+function doUndo() {
+  const currentSolution = store.solutions[store.activeSolutionIndex]
+  if (currentSolution?.isSolved && props.onBeforeRetract) {
+    props.onBeforeRetract(() => store.undoMove())
+  } else {
+    store.undoMove()
+  }
 }
 
-// Format solve time relative to game start (e.g., "1:23")
+function doDelete() {
+  const solution = store.solutions[store.activeSolutionIndex]
+  if (solution?.isSolved && props.onBeforeRetract) {
+    props.onBeforeRetract(() => store.deleteSolution(store.activeSolutionIndex))
+  } else {
+    store.deleteSolution(store.activeSolutionIndex)
+  }
+}
+
+// Input handling composable
+useGameInput(
+  {
+    onMove: (direction) => store.moveRobot(direction),
+    onUndo: doUndo,
+    onDelete: doDelete,
+    onNewSolution: () => store.startNewSolution(),
+    onSelectRobot: (index) => store.selectRobot(index),
+    onSwitchSolution: (delta) => store.switchSolution(store.activeSolutionIndex + delta),
+    onSwitchPlayerSolution: (delta) => {
+      if (props.playerSolutions) {
+        switchToPlayerSolution(activePlayerSolutionIndex.value + delta, props.playerSolutions)
+      }
+    },
+    onToggleHelp: () => { showHowToPlay.value = !showHowToPlay.value },
+    onCloseHelp: () => { showHowToPlay.value = false },
+  },
+  {
+    inputBlocked: computed(() => props.inputBlocked ?? false),
+    gameEnded: computed(() => props.gameEnded ?? false),
+    helpOpen: showHowToPlay,
+    canStartNewSolution: computed(() => store.canStartNewSolution),
+    selectedRobotId: computed(() => store.selectedRobotId),
+    robotCount: computed(() => store.robots.length),
+  }
+)
+
+// Format solve time relative to game start
 function formatSolveTime(solvedAt?: Timestamp): string {
   if (!solvedAt || !props.gameStartedAt) return ''
   const solvedMs = Number(solvedAt.seconds) * 1000 + Math.floor(solvedAt.nanos / 1_000_000)
@@ -81,278 +99,14 @@ function formatSolveTime(solvedAt?: Timestamp): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
-// Switch to a different player's solution with replay
-function switchToPlayerSolution(index: number) {
-  if (!props.playerSolutions || index < 0 || index >= props.playerSolutions.length) return
-  if (index === activePlayerSolutionIndex.value && !isReplaying.value && !isUnwinding.value) return
-
-  // Stop any current replay
-  stopReplay()
-
-  activePlayerSolutionIndex.value = index
-
-  // Unwind current board state, then replay new solution
-  unwindThenReplay()
-}
-
-function unwindThenReplay() {
-  // If no solution is currently displayed, just start replay
-  if (displayedSolutionIndex.value < 0 || !props.playerSolutions?.[displayedSolutionIndex.value]) {
-    store.resetBoard()
-    store.clearCommittedMoves()
-    startReplayWithDelay()
-    return
-  }
-
-  const displayedSolution = props.playerSolutions[displayedSolutionIndex.value]
-  if (!displayedSolution || displayedSolution.moves.length === 0) {
-    store.resetBoard()
-    store.clearCommittedMoves()
-    startReplayWithDelay()
-    return
-  }
-
-  // Start unwinding from the last move
-  isUnwinding.value = true
-  unwindMoveIndex.value = displayedSolution.moves.length - 1
-
-  // Build position map to know where each robot was before each move
-  // We need to track positions through all moves to know "from" positions
-  const positionHistory: Map<number, { x: number; y: number }>[] = []
-
-  // Initial positions
-  const initialPositions = new Map<number, { x: number; y: number }>()
-  for (const robot of store.initialRobots) {
-    initialPositions.set(robot.id, { x: robot.x, y: robot.y })
-  }
-  positionHistory.push(new Map(initialPositions))
-
-  // Track positions after each move
-  let currentPositions = new Map(initialPositions)
-  for (const move of displayedSolution.moves) {
-    currentPositions = new Map(currentPositions)
-    currentPositions.set(move.id, { x: move.pos?.x ?? 0, y: move.pos?.y ?? 0 })
-    positionHistory.push(new Map(currentPositions))
-  }
-
-  // Store the history for unwind steps
-  replayRobotPositions.value = positionHistory[unwindMoveIndex.value] ?? new Map()
-
-  unwindStep(displayedSolution.moves, positionHistory)
-}
-
-function unwindStep(moves: BotPos[], positionHistory: Map<number, { x: number; y: number }>[]) {
-  if (unwindMoveIndex.value < 0) {
-    // Done unwinding, start replay with delay
-    isUnwinding.value = false
-    displayedSolutionIndex.value = -1
-    startReplayWithDelay()
-    return
-  }
-
-  const move = moves[unwindMoveIndex.value]
-  if (!move) {
-    isUnwinding.value = false
-    displayedSolutionIndex.value = -1
-    startReplayWithDelay()
-    return
-  }
-
-  // Get the position this robot was at BEFORE this move
-  const beforePositions = positionHistory[unwindMoveIndex.value]
-  const beforePos = beforePositions?.get(move.id)
-
-  if (beforePos) {
-    store.unwindReplayMove(move.id, beforePos.x, beforePos.y)
-  }
-
-  unwindMoveIndex.value--
-
-  // Schedule next unwind step
-  replayTimeout.value = window.setTimeout(() => {
-    unwindStep(moves, positionHistory)
-  }, 150) // Same speed as in-game unwind
-}
-
-function startReplayWithDelay() {
-  if (!props.playerSolutions?.length) return
-  const solution = props.playerSolutions[activePlayerSolutionIndex.value]
-  if (!solution || !solution.moves.length) return
-
-  isReplaying.value = true
-  replayMoveIndex.value = 0
-
-  // Initialize robot positions for tracking
-  replayRobotPositions.value = new Map()
-  for (const robot of store.initialRobots) {
-    replayRobotPositions.value.set(robot.id, { x: robot.x, y: robot.y })
-  }
-
-  // Delay before first move
-  replayTimeout.value = window.setTimeout(() => {
-    stepReplay()
-  }, 600)
-}
-
-function stepReplay() {
-  if (!props.playerSolutions?.length) {
-    isReplaying.value = false
-    displayedSolutionIndex.value = activePlayerSolutionIndex.value
-    return
-  }
-  const solution = props.playerSolutions[activePlayerSolutionIndex.value]
-  if (!solution || replayMoveIndex.value >= solution.moves.length) {
-    isReplaying.value = false
-    displayedSolutionIndex.value = activePlayerSolutionIndex.value
-    return
-  }
-
-  const move = solution.moves[replayMoveIndex.value]
-  if (!move || !move.pos) {
-    isReplaying.value = false
-    displayedSolutionIndex.value = activePlayerSolutionIndex.value
-    return
-  }
-
-  store.applyReplayMove(move.id, move.pos.x, move.pos.y)
-  replayMoveIndex.value++
-
-  // Schedule next move with 600ms delay
-  replayTimeout.value = window.setTimeout(() => {
-    stepReplay()
-  }, 600)
-}
-
-function stopReplay() {
-  if (replayTimeout.value) {
-    clearTimeout(replayTimeout.value)
-    replayTimeout.value = null
-  }
-  isReplaying.value = false
-  isUnwinding.value = false
-  replayMoveIndex.value = 0
-}
-
 // When game ends and we have solutions, start showing the first one
 watch(() => props.gameEnded, (ended) => {
   if (ended && props.playerSolutions?.length) {
-    activePlayerSolutionIndex.value = 0
-    store.resetBoard()
-    store.clearCommittedMoves()
-    startReplayWithDelay()
+    startInitialReplay(props.playerSolutions)
   }
 })
 
-// Wrap actions that could retract a solution
-function doUndo() {
-  // Only need confirmation if current solution is solved and this is the last move
-  const currentSolution = store.solutions[store.activeSolutionIndex]
-  if (currentSolution?.isSolved && props.onBeforeRetract) {
-    props.onBeforeRetract(() => store.undoMove())
-  } else {
-    store.undoMove()
-  }
-}
-
-function doDelete(index: number) {
-  const solution = store.solutions[index]
-  if (solution?.isSolved && props.onBeforeRetract) {
-    props.onBeforeRetract(() => store.deleteSolution(index))
-  } else {
-    store.deleteSolution(index)
-  }
-}
-
-const boardPixelSize = BOARD_SIZE * CELL_SIZE
-
-// Key mappings for movement directions
-const MOVEMENT_KEYS: Record<string, Direction> = {
-  ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
-  w: 'up', s: 'down', a: 'left', d: 'right',
-}
-
-function handleKeydown(event: KeyboardEvent) {
-  const { key, shiftKey } = event
-
-  // Help toggle (works in all modes)
-  if (key === '?') {
-    showHowToPlay.value = !showHowToPlay.value
-    return
-  }
-
-  // Close help modal with Escape
-  if (key === 'Escape' && showHowToPlay.value) {
-    showHowToPlay.value = false
-    return
-  }
-
-  // Block all other input when a modal is open
-  if (props.inputBlocked) {
-    return
-  }
-
-  // Game ended mode - only allow navigating player solutions
-  if (props.gameEnded) {
-    if (shiftKey) {
-      if (key === 'ArrowLeft') {
-        event.preventDefault()
-        switchToPlayerSolution(activePlayerSolutionIndex.value - 1)
-        return
-      }
-      if (key === 'ArrowRight') {
-        event.preventDefault()
-        switchToPlayerSolution(activePlayerSolutionIndex.value + 1)
-        return
-      }
-    }
-    return // Ignore other keys in game-ended mode
-  }
-
-  // Normal game mode below
-
-  // Undo
-  if (key === 'z' || key === 'u' || key === 'Escape') {
-    doUndo()
-    return
-  }
-
-  // Shift commands
-  if (shiftKey) {
-    if (key === 'D') { doDelete(store.activeSolutionIndex); return }
-    if (key === 'ArrowLeft') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex - 1); return }
-    if (key === 'ArrowRight') { event.preventDefault(); store.switchSolution(store.activeSolutionIndex + 1); return }
-  }
-
-  // New solution
-  if ((key === 'n' || key === '+') && store.canStartNewSolution) {
-    store.startNewSolution()
-    return
-  }
-
-  // Robot selection (1-4)
-  const num = parseInt(key)
-  if (num >= 1 && num <= store.robots.length) {
-    store.selectRobot(num - 1)
-    return
-  }
-
-  // Movement
-  const direction = MOVEMENT_KEYS[key]
-  if (direction && store.selectedRobotId !== null) {
-    event.preventDefault()
-    store.moveRobot(direction)
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-  stopReplay()
-})
-
+// Style helpers
 function getVWallStyle(wall: { x: number; y: number }) {
   return {
     left: `${(wall.x + 1) * CELL_SIZE - WALL_THICKNESS / 2}px`,
@@ -415,6 +169,12 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
     width: `${size}px`,
     height: `${size}px`,
     backgroundColor: getRobotColor(robotId),
+  }
+}
+
+function handleSwitchPlayerSolution(index: number) {
+  if (props.playerSolutions) {
+    switchToPlayerSolution(index, props.playerSolutions)
   }
 }
 </script>
@@ -525,7 +285,7 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
               :key="solution.playerId"
               class="solution-column player-solution"
               :class="{ active: index === activePlayerSolutionIndex, winner: index === 0 }"
-              @click="switchToPlayerSolution(index)"
+              @click="handleSwitchPlayerSolution(index)"
             >
               <div class="player-solution-header">
                 <div class="player-name-row">
@@ -537,7 +297,7 @@ function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: bool
               </div>
               <div class="move-list">
                 <div
-                  v-for="(move, i) in getPlayerSolutionMoves(index)"
+                  v-for="(move, i) in getPlayerSolutionMoves(solution)"
                   :key="i"
                   class="move-item"
                   :class="{ animating: index === activePlayerSolutionIndex && i < replayMoveIndex }"
