@@ -8,4 +8,7 @@ export default defineConfig({
     host: true, // Listen on all network interfaces
     allowedHosts: true, // Allow any hostname (for local network access)
   },
+  test: {
+    environment: 'jsdom',
+  },
 })
