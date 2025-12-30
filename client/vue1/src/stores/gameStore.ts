@@ -4,6 +4,7 @@ import { bounceBotClient } from '../services/connectClient'
 import type { Game } from '../gen/bouncebot_pb'
 import { BOARD_SIZE, MAX_SOLUTIONS, type Direction } from '../constants'
 import { calculateDestination } from '../gamePhysics'
+import { ANIMATION_TIMING } from '../services/AnimationService'
 
 export type Robot = {
   id: number
@@ -113,10 +114,10 @@ export const useGameStore = defineStore('game', () => {
       robot.x = destination.x
       robot.y = destination.y
 
-      // Delay adding to committedMoves to match animation (150ms)
+      // Delay adding to committedMoves to match animation
       setTimeout(() => {
         committedMoves.value.push(move)
-      }, 150)
+      }, ANIMATION_TIMING.MOVE_DELAY)
 
       // Check if puzzle is now solved and mark the solution
       const targetRobot = robots.value.find(r => r.id === target.value.robotId)
@@ -166,9 +167,9 @@ export const useGameStore = defineStore('game', () => {
           robot.x = move.fromX
           robot.y = move.fromY
         }
-      }, i * 150)
+      }, i * ANIMATION_TIMING.MOVE_DELAY)
     })
-    return movesToUnwind.length * 150
+    return movesToUnwind.length * ANIMATION_TIMING.MOVE_DELAY
   }
 
   // Shared function to replay moves with animation, starting after a delay
@@ -182,9 +183,9 @@ export const useGameStore = defineStore('game', () => {
           robot.y = move.toY
         }
         committedMoves.value.push(move)
-      }, startDelay + i * 150)
+      }, startDelay + i * ANIMATION_TIMING.MOVE_DELAY)
     })
-    return startDelay + movesToReplay.length * 150
+    return startDelay + movesToReplay.length * ANIMATION_TIMING.MOVE_DELAY
   }
 
   function switchSolution(index: number) {
@@ -353,12 +354,12 @@ export const useGameStore = defineStore('game', () => {
       robot.x = x
       robot.y = y
 
-      // Add to committedMoves after animation delay (150ms) so dot appears after robot arrives
+      // Add to committedMoves after animation delay so dot appears after robot arrives
       const direction = computeDirection(fromX, fromY, x, y)
       const move: Move = { robotId, direction, fromX, fromY, toX: x, toY: y }
       setTimeout(() => {
         committedMoves.value.push(move)
-      }, 150)
+      }, ANIMATION_TIMING.MOVE_DELAY)
     }
   }
 
