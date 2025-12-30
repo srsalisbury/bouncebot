@@ -153,8 +153,7 @@ If you make changes to `proto/bouncebot.proto`, regenerate the Go and TypeScript
 npm run generate
 ```
 
-## Documentation
+## Developer Documentation
 
-- **[client/vue1/CONTEXT.md](./client/vue1/CONTEXT.md)** - Project overview and key decisions
-- **[client/vue1/IMPLEMENTATION_PLAN.md](./client/vue1/IMPLEMENTATION_PLAN.md)** - Step-by-step build plan
-- **[client/vue1/PROGRESS.md](./client/vue1/PROGRESS.md)** - Completed steps and PR history
+- **[client/vue1/CONTEXT.md](./client/vue1/CONTEXT.md)** - Frontend code layout and conventions
+- **[client/vue1/PROGRESS.md](./client/vue1/PROGRESS.md)** - Implementation history and PR links
