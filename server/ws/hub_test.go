@@ -21,7 +21,7 @@ func mockClient(hub *Hub, roomID, playerID string) *Client {
 }
 
 func TestHubRegisterUnregister(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 
@@ -66,7 +66,7 @@ func TestHubRegisterUnregister(t *testing.T) {
 }
 
 func TestHubBroadcastDelivery(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 
@@ -97,7 +97,7 @@ func TestHubBroadcastDelivery(t *testing.T) {
 }
 
 func TestHubRoomIsolation(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 
@@ -136,7 +136,7 @@ func TestHubRoomIsolation(t *testing.T) {
 }
 
 func TestBroadcastPlayerJoined(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 
@@ -172,7 +172,7 @@ func TestBroadcastPlayerJoined(t *testing.T) {
 }
 
 func TestBroadcastPlayerSolved(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 
@@ -209,7 +209,7 @@ func TestBroadcastPlayerSolved(t *testing.T) {
 }
 
 func TestBroadcastGameEnded(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 
@@ -256,7 +256,7 @@ func TestBroadcastGameEnded(t *testing.T) {
 }
 
 func TestBroadcastToEmptyRoom(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 
@@ -265,7 +265,7 @@ func TestBroadcastToEmptyRoom(t *testing.T) {
 }
 
 func TestMultipleClientsInRoom(t *testing.T) {
-	store := room.NewStore()
+	store := room.NewRoomService()
 	cfg := &config.Config{}
 	hub := NewHub(store, cfg)
 

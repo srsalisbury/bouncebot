@@ -80,13 +80,13 @@ type Client struct {
 type Hub struct {
 	mu       sync.RWMutex
 	rooms    map[string]map[*Client]bool // roomID -> clients
-	store    *room.Store
+	store    *room.RoomService
 	config   *config.Config
 	upgrader websocket.Upgrader
 }
 
 // NewHub creates a new WebSocket hub.
-func NewHub(store *room.Store, cfg *config.Config) *Hub {
+func NewHub(store *room.RoomService, cfg *config.Config) *Hub {
 	h := &Hub{
 		rooms:  make(map[string]map[*Client]bool),
 		store:  store,

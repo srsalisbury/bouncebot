@@ -2,10 +2,6 @@
 package room
 
 import (
-	"fmt"
-	"math/rand/v2"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/srsalisbury/bouncebot/model"
@@ -49,7 +45,7 @@ func (r *Room) FindPlayerIndex(playerID string) int {
 	return -1
 }
 
-// ContainsPlayer returns true if the player ID is in the given list.
+// containsString returns true if the string is in the slice.
 func containsString(slice []string, s string) bool {
 	for _, v := range slice {
 		if v == s {
@@ -144,120 +140,3 @@ type EventBroadcaster interface {
 	BroadcastSolutionRetracted(roomID, playerID string)
 	BroadcastGameEnded(roomID, winnerID, winnerName string, moves []MovePayload)
 }
-
-// Store manages rooms in memory.
-type Store struct {
-	mu                    sync.RWMutex
-	rooms                 map[string]*Room
-	broadcaster           EventBroadcaster
-	timers                map[string]*time.Timer // playerID -> timer
-	disconnectGracePeriod time.Duration
-}
-
-// NewStore creates a new room store.
-func NewStore() *Store {
-	return &Store{
-		rooms:                 make(map[string]*Room),
-		timers:                make(map[string]*time.Timer),
-		disconnectGracePeriod: 30 * time.Second, // default
-	}
-}
-
-// SetBroadcaster sets the event broadcaster for the store.
-func (store *Store) SetBroadcaster(b EventBroadcaster) {
-	store.broadcaster = b
-}
-
-// SetDisconnectGracePeriod sets the grace period for player disconnection.
-func (store *Store) SetDisconnectGracePeriod(d time.Duration) {
-	store.disconnectGracePeriod = d
-}
-
-// roomIDChars is the character set for room IDs (no 0, 1, I, O to avoid confusion)
-const roomIDChars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
-
-// generateRoomID creates a random 4-character room ID.
-func generateRoomID() string {
-	result := make([]byte, 4)
-	for i := range result {
-		result[i] = roomIDChars[rand.IntN(len(roomIDChars))]
-	}
-	return string(result)
-}
-
-// generatePlayerID creates a random player ID.
-func generatePlayerID() string {
-	return fmt.Sprintf("%016x", rand.Uint64())
-}
-
-// Create creates a new room with the given player.
-func (store *Store) Create(playerName string) *Room {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-
-	// Generate unique room ID (retry if collision)
-	roomID := generateRoomID()
-	for store.rooms[roomID] != nil {
-		roomID = generateRoomID()
-	}
-
-	playerID := generatePlayerID()
-	now := time.Now()
-
-	room := &Room{
-		ID: roomID,
-		Players: []Player{
-			{ID: playerID, Name: playerName, Status: PlayerStatusConnected},
-		},
-		CreatedAt:      now,
-		LastActivityAt: now,
-		Wins:           make(map[string]int),
-	}
-
-	store.rooms[roomID] = room
-	return room
-}
-
-// Join adds a player to an existing room.
-func (store *Store) Join(roomID, playerName string) (*Room, error) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-
-	// Normalize room ID to uppercase for case-insensitive matching
-	normalizedID := strings.ToUpper(roomID)
-	room, ok := store.rooms[normalizedID]
-	if !ok {
-		return nil, fmt.Errorf("room not found: %s", roomID)
-	}
-
-	playerID := generatePlayerID()
-	room.Players = append(room.Players, Player{
-		ID:     playerID,
-		Name:   playerName,
-		Status: PlayerStatusConnected,
-	})
-	room.LastActivityAt = time.Now()
-
-	// Broadcast player joined event
-	if store.broadcaster != nil {
-		store.broadcaster.BroadcastPlayerJoined(roomID, playerID, playerName)
-	}
-
-	return room, nil
-}
-
-// Get retrieves a room by ID.
-func (store *Store) Get(roomID string) (*Room, error) {
-	store.mu.RLock()
-	defer store.mu.RUnlock()
-
-	// Normalize room ID to uppercase for case-insensitive matching
-	normalizedID := strings.ToUpper(roomID)
-	room, ok := store.rooms[normalizedID]
-	if !ok {
-		return nil, fmt.Errorf("room not found: %s", roomID)
-	}
-
-	return room, nil
-}
-

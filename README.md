@@ -83,7 +83,7 @@ go run ./server -data /path/to/rooms.json
 The current JSON file persistence works well for single-server deployments. For multi-server deployments (e.g., Kubernetes with multiple replicas), you'll need a shared room store like Redis:
 
 1. **Add Redis dependency**: `go get github.com/redis/go-redis/v9`
-2. **Implement a Redis-backed Store**: Replace the file-based `Load`/`Save` methods with Redis operations
+2. **Implement a Redis-backed RoomRepository**: Replace the file-based `Load`/`Save` methods with Redis operations
 3. **Use Redis pub/sub**: Replace the in-memory WebSocket hub with Redis pub/sub for cross-server broadcasting
 4. **Room affinity**: Alternatively, use sticky sessions to route players to the same server instance
 

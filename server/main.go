@@ -28,7 +28,7 @@ var (
 )
 
 type bounceBotServer struct {
-	rooms *room.Store
+	rooms *room.RoomService
 }
 
 func (s *bounceBotServer) MakeGame(_ context.Context, req *connect.Request[pb.MakeGameRequest]) (*connect.Response[pb.Game], error) {
@@ -132,7 +132,7 @@ func main() {
 
 	log.Printf("Configuration: port=%d, data=%s, origins=%v", cfg.Port, cfg.DataFile, cfg.AllowedOrigins)
 
-	rooms := room.NewStore()
+	rooms := room.NewRoomService()
 	rooms.SetDisconnectGracePeriod(cfg.DisconnectGracePeriod)
 
 	// Load existing rooms from disk (continue with empty list on failure)

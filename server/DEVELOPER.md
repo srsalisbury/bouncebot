@@ -10,12 +10,18 @@ server/
 ├── config/
 │   └── config.go       # Server configuration (ports, persistence settings)
 ├── room/               # Multiplayer room management
-│   ├── room.go         # Room struct, Store, Create/Join/Get operations
-│   ├── player.go       # Player management, disconnect handling
-│   ├── solution.go     # Solution submission, retraction, history
-│   ├── lifecycle.go    # Game lifecycle (start, end, continuation)
-│   ├── persistence.go  # JSON file save/load, auto-save, cleanup
-│   └── *_test.go
+│   ├── service.go      # RoomService orchestrator (main entry point)
+│   ├── repository.go   # RoomRepository - CRUD with per-room locking
+│   ├── player_manager.go    # PlayerManager - connection state
+│   ├── game_lifecycle_manager.go  # GameLifecycle - game state transitions
+│   ├── solution_manager.go  # SolutionManager - solution submission/retraction
+│   ├── timer_manager.go     # TimerManager - disconnect grace timers
+│   ├── persistence_manager.go  # PersistenceManager - save/load/cleanup
+│   ├── signals.go      # Signal types for component communication
+│   ├── room.go         # Room struct and helpers
+│   ├── player.go       # Player struct, PlayerStatus
+│   ├── solution.go     # PlayerSolution structs
+│   └── *_test.go       # Unit tests per component + integration tests
 └── ws/                 # WebSocket real-time events
     ├── hub.go          # Connection hub, event broadcasting
     └── hub_test.go
@@ -37,6 +43,45 @@ proto/                  # Protocol buffer definitions
 └── compile_protos.sh   # Regenerate Go code
 ```
 
+## Architecture
+
+The `room` package uses a component-based architecture with signal-driven communication:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   RoomService (Orchestrator)                 │
+│  - Receives API calls                                        │
+│  - Delegates to components                                   │
+│  - Processes returned signals                                │
+│  - Coordinates cross-cutting concerns                        │
+└─────────────────────────────────────────────────────────────┘
+         │           │            │            │           │
+         ▼           ▼            ▼            ▼           ▼
+   ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+   │   Room   │ │  Player  │ │   Game   │ │ Solution │ │  Timer   │
+   │Repository│ │ Manager  │ │ Lifecycle│ │ Manager  │ │ Manager  │
+   └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘
+```
+
+Components return **signals** instead of calling each other directly. The orchestrator interprets signals and coordinates actions:
+
+```go
+// Components return signals indicating what should happen
+signals, err := playerMgr.RemovePlayer(room, playerID)
+// -> may return EndGameSignal if all remaining players are finished
+
+// Orchestrator processes signals
+for _, sig := range signals {
+    switch s := sig.(type) {
+    case EndGameSignal:
+        newSignals := gameMgr.EndGame(room)
+        // process recursively...
+    case BroadcastSignal:
+        broadcaster.Broadcast(s.Event)
+    }
+}
+```
+
 ## Key Packages
 
 ### `model/` - Game Logic
@@ -48,12 +93,17 @@ Pure game logic with no server dependencies. Can be tested independently.
 - **ComputeDestination**: Calculate where robot stops when sliding
 
 ### `server/room/` - Room Management
-Multiplayer room state and operations.
+Multiplayer room state and operations, organized into components:
 
-- **Room**: Players, current game, solutions, wins tracking
-- **Store**: Thread-safe room storage with persistence
-- **Solution history**: Tracks all solutions for retraction support
-- **Lifecycle**: Game start, end detection, continuation games
+| Component | File | Responsibility |
+|-----------|------|----------------|
+| **RoomService** | `service.go` | Orchestrator - coordinates all components |
+| **RoomRepository** | `repository.go` | CRUD operations with per-room locking |
+| **PlayerManager** | `player_manager.go` | Add/disconnect/reconnect/remove players |
+| **GameLifecycle** | `game_lifecycle_manager.go` | Start/end games, mark finished/ready |
+| **SolutionManager** | `solution_manager.go` | Submit/retract solutions, determine winner |
+| **TimerManager** | `timer_manager.go` | Disconnect grace period timers |
+| **PersistenceManager** | `persistence_manager.go` | Save/load rooms, cleanup stale rooms |
 
 ### `server/ws/` - WebSocket Hub
 Real-time event broadcasting to connected clients.
@@ -89,10 +139,14 @@ Defined in `proto/bouncebot.proto`, handled in `server/main.go`:
 - Use `connect.CodeNotFound`, `connect.CodeInvalidArgument`, etc.
 
 ### Thread Safety
-- `Store` uses `sync.RWMutex` for concurrent access
-- Room modifications happen inside lock
+- `RoomRepository` uses per-room locking via `GetWithLock()`
+- Each room operation locks only that room
+- Timer callbacks and other rooms can proceed concurrently
 
 ### Testing
+- Unit tests per component (e.g., `repository_test.go`, `player_manager_test.go`)
+- Integration tests in `service_test.go`
+- Shared test utilities in `helpers_test.go`
 - Table-driven tests preferred
 - Shared physics fixtures in `tests/physics_cases.json`
 - Run all tests: `go test ./...`
