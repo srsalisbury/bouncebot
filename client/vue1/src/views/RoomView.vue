@@ -23,7 +23,6 @@ const isJoining = ref(false)
 const joinName = ref(roomStore.currentPlayerName ?? '')
 const showRetractConfirm = ref(false)
 const pendingRetractAction = ref<(() => void) | null>(null)
-const useFixedBoard = ref(false)
 const gameEnded = ref(false)
 const showLeaderboard = ref(false)
 
@@ -111,7 +110,7 @@ async function startGame() {
   isStarting.value = true
   gameActions.resetForNewGame()
   gameEnded.value = false
-  await doStartGame(useFixedBoard.value)
+  await doStartGame()
   isStarting.value = false
 }
 
@@ -328,11 +327,6 @@ onUnmounted(() => {
           >
             {{ isStarting ? 'Starting...' : 'Start Game' }}
           </button>
-
-          <label class="fixed-board-option">
-            <input type="checkbox" v-model="useFixedBoard" />
-            Use fixed board (for testing)
-          </label>
         </div>
 
         <p class="hint">Share the link above with friends to play together!</p>

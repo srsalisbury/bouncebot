@@ -17,11 +17,6 @@ func NewBounceBotServer(rooms *room.RoomService) *bounceBotServer {
 	return &bounceBotServer{rooms: rooms}
 }
 
-func (s *bounceBotServer) MakeGame(_ context.Context, req *connect.Request[pb.MakeGameRequest]) (*connect.Response[pb.Game], error) {
-	game := model.Game1()
-	return connect.NewResponse(game.ToProto()), nil
-}
-
 func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.Room], error) {
 	r := s.rooms.Create(req.Msg.PlayerName)
 	return connect.NewResponse(r.ToProto()), nil
@@ -44,7 +39,7 @@ func (s *bounceBotServer) GetRoom(_ context.Context, req *connect.Request[pb.Get
 }
 
 func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.StartGameRequest]) (*connect.Response[pb.Room], error) {
-	r, err := s.rooms.StartGame(req.Msg.RoomId, req.Msg.UseFixedBoard)
+	r, err := s.rooms.StartGame(req.Msg.RoomId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}

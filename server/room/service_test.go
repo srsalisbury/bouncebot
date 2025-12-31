@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/srsalisbury/bouncebot/model"
 	"github.com/srsalisbury/bouncebot/server/config"
 )
 
@@ -72,7 +73,7 @@ func TestService_StartGame(t *testing.T) {
 	svc := NewRoomService()
 
 	room := svc.Create("Alice")
-	room, err := svc.StartGame(room.ID, false)
+	room, err := svc.StartGame(room.ID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -91,7 +92,9 @@ func TestService_SubmitSolution_ValidSolution(t *testing.T) {
 	svc.SetBroadcaster(mock)
 
 	room := svc.Create("Alice")
-	svc.StartGame(room.ID, true) // Use fixed board
+	svc.StartGame(room.ID)
+	// Use fixed Game1 board so validSolution() works
+	room.CurrentGame = model.Game1()
 	aliceID := room.Players[0].ID
 
 	solution, err := svc.SubmitSolution(room.ID, aliceID, validSolution())
@@ -124,7 +127,9 @@ func TestService_RetractSolution(t *testing.T) {
 	svc.SetBroadcaster(mock)
 
 	room := svc.Create("Alice")
-	svc.StartGame(room.ID, true)
+	svc.StartGame(room.ID)
+	// Use fixed Game1 board so validSolution() works
+	room.CurrentGame = model.Game1()
 	aliceID := room.Players[0].ID
 
 	svc.SubmitSolution(room.ID, aliceID, validSolution())
@@ -210,7 +215,7 @@ func TestService_MarkFinishedSolving_TriggersGameEnd(t *testing.T) {
 
 	room := svc.Create("Alice")
 	svc.Join(room.ID, "Bob")
-	svc.StartGame(room.ID, true)
+	svc.StartGame(room.ID)
 
 	aliceID := room.Players[0].ID
 	bobID := room.Players[1].ID
@@ -257,7 +262,7 @@ func TestService_RemovePlayer_TriggersGameEnd(t *testing.T) {
 
 	room := svc.Create("Alice")
 	svc.Join(room.ID, "Bob")
-	svc.StartGame(room.ID, false)
+	svc.StartGame(room.ID)
 
 	aliceID := room.Players[0].ID
 	bobID := room.Players[1].ID
@@ -365,7 +370,7 @@ func TestService_ToProto(t *testing.T) {
 
 	room := svc.Create("Alice")
 	svc.Join(room.ID, "Bob")
-	svc.StartGame(room.ID, false)
+	svc.StartGame(room.ID)
 
 	room, _ = svc.Get(room.ID)
 	proto := room.ToProto()

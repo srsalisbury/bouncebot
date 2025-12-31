@@ -33,8 +33,6 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// BounceBotMakeGameProcedure is the fully-qualified name of the BounceBot's MakeGame RPC.
-	BounceBotMakeGameProcedure = "/bouncebot.BounceBot/MakeGame"
 	// BounceBotCreateRoomProcedure is the fully-qualified name of the BounceBot's CreateRoom RPC.
 	BounceBotCreateRoomProcedure = "/bouncebot.BounceBot/CreateRoom"
 	// BounceBotJoinRoomProcedure is the fully-qualified name of the BounceBot's JoinRoom RPC.
@@ -59,7 +57,6 @@ const (
 
 // BounceBotClient is a client for the bouncebot.BounceBot service.
 type BounceBotClient interface {
-	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
 	// Room management
 	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
 	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error)
@@ -82,12 +79,6 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 	baseURL = strings.TrimRight(baseURL, "/")
 	bounceBotMethods := proto.File_bouncebot_proto.Services().ByName("BounceBot").Methods()
 	return &bounceBotClient{
-		makeGame: connect.NewClient[proto.MakeGameRequest, proto.Game](
-			httpClient,
-			baseURL+BounceBotMakeGameProcedure,
-			connect.WithSchema(bounceBotMethods.ByName("MakeGame")),
-			connect.WithClientOptions(opts...),
-		),
 		createRoom: connect.NewClient[proto.CreateRoomRequest, proto.Room](
 			httpClient,
 			baseURL+BounceBotCreateRoomProcedure,
@@ -141,7 +132,6 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 
 // bounceBotClient implements BounceBotClient.
 type bounceBotClient struct {
-	makeGame            *connect.Client[proto.MakeGameRequest, proto.Game]
 	createRoom          *connect.Client[proto.CreateRoomRequest, proto.Room]
 	joinRoom            *connect.Client[proto.JoinRoomRequest, proto.Room]
 	getRoom             *connect.Client[proto.GetRoomRequest, proto.Room]
@@ -150,11 +140,6 @@ type bounceBotClient struct {
 	retractSolution     *connect.Client[proto.RetractSolutionRequest, proto.RetractSolutionResponse]
 	markFinishedSolving *connect.Client[proto.MarkFinishedSolvingRequest, proto.MarkFinishedSolvingResponse]
 	markReadyForNext    *connect.Client[proto.MarkReadyForNextRequest, proto.MarkReadyForNextResponse]
-}
-
-// MakeGame calls bouncebot.BounceBot.MakeGame.
-func (c *bounceBotClient) MakeGame(ctx context.Context, req *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error) {
-	return c.makeGame.CallUnary(ctx, req)
 }
 
 // CreateRoom calls bouncebot.BounceBot.CreateRoom.
@@ -199,7 +184,6 @@ func (c *bounceBotClient) MarkReadyForNext(ctx context.Context, req *connect.Req
 
 // BounceBotHandler is an implementation of the bouncebot.BounceBot service.
 type BounceBotHandler interface {
-	MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error)
 	// Room management
 	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
 	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error)
@@ -218,12 +202,6 @@ type BounceBotHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	bounceBotMethods := proto.File_bouncebot_proto.Services().ByName("BounceBot").Methods()
-	bounceBotMakeGameHandler := connect.NewUnaryHandler(
-		BounceBotMakeGameProcedure,
-		svc.MakeGame,
-		connect.WithSchema(bounceBotMethods.ByName("MakeGame")),
-		connect.WithHandlerOptions(opts...),
-	)
 	bounceBotCreateRoomHandler := connect.NewUnaryHandler(
 		BounceBotCreateRoomProcedure,
 		svc.CreateRoom,
@@ -274,8 +252,6 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 	)
 	return "/bouncebot.BounceBot/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case BounceBotMakeGameProcedure:
-			bounceBotMakeGameHandler.ServeHTTP(w, r)
 		case BounceBotCreateRoomProcedure:
 			bounceBotCreateRoomHandler.ServeHTTP(w, r)
 		case BounceBotJoinRoomProcedure:
@@ -300,10 +276,6 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 
 // UnimplementedBounceBotHandler returns CodeUnimplemented from all methods.
 type UnimplementedBounceBotHandler struct{}
-
-func (UnimplementedBounceBotHandler) MakeGame(context.Context, *connect.Request[proto.MakeGameRequest]) (*connect.Response[proto.Game], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.MakeGame is not implemented"))
-}
 
 func (UnimplementedBounceBotHandler) CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CreateRoom is not implemented"))

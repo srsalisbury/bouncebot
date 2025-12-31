@@ -81,11 +81,11 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     }
   }
 
-  async function startGame(useFixedBoard = false) {
+  async function startGame() {
     error.value = null
 
     try {
-      const rm = await bounceBotClient.startGame({ roomId: normalizedRoomId.value, useFixedBoard })
+      const rm = await bounceBotClient.startGame({ roomId: normalizedRoomId.value })
       room.value = rm
       onRoomUpdated?.(rm)
       return true

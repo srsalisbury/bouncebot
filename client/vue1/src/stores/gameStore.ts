@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { bounceBotClient } from '../services/connectClient'
 import type { Game } from '../gen/bouncebot_pb'
-import { BOARD_SIZE, MAX_SOLUTIONS, type Direction } from '../constants'
+import { MAX_SOLUTIONS, type Direction } from '../constants'
 import { calculateDestination } from '../gamePhysics'
 import { ANIMATION_TIMING } from '../services/AnimationService'
 
@@ -310,32 +309,6 @@ export const useGameStore = defineStore('game', () => {
     selectedRobotId.value = null
   }
 
-  async function loadGame() {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const game = await bounceBotClient.makeGame({ size: BOARD_SIZE })
-
-      // Validate game response
-      if (!game.board || !game.bots || game.bots.length === 0 || !game.target) {
-        throw new Error('Invalid game data received from server')
-      }
-
-      applyGame(game)
-    } catch (e) {
-      // Format error message for user
-      const message = e instanceof Error ? e.message : 'Failed to load game'
-      if (message.includes('fetch') || message.includes('network') || message.includes('Failed to fetch')) {
-        error.value = 'Unable to connect to server. Please check your connection and try again.'
-      } else {
-        error.value = message
-      }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
   // Reset board to initial robot positions (for replay)
   function resetBoard() {
     robots.value = initialRobots.value.map(r => ({ ...r }))
@@ -419,7 +392,6 @@ export const useGameStore = defineStore('game', () => {
     selectRobot,
     moveRobot,
     undoMove,
-    loadGame,
     applyGame,
     switchSolution,
     startNewSolution,

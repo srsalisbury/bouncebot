@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println(model.Game1().String())
-	fmt.Println(model.Board1().String())
+	game := model.NewRandomGame()
+	fmt.Println(game.String())
+	fmt.Println(game.Board.String())
 }

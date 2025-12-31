@@ -25,17 +25,7 @@ func (m *mockBroadcaster) BroadcastGameEnded(roomID, winnerID, winnerName string
 	m.gameEndedCalled = true
 }
 
-// validSolution returns a valid 7-move solution for Game1 (fixed board).
-// Target is bot 0 at (5, 13), starting at (5, 4).
-// Moves: Bot 1 left, then Bot 0: up, left, down, left, up, right
+// validSolution returns model.Game1Solution for convenience.
 func validSolution() []model.BotPosition {
-	return []model.BotPosition{
-		{Id: 1, Pos: model.Position{X: 0, Y: 12}},
-		{Id: 0, Pos: model.Position{X: 5, Y: 0}},
-		{Id: 0, Pos: model.Position{X: 2, Y: 0}},
-		{Id: 0, Pos: model.Position{X: 2, Y: 15}},
-		{Id: 0, Pos: model.Position{X: 0, Y: 15}},
-		{Id: 0, Pos: model.Position{X: 0, Y: 13}},
-		{Id: 0, Pos: model.Position{X: 5, Y: 13}},
-	}
+	return model.Game1Solution()
 }

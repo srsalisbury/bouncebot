@@ -163,11 +163,6 @@ func BuildBoard(panel1, panel2, panel3, panel4 int) Board {
 	)
 }
 
-// Returns a sample full-sized board.
-func Board1() Board {
-	return BuildBoard(1, 2, 3, 4)
-}
-
 // mustBuildNewGame is like NewGame but panics on error.
 func mustBuildNewGame(board Board, bots map[BotId]Position, botTarget BotPosition) *Game {
 	game, err := NewGame(board, bots, botTarget)
@@ -175,19 +170,6 @@ func mustBuildNewGame(board Board, bots map[BotId]Position, botTarget BotPositio
 		panic(err)
 	}
 	return game
-}
-
-// Returns a sample full-sized game with fixed configuration.
-func Game1() *Game {
-	board := Board1()
-	bots := map[BotId]Position{
-		0: {X: 5, Y: 4},
-		1: {X: 10, Y: 12},
-		2: {X: 3, Y: 9},
-		3: {X: 12, Y: 4},
-	}
-	target := BotPosition{Id: 0, Pos: Position{X: 5, Y: 13}}
-	return mustBuildNewGame(board, bots, target)
 }
 
 // NewRandomGame generates a new game with random configuration:

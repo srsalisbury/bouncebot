@@ -19,7 +19,7 @@ func TestGameLifecycle_StartGame(t *testing.T) {
 		Wins:           map[string]int{},
 	}
 
-	signals, err := gl.StartGame(room, false)
+	signals, err := gl.StartGame(room)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -45,41 +45,6 @@ func TestGameLifecycle_StartGame(t *testing.T) {
 	}
 }
 
-func TestGameLifecycle_StartGame_FixedBoard(t *testing.T) {
-	sm := NewSolutionManager()
-	gl := NewGameLifecycle(sm)
-
-	room := &Room{
-		ID:             "TEST",
-		Players:        []Player{{ID: "alice", Name: "Alice"}},
-		CreatedAt:      time.Now(),
-		LastActivityAt: time.Now(),
-		Wins:           map[string]int{},
-	}
-
-	signals, err := gl.StartGame(room, true)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if room.CurrentGame == nil {
-		t.Fatal("expected game to be set")
-	}
-
-	// Fixed board should have target at position (5, 13) for robot 0
-	target := room.CurrentGame.Target
-	if target.Id != 0 {
-		t.Errorf("expected fixed board target robot ID 0, got %d", target.Id)
-	}
-	if target.Pos.X != 5 || target.Pos.Y != 13 {
-		t.Errorf("expected fixed board target at (5, 13), got (%d, %d)", target.Pos.X, target.Pos.Y)
-	}
-
-	if len(signals) != 1 {
-		t.Errorf("expected 1 signal, got %d", len(signals))
-	}
-}
-
 func TestGameLifecycle_StartGame_ClearsGameState(t *testing.T) {
 	sm := NewSolutionManager()
 	gl := NewGameLifecycle(sm)
@@ -95,7 +60,7 @@ func TestGameLifecycle_StartGame_ClearsGameState(t *testing.T) {
 		ReadyForNext:    []string{"alice"},
 	}
 
-	gl.StartGame(room, false)
+	gl.StartGame(room)
 
 	if len(room.Solutions) != 0 {
 		t.Error("expected Solutions to be cleared")
@@ -124,13 +89,13 @@ func TestGameLifecycle_StartGame_Multiple(t *testing.T) {
 	}
 
 	// First game
-	gl.StartGame(room, false)
+	gl.StartGame(room)
 	firstGameStartedAt := room.GameStartedAt
 
 	time.Sleep(10 * time.Millisecond)
 
 	// Second game
-	gl.StartGame(room, false)
+	gl.StartGame(room)
 
 	if room.GameStartedAt == firstGameStartedAt {
 		t.Error("expected GameStartedAt to be updated for new game")

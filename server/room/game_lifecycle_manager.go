@@ -11,7 +11,7 @@ import (
 type GameLifecycle interface {
 	// StartGame starts a new game in the room.
 	// Returns signals or error.
-	StartGame(room *Room, useFixedBoard bool) ([]Signal, error)
+	StartGame(room *Room) ([]Signal, error)
 
 	// MarkFinishedSolving marks a player as finished solving.
 	// Returns signals or error.
@@ -41,7 +41,7 @@ func NewGameLifecycle(solutionMgr SolutionManager) GameLifecycle {
 	return &gameLifecycle{solutionMgr: solutionMgr}
 }
 
-func (gl *gameLifecycle) StartGame(room *Room, useFixedBoard bool) ([]Signal, error) {
+func (gl *gameLifecycle) StartGame(room *Room) ([]Signal, error) {
 	// If there was a previous game with solutions, determine and record the winner
 	// and get the final game state from the winning solution
 	var winningGameState *model.Game
@@ -59,9 +59,7 @@ func (gl *gameLifecycle) StartGame(room *Room, useFixedBoard bool) ([]Signal, er
 
 	// Generate game
 	var game *model.Game
-	if useFixedBoard {
-		game = model.Game1()
-	} else if winningGameState != nil {
+	if winningGameState != nil {
 		// Continue from winning game state: same board, robots at final positions
 		game = model.NewContinuationGame(winningGameState)
 	} else if room.CurrentGame != nil {

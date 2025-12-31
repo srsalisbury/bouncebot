@@ -153,14 +153,14 @@ func (s *RoomService) Get(roomID string) (*Room, error) {
 }
 
 // StartGame starts a new game in the room.
-func (s *RoomService) StartGame(roomID string, useFixedBoard bool) (*Room, error) {
+func (s *RoomService) StartGame(roomID string) (*Room, error) {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
 		return nil, fmt.Errorf("room not found: %s", roomID)
 	}
 
-	signals, err := s.gameMgr.StartGame(room, useFixedBoard)
+	signals, err := s.gameMgr.StartGame(room)
 	unlock()
 
 	if err != nil {
