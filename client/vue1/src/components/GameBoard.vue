@@ -5,6 +5,7 @@ import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor } from '../cons
 import HowToPlayModal from './HowToPlayModal.vue'
 import { useGameInput } from '../composables/useGameInput'
 import { useReplay } from '../composables/useReplay'
+import { useSwipe } from '../composables/useSwipe'
 import type { PlayerSolution } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 
@@ -21,6 +22,7 @@ const props = defineProps<{
 
 const store = useGameStore()
 const showHowToPlay = ref(false)
+const boardRef = ref<HTMLElement | null>(null)
 
 // Percentage-based sizing for responsive board
 const CELL_PERCENT = 100 / BOARD_SIZE  // 6.25%
@@ -87,6 +89,18 @@ useGameInput(
     robotCount: computed(() => store.robots.length),
   }
 )
+
+// Swipe gesture handling for mobile
+useSwipe({
+  target: boardRef,
+  onSwipe: (direction) => {
+    if (props.inputBlocked || props.gameEnded) return
+    if (store.selectedRobotId !== null) {
+      store.moveRobot(direction)
+    }
+  },
+  enabled: computed(() => !props.inputBlocked && !props.gameEnded),
+})
 
 // Format solve time relative to game start
 function formatSolveTime(solvedAt?: Timestamp): string {
@@ -203,6 +217,7 @@ function handleSwitchPlayerSolution(index: number) {
         <div class="board-area">
           <!-- Game board -->
           <div
+            ref="boardRef"
             class="board"
             :style="{ borderColor: WALL_COLOR }"
           >
