@@ -19,26 +19,38 @@ Add mobile/touch support to the BounceBot Vue.js client, enabling gameplay on ph
 
 **File**: `client/vue1/src/components/GameBoard.vue`
 
-- Use CSS `transform: scale()` to fit board in available space
-- Calculate scale factor based on viewport width/height
-- Preserve aspect ratio (board is always square)
-- Add container with `overflow: hidden` to clip during transitions
+- Use percentage-based sizing instead of fixed pixels
+- Board container uses `aspect-ratio: 1` to stay square
+- Container fills available space with CSS constraints
+- All internal positioning uses percentages (e.g., `6.25%` for 1/16th)
 
-```vue
-const boardScale = computed(() => {
-  const maxWidth = viewportWidth.value - padding
-  const maxHeight = viewportHeight.value - headerHeight
-  return Math.min(1, maxWidth / 512, maxHeight / 512)
-})
+```css
+.board {
+  width: 100%;
+  max-width: min(100vw - 2rem, 100vh - 10rem);
+  aspect-ratio: 1;
+}
+.cell {
+  width: 6.25%;  /* 100% / 16 cells */
+  height: 6.25%;
+}
 ```
 
-### 1.2 Add viewport size tracking
+### 1.2 Convert pixel-based positioning to percentages
 
-**File**: `client/vue1/src/composables/useViewport.ts` (new)
+**File**: `client/vue1/src/components/GameBoard.vue`
 
-- Track `window.innerWidth` and `window.innerHeight`
-- Debounce resize events
-- Provide reactive viewport dimensions
+- Update all style helper functions to use percentages:
+  - `getRobotStyle()`: `left: ${x * (100/16)}%` instead of `${x * 32}px`
+  - `getVWallStyle()`, `getHWallStyle()`: percentage positioning
+  - `getTargetContainerStyle()`, `getHistoryDotStyle()`: percentage positioning
+- Wall thickness and robot padding become percentage-based
+- No JS viewport tracking needed — CSS handles responsive sizing
+
+**Benefits over transform: scale():**
+- Click/touch coordinates work naturally (no recalculation)
+- Sharp rendering at any size (no subpixel blurring)
+- Simpler implementation with standard CSS layout
 
 ---
 
@@ -126,7 +138,6 @@ const boardScale = computed(() => {
 
 | File | Purpose |
 |------|---------|
-| `src/composables/useViewport.ts` | Reactive viewport dimensions |
 | `src/composables/useSwipe.ts` | Swipe gesture detection |
 | `src/components/SolutionsDrawer.vue` | Collapsible mobile solutions panel |
 
@@ -144,15 +155,14 @@ const boardScale = computed(() => {
 
 ## Implementation Order
 
-1. `useViewport.ts` - Viewport tracking composable
-2. `GameBoard.vue` - Add board scaling
-3. `GameBoard.vue` - Add tap-to-select robot
-4. `useSwipe.ts` - Swipe gesture composable
-5. `GameBoard.vue` - Add swipe-to-move
-6. `RoomView.vue` - Responsive stacked layout
-7. `SolutionsDrawer.vue` - Collapsible solutions drawer
-8. `PlayersPanel.vue` - Compact mobile mode
-9. CSS polish and touch behavior fixes
+1. `GameBoard.vue` - Convert to percentage-based sizing
+2. `GameBoard.vue` - Tap-to-select already works, verify on mobile
+3. `useSwipe.ts` - Swipe gesture composable
+4. `GameBoard.vue` - Add swipe-to-move
+5. `RoomView.vue` - Responsive stacked layout
+6. `SolutionsDrawer.vue` - Collapsible solutions drawer
+7. `PlayersPanel.vue` - Compact mobile mode
+8. CSS polish and touch behavior fixes
 
 ---
 
