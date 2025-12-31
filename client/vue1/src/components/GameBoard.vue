@@ -31,6 +31,7 @@ const {
   replayMoveIndex,
   switchToPlayerSolution,
   startInitialReplay,
+  stopReplay,
   getPlayerSolutionMoves,
 } = useReplay(
   computed(() => store.initialRobots),
@@ -100,10 +101,12 @@ function formatSolveTime(solvedAt?: Timestamp): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
-// When game ends and we have solutions, start showing the first one
+// When game ends, start showing solutions; when new round starts, stop replay
 watch(() => props.gameEnded, (ended) => {
   if (ended && props.playerSolutions?.length) {
     startInitialReplay(props.playerSolutions)
+  } else if (!ended) {
+    stopReplay()
   }
 })
 
