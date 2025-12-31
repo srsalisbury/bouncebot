@@ -14,7 +14,7 @@ import (
 
 // OriginChecker is an interface for checking if origins are allowed.
 type OriginChecker interface {
-	IsOriginAllowed(origin string) bool
+	IsOriginAllowedForRequest(origin, requestHost string) bool
 }
 
 // Event represents a WebSocket event sent to clients.
@@ -95,7 +95,7 @@ func NewHub(store *room.RoomService, cfg *config.Config) *Hub {
 	h.upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
-			return cfg.IsOriginAllowed(origin)
+			return cfg.IsOriginAllowedForRequest(origin, r.Host)
 		},
 	}
 	return h

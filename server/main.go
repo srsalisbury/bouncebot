@@ -77,7 +77,9 @@ func main() {
 
 	// CORS configuration for browser access
 	corsHandler := cors.New(cors.Options{
-		AllowOriginFunc: cfg.IsOriginAllowed,
+		AllowOriginRequestFunc: func(r *http.Request, origin string) bool {
+			return cfg.IsOriginAllowedForRequest(origin, r.Host)
+		},
 		AllowedMethods: []string{
 			http.MethodGet,
 			http.MethodPost,
