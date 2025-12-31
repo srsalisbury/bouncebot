@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { BOARD_SIZE, CELL_SIZE, WALL_COLOR, WALL_THICKNESS, DIRECTION_ARROWS, getRobotColor } from '../constants'
+import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
 import { useGameInput } from '../composables/useGameInput'
 import { useReplay } from '../composables/useReplay'
@@ -22,7 +22,8 @@ const props = defineProps<{
 const store = useGameStore()
 const showHowToPlay = ref(false)
 
-const boardPixelSize = BOARD_SIZE * CELL_SIZE
+// Percentage-based sizing for responsive board
+const CELL_PERCENT = 100 / BOARD_SIZE  // 6.25%
 
 // Replay composable
 const {
@@ -106,68 +107,70 @@ watch(() => props.gameEnded, (ended) => {
   }
 })
 
-// Style helpers
+// Style helpers - all use percentages for responsive sizing
+const WALL_THICKNESS_PERCENT = 0.78  // ~4px at 512px board size
+
 function getVWallStyle(wall: { x: number; y: number }) {
   return {
-    left: `${(wall.x + 1) * CELL_SIZE - WALL_THICKNESS / 2}px`,
-    top: `${wall.y * CELL_SIZE}px`,
-    height: `${CELL_SIZE}px`,
-    width: `${WALL_THICKNESS}px`,
+    left: `calc(${(wall.x + 1) * CELL_PERCENT}% - ${WALL_THICKNESS_PERCENT / 2}%)`,
+    top: `${wall.y * CELL_PERCENT}%`,
+    height: `${CELL_PERCENT}%`,
+    width: `${WALL_THICKNESS_PERCENT}%`,
     backgroundColor: WALL_COLOR,
   }
 }
 
 function getHWallStyle(wall: { x: number; y: number }) {
   return {
-    left: `${wall.x * CELL_SIZE}px`,
-    top: `${(wall.y + 1) * CELL_SIZE - WALL_THICKNESS / 2}px`,
-    width: `${CELL_SIZE}px`,
-    height: `${WALL_THICKNESS}px`,
+    left: `${wall.x * CELL_PERCENT}%`,
+    top: `calc(${(wall.y + 1) * CELL_PERCENT}% - ${WALL_THICKNESS_PERCENT / 2}%)`,
+    width: `${CELL_PERCENT}%`,
+    height: `${WALL_THICKNESS_PERCENT}%`,
     backgroundColor: WALL_COLOR,
   }
 }
 
 function getRobotStyle(robot: { id: number; x: number; y: number }) {
-  const padding = CELL_SIZE * 0.1
   return {
-    left: `${robot.x * CELL_SIZE + padding}px`,
-    top: `${robot.y * CELL_SIZE + padding}px`,
-    width: `${CELL_SIZE - padding * 2}px`,
-    height: `${CELL_SIZE - padding * 2}px`,
+    left: `${(robot.x + 0.5) * CELL_PERCENT}%`,
+    top: `${(robot.y + 0.5) * CELL_PERCENT}%`,
+    width: `${CELL_PERCENT * 0.8}%`,
+    height: `${CELL_PERCENT * 0.8}%`,
+    transform: 'translate(-50%, -50%)',
     backgroundColor: getRobotColor(robot.id),
   }
 }
 
 function getTargetContainerStyle() {
   return {
-    left: `${store.target.x * CELL_SIZE}px`,
-    top: `${store.target.y * CELL_SIZE}px`,
-    width: `${CELL_SIZE}px`,
-    height: `${CELL_SIZE}px`,
+    left: `${(store.target.x + 0.5) * CELL_PERCENT}%`,
+    top: `${(store.target.y + 0.5) * CELL_PERCENT}%`,
+    width: `${CELL_PERCENT}%`,
+    height: `${CELL_PERCENT}%`,
+    transform: 'translate(-50%, -50%)',
   }
 }
 
 function getTargetBackgroundStyle() {
   const color = getRobotColor(store.target.robotId)
-  const robotPadding = CELL_SIZE * 0.1
-  const holeSize = CELL_SIZE - robotPadding * 2
+  // Use closest-side sizing so 80% = 80% of half-width = 40% of cell = robot radius
   return {
     width: '100%',
     height: '100%',
     backgroundColor: color,
-    maskImage: `radial-gradient(circle at center, transparent ${holeSize / 2}px, black ${holeSize / 2}px)`,
-    WebkitMaskImage: `radial-gradient(circle at center, transparent ${holeSize / 2}px, black ${holeSize / 2}px)`,
+    maskImage: `radial-gradient(circle closest-side at center, transparent 80%, black 80%)`,
+    WebkitMaskImage: `radial-gradient(circle closest-side at center, transparent 80%, black 80%)`,
   }
 }
 
 function getHistoryDotStyle(x: number, y: number, robotId: number, isStart: boolean) {
-  const size = isStart ? CELL_SIZE * 0.35 : CELL_SIZE * 0.25
-  const offset = (CELL_SIZE - size) / 2
+  const sizePercent = isStart ? CELL_PERCENT * 0.35 : CELL_PERCENT * 0.25
+  const offsetPercent = (CELL_PERCENT - sizePercent) / 2
   return {
-    left: `${x * CELL_SIZE + offset}px`,
-    top: `${y * CELL_SIZE + offset}px`,
-    width: `${size}px`,
-    height: `${size}px`,
+    left: `${x * CELL_PERCENT + offsetPercent}%`,
+    top: `${y * CELL_PERCENT + offsetPercent}%`,
+    width: `${sizePercent}%`,
+    height: `${sizePercent}%`,
     backgroundColor: getRobotColor(robotId),
   }
 }
@@ -199,72 +202,66 @@ function handleSwitchPlayerSolution(index: number) {
         <!-- Board area (board + hints) -->
         <div class="board-area">
           <!-- Game board -->
-        <div
-          class="board"
-    :style="{
-      width: `${boardPixelSize}px`,
-      height: `${boardPixelSize}px`,
-      gridTemplateColumns: `repeat(${BOARD_SIZE}, ${CELL_SIZE}px)`,
-      gridTemplateRows: `repeat(${BOARD_SIZE}, ${CELL_SIZE}px)`,
-      borderColor: WALL_COLOR,
-    }"
-  >
-    <div
-      v-for="i in BOARD_SIZE * BOARD_SIZE"
-      :key="i"
-      class="cell"
-    />
+          <div
+            class="board"
+            :style="{ borderColor: WALL_COLOR }"
+          >
+            <div
+              v-for="i in BOARD_SIZE * BOARD_SIZE"
+              :key="i"
+              class="cell"
+            />
 
-    <!-- Target marker -->
-    <div class="target-container" :style="getTargetContainerStyle()">
-      <div class="target-background" :style="getTargetBackgroundStyle()" />
-      <span class="target-number">{{ store.target.robotId + 1 }}</span>
-    </div>
+            <!-- Target marker -->
+            <div class="target-container" :style="getTargetContainerStyle()">
+              <div class="target-background" :style="getTargetBackgroundStyle()" />
+              <span class="target-number">{{ store.target.robotId + 1 }}</span>
+            </div>
 
-    <!-- Robot starting positions (large dots) -->
-    <div
-      v-for="robot in store.initialRobots"
-      :key="`start-${robot.id}`"
-      class="history-dot start-dot"
-      :style="getHistoryDotStyle(robot.x, robot.y, robot.id, true)"
-    />
+            <!-- Robot starting positions (large dots) -->
+            <div
+              v-for="robot in store.initialRobots"
+              :key="`start-${robot.id}`"
+              class="history-dot start-dot"
+              :style="getHistoryDotStyle(robot.x, robot.y, robot.id, true)"
+            />
 
-    <!-- Robot move history (small dots at destinations) -->
-    <div
-      v-for="(move, i) in store.committedMoves"
-      :key="`move-${i}`"
-      class="history-dot"
-      :style="getHistoryDotStyle(move.toX, move.toY, move.robotId, false)"
-    />
+            <!-- Robot move history (small dots at destinations) -->
+            <div
+              v-for="(move, i) in store.committedMoves"
+              :key="`move-${i}`"
+              class="history-dot"
+              :style="getHistoryDotStyle(move.toX, move.toY, move.robotId, false)"
+            />
 
-    <!-- Robots -->
-    <div
-      v-for="robot in store.robots"
-      :key="`robot-${robot.id}`"
-      class="robot"
-      :class="{ selected: store.selectedRobotId === robot.id }"
-      :style="getRobotStyle(robot)"
-      @click="store.selectRobot(robot.id)"
-    >
-      {{ robot.id + 1 }}
-    </div>
+            <!-- Robots -->
+            <div
+              v-for="robot in store.robots"
+              :key="`robot-${robot.id}`"
+              class="robot"
+              :class="{ selected: store.selectedRobotId === robot.id }"
+              :style="getRobotStyle(robot)"
+              @click="store.selectRobot(robot.id)"
+            >
+              {{ robot.id + 1 }}
+            </div>
 
-    <!-- Vertical walls -->
-    <div
-      v-for="(wall, i) in store.vWalls"
-      :key="`vwall-${i}`"
-      class="wall"
-      :style="getVWallStyle(wall)"
-    />
+            <!-- Vertical walls -->
+            <div
+              v-for="(wall, i) in store.vWalls"
+              :key="`vwall-${i}`"
+              class="wall"
+              :style="getVWallStyle(wall)"
+            />
 
-    <!-- Horizontal walls -->
-    <div
-      v-for="(wall, i) in store.hWalls"
-      :key="`hwall-${i}`"
-      class="wall"
-      :style="getHWallStyle(wall)"
-    />
-    </div>
+            <!-- Horizontal walls -->
+            <div
+              v-for="(wall, i) in store.hWalls"
+              :key="`hwall-${i}`"
+              class="wall"
+              :style="getHWallStyle(wall)"
+            />
+          </div>
 
           <!-- Keyboard hints under board -->
           <div class="keyboard-hints">
@@ -561,9 +558,14 @@ function handleSwitchPlayerSolution(index: number) {
 
 .board {
   display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-template-rows: repeat(16, 1fr);
   background: #dddddd;
   border: 4px solid;
   position: relative;
+  width: min(calc(100vw - 2rem), calc(100vh - 10rem), 820px);
+  aspect-ratio: 1;
+  container-type: inline-size;
 }
 
 .cell {
@@ -586,7 +588,7 @@ function handleSwitchPlayerSolution(index: number) {
   justify-content: center;
   font-weight: bold;
   color: white;
-  font-size: 14px;
+  font-size: 3cqw;
   user-select: none;
   cursor: pointer;
   transition: left 0.15s ease-out, top 0.15s ease-out, transform 0.1s, box-shadow 0.1s;
@@ -596,12 +598,12 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .robot:hover {
-  transform: scale(1.05);
+  transform: translate(-50%, -50%) scale(1.05);
 }
 
 .robot.selected {
-  box-shadow: 0 0 0 3px white, 0 0 0 4px black, 0 0 10px 3px rgba(255, 255, 255, 0.5);
-  transform: scale(1.1);
+  box-shadow: 0 0 0 0.5cqw white, 0 0 0 0.625cqw black, 0 0 1.5cqw 0.5cqw rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%) scale(1.1);
 }
 
 .wall {
@@ -624,7 +626,7 @@ function handleSwitchPlayerSolution(index: number) {
 .target-number {
   position: relative;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 3cqw;
   color: black;
 }
 
