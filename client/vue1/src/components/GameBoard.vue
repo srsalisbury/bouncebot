@@ -201,18 +201,8 @@ function handleSwitchPlayerSolution(index: number) {
 
 <template>
   <div class="game-container">
-    <!-- Loading state -->
-    <div v-if="store.isLoading" class="loading">Loading game...</div>
-
-    <!-- Error state -->
-    <div v-else-if="store.error" class="error">
-      <div class="error-icon">⚠</div>
-      <div class="error-message">{{ store.error }}</div>
-      <button @click="store.loadGame()">Try Again</button>
-    </div>
-
     <!-- Game content wrapper -->
-    <div v-else class="game-content">
+    <div class="game-content">
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
         <h1 class="title">BounceBot<span v-if="props.gameNumber" class="game-number"> - Game #{{ props.gameNumber }}</span></h1>
