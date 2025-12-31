@@ -175,9 +175,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
   if (elapsedSeconds < 60) {
     return `${elapsedSeconds.toFixed(1)}s`
   } else {
-    const minutes = Math.floor(elapsedSeconds / 60)
-    const seconds = elapsedSeconds % 60
-    return `${minutes}:${seconds.toFixed(0).padStart(2, '0')}`
+    // Round total seconds first to avoid "7:60" display bug
+    const totalRoundedSeconds = Math.round(elapsedSeconds)
+    const minutes = Math.floor(totalRoundedSeconds / 60)
+    const seconds = totalRoundedSeconds % 60
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 }
 </script>
