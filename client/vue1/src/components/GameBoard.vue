@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
+import SolutionsDrawer from './SolutionsDrawer.vue'
 import { useGameInput } from '../composables/useGameInput'
 import { useReplay } from '../composables/useReplay'
 import { useSwipe } from '../composables/useSwipe'
@@ -346,9 +347,38 @@ function handleSwitchPlayerSolution(index: number) {
               </div>
             </div>
           </div>
+          <!-- Action buttons under solutions (desktop) -->
+          <div class="action-buttons desktop-actions">
+            <button class="action-btn" @click="doUndo">Undo</button>
+            <button
+              class="action-btn"
+              :disabled="!store.canStartNewSolution"
+              @click="store.startNewSolution()"
+            >
+              New Solution
+            </button>
+          </div>
         </div>
       </div>
+
+      <!-- Action buttons under board (mobile) -->
+      <div v-if="!props.gameEnded" class="action-buttons mobile-actions">
+        <button class="action-btn" @click="doUndo">Undo</button>
+        <button
+          class="action-btn"
+          :disabled="!store.canStartNewSolution"
+          @click="store.startNewSolution()"
+        >
+          New Solution
+        </button>
+      </div>
     </div>
+
+    <!-- Mobile solutions drawer (only during gameplay, hidden on desktop) -->
+    <SolutionsDrawer
+      v-if="!props.gameEnded"
+      class="mobile-drawer"
+    />
 
     <!-- How to Play modal -->
     <HowToPlayModal :show="showHowToPlay" @close="showHowToPlay = false" />
@@ -360,7 +390,6 @@ function handleSwitchPlayerSolution(index: number) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
 }
 
 .game-content {
@@ -410,6 +439,107 @@ function handleSwitchPlayerSolution(index: number) {
   gap: 0.5rem;
   align-items: flex-start;
   width: 280px;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  background: #333;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #444;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Desktop: show under solutions, hide mobile actions */
+.desktop-actions {
+  margin-top: auto;
+}
+
+.mobile-actions {
+  display: none;
+}
+
+/* Mobile/narrow: stack vertically */
+@media (max-width: 950px) {
+  .board-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0.5rem;
+    justify-items: center;
+  }
+
+  .title {
+    grid-column: 1;
+    font-size: 1.4rem;
+  }
+
+  .board-area {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .solutions-panel {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+    display: none;
+  }
+
+  .solutions-columns {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: center;
+  }
+
+  .keyboard-hints {
+    display: none;
+  }
+
+  .desktop-actions {
+    display: none;
+  }
+
+  .mobile-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.5rem;
+    margin-bottom: 70px; /* Space above drawer */
+    width: 100%;
+  }
+
+  .board {
+    /* Account for: header(~60px) + title(~45px) + buttons(~55px) + drawer(70px) + margins(~50px) ≈ 280px ≈ 18rem */
+    width: min(calc(100vw - 1rem), calc(100vh - 18rem), 820px);
+  }
+}
+
+/* Mobile drawer - hidden on desktop */
+.mobile-drawer {
+  display: none;
+}
+
+@media (max-width: 950px) {
+  .mobile-drawer {
+    display: block;
+  }
 }
 
 .solution-column {
@@ -571,7 +701,8 @@ function handleSwitchPlayerSolution(index: number) {
   background: #dddddd;
   border: 4px solid;
   position: relative;
-  width: min(calc(100vw - 2rem), calc(100vh - 10rem), 820px);
+  /* Account for: header(~70px) + title(~50px) + hints(~35px) + padding(~40px) ≈ 195px ≈ 12rem */
+  width: min(calc(100vw - 2rem), calc(100vh - 12rem), 820px);
   aspect-ratio: 1;
   container-type: inline-size;
 }
