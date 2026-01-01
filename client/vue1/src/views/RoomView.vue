@@ -709,8 +709,8 @@ onUnmounted(() => {
   background: #c62828;
 }
 
-/* Mobile/narrow responsive styles */
-@media (max-width: 950px) {
+/* Vertical layout responsive styles */
+@media (max-aspect-ratio: 6/5), (max-width: 1050px) {
   .game-wrapper {
     padding: 0.5rem;
   }
@@ -733,12 +733,7 @@ onUnmounted(() => {
     margin-left: 0;
   }
 
-  .done-btn {
-    width: 100%;
-    text-align: center;
-    order: 1;
-  }
-
+  .done-btn,
   .done-indicator {
     margin-left: auto;
   }

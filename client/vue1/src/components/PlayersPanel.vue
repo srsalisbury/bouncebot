@@ -14,6 +14,13 @@ const props = defineProps<{
   compact?: boolean
 }>()
 
+// Dropdown state for vertical layout
+const isDropdownOpen = ref(false)
+
+function toggleDropdown() {
+  isDropdownOpen.value = !isDropdownOpen.value
+}
+
 // Timer state
 const elapsedTime = ref<string>('0:00')
 const timerInterval = ref<number | null>(null)
@@ -136,6 +143,18 @@ const leaderPlayerId = computed(() => {
   return earliest?.playerId ?? null
 })
 
+// Get leader player object
+const leaderPlayer = computed(() => {
+  if (!leaderPlayerId.value) return null
+  return props.players.find(p => p.id === leaderPlayerId.value) ?? null
+})
+
+// Get leader's solution
+const leaderSolution = computed(() => {
+  if (!leaderPlayerId.value || !props.solutions) return null
+  return props.solutions.find(s => s.playerId === leaderPlayerId.value) ?? null
+})
+
 function getPlayerSolution(player: Player): PlayerSolution | undefined {
   return props.solutions?.find((s) => s.playerId === player.id)
 }
@@ -185,10 +204,27 @@ function getSolveTime(solution: PlayerSolution): string | null {
 </script>
 
 <template>
-  <div class="players-panel" :class="{ compact }">
+  <div class="players-panel" :class="{ compact, 'dropdown-open': isDropdownOpen }">
     <div v-if="players.length === 1 && !compact" class="waiting-message">
       Waiting for players...
     </div>
+
+    <!-- Dropdown summary for vertical layout (compact mode) -->
+    <div v-if="compact" class="dropdown-summary" :class="{ 'has-leader': leaderPlayer }" @click="toggleDropdown">
+      <template v-if="leaderPlayer && leaderSolution">
+        <span class="player-dot" :style="{ backgroundColor: getPlayerColorFor(leaderPlayer) }" />
+        <span class="player-name">{{ leaderPlayer.name }}</span>
+        <span class="solution-badge leader-badge">
+          {{ leaderSolution.moves.length }} moves
+        </span>
+      </template>
+      <template v-else>
+        <span class="no-solutions">{{ players.length }} players</span>
+      </template>
+      <span class="dropdown-arrow">{{ isDropdownOpen ? '▲' : '▼' }}</span>
+    </div>
+
+    <!-- Full player list (always shown on desktop, dropdown on vertical layout) -->
     <TransitionGroup name="player-list" tag="div" class="players-list">
       <div
         v-for="player in sortedPlayers"
@@ -329,6 +365,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
   color: #000;
 }
 
+/* Dropdown summary - hidden by default (shown only in vertical layout) */
+.dropdown-summary {
+  display: none;
+}
+
 /* Compact mode for game view */
 .compact {
   flex-direction: row;
@@ -383,25 +424,91 @@ function getSolveTime(solution: PlayerSolution): string | null {
   transform: translateX(20px);
 }
 
-/* Mobile/narrow responsive styles */
-@media (max-width: 950px) {
+/* Vertical layout responsive styles */
+@media (max-aspect-ratio: 6/5), (max-width: 1050px) {
   .compact {
     flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+    position: relative;
   }
 
+  /* Show dropdown summary */
+  .compact .dropdown-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    background: #242424;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .compact .dropdown-summary:hover {
+    background: #2a2a2a;
+  }
+
+  .compact .dropdown-summary.has-leader {
+    background: #2e2a1a;
+    border: 1px solid #ffd700;
+  }
+
+  .compact .dropdown-summary .player-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .compact .dropdown-summary .player-name {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .compact .dropdown-summary .leader-badge {
+    background: #ffd700;
+    color: #000;
+  }
+
+  .compact .dropdown-summary .no-solutions {
+    color: #888;
+  }
+
+  .compact .dropdown-summary .dropdown-arrow {
+    margin-left: 0.25rem;
+    font-size: 0.7rem;
+    color: #888;
+  }
+
+  /* Hide player list by default */
   .compact .players-list {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 200;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: #1a1a1a;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin-top: 0.25rem;
+    min-width: 280px;
+    width: max-content;
+  }
+
+  /* Show player list when dropdown is open */
+  .compact.dropdown-open .players-list {
+    display: flex;
   }
 
   .compact .player-item {
     flex-shrink: 0;
   }
 
-  .compact .player-name {
-    max-width: 80px;
+  .compact .players-list .player-name {
+    max-width: none;
   }
 
   .compact .timer-display {
