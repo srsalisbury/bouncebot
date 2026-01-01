@@ -42,7 +42,7 @@ const solutionCount = computed(() => store.solutions.length)
       <div class="drawer-handle" />
       <div class="header-content">
         <span class="solution-count">
-          {{ moveCount }} moves
+          {{ moveCount }} {{ moveCount === 1 ? 'move' : 'moves' }}
           <span v-if="isSolved" class="solved-indicator">✓</span>
         </span>
         <span class="solution-label">Solution {{ store.activeSolutionIndex + 1 }}/{{ solutionCount }}</span>
