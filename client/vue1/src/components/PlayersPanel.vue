@@ -442,6 +442,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.85rem;
+    color: #ddd;
   }
 
   .compact .dropdown-summary:hover {
