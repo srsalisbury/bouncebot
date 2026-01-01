@@ -17,6 +17,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* Prevent pull-to-refresh on mobile so swipe-down works as game control */
+  overscroll-behavior-y: none;
 }
 
 #app {
