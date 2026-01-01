@@ -707,13 +707,23 @@ function handleSwitchPlayerSolution(index: number) {
   grid-template-columns: repeat(16, 1fr);
   grid-template-rows: repeat(16, 1fr);
   background: #dddddd;
-  border: 4px solid;
   position: relative;
   /* Account for: header + title + hints + padding ≈ 13rem */
   /* Use dvh for accurate viewport height, with fallback to vh */
   width: min(calc(100vw - 2rem), calc(100dvh - 13rem), calc(100vh - 13rem));
   aspect-ratio: 1;
   container-type: inline-size;
+}
+
+/* Outer border as child element so cqw references the board correctly */
+.board::before {
+  content: '';
+  position: absolute;
+  /* Position centered on edge: offset by half wall thickness */
+  inset: -0.39cqw;
+  border: 0.78cqw solid var(--wall-color);
+  pointer-events: none;
+  z-index: 10;
 }
 
 .cell {
@@ -838,12 +848,8 @@ function handleSwitchPlayerSolution(index: number) {
   }
 
   .board {
-    --wall-color: #aaa;
+    --wall-color: #ccc;
     background: #2a2a2a;
-  }
-
-  .wall {
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
   }
 
   .cell {
