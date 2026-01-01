@@ -129,20 +129,24 @@ watch(() => props.gameEnded, (ended) => {
 const WALL_THICKNESS_PERCENT = 0.78  // ~4px at 512px board size
 
 function getVWallStyle(wall: { x: number; y: number }) {
+  // Extend by half thickness on each end to fill corner gaps
+  const extension = WALL_THICKNESS_PERCENT / 2
   return {
     left: `calc(${(wall.x + 1) * CELL_PERCENT}% - ${WALL_THICKNESS_PERCENT / 2}%)`,
-    top: `${wall.y * CELL_PERCENT}%`,
-    height: `${CELL_PERCENT}%`,
+    top: `${wall.y * CELL_PERCENT - extension}%`,
+    height: `${CELL_PERCENT + WALL_THICKNESS_PERCENT}%`,
     width: `${WALL_THICKNESS_PERCENT}%`,
     backgroundColor: WALL_COLOR,
   }
 }
 
 function getHWallStyle(wall: { x: number; y: number }) {
+  // Extend by half thickness on each end to fill corner gaps
+  const extension = WALL_THICKNESS_PERCENT / 2
   return {
-    left: `${wall.x * CELL_PERCENT}%`,
+    left: `${wall.x * CELL_PERCENT - extension}%`,
     top: `calc(${(wall.y + 1) * CELL_PERCENT}% - ${WALL_THICKNESS_PERCENT / 2}%)`,
-    width: `${CELL_PERCENT}%`,
+    width: `${CELL_PERCENT + WALL_THICKNESS_PERCENT}%`,
     height: `${WALL_THICKNESS_PERCENT}%`,
     backgroundColor: WALL_COLOR,
   }
