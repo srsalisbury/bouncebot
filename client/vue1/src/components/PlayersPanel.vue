@@ -215,11 +215,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
         <span class="player-dot" :style="{ backgroundColor: getPlayerColorFor(leaderPlayer) }" />
         <span class="player-name">{{ leaderPlayer.name }}</span>
         <span class="solution-badge leader-badge">
-          {{ leaderSolution.moves.length }} moves
+          {{ leaderSolution.moves.length }} {{ leaderSolution.moves.length === 1 ? 'move' : 'moves' }}
         </span>
       </template>
       <template v-else>
-        <span class="no-solutions">{{ players.length }} players</span>
+        <span class="no-solutions">{{ players.length }} {{ players.length === 1 ? 'player' : 'players' }}</span>
       </template>
       <span class="dropdown-arrow">{{ isDropdownOpen ? '▲' : '▼' }}</span>
     </div>
@@ -239,7 +239,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
           {{ getPlayerWins(player) }} {{ getPlayerWins(player) === 1 ? 'win' : 'wins' }}
         </span>
         <span v-if="getPlayerSolution(player)" class="solution-badge">
-          {{ getPlayerSolution(player)?.moves.length }} moves
+          {{ getPlayerSolution(player)?.moves.length }} {{ getPlayerSolution(player)?.moves.length === 1 ? 'move' : 'moves' }}
           <span v-if="getSolveTime(getPlayerSolution(player)!)" class="solve-time">
             {{ getSolveTime(getPlayerSolution(player)!) }}
           </span>
