@@ -708,4 +708,39 @@ onUnmounted(() => {
 .btn.danger:hover {
   background: #c62828;
 }
+
+/* Mobile/narrow responsive styles */
+@media (max-width: 950px) {
+  .game-wrapper {
+    padding: 0.5rem;
+  }
+
+  .game-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .ready-btn {
+    width: 100%;
+    text-align: center;
+    order: 1;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .leaderboard-btn {
+    margin-left: 0;
+  }
+
+  .done-btn {
+    width: 100%;
+    text-align: center;
+    order: 1;
+  }
+
+  .done-indicator {
+    margin-left: auto;
+  }
+}
 </style>

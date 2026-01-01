@@ -382,4 +382,30 @@ function getSolveTime(solution: PlayerSolution): string | null {
   opacity: 0;
   transform: translateX(20px);
 }
+
+/* Mobile/narrow responsive styles */
+@media (max-width: 950px) {
+  .compact {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .compact .players-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .compact .player-item {
+    flex-shrink: 0;
+  }
+
+  .compact .player-name {
+    max-width: 80px;
+  }
+
+  .compact .timer-display {
+    flex-shrink: 0;
+  }
+}
 </style>
