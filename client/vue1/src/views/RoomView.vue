@@ -255,47 +255,48 @@ onUnmounted(() => {
 
     <!-- Game in progress -->
     <div v-else-if="hasGame && room" class="game-wrapper">
-      <div class="game-header">
-        <template v-if="!gameEnded">
-          <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
-          <button
-            v-if="!isPlayerFinished"
-            class="btn done-btn"
-            @click="gameActions.markFinishedSolving"
-          >
-            I'm Finished
-          </button>
-          <span v-else class="done-indicator">Finished</span>
+      <GameBoard
+        :on-before-retract="onBeforeRetract"
+        :game-ended="gameEnded"
+        :player-solutions="sortedSolutions"
+        :get-player-name="getPlayerName"
+        :get-player-color="getPlayerColorById"
+        :game-started-at="room.gameStartedAt"
+        :game-number="room.gamesPlayed + 1"
+        :input-blocked="showLeaderboard"
+      >
+        <template #header>
+          <div class="game-header">
+            <template v-if="!gameEnded">
+              <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
+              <button
+                v-if="!isPlayerFinished"
+                class="btn done-btn"
+                @click="gameActions.markFinishedSolving"
+              >
+                I'm Finished
+              </button>
+              <span v-else class="done-indicator">Finished</span>
+            </template>
+            <template v-else>
+              <button
+                class="btn leaderboard-btn"
+                @click="toggleLeaderboard"
+              >
+                Leaderboard
+              </button>
+              <button
+                class="btn ready-btn"
+                :class="{ pressed: isPlayerReady }"
+                :disabled="isPlayerReady"
+                @click="gameActions.markReadyForNext"
+              >
+                I'm Ready For Next Game ({{ readyCount }}/{{ playerCount }})
+              </button>
+            </template>
+          </div>
         </template>
-        <template v-else>
-          <button
-            class="btn leaderboard-btn"
-            @click="toggleLeaderboard"
-          >
-            Leaderboard
-          </button>
-          <button
-            class="btn ready-btn"
-            :class="{ pressed: isPlayerReady }"
-            :disabled="isPlayerReady"
-            @click="gameActions.markReadyForNext"
-          >
-            I'm Ready For Next Game ({{ readyCount }}/{{ playerCount }})
-          </button>
-        </template>
-      </div>
-      <div class="game-container">
-        <GameBoard
-          :on-before-retract="onBeforeRetract"
-          :game-ended="gameEnded"
-          :player-solutions="sortedSolutions"
-          :get-player-name="getPlayerName"
-          :get-player-color="getPlayerColorById"
-          :game-started-at="room.gameStartedAt"
-          :game-number="room.gamesPlayed + 1"
-          :input-blocked="showLeaderboard"
-        />
-      </div>
+      </GameBoard>
     </div>
 
     <!-- Waiting room -->
@@ -397,14 +398,16 @@ onUnmounted(() => {
 .game-wrapper {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .game-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
   padding: 0.5rem 1rem;
   background: #1a1a1a;
   border-radius: 8px;
@@ -472,10 +475,6 @@ onUnmounted(() => {
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;
-}
-
-.game-container {
-  /* contains GameBoard */
 }
 
 .waiting-room,

@@ -208,6 +208,8 @@ function handleSwitchPlayerSolution(index: number) {
   <div class="game-container">
     <!-- Game content wrapper -->
     <div class="game-content">
+      <!-- Header slot for room controls -->
+      <slot name="header"></slot>
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
         <h1 class="title">BounceBot<span v-if="props.gameNumber" class="game-number"> - Game #{{ props.gameNumber }}</span></h1>
@@ -276,15 +278,16 @@ function handleSwitchPlayerSolution(index: number) {
             />
           </div>
 
-          <!-- Keyboard hints under board -->
-          <div class="keyboard-hints">
-            <template v-if="props.gameEnded">
-              <kbd>Shift+←→</kbd> switch solutions
-            </template>
-            <template v-else>
-              <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>?</kbd> help
-            </template>
-          </div>
+        </div>
+
+        <!-- Keyboard hints under board -->
+        <div class="keyboard-hints">
+          <template v-if="props.gameEnded">
+            <kbd>Shift+←→</kbd> switch solutions
+          </template>
+          <template v-else>
+            <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>?</kbd> help
+          </template>
         </div>
 
         <!-- Player solutions panel (when game ended) -->
@@ -394,19 +397,25 @@ function handleSwitchPlayerSolution(index: number) {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1;
 }
 
 .game-content {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: calc(100vw - 2rem);
 }
 
 .board-layout {
   display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: auto auto;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto auto;
   gap: 0.5rem 2rem;
+  align-items: stretch;
+  max-width: calc(100vw - 2rem);
 }
 
 .title {
@@ -442,14 +451,14 @@ function handleSwitchPlayerSolution(index: number) {
   flex-direction: row;
   gap: 0.5rem;
   align-items: flex-start;
-  width: 280px;
 }
 
 /* Action buttons */
 .action-buttons {
   display: flex;
   gap: 0.5rem;
-  justify-content: center;
+  justify-content: flex-end;
+  margin-top: auto;
 }
 
 .action-btn {
@@ -486,11 +495,21 @@ function handleSwitchPlayerSolution(index: number) {
    - Screen is narrow (≤1050px) regardless of aspect ratio
 */
 @media (max-aspect-ratio: 6/5), (max-width: 1050px) {
+  .game-container {
+    width: 100%;
+  }
+
+  .game-content {
+    width: 100%;
+    max-width: none;
+  }
+
   .board-layout {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
     gap: 0.5rem;
-    justify-items: center;
+    width: 100%;
+    max-width: none;
   }
 
   .title {
@@ -501,6 +520,7 @@ function handleSwitchPlayerSolution(index: number) {
   .board-area {
     grid-column: 1;
     grid-row: 2;
+    width: 100%;
   }
 
   .solutions-panel {
@@ -528,14 +548,10 @@ function handleSwitchPlayerSolution(index: number) {
     display: flex;
     justify-content: center;
     margin-top: 0.5rem;
-    margin-bottom: 70px; /* Space above drawer */
+    margin-bottom: 4.5rem; /* Space above drawer */
     width: 100%;
   }
 
-  .board {
-    /* Account for: header(~60px) + title(~45px) + buttons(~55px) + drawer(70px) + margins(~50px) ≈ 280px ≈ 18rem */
-    width: min(calc(100vw - 1rem), calc(100dvh - 18rem), calc(100vh - 18rem));
-  }
 }
 
 /* Mobile drawer - hidden on desktop */
@@ -550,7 +566,9 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .solution-column {
-  min-width: 54px;
+  width: 5rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -601,16 +619,17 @@ function handleSwitchPlayerSolution(index: number) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  max-height: 512px;
+  gap: 0.25rem;
+  max-height: 45rem;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .move-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 2px 4px;
+  gap: 0.5rem;
+  padding: 0.125rem 0.25rem;
   border-radius: 4px;
 }
 
@@ -619,33 +638,35 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .move-robot {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: white;
+  border: 0.5px solid black;
+  text-shadow: -0.3px -0.3px 0 black, 0.3px -0.3px 0 black, -0.3px 0.3px 0 black, 0.3px 0.3px 0 black;
 }
 
 .move-arrow {
-  font-size: 18px;
+  font-size: 1.125rem;
   color: #333;
-  width: 18px;
+  width: 1.125rem;
   text-align: center;
 }
 
 .move-pos {
-  font-size: 11px;
+  font-size: 0.7rem;
   color: #666;
   font-family: monospace;
 }
 
 /* Player solution column styles */
 .solution-column.player-solution {
-  min-width: 54px;
+  min-width: 3.375rem;
 }
 
 .player-solution-header {
@@ -665,8 +686,8 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .player-solution-header .player-dot {
-  width: 10px;
-  height: 10px;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -675,7 +696,7 @@ function handleSwitchPlayerSolution(index: number) {
   font-size: 0.9rem;
   font-weight: 600;
   color: #333;
-  max-width: 70px;
+  max-width: 4.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -708,9 +729,9 @@ function handleSwitchPlayerSolution(index: number) {
   grid-template-rows: repeat(16, 1fr);
   background: #dddddd;
   position: relative;
-  /* Account for: header + title + hints + padding ≈ 13rem */
-  /* Use dvh for accurate viewport height, with fallback to vh */
-  width: min(calc(100vw - 2rem), calc(100dvh - 13rem), calc(100vh - 13rem));
+  /* Account for: padding(2rem) + gap(2rem) + solutions(21rem) = 25rem horizontal */
+  /* Account for: padding(2rem) + header(2.5rem) + title(2rem) + gaps(1rem) + hints(1.5rem) ≈ 12rem vertical */
+  width: min(calc(100vw - 25rem), calc(100dvh - 12rem), calc(100vh - 12rem));
   aspect-ratio: 1;
   container-type: inline-size;
 }
@@ -724,6 +745,14 @@ function handleSwitchPlayerSolution(index: number) {
   border: 0.78cqw solid var(--wall-color);
   pointer-events: none;
   z-index: 10;
+}
+
+@media (max-aspect-ratio: 6/5), (max-width: 1050px) {
+  .board {
+    /* Fill width in mobile, but constrain by height. Account for header, title, buttons, drawer */
+    width: min(calc(100% - 0.5rem), calc(100dvh - 17rem), calc(100vh - 17rem));
+    margin: 0 auto;
+  }
 }
 
 .cell {
@@ -810,7 +839,7 @@ function handleSwitchPlayerSolution(index: number) {
 
 .error-message {
   color: #e53935;
-  max-width: 300px;
+  max-width: 18.75rem;
 }
 
 .error button {
@@ -828,15 +857,16 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .keyboard-hints {
+  grid-column: 1;
+  grid-row: 3;
   font-size: 0.8rem;
   color: #888;
-  margin-top: 0.5rem;
 }
 
 .keyboard-hints kbd {
   background: #333;
   color: #fff;
-  padding: 2px 6px;
+  padding: 0.125rem 0.375rem;
   border-radius: 3px;
   font-family: inherit;
   font-size: 0.75rem;

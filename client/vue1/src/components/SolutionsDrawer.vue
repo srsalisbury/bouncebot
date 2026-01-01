@@ -89,8 +89,8 @@ const solutionCount = computed(() => store.solutions.length)
   left: 0;
   right: 0;
   background: #1a1a1a;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   z-index: 100;
   transition: max-height 0.3s ease;
@@ -155,6 +155,7 @@ const solutionCount = computed(() => store.solutions.length)
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
+  justify-content: center;
   overflow-x: auto;
   padding: 4px; /* Space for box-shadow outline */
   padding-bottom: 0.5rem;
@@ -239,6 +240,8 @@ const solutionCount = computed(() => store.solutions.length)
   font-weight: bold;
   font-size: 12px;
   color: white;
+  border: 0.5px solid black;
+  text-shadow: -0.3px -0.3px 0 black, 0.3px -0.3px 0 black, -0.3px 0.3px 0 black, 0.3px 0.3px 0 black;
 }
 
 .move-arrow {
