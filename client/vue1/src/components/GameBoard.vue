@@ -481,8 +481,11 @@ function handleSwitchPlayerSolution(index: number) {
   display: none;
 }
 
-/* Mobile/narrow: stack vertically */
-@media (max-width: 950px) {
+/* Vertical layout when:
+   - Screen aspect ratio ≤ 6/5 (1.2) - screen is too square/tall for side-by-side layout, OR
+   - Screen is narrow (≤1050px) regardless of aspect ratio
+*/
+@media (max-aspect-ratio: 6/5), (max-width: 1050px) {
   .board-layout {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
@@ -531,7 +534,7 @@ function handleSwitchPlayerSolution(index: number) {
 
   .board {
     /* Account for: header(~60px) + title(~45px) + buttons(~55px) + drawer(70px) + margins(~50px) ≈ 280px ≈ 18rem */
-    width: min(calc(100vw - 1rem), calc(100vh - 18rem), 820px);
+    width: min(calc(100vw - 1rem), calc(100dvh - 18rem), calc(100vh - 18rem));
   }
 }
 
@@ -540,7 +543,7 @@ function handleSwitchPlayerSolution(index: number) {
   display: none;
 }
 
-@media (max-width: 950px) {
+@media (max-aspect-ratio: 6/5), (max-width: 1050px) {
   .mobile-drawer {
     display: block;
   }
@@ -706,8 +709,9 @@ function handleSwitchPlayerSolution(index: number) {
   background: #dddddd;
   border: 4px solid;
   position: relative;
-  /* Account for: header(~70px) + title(~50px) + hints(~35px) + padding(~40px) ≈ 195px ≈ 12rem */
-  width: min(calc(100vw - 2rem), calc(100vh - 12rem), 820px);
+  /* Account for: header + title + hints + padding ≈ 13rem */
+  /* Use dvh for accurate viewport height, with fallback to vh */
+  width: min(calc(100vw - 2rem), calc(100dvh - 13rem), calc(100vh - 13rem));
   aspect-ratio: 1;
   container-type: inline-size;
 }
