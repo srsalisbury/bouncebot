@@ -2,6 +2,7 @@
 package config
 
 import (
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -15,9 +16,14 @@ type Config struct {
 	DataFile string
 
 	// CORS/WebSocket allowed origins (comma-separated hostnames)
-	// e.g., "localhost,guido.local,myserver.com"
+	// e.g., "localhost,myserver.com"
 	// Each hostname allows both http://hostname and http://hostname:port
 	AllowedOrigins []string
+
+	// AllowSameHost allows requests where the Origin header's hostname
+	// matches the server's Host header. This makes CORS work automatically
+	// when frontend and backend are served from the same host.
+	AllowSameHost bool
 
 	// Room timing
 	AutoSaveInterval      time.Duration
@@ -31,7 +37,8 @@ func DefaultConfig() *Config {
 	return &Config{
 		Port:                  8080,
 		DataFile:              "rooms.json",
-		AllowedOrigins:        []string{"localhost", "guido.local"},
+		AllowedOrigins:        []string{"localhost"},
+		AllowSameHost:         true,
 		AutoSaveInterval:      30 * time.Second,
 		CleanupInterval:       1 * time.Hour,
 		RoomMaxAge:            24 * time.Hour,
@@ -44,6 +51,7 @@ func DefaultConfig() *Config {
 //   - PORT: Server port (default: 8080)
 //   - DATA_FILE: Path to room data file (default: rooms.json)
 //   - ALLOWED_ORIGINS: Comma-separated allowed origins (default: localhost)
+//   - ALLOW_SAME_HOST: Allow same-host requests (default: true)
 //   - AUTO_SAVE_INTERVAL: Auto-save interval in seconds (default: 30)
 //   - CLEANUP_INTERVAL: Cleanup interval in seconds (default: 3600)
 //   - ROOM_MAX_AGE: Room max age in seconds (default: 86400)
@@ -70,6 +78,10 @@ func LoadFromEnv() *Config {
 				cfg.AllowedOrigins = append(cfg.AllowedOrigins, o)
 			}
 		}
+	}
+
+	if v := os.Getenv("ALLOW_SAME_HOST"); v != "" {
+		cfg.AllowSameHost = v == "true" || v == "1"
 	}
 
 	if v := os.Getenv("AUTO_SAVE_INTERVAL"); v != "" {
@@ -99,7 +111,7 @@ func LoadFromEnv() *Config {
 	return cfg
 }
 
-// IsOriginAllowed checks if the given origin is allowed.
+// IsOriginAllowed checks if the given origin is allowed based on configured origins only.
 func (c *Config) IsOriginAllowed(origin string) bool {
 	for _, allowed := range c.AllowedOrigins {
 		// Check both http and https, with or without port
@@ -110,5 +122,37 @@ func (c *Config) IsOriginAllowed(origin string) bool {
 			}
 		}
 	}
+	return false
+}
+
+// IsOriginAllowedForRequest checks if the given origin is allowed,
+// considering both configured origins and same-host policy.
+// requestHost is the Host header from the incoming request.
+func (c *Config) IsOriginAllowedForRequest(origin, requestHost string) bool {
+	// Check configured origins first
+	if c.IsOriginAllowed(origin) {
+		return true
+	}
+
+	// Check same-host policy
+	if c.AllowSameHost {
+		parsedOrigin, err := url.Parse(origin)
+		if err != nil {
+			return false
+		}
+		originHost := parsedOrigin.Hostname()
+
+		// Strip port from request host for comparison
+		parsedReq, err := url.Parse("http://" + requestHost)
+		if err != nil {
+			return false
+		}
+		reqHost := parsedReq.Hostname()
+
+		if originHost == reqHost {
+			return true
+		}
+	}
+
 	return false
 }
