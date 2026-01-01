@@ -17,6 +17,7 @@ export function useSwipe(options: SwipeOptions) {
 
   let startX = 0
   let startY = 0
+  let isSwiping = false
 
   function handleTouchStart(event: TouchEvent) {
     if (enabled?.value === false) return
@@ -24,17 +25,40 @@ export function useSwipe(options: SwipeOptions) {
     if (!touch) return
     startX = touch.clientX
     startY = touch.clientY
+    isSwiping = true
+  }
+
+  function handleTouchMove(event: TouchEvent) {
+    if (!isSwiping || enabled?.value === false) return
+    const touch = event.touches[0]
+    if (!touch) return
+
+    const deltaY = touch.clientY - startY
+    const absY = Math.abs(deltaY)
+
+    // If vertical movement exceeds threshold, prevent default to stop pull-to-refresh
+    if (absY > 10) {
+      event.preventDefault()
+    }
   }
 
   function handleTouchEnd(event: TouchEvent) {
-    if (enabled?.value === false) return
+    if (enabled?.value === false) {
+      isSwiping = false
+      return
+    }
     const touch = event.changedTouches[0]
-    if (!touch) return
+    if (!touch) {
+      isSwiping = false
+      return
+    }
     const deltaX = touch.clientX - startX
     const deltaY = touch.clientY - startY
 
     const absX = Math.abs(deltaX)
     const absY = Math.abs(deltaY)
+
+    isSwiping = false
 
     // Must exceed minimum distance
     if (absX < minDistance && absY < minDistance) {
@@ -56,6 +80,7 @@ export function useSwipe(options: SwipeOptions) {
     const el = target.value
     if (!el) return
     el.addEventListener('touchstart', handleTouchStart, { passive: true })
+    el.addEventListener('touchmove', handleTouchMove, { passive: false })
     el.addEventListener('touchend', handleTouchEnd, { passive: true })
   }
 
@@ -63,6 +88,7 @@ export function useSwipe(options: SwipeOptions) {
     const el = target.value
     if (!el) return
     el.removeEventListener('touchstart', handleTouchStart)
+    el.removeEventListener('touchmove', handleTouchMove)
     el.removeEventListener('touchend', handleTouchEnd)
   }
 
