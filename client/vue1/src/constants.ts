@@ -3,8 +3,8 @@ export const BOARD_SIZE = 16
 export const CELL_SIZE = 32
 export const WALL_THICKNESS = 4
 
-// Colors
-export const WALL_COLOR = '#2a2a2a'
+// Colors - uses CSS custom property for dark mode support
+export const WALL_COLOR = 'var(--wall-color, #2a2a2a)'
 
 // Color palette for robots - colors are assigned by robot ID (index)
 export const ROBOT_COLORS = [

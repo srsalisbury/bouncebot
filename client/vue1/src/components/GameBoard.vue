@@ -695,6 +695,7 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .board {
+  --wall-color: #2a2a2a;
   display: grid;
   grid-template-columns: repeat(16, 1fr);
   grid-template-rows: repeat(16, 1fr);
@@ -821,5 +822,65 @@ function handleSwitchPlayerSolution(index: number) {
   border-radius: 3px;
   font-family: inherit;
   font-size: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .game-number {
+    color: #aaa;
+  }
+
+  .board {
+    --wall-color: #aaa;
+    background: #2a2a2a;
+  }
+
+  .wall {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  }
+
+  .cell {
+    border-color: #444;
+  }
+
+  .solution-column {
+    background: #3a3a3a;
+  }
+
+  .solution-column:hover {
+    background: #454545;
+  }
+
+  .solution-column.active {
+    background: #3a3a3a;
+  }
+
+  .solution-column.winner {
+    background: #3d3820;
+    border-color: #b8960b;
+  }
+
+  .solution-header {
+    border-bottom-color: #555;
+  }
+
+  .solution-moves,
+  .move-arrow,
+  .player-solution-header .player-name,
+  .player-solution-header .solution-moves {
+    color: #ddd;
+  }
+
+  .move-pos,
+  .player-solution-header .solution-time {
+    color: #999;
+  }
+
+  .player-solution-header {
+    border-bottom-color: #555;
+  }
+
+  .target-number {
+    color: white;
+  }
 }
 </style>
