@@ -434,7 +434,6 @@ onUnmounted(() => {
 }
 
 .leaderboard-btn {
-  margin-left: auto;
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;
@@ -449,12 +448,13 @@ onUnmounted(() => {
 }
 
 .ready-btn {
-  padding: 0.5rem 1rem;
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;
   background: #42b883;
   color: white;
-  border: 2px solid #42b883;
+  border: 1px solid #42b883;
 }
 
 .ready-btn:hover:not(.pressed) {
@@ -721,15 +721,7 @@ onUnmounted(() => {
   }
 
   .ready-btn {
-    width: 100%;
-    text-align: center;
-    order: 1;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-  }
-
-  .leaderboard-btn {
-    margin-left: 0;
+    margin-left: auto;
   }
 
   .done-btn,
