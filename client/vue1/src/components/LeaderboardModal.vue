@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { Player, PlayerScore } from '../gen/bouncebot_pb'
 import { getPlayerColor } from '../constants'
 
@@ -13,6 +13,23 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
 }>()
+
+// Detect mobile/vertical layout
+const isMobile = ref(false)
+
+function checkMobile() {
+  const aspectRatio = window.innerWidth / window.innerHeight
+  isMobile.value = aspectRatio < 6/5 || window.innerWidth <= 1050
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 // Map player IDs to their color index (based on join order)
 const playerColorMap = computed(() => {
@@ -51,8 +68,9 @@ function handleBackdropClick(event: MouseEvent) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="show" class="modal-backdrop" @click="handleBackdropClick">
+  <!-- Desktop: Full modal -->
+  <Teleport to="body" :disabled="isMobile">
+    <div v-if="show && !isMobile" class="modal-backdrop" @click="handleBackdropClick">
       <div class="modal">
         <button class="close-btn" @click="emit('close')">×</button>
         <h2>Leaderboard</h2>
@@ -76,6 +94,30 @@ function handleBackdropClick(event: MouseEvent) {
       </div>
     </div>
   </Teleport>
+
+  <!-- Mobile: Dropdown -->
+  <div v-if="isMobile" class="leaderboard-dropdown" :class="{ open: show }">
+    <div class="dropdown-summary" @click="emit('close')">
+      <span class="dropdown-label">Leaderboard</span>
+      <span class="dropdown-arrow">{{ show ? '▲' : '▼' }}</span>
+    </div>
+    <div v-if="show" class="dropdown-content">
+      <p class="games-played">{{ gamesPlayed }} {{ gamesPlayed === 1 ? 'game' : 'games' }} played</p>
+      <div class="leaderboard">
+        <div
+          v-for="(player, index) in rankedPlayers"
+          :key="player.id"
+          class="player-row"
+          :class="{ winner: index === 0 && getPlayerWins(player.id) > 0 }"
+        >
+          <span class="rank">{{ index + 1 }}</span>
+          <span class="player-dot" :style="{ backgroundColor: getPlayerColorById(player.id) }" />
+          <span class="player-name">{{ player.name }}</span>
+          <span class="wins">{{ getPlayerWins(player.id) }} {{ getPlayerWins(player.id) === 1 ? 'win' : 'wins' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -85,7 +127,7 @@ function handleBackdropClick(event: MouseEvent) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -204,5 +246,82 @@ kbd {
   border-radius: 3px;
   font-family: inherit;
   font-size: 0.75rem;
+}
+
+/* Mobile dropdown styles */
+.leaderboard-dropdown {
+  position: relative;
+}
+
+.dropdown-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #ddd;
+}
+
+.dropdown-summary:hover {
+  background: #444;
+  border-color: #666;
+}
+
+.leaderboard-dropdown.open .dropdown-summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 200;
+  padding: 0.75rem;
+  background: #1a1a1a;
+  border: 1px solid #555;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 280px;
+  width: max-content;
+}
+
+.dropdown-content .games-played {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+}
+
+.dropdown-content .player-row {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.dropdown-content .player-name {
+  text-align: left;
+}
+
+.dropdown-content .player-dot {
+  width: 10px;
+  height: 10px;
+}
+
+.dropdown-content .rank {
+  font-size: 0.85rem;
+  min-width: 1.25rem;
+}
+
+.dropdown-content .wins {
+  font-size: 0.8rem;
 }
 </style>
