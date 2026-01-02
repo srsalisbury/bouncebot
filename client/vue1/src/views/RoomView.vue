@@ -48,7 +48,7 @@ const {
   },
   onRoomUpdated: (rm) => {
     if (rm.currentGame) {
-      gameStore.applyGame(rm.currentGame)
+      gameStore.applyGame(rm.currentGame, rm.id, rm.gamesPlayed + 1)
     }
     // Restore gameEnded state from server
     if (rm.currentGame && rm.finishedSolving.length === rm.players.length && rm.players.length > 0) {

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { Game } from '../gen/bouncebot_pb'
 import { MAX_SOLUTIONS, type Direction } from '../constants'
 import { calculateDestination } from '../gamePhysics'
@@ -36,6 +36,45 @@ export type Solution = {
   isSolved: boolean
 }
 
+// Persisted solution state
+type PersistedSolutions = {
+  gameNumber: number
+  solutions: Solution[]
+  activeSolutionIndex: number
+}
+
+const STORAGE_KEY_PREFIX = 'bouncebot_solutions_'
+
+function getSolutionsStorageKey(roomId: string): string {
+  return `${STORAGE_KEY_PREFIX}${roomId}`
+}
+
+function loadPersistedSolutions(roomId: string): PersistedSolutions | null {
+  try {
+    const stored = localStorage.getItem(getSolutionsStorageKey(roomId))
+    if (!stored) return null
+    return JSON.parse(stored) as PersistedSolutions
+  } catch {
+    return null
+  }
+}
+
+function savePersistedSolutions(roomId: string, data: PersistedSolutions): void {
+  try {
+    localStorage.setItem(getSolutionsStorageKey(roomId), JSON.stringify(data))
+  } catch {
+    // Ignore storage errors (quota exceeded, etc.)
+  }
+}
+
+function clearPersistedSolutions(roomId: string): void {
+  try {
+    localStorage.removeItem(getSolutionsStorageKey(roomId))
+  } catch {
+    // Ignore errors
+  }
+}
+
 export const useGameStore = defineStore('game', () => {
   // Loading state
   const isLoading = ref(false)
@@ -44,6 +83,9 @@ export const useGameStore = defineStore('game', () => {
   // Initial state (stored for reset)
   const initialRobots = ref<Robot[]>([])
 
+  // Current game/room tracking for persistence
+  const currentRoomId = ref<string | null>(null)
+  const currentGameNumber = ref<number>(0)
 
   // Game state
   const robots = ref<Robot[]>([])
@@ -65,6 +107,23 @@ export const useGameStore = defineStore('game', () => {
 
   // Committed moves (for history dots - delayed to match animation)
   const committedMoves = ref<Move[]>([])
+
+  // Persist solutions when they change
+  function persistSolutions() {
+    if (!currentRoomId.value || currentGameNumber.value === 0) return
+    savePersistedSolutions(currentRoomId.value, {
+      gameNumber: currentGameNumber.value,
+      solutions: solutions.value,
+      activeSolutionIndex: activeSolutionIndex.value,
+    })
+  }
+
+  // Watch for solution changes and persist
+  watch(
+    [solutions, activeSolutionIndex],
+    () => persistSolutions(),
+    { deep: true }
+  )
 
   // Helper to find robot by ID
   function findRobotById(id: number): Robot | undefined {
@@ -281,7 +340,7 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  function applyGame(game: Game) {
+  function applyGame(game: Game, roomId?: string, gameNumber?: number) {
     // Parse robots
     const newRobots: Robot[] = game.bots.map(bot => ({
       id: bot.id,
@@ -302,10 +361,44 @@ export const useGameStore = defineStore('game', () => {
       y: game.target?.pos?.y ?? 0,
     }
 
-    // Reset game state
-    solutions.value = [{ moves: [], isSolved: false }]
-    activeSolutionIndex.value = 0
-    committedMoves.value = []
+    // Update room/game tracking
+    currentRoomId.value = roomId ?? null
+    currentGameNumber.value = gameNumber ?? 0
+
+    // Try to restore persisted solutions if game number matches
+    let restored = false
+    if (roomId && gameNumber) {
+      const persisted = loadPersistedSolutions(roomId)
+      if (persisted && persisted.gameNumber === gameNumber) {
+        // Restore solutions from localStorage
+        solutions.value = persisted.solutions
+        activeSolutionIndex.value = persisted.activeSolutionIndex
+        restored = true
+
+        // Replay the active solution's moves to restore robot positions
+        const activeMoves = solutions.value[activeSolutionIndex.value]?.moves ?? []
+        for (const move of activeMoves) {
+          const robot = findRobotById(move.robotId)
+          if (robot) {
+            robot.x = move.toX
+            robot.y = move.toY
+          }
+        }
+        // Also restore committed moves for the active solution
+        committedMoves.value = [...activeMoves]
+      } else if (persisted) {
+        // Different game number, clear stale persisted solutions
+        clearPersistedSolutions(roomId)
+      }
+    }
+
+    // Reset to fresh state if not restored
+    if (!restored) {
+      solutions.value = [{ moves: [], isSolved: false }]
+      activeSolutionIndex.value = 0
+      committedMoves.value = []
+    }
+
     selectedRobotId.value = null
   }
 
