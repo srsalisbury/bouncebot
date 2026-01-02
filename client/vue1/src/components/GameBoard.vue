@@ -356,7 +356,7 @@ function handleSwitchPlayerSolution(index: number) {
           </div>
           <!-- Action buttons under solutions (desktop) -->
           <div class="action-buttons desktop-actions">
-            <button class="action-btn" @click="doUndo">Undo</button>
+            <button class="action-btn" @click="doUndo">Undo Move</button>
             <button
               class="action-btn"
               :disabled="!store.canStartNewSolution"
@@ -370,14 +370,7 @@ function handleSwitchPlayerSolution(index: number) {
 
       <!-- Action buttons under board (mobile) -->
       <div v-if="!props.gameEnded" class="action-buttons mobile-actions">
-        <button class="action-btn" @click="doUndo">Undo</button>
-        <button
-          class="action-btn"
-          :disabled="!store.canStartNewSolution"
-          @click="store.startNewSolution()"
-        >
-          New Solution
-        </button>
+        <button class="action-btn" @click="doUndo">Undo Move</button>
       </div>
     </div>
 
