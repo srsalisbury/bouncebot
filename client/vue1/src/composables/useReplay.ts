@@ -1,5 +1,5 @@
 import { ref, onUnmounted, type Ref } from 'vue'
-import type { PlayerSolution, BotPos } from '../gen/bouncebot_pb'
+import type { PlayerSolution } from '../gen/bouncebot_pb'
 import type { Direction } from '../constants'
 import { ANIMATION_TIMING } from '../services/AnimationService'
 
@@ -13,7 +13,6 @@ export interface ReplayCallbacks {
   resetBoard: () => void
   clearCommittedMoves: () => void
   applyReplayMove: (robotId: number, x: number, y: number) => void
-  unwindReplayMove: (robotId: number, x: number, y: number) => void
 }
 
 export interface MoveWithDirection {
@@ -30,9 +29,7 @@ export function useReplay(
   const activePlayerSolutionIndex = ref(0)
   const displayedSolutionIndex = ref(-1)
   const isReplaying = ref(false)
-  const isUnwinding = ref(false)
   const replayMoveIndex = ref(0)
-  const unwindMoveIndex = ref(0)
   const replayTimeout = ref<number | null>(null)
   const replayRobotPositions = ref<Map<number, { x: number; y: number }>>(new Map())
 
@@ -76,7 +73,6 @@ export function useReplay(
       replayTimeout.value = null
     }
     isReplaying.value = false
-    isUnwinding.value = false
     replayMoveIndex.value = 0
   }
 
@@ -126,82 +122,23 @@ export function useReplay(
     }, ANIMATION_TIMING.REPLAY_DELAY)
   }
 
-  function unwindStep(moves: BotPos[], positionHistory: Map<number, { x: number; y: number }>[], solutions: PlayerSolution[]) {
-    if (unwindMoveIndex.value < 0) {
-      isUnwinding.value = false
-      displayedSolutionIndex.value = -1
-      startReplayWithDelay(solutions)
-      return
-    }
+  function resetAndReplay(solutions: PlayerSolution[]) {
+    // Reset board to initial positions immediately
+    callbacks.resetBoard()
+    callbacks.clearCommittedMoves()
+    displayedSolutionIndex.value = -1
 
-    const move = moves[unwindMoveIndex.value]
-    if (!move) {
-      isUnwinding.value = false
-      displayedSolutionIndex.value = -1
-      startReplayWithDelay(solutions)
-      return
-    }
-
-    const beforePositions = positionHistory[unwindMoveIndex.value]
-    const beforePos = beforePositions?.get(move.id)
-
-    if (beforePos) {
-      callbacks.unwindReplayMove(move.id, beforePos.x, beforePos.y)
-    }
-
-    unwindMoveIndex.value--
-
-    replayTimeout.value = window.setTimeout(() => {
-      unwindStep(moves, positionHistory, solutions)
-    }, ANIMATION_TIMING.UNWIND_DELAY)
-  }
-
-  function unwindThenReplay(solutions: PlayerSolution[]) {
-    if (displayedSolutionIndex.value < 0 || !solutions[displayedSolutionIndex.value]) {
-      callbacks.resetBoard()
-      callbacks.clearCommittedMoves()
-      startReplayWithDelay(solutions)
-      return
-    }
-
-    const displayedSolution = solutions[displayedSolutionIndex.value]
-    if (!displayedSolution || displayedSolution.moves.length === 0) {
-      callbacks.resetBoard()
-      callbacks.clearCommittedMoves()
-      startReplayWithDelay(solutions)
-      return
-    }
-
-    isUnwinding.value = true
-    unwindMoveIndex.value = displayedSolution.moves.length - 1
-
-    const positionHistory: Map<number, { x: number; y: number }>[] = []
-
-    const initialPositions = new Map<number, { x: number; y: number }>()
-    for (const robot of initialRobots.value) {
-      initialPositions.set(robot.id, { x: robot.x, y: robot.y })
-    }
-    positionHistory.push(new Map(initialPositions))
-
-    let currentPositions = new Map(initialPositions)
-    for (const move of displayedSolution.moves) {
-      currentPositions = new Map(currentPositions)
-      currentPositions.set(move.id, { x: move.pos?.x ?? 0, y: move.pos?.y ?? 0 })
-      positionHistory.push(new Map(currentPositions))
-    }
-
-    replayRobotPositions.value = positionHistory[unwindMoveIndex.value] ?? new Map()
-
-    unwindStep(displayedSolution.moves, positionHistory, solutions)
+    // Start replay after a delay
+    startReplayWithDelay(solutions)
   }
 
   function switchToPlayerSolution(index: number, solutions: PlayerSolution[]) {
     if (!solutions || index < 0 || index >= solutions.length) return
-    if (index === activePlayerSolutionIndex.value && !isReplaying.value && !isUnwinding.value) return
+    if (index === activePlayerSolutionIndex.value && !isReplaying.value) return
 
     stopReplay()
     activePlayerSolutionIndex.value = index
-    unwindThenReplay(solutions)
+    resetAndReplay(solutions)
   }
 
   function startInitialReplay(solutions: PlayerSolution[]) {
@@ -221,7 +158,6 @@ export function useReplay(
     activePlayerSolutionIndex,
     displayedSolutionIndex,
     isReplaying,
-    isUnwinding,
     replayMoveIndex,
     stopReplay,
     switchToPlayerSolution,
