@@ -4,6 +4,7 @@ import { useGameStore } from '../stores/gameStore'
 import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
 import SolutionsDrawer from './SolutionsDrawer.vue'
+import PlayerSolutionsDrawer from './PlayerSolutionsDrawer.vue'
 import { useGameInput } from '../composables/useGameInput'
 import { useReplay } from '../composables/useReplay'
 import { useSwipe } from '../composables/useSwipe'
@@ -385,6 +386,20 @@ function handleSwitchPlayerSolution(index: number) {
     <SolutionsDrawer
       v-if="!props.gameEnded"
       class="mobile-drawer"
+    />
+
+    <!-- Mobile player solutions drawer (only after game ends, hidden on desktop) -->
+    <PlayerSolutionsDrawer
+      v-if="props.gameEnded && props.playerSolutions?.length"
+      class="mobile-drawer"
+      :player-solutions="props.playerSolutions"
+      :active-index="activePlayerSolutionIndex"
+      :replay-move-index="replayMoveIndex"
+      :get-player-name="props.getPlayerName ?? (() => 'Unknown')"
+      :get-player-color="props.getPlayerColor ?? (() => '#888888')"
+      :get-player-solution-moves="getPlayerSolutionMoves"
+      :game-started-at="props.gameStartedAt"
+      @switch-solution="(index) => handleSwitchPlayerSolution(index)"
     />
 
     <!-- How to Play modal -->
