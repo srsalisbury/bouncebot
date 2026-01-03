@@ -92,11 +92,31 @@ useGameInput(
   }
 )
 
+// Track robot under touch start for swipe-to-select
+let swipeStartRobotId: number | null = null
+
 // Swipe gesture handling for mobile
 useSwipe({
   target: boardRef,
+  onSwipeStart: ({ relativeX, relativeY }) => {
+    swipeStartRobotId = null
+    if (props.inputBlocked || props.gameEnded) return
+    // Convert normalized position to cell coordinates
+    const cellX = Math.floor(relativeX * BOARD_SIZE)
+    const cellY = Math.floor(relativeY * BOARD_SIZE)
+    // Record which robot (if any) the touch started on
+    const robotAtCell = store.robots.find(r => r.x === cellX && r.y === cellY)
+    if (robotAtCell) {
+      swipeStartRobotId = robotAtCell.id
+    }
+  },
   onSwipe: (direction) => {
     if (props.inputBlocked || props.gameEnded) return
+    // If swipe started on a robot, select it (if not already selected)
+    if (swipeStartRobotId !== null && store.selectedRobotId !== swipeStartRobotId) {
+      store.selectRobot(swipeStartRobotId)
+    }
+    // Move the selected robot
     if (store.selectedRobotId !== null) {
       store.moveRobot(direction)
     }

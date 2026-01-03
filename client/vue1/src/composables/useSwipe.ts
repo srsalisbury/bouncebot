@@ -1,6 +1,13 @@
 import { onMounted, onUnmounted, type Ref } from 'vue'
 import type { Direction } from '../constants'
 
+export interface SwipeStartInfo {
+  /** X position relative to target element (0-1 normalized) */
+  relativeX: number
+  /** Y position relative to target element (0-1 normalized) */
+  relativeY: number
+}
+
 export interface SwipeOptions {
   /** Minimum distance in pixels to register as a swipe */
   minDistance?: number
@@ -8,12 +15,14 @@ export interface SwipeOptions {
   target: Ref<HTMLElement | null>
   /** Called when a swipe is detected */
   onSwipe: (direction: Direction) => void
+  /** Called when a swipe gesture starts, before direction is determined */
+  onSwipeStart?: (info: SwipeStartInfo) => void
   /** Whether swipe detection is enabled */
   enabled?: Ref<boolean>
 }
 
 export function useSwipe(options: SwipeOptions) {
-  const { target, onSwipe, minDistance = 30, enabled } = options
+  const { target, onSwipe, onSwipeStart, minDistance = 30, enabled } = options
 
   let startX = 0
   let startY = 0
@@ -26,6 +35,14 @@ export function useSwipe(options: SwipeOptions) {
     startX = touch.clientX
     startY = touch.clientY
     isSwiping = true
+
+    // Call onSwipeStart with normalized position relative to target
+    if (onSwipeStart && target.value) {
+      const rect = target.value.getBoundingClientRect()
+      const relativeX = (touch.clientX - rect.left) / rect.width
+      const relativeY = (touch.clientY - rect.top) / rect.height
+      onSwipeStart({ relativeX, relativeY })
+    }
   }
 
   function handleTouchMove(event: TouchEvent) {
