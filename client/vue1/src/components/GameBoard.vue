@@ -761,6 +761,11 @@ function handleSwitchPlayerSolution(index: number) {
   width: min(calc(100vw - 25rem), calc(100dvh - 12rem), calc(100vh - 12rem));
   aspect-ratio: 1;
   container-type: inline-size;
+  /* Prevent unwanted touch behaviors */
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
 }
 
 /* Outer border as child element so cqw references the board correctly */
