@@ -59,6 +59,14 @@ const solutionCount = computed(() => store.solutions.length)
           :class="{ active: index === store.activeSolutionIndex }"
           @click="store.switchSolution(index)"
         >
+          <!-- Delete button on active solution (only if more than 1 solution) -->
+          <button
+            v-if="index === store.activeSolutionIndex && store.solutions.length > 1"
+            class="delete-btn"
+            @click.stop="store.deleteSolution(index)"
+          >
+            ×
+          </button>
           <div class="solution-header">
             <span class="solution-moves">{{ solution.moves.length }}</span>
             <span class="solved-check" :class="{ visible: solution.isSolved }">✓</span>
@@ -77,6 +85,14 @@ const solutionCount = computed(() => store.solutions.length)
             </div>
           </div>
         </div>
+        <!-- Add new solution button -->
+        <button
+          v-if="store.canStartNewSolution"
+          class="add-solution-btn"
+          @click="store.startNewSolution()"
+        >
+          +
+        </button>
       </div>
     </div>
   </div>
@@ -162,6 +178,7 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .solution-column {
+  position: relative;
   min-width: 54px;
   display: flex;
   flex-direction: column;
@@ -171,6 +188,51 @@ const solutionCount = computed(() => store.solutions.length)
   background: #2a2a2a;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.delete-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e53935;
+  color: white;
+  border: 2px solid #1a1a1a;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.delete-btn:hover {
+  background: #c62828;
+}
+
+.add-solution-btn {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #333;
+  color: #42b883;
+  border: 2px solid #42b883;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.add-solution-btn:hover {
+  background: #3a3a3a;
 }
 
 .solution-column:hover {
