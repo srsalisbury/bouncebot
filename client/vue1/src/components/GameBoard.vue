@@ -65,6 +65,45 @@ function doDelete() {
   }
 }
 
+function doReset() {
+  const currentSolution = store.solutions[store.activeSolutionIndex]
+  if (currentSolution?.isSolved && props.onBeforeRetract) {
+    props.onBeforeRetract(() => store.resetCurrentSolution())
+  } else {
+    store.resetCurrentSolution()
+  }
+}
+
+// Press-and-hold detection for reset functionality
+let undoHoldTimer: ReturnType<typeof setTimeout> | null = null
+let undoDidReset = false
+
+function onUndoPointerDown() {
+  undoDidReset = false
+  undoHoldTimer = setTimeout(() => {
+    undoDidReset = true
+    doReset()
+  }, 1000)
+}
+
+function onUndoPointerUp() {
+  if (undoHoldTimer) {
+    clearTimeout(undoHoldTimer)
+    undoHoldTimer = null
+  }
+  // If we didn't reset, do a normal undo
+  if (!undoDidReset) {
+    doUndo()
+  }
+}
+
+function onUndoPointerCancel() {
+  if (undoHoldTimer) {
+    clearTimeout(undoHoldTimer)
+    undoHoldTimer = null
+  }
+}
+
 // Input handling composable
 useGameInput(
   {
@@ -398,9 +437,15 @@ function handleSwitchPlayerSolution(index: number) {
           </div>
           <!-- Action buttons under solutions (desktop) -->
           <div class="action-buttons desktop-actions">
-            <button class="action-btn" @click="doUndo">Undo Move</button>
             <button
-              class="action-btn"
+              class="action-btn undo-btn"
+              @pointerdown="onUndoPointerDown"
+              @pointerup="onUndoPointerUp"
+              @pointercancel="onUndoPointerCancel"
+              @pointerleave="onUndoPointerCancel"
+            >Undo Move</button>
+            <button
+              class="action-btn new-solution-btn"
               :disabled="!store.canStartNewSolution"
               @click="store.startNewSolution()"
             >
@@ -412,7 +457,20 @@ function handleSwitchPlayerSolution(index: number) {
 
       <!-- Action buttons under board (mobile) -->
       <div v-if="!props.gameEnded" class="action-buttons mobile-actions">
-        <button class="action-btn" @click="doUndo">Undo Move</button>
+        <button
+          class="action-btn undo-btn"
+          @pointerdown="onUndoPointerDown"
+          @pointerup="onUndoPointerUp"
+          @pointercancel="onUndoPointerCancel"
+          @pointerleave="onUndoPointerCancel"
+        >Undo Move</button>
+        <button
+          class="action-btn new-solution-btn"
+          :disabled="!store.canStartNewSolution"
+          @click="store.startNewSolution()"
+        >
+          New Solution
+        </button>
       </div>
     </div>
 
@@ -519,10 +577,29 @@ function handleSwitchPlayerSolution(index: number) {
   font-size: 0.9rem;
   cursor: pointer;
   min-height: 44px;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .action-btn:hover:not(:disabled) {
   background: #444;
+}
+
+.action-btn.undo-btn {
+  background: #c62828;
+}
+
+.action-btn.undo-btn:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.action-btn.new-solution-btn {
+  background: #2e7d32;
+}
+
+.action-btn.new-solution-btn:hover:not(:disabled) {
+  background: #388e3c;
 }
 
 .action-btn:disabled {
@@ -824,6 +901,11 @@ function handleSwitchPlayerSolution(index: number) {
   z-index: 1;
 }
 
+.history-dot.start-dot {
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
 .robot {
   position: absolute;
   border-radius: 50%;
@@ -846,6 +928,9 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .robot.selected {
+  /* Fallback for iPad Safari where cqw may not work */
+  box-shadow: 0 0 0 3px white, 0 0 0 4px black, 0 0 8px 3px rgba(255, 255, 255, 0.5);
+  /* Enhanced version using container query units */
   box-shadow: 0 0 0 0.5cqw white, 0 0 0 0.625cqw black, 0 0 1.5cqw 0.5cqw rgba(255, 255, 255, 0.5);
   transform: translate(-50%, -50%) scale(1.1);
 }
