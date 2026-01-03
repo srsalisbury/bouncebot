@@ -9,7 +9,6 @@ function createMockCallbacks(): ReplayCallbacks {
     resetBoard: vi.fn(),
     clearCommittedMoves: vi.fn(),
     applyReplayMove: vi.fn(),
-    unwindReplayMove: vi.fn(),
   }
 }
 
@@ -110,13 +109,11 @@ describe('useReplay', () => {
         activePlayerSolutionIndex,
         displayedSolutionIndex,
         isReplaying,
-        isUnwinding,
       } = useReplay(robots, createMockCallbacks())
 
       expect(activePlayerSolutionIndex.value).toBe(0)
       expect(displayedSolutionIndex.value).toBe(-1)
       expect(isReplaying.value).toBe(false)
-      expect(isUnwinding.value).toBe(false)
     })
   })
 

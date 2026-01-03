@@ -1,8 +1,7 @@
 // Animation timing constants
 export const ANIMATION_TIMING = {
   MOVE_DELAY: 150,      // Delay between animated moves (ms)
-  REPLAY_DELAY: 600,    // Delay before starting replay (ms)
-  UNWIND_DELAY: 150,    // Delay between unwind steps (ms)
+  REPLAY_DELAY: 500,    // Delay before starting replay after reset (ms)
 } as const
 
 // Schedule a sequence of callbacks with delays between them

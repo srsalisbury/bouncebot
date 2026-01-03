@@ -213,28 +213,6 @@ export const useGameStore = defineStore('game', () => {
     activeSolution.value.isSolved = false
   }
 
-  // Shared function to unwind moves with animation, returns total time in ms
-  function unwindMoves(movesToUnwind: Move[]): number {
-    movesToUnwind.slice().reverse().forEach((move, i) => {
-      const moveIndex = movesToUnwind.length - 1 - i
-      setTimeout(() => {
-        animatingMoveIndex.value = moveIndex
-        // Remove dot first (before robot moves)
-        const idx = committedMoves.value.indexOf(move)
-        if (idx !== -1) {
-          committedMoves.value.splice(idx, 1)
-        }
-        // Then move robot
-        const robot = findRobotById(move.robotId)
-        if (robot) {
-          robot.x = move.fromX
-          robot.y = move.fromY
-        }
-      }, i * ANIMATION_TIMING.MOVE_DELAY)
-    })
-    return movesToUnwind.length * ANIMATION_TIMING.MOVE_DELAY
-  }
-
   // Shared function to replay moves with animation, starting after a delay
   function replayMoves(movesToReplay: Move[], startDelay: number): number {
     movesToReplay.forEach((move, i) => {
@@ -255,22 +233,21 @@ export const useGameStore = defineStore('game', () => {
     if (index < 0 || index >= solutions.value.length) return
     if (index === activeSolutionIndex.value) return
 
-    const currentMoves = [...activeSolution.value.moves]
     const targetMoves = solutions.value[index]!.moves
 
     selectedRobotId.value = null
 
-    // Unwind current solution
-    const unwindTime = unwindMoves(currentMoves)
+    // Reset to initial positions immediately
+    resetBoard()
+    committedMoves.value = []
+    animatingMoveIndex.value = null
+    activeSolutionIndex.value = index
 
-    // Switch to target solution after unwind completes
-    setTimeout(() => {
-      animatingMoveIndex.value = null
-      activeSolutionIndex.value = index
-    }, unwindTime)
+    // Wait before replaying new solution
+    const resetDelay = 500
 
-    // Replay target moves after switching
-    const totalTime = replayMoves(targetMoves, unwindTime)
+    // Replay target moves after delay
+    const totalTime = replayMoves(targetMoves, resetDelay)
 
     // Clear highlight after replay completes
     setTimeout(() => {
@@ -281,22 +258,17 @@ export const useGameStore = defineStore('game', () => {
   function startNewSolution() {
     if (!canStartNewSolution.value) return
 
-    const currentMoves = [...activeSolution.value.moves]
-
     // Create new empty solution
     solutions.value.push({ moves: [], isSolved: false })
     const newIndex = solutions.value.length - 1
 
     selectedRobotId.value = null
 
-    // Unwind current solution
-    const unwindTime = unwindMoves(currentMoves)
-
-    // Switch to new solution after unwind completes
-    setTimeout(() => {
-      animatingMoveIndex.value = null
-      activeSolutionIndex.value = newIndex
-    }, unwindTime)
+    // Reset to initial positions immediately
+    resetBoard()
+    committedMoves.value = []
+    animatingMoveIndex.value = null
+    activeSolutionIndex.value = newIndex
   }
 
   function deleteSolution(index: number) {
@@ -308,24 +280,24 @@ export const useGameStore = defineStore('game', () => {
     if (index === activeSolutionIndex.value) {
       // Switch to previous solution, or first if deleting index 0
       const newActiveIndex = index > 0 ? index - 1 : 1
-      const currentMoves = [...activeSolution.value.moves]
       const targetMoves = solutions.value[newActiveIndex]!.moves
 
       selectedRobotId.value = null
 
-      // Unwind current solution
-      const unwindTime = unwindMoves(currentMoves)
+      // Reset to initial positions immediately
+      resetBoard()
+      committedMoves.value = []
+      animatingMoveIndex.value = null
 
-      // After unwind, remove solution and replay new active
-      setTimeout(() => {
-        solutions.value.splice(index, 1)
-        // Adjust active index after removal
-        activeSolutionIndex.value = index > 0 ? index - 1 : 0
-        animatingMoveIndex.value = null
-      }, unwindTime)
+      // Remove solution and update index
+      solutions.value.splice(index, 1)
+      activeSolutionIndex.value = index > 0 ? index - 1 : 0
+
+      // Wait before replaying new solution
+      const resetDelay = 500
 
       // Replay new active solution
-      const totalTime = replayMoves(targetMoves, unwindTime)
+      const totalTime = replayMoves(targetMoves, resetDelay)
 
       setTimeout(() => {
         animatingMoveIndex.value = null
@@ -439,29 +411,6 @@ export const useGameStore = defineStore('game', () => {
     committedMoves.value = []
   }
 
-  // Unwind a replay move (remove dot first, then move robot)
-  function unwindReplayMove(robotId: number, x: number, y: number) {
-    const robot = findRobotById(robotId)
-    if (robot) {
-      // Remove the dot immediately (before robot moves)
-      let lastIndex = -1
-      for (let i = committedMoves.value.length - 1; i >= 0; i--) {
-        const move = committedMoves.value[i]
-        if (move && move.robotId === robotId) {
-          lastIndex = i
-          break
-        }
-      }
-      if (lastIndex !== -1) {
-        committedMoves.value.splice(lastIndex, 1)
-      }
-
-      // Then move the robot
-      robot.x = x
-      robot.y = y
-    }
-  }
-
   return {
     // State
     robots,
@@ -492,6 +441,5 @@ export const useGameStore = defineStore('game', () => {
     resetBoard,
     applyReplayMove,
     clearCommittedMoves,
-    unwindReplayMove,
   }
 })

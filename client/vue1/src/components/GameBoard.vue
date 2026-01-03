@@ -42,7 +42,6 @@ const {
     resetBoard: () => store.resetBoard(),
     clearCommittedMoves: () => store.clearCommittedMoves(),
     applyReplayMove: (robotId, x, y) => store.applyReplayMove(robotId, x, y),
-    unwindReplayMove: (robotId, x, y) => store.unwindReplayMove(robotId, x, y),
   }
 )
 
