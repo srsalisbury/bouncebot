@@ -280,11 +280,19 @@ onUnmounted(() => {
             </template>
             <template v-else>
               <button
-                class="btn leaderboard-btn"
+                class="btn leaderboard-btn desktop-only"
                 @click="toggleLeaderboard"
               >
                 Leaderboard
               </button>
+              <LeaderboardModal
+                class="mobile-only"
+                :show="showLeaderboard"
+                :players="room.players"
+                :scores="room.scores"
+                :games-played="room.gamesPlayed"
+                @close="toggleLeaderboard"
+              />
               <button
                 class="btn ready-btn"
                 :class="{ pressed: isPlayerReady }"
@@ -708,14 +716,27 @@ onUnmounted(() => {
   background: #c62828;
 }
 
+/* Desktop/mobile visibility */
+.mobile-only {
+  display: none;
+}
+
 /* Vertical layout responsive styles */
 @media (max-aspect-ratio: 6/5), (max-width: 1050px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
   .game-wrapper {
     padding: 0.5rem;
   }
 
   .game-header {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0.5rem;
     padding: 0.5rem;
   }
