@@ -77,8 +77,12 @@ function doReset() {
 // Press-and-hold detection for reset functionality
 let undoHoldTimer: ReturnType<typeof setTimeout> | null = null
 let undoDidReset = false
+let undoHoldActive = false
 
 function onUndoPointerDown() {
+  // Prevent double-triggering from both touch and pointer events
+  if (undoHoldActive) return
+  undoHoldActive = true
   undoDidReset = false
   undoHoldTimer = setTimeout(() => {
     undoDidReset = true
@@ -87,6 +91,8 @@ function onUndoPointerDown() {
 }
 
 function onUndoPointerUp() {
+  if (!undoHoldActive) return
+  undoHoldActive = false
   if (undoHoldTimer) {
     clearTimeout(undoHoldTimer)
     undoHoldTimer = null
@@ -98,6 +104,7 @@ function onUndoPointerUp() {
 }
 
 function onUndoPointerCancel() {
+  undoHoldActive = false
   if (undoHoldTimer) {
     clearTimeout(undoHoldTimer)
     undoHoldTimer = null
@@ -443,6 +450,10 @@ function handleSwitchPlayerSolution(index: number) {
               @pointerup="onUndoPointerUp"
               @pointercancel="onUndoPointerCancel"
               @pointerleave="onUndoPointerCancel"
+              @touchstart.prevent="onUndoPointerDown"
+              @touchend.prevent="onUndoPointerUp"
+              @touchcancel="onUndoPointerCancel"
+              @contextmenu.prevent
             >Undo Move</button>
             <button
               class="action-btn new-solution-btn"
@@ -463,6 +474,10 @@ function handleSwitchPlayerSolution(index: number) {
           @pointerup="onUndoPointerUp"
           @pointercancel="onUndoPointerCancel"
           @pointerleave="onUndoPointerCancel"
+          @touchstart.prevent="onUndoPointerDown"
+          @touchend.prevent="onUndoPointerUp"
+          @touchcancel="onUndoPointerCancel"
+          @contextmenu.prevent
         >Undo Move</button>
         <button
           class="action-btn new-solution-btn"
@@ -588,6 +603,11 @@ function handleSwitchPlayerSolution(index: number) {
 
 .action-btn.undo-btn {
   background: #c62828;
+  /* Prevent iOS long-press behaviors that cancel pointer events */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .action-btn.undo-btn:hover:not(:disabled) {
