@@ -280,11 +280,19 @@ onUnmounted(() => {
             </template>
             <template v-else>
               <button
-                class="btn leaderboard-btn"
+                class="btn leaderboard-btn desktop-only"
                 @click="toggleLeaderboard"
               >
                 Leaderboard
               </button>
+              <LeaderboardModal
+                class="mobile-only"
+                :show="showLeaderboard"
+                :players="room.players"
+                :scores="room.scores"
+                :games-played="room.gamesPlayed"
+                @close="toggleLeaderboard"
+              />
               <button
                 class="btn ready-btn"
                 :class="{ pressed: isPlayerReady }"
@@ -434,7 +442,6 @@ onUnmounted(() => {
 }
 
 .leaderboard-btn {
-  margin-left: auto;
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;
@@ -449,12 +456,13 @@ onUnmounted(() => {
 }
 
 .ready-btn {
-  padding: 0.5rem 1rem;
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;
   background: #42b883;
   color: white;
-  border: 2px solid #42b883;
+  border: 1px solid #42b883;
 }
 
 .ready-btn:hover:not(.pressed) {
@@ -708,28 +716,33 @@ onUnmounted(() => {
   background: #c62828;
 }
 
+/* Desktop/mobile visibility */
+.mobile-only {
+  display: none;
+}
+
 /* Vertical layout responsive styles */
 @media (max-aspect-ratio: 6/5), (max-width: 1050px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
   .game-wrapper {
     padding: 0.5rem;
   }
 
   .game-header {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0.5rem;
     padding: 0.5rem;
   }
 
   .ready-btn {
-    width: 100%;
-    text-align: center;
-    order: 1;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-  }
-
-  .leaderboard-btn {
-    margin-left: 0;
+    margin-left: auto;
   }
 
   .done-btn,
