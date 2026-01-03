@@ -191,10 +191,15 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .delete-btn {
+  /* Reset iOS button styling */
+  -webkit-appearance: none;
+  appearance: none;
   position: absolute;
   top: -8px;
   right: -8px;
   width: 22px;
+  min-width: 22px;
+  max-width: 22px;
   height: 22px;
   border-radius: 50%;
   background: #e53935;
@@ -208,6 +213,8 @@ const solutionCount = computed(() => store.solutions.length)
   align-items: center;
   justify-content: center;
   z-index: 10;
+  box-sizing: border-box;
+  padding: 0;
 }
 
 .delete-btn:hover {

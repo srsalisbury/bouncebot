@@ -11,7 +11,7 @@ export const ROBOT_COLORS = [
   '#e53935', // red
   '#1e88e5', // blue
   '#43a047', // green
-  '#fdd835', // yellow
+  '#ffc107', // golden yellow
   '#8e24aa', // purple
   '#ff6f00', // orange
   '#00acc1', // cyan
@@ -30,7 +30,7 @@ export const PLAYER_COLORS = [
   '#e53935', // red
   '#1e88e5', // blue
   '#43a047', // green
-  '#fdd835', // yellow
+  '#ffc107', // golden yellow
   '#8e24aa', // purple
   '#fb8c00', // orange
   '#00acc1', // cyan

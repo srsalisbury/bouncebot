@@ -411,6 +411,22 @@ export const useGameStore = defineStore('game', () => {
     committedMoves.value = []
   }
 
+  // Reset current solution back to starting point
+  function resetCurrentSolution() {
+    const solution = solutions.value[activeSolutionIndex.value]
+    if (!solution) return
+
+    // Clear moves and reset solved state
+    solution.moves = []
+    solution.isSolved = false
+
+    // Reset board state
+    selectedRobotId.value = null
+    resetBoard()
+    committedMoves.value = []
+    animatingMoveIndex.value = null
+  }
+
   return {
     // State
     robots,
@@ -441,5 +457,6 @@ export const useGameStore = defineStore('game', () => {
     resetBoard,
     applyReplayMove,
     clearCommittedMoves,
+    resetCurrentSolution,
   }
 })
