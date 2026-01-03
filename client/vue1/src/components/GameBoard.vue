@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
@@ -142,6 +142,28 @@ watch(() => props.gameEnded, (ended) => {
     startInitialReplay(props.playerSolutions)
   } else if (!ended) {
     stopReplay()
+  }
+})
+
+// Prevent double-tap zoom on iOS/iPad
+let lastTouchEnd = 0
+function preventDoubleTapZoom(event: TouchEvent) {
+  const now = Date.now()
+  if (now - lastTouchEnd <= 300) {
+    event.preventDefault()
+  }
+  lastTouchEnd = now
+}
+
+onMounted(() => {
+  if (boardRef.value) {
+    boardRef.value.addEventListener('touchend', preventDoubleTapZoom, { passive: false })
+  }
+})
+
+onUnmounted(() => {
+  if (boardRef.value) {
+    boardRef.value.removeEventListener('touchend', preventDoubleTapZoom)
   }
 })
 
@@ -766,9 +788,12 @@ function handleSwitchPlayerSolution(index: number) {
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
+  /* Border for iPad Safari and other browsers where ::before with cqw may not work */
+  border: 4px solid var(--wall-color);
+  box-sizing: border-box;
 }
 
-/* Outer border as child element so cqw references the board correctly */
+/* Enhanced border using cqw units - overlays the fallback border on supporting browsers */
 .board::before {
   content: '';
   position: absolute;

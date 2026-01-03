@@ -215,7 +215,12 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .add-solution-btn {
+  /* Reset iOS button styling */
+  -webkit-appearance: none;
+  appearance: none;
+  width: 44px;
   min-width: 44px;
+  max-width: 44px;
   height: 44px;
   border-radius: 50%;
   background: #333;
@@ -227,8 +232,10 @@ const solutionCount = computed(() => store.solutions.length)
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  flex: 0 0 44px;
   align-self: flex-start;
+  box-sizing: border-box;
+  padding: 0;
 }
 
 .add-solution-btn:hover {
