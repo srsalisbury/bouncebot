@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { useRoomStore } from '../stores/roomStore'
@@ -12,6 +12,14 @@ const joinRoomId = ref('')
 const isCreating = ref(false)
 const isJoining = ref(false)
 const error = ref<string | null>(null)
+
+const lastRoom = computed(() => roomStore.lastRoomId)
+
+function returnToGame() {
+  if (lastRoom.value) {
+    router.push(`/room/${lastRoom.value}`)
+  }
+}
 
 async function createRoom() {
   if (!playerName.value.trim()) {
@@ -125,6 +133,12 @@ async function joinRoom() {
       </div>
 
       <div v-if="error" class="error">{{ error }}</div>
+
+      <div v-if="lastRoom" class="return-section">
+        <button class="btn return-btn" @click="returnToGame">
+          Return to game
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -249,5 +263,20 @@ async function joinRoom() {
   border-radius: 6px;
   color: #e53935;
   font-size: 0.9rem;
+}
+
+.return-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #333;
+}
+
+.btn.return-btn {
+  background: #1e88e5;
+  color: #fff;
+}
+
+.btn.return-btn:hover:not(:disabled) {
+  background: #1976d2;
 }
 </style>
