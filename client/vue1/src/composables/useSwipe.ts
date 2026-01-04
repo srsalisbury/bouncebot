@@ -22,19 +22,21 @@ export interface SwipeOptions {
 }
 
 export function useSwipe(options: SwipeOptions) {
-  const { target, onSwipe, onSwipeStart, minDistance = 30, enabled } = options
+  const { target, onSwipe, onSwipeStart, minDistance = 50, enabled } = options
 
-  let startX = 0
-  let startY = 0
+  let originX = 0
+  let originY = 0
   let isSwiping = false
+  let hasFiredSwipe = false  // Track if we've fired at least one swipe this gesture
 
   function handleTouchStart(event: TouchEvent) {
     if (enabled?.value === false) return
     const touch = event.touches[0]
     if (!touch) return
-    startX = touch.clientX
-    startY = touch.clientY
+    originX = touch.clientX
+    originY = touch.clientY
     isSwiping = true
+    hasFiredSwipe = false
 
     // Call onSwipeStart with normalized position relative to target
     if (onSwipeStart && target.value) {
@@ -50,12 +52,33 @@ export function useSwipe(options: SwipeOptions) {
     const touch = event.touches[0]
     if (!touch) return
 
-    const deltaY = touch.clientY - startY
+    const deltaX = touch.clientX - originX
+    const deltaY = touch.clientY - originY
+    const absX = Math.abs(deltaX)
     const absY = Math.abs(deltaY)
 
-    // If vertical movement exceeds threshold, prevent default to stop pull-to-refresh
-    if (absY > 10) {
+    // Prevent default to stop pull-to-refresh and scrolling
+    if (absX > 10 || absY > 10) {
       event.preventDefault()
+    }
+
+    // Check if we've moved enough to trigger a swipe
+    if (absX >= minDistance || absY >= minDistance) {
+      // Determine primary direction
+      let direction: Direction
+      if (absX > absY) {
+        direction = deltaX > 0 ? 'right' : 'left'
+      } else {
+        direction = deltaY > 0 ? 'down' : 'up'
+      }
+
+      // Fire the swipe
+      onSwipe(direction)
+      hasFiredSwipe = true
+
+      // Reset origin to current position for next potential swipe
+      originX = touch.clientX
+      originY = touch.clientY
     }
   }
 
@@ -64,33 +87,31 @@ export function useSwipe(options: SwipeOptions) {
       isSwiping = false
       return
     }
-    const touch = event.changedTouches[0]
-    if (!touch) {
-      isSwiping = false
-      return
-    }
-    const deltaX = touch.clientX - startX
-    const deltaY = touch.clientY - startY
 
-    const absX = Math.abs(deltaX)
-    const absY = Math.abs(deltaY)
+    // If we haven't fired any swipe yet, check if we should fire one on release
+    if (!hasFiredSwipe) {
+      const touch = event.changedTouches[0]
+      if (touch) {
+        const deltaX = touch.clientX - originX
+        const deltaY = touch.clientY - originY
+        const absX = Math.abs(deltaX)
+        const absY = Math.abs(deltaY)
+
+        // Fire swipe if exceeded threshold
+        if (absX >= minDistance || absY >= minDistance) {
+          let direction: Direction
+          if (absX > absY) {
+            direction = deltaX > 0 ? 'right' : 'left'
+          } else {
+            direction = deltaY > 0 ? 'down' : 'up'
+          }
+          onSwipe(direction)
+        }
+      }
+    }
 
     isSwiping = false
-
-    // Must exceed minimum distance
-    if (absX < minDistance && absY < minDistance) {
-      return
-    }
-
-    // Determine primary direction
-    let direction: Direction
-    if (absX > absY) {
-      direction = deltaX > 0 ? 'right' : 'left'
-    } else {
-      direction = deltaY > 0 ? 'down' : 'up'
-    }
-
-    onSwipe(direction)
+    hasFiredSwipe = false
   }
 
   function attach() {
