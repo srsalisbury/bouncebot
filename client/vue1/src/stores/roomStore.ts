@@ -3,13 +3,16 @@ import { defineStore } from 'pinia'
 
 const STORAGE_KEY_NAME = 'bouncebot_player_name'
 const STORAGE_KEY_ID = 'bouncebot_player_id'
+const STORAGE_KEY_LAST_ROOM = 'bouncebot_last_room'
 
 export const useRoomStore = defineStore('room', () => {
   // Load from localStorage on init
   const storedName = localStorage.getItem(STORAGE_KEY_NAME)
   const storedId = localStorage.getItem(STORAGE_KEY_ID)
+  const storedLastRoom = localStorage.getItem(STORAGE_KEY_LAST_ROOM)
   const currentPlayerName = ref<string | null>(storedName)
   const currentPlayerId = ref<string | null>(storedId)
+  const lastRoomId = ref<string | null>(storedLastRoom)
 
   // Persist to localStorage when changed
   watch(currentPlayerName, (name) => {
@@ -28,9 +31,21 @@ export const useRoomStore = defineStore('room', () => {
     }
   })
 
+  watch(lastRoomId, (roomId) => {
+    if (roomId) {
+      localStorage.setItem(STORAGE_KEY_LAST_ROOM, roomId)
+    } else {
+      localStorage.removeItem(STORAGE_KEY_LAST_ROOM)
+    }
+  })
+
   function setCurrentPlayer(id: string, name: string) {
     currentPlayerId.value = id
     currentPlayerName.value = name
+  }
+
+  function setLastRoom(roomId: string) {
+    lastRoomId.value = roomId
   }
 
   function clear() {
@@ -41,7 +56,9 @@ export const useRoomStore = defineStore('room', () => {
   return {
     currentPlayerId,
     currentPlayerName,
+    lastRoomId,
     setCurrentPlayer,
+    setLastRoom,
     clear,
   }
 })
