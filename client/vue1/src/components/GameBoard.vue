@@ -18,6 +18,7 @@ const props = defineProps<{
   getPlayerName?: (playerId: string) => string
   getPlayerColor?: (playerId: string) => string
   gameStartedAt?: Timestamp
+  roomId?: string
   gameNumber?: number
   inputBlocked?: boolean
 }>()
@@ -300,7 +301,7 @@ function handleSwitchPlayerSolution(index: number) {
       <slot name="header"></slot>
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
-        <h1 class="title">BounceBot<span v-if="props.gameNumber" class="game-number"> - Game #{{ props.gameNumber }}</span></h1>
+        <h1 class="title">BounceBot<span v-if="props.roomId && props.gameNumber" class="game-number"> - Game {{ props.roomId }}/{{ props.gameNumber }}</span></h1>
         <!-- Board area (board + hints) -->
         <div class="board-area">
           <!-- Game board -->
