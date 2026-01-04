@@ -18,6 +18,7 @@ const props = defineProps<{
   getPlayerName?: (playerId: string) => string
   getPlayerColor?: (playerId: string) => string
   gameStartedAt?: Timestamp
+  roomId?: string
   gameNumber?: number
   inputBlocked?: boolean
 }>()
@@ -300,7 +301,7 @@ function handleSwitchPlayerSolution(index: number) {
       <slot name="header"></slot>
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
-        <h1 class="title">BounceBot<span v-if="props.gameNumber" class="game-number"> - Game #{{ props.gameNumber }}</span></h1>
+        <h1 class="title">BounceBot<span v-if="props.roomId && props.gameNumber" class="game-number"> - Game {{ props.roomId }}/{{ props.gameNumber }}</span></h1>
         <!-- Board area (board + hints) -->
         <div class="board-area">
           <!-- Game board -->
@@ -904,7 +905,8 @@ function handleSwitchPlayerSolution(index: number) {
 @media (max-aspect-ratio: 6/5), (max-width: 1050px) {
   .board {
     /* Fill width in mobile, but constrain by height. Account for header, title, buttons, drawer */
-    width: min(calc(100% - 0.5rem), calc(100dvh - 17rem), calc(100vh - 17rem));
+    /* Leave 1rem (16px) on each side to reduce accidental browser back/forward gestures */
+    width: min(calc(100% - 2rem), calc(100dvh - 17rem), calc(100vh - 17rem));
     margin: 0 auto;
   }
 }

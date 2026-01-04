@@ -136,7 +136,7 @@ async function joinRoom() {
 
       <div v-if="lastRoom" class="return-section">
         <button class="btn return-btn" @click="returnToGame">
-          Return to game
+          Return to Game
         </button>
       </div>
     </div>

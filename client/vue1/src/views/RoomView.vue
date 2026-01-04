@@ -305,6 +305,7 @@ onUnmounted(() => {
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"
         :game-started-at="room.gameStartedAt"
+        :room-id="room.id"
         :game-number="room.gamesPlayed + 1"
         :input-blocked="showLeaderboard"
       >
@@ -342,7 +343,7 @@ onUnmounted(() => {
                 :disabled="isPlayerReady"
                 @click="gameActions.markReadyForNext"
               >
-                I'm Ready For Next Game ({{ readyCount }}/{{ playerCount }})
+                Next Game ({{ readyCount }}/{{ playerCount }})
               </button>
             </template>
           </div>
