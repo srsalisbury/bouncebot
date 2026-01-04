@@ -21,6 +21,7 @@ const props = defineProps<{
   roomId?: string
   gameNumber?: number
   inputBlocked?: boolean
+  singlePlayer?: boolean
 }>()
 
 const store = useGameStore()
@@ -379,8 +380,8 @@ function handleSwitchPlayerSolution(index: number) {
           </template>
         </div>
 
-        <!-- Player solutions panel (when game ended) -->
-        <div v-if="props.gameEnded && props.playerSolutions?.length" class="solutions-panel">
+        <!-- Player solutions panel (when game ended, hidden in single-player) -->
+        <div v-if="props.gameEnded && props.playerSolutions?.length && !props.singlePlayer" class="solutions-panel">
           <div class="solutions-columns">
             <div
               v-for="(solution, index) in props.playerSolutions"
@@ -496,9 +497,9 @@ function handleSwitchPlayerSolution(index: number) {
       class="mobile-drawer"
     />
 
-    <!-- Mobile player solutions drawer (only after game ends, hidden on desktop) -->
+    <!-- Mobile player solutions drawer (only after game ends, hidden on desktop, hidden in single-player) -->
     <PlayerSolutionsDrawer
-      v-if="props.gameEnded && props.playerSolutions?.length"
+      v-if="props.gameEnded && props.playerSolutions?.length && !props.singlePlayer"
       class="mobile-drawer"
       :player-solutions="props.playerSolutions"
       :active-index="activePlayerSolutionIndex"
