@@ -904,7 +904,8 @@ function handleSwitchPlayerSolution(index: number) {
 @media (max-aspect-ratio: 6/5), (max-width: 1050px) {
   .board {
     /* Fill width in mobile, but constrain by height. Account for header, title, buttons, drawer */
-    width: min(calc(100% - 0.5rem), calc(100dvh - 17rem), calc(100vh - 17rem));
+    /* Leave 1rem (16px) on each side to reduce accidental browser back/forward gestures */
+    width: min(calc(100% - 2rem), calc(100dvh - 17rem), calc(100vh - 17rem));
     margin: 0 auto;
   }
 }
