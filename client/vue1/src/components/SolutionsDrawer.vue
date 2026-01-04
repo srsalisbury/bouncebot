@@ -8,7 +8,7 @@ const store = useGameStore()
 const isExpanded = ref(false)
 const drawerRef = ref<HTMLElement | null>(null)
 
-// Swipe down to collapse
+// Swipe to expand/collapse and switch solutions
 useSwipe({
   target: drawerRef,
   onSwipe: (direction) => {
@@ -16,6 +16,13 @@ useSwipe({
       isExpanded.value = false
     } else if (direction === 'up' && !isExpanded.value) {
       isExpanded.value = true
+    } else if (!isExpanded.value) {
+      // Swipe left/right on collapsed drawer to switch solutions
+      if (direction === 'left' && store.activeSolutionIndex < store.solutions.length - 1) {
+        store.switchSolution(store.activeSolutionIndex + 1)
+      } else if (direction === 'right' && store.activeSolutionIndex > 0) {
+        store.switchSolution(store.activeSolutionIndex - 1)
+      }
     }
   },
   minDistance: 30,

@@ -28,7 +28,7 @@ const emit = defineEmits<{
 const isExpanded = ref(false)
 const drawerRef = ref<HTMLElement | null>(null)
 
-// Swipe down to collapse, up to expand
+// Swipe to expand/collapse and switch solutions
 useSwipe({
   target: drawerRef,
   onSwipe: (direction) => {
@@ -36,6 +36,13 @@ useSwipe({
       isExpanded.value = false
     } else if (direction === 'up' && !isExpanded.value) {
       isExpanded.value = true
+    } else if (!isExpanded.value) {
+      // Swipe left/right on collapsed drawer to switch player solutions
+      if (direction === 'left' && props.activeIndex < props.playerSolutions.length - 1) {
+        emit('switchSolution', props.activeIndex + 1)
+      } else if (direction === 'right' && props.activeIndex > 0) {
+        emit('switchSolution', props.activeIndex - 1)
+      }
     }
   },
   minDistance: 30,
