@@ -31,6 +31,9 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       const hadGame = hasGame.value
       room.value = rm
 
+      // Remember this room for easy return if user navigates away
+      roomStore.setLastRoom(normalizedRoomId.value)
+
       // Check if current player is still in the room (handle stale localStorage)
       if (roomStore.currentPlayerId) {
         const isPlayerInRoom = rm.players.some(p => p.id === roomStore.currentPlayerId)
