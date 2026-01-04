@@ -25,6 +25,7 @@ const showRetractConfirm = ref(false)
 const pendingRetractAction = ref<(() => void) | null>(null)
 const gameEnded = ref(false)
 const showLeaderboard = ref(false)
+const showLeaveConfirm = ref(false)
 
 // Room connection composable
 const {
@@ -190,19 +191,61 @@ function toggleLeaderboard() {
   showLeaderboard.value = !showLeaderboard.value
 }
 
-function leaderboardKeydownHandler(event: KeyboardEvent) {
-  if (event.key === 'l' && (hasGame.value || gameEnded.value) && !showRetractConfirm.value) {
+// Leave game
+function promptLeaveGame() {
+  showLeaveConfirm.value = true
+}
+
+function confirmLeave() {
+  showLeaveConfirm.value = false
+  roomStore.clear()
+  router.push('/')
+}
+
+function cancelLeave() {
+  showLeaveConfirm.value = false
+}
+
+function globalKeyHandler(event: KeyboardEvent) {
+  // Don't handle if any dialog is open
+  if (showRetractConfirm.value || showLeaveConfirm.value) return
+
+  if (event.key === 'l' && (hasGame.value || gameEnded.value)) {
     event.preventDefault()
     toggleLeaderboard()
+  } else if (event.key === 'x') {
+    event.preventDefault()
+    promptLeaveGame()
   }
 }
 
+function leaveDialogKeyHandler(event: KeyboardEvent) {
+  if (!showLeaveConfirm.value) return
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    event.stopPropagation()
+    confirmLeave()
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    cancelLeave()
+  }
+}
+
+watch(showLeaveConfirm, (show) => {
+  if (show) {
+    window.addEventListener('keydown', leaveDialogKeyHandler, true)
+  } else {
+    window.removeEventListener('keydown', leaveDialogKeyHandler, true)
+  }
+})
+
 onMounted(() => {
-  window.addEventListener('keydown', leaderboardKeydownHandler)
+  window.addEventListener('keydown', globalKeyHandler)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', leaderboardKeydownHandler)
+  window.removeEventListener('keydown', globalKeyHandler)
 })
 </script>
 
@@ -354,6 +397,20 @@ onUnmounted(() => {
         <div class="dialog-actions">
           <button class="btn" @click="cancelRetract">Cancel</button>
           <button class="btn danger" @click="confirmRetract">Retract</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leave confirmation dialog -->
+    <div v-if="showLeaveConfirm" class="dialog-overlay" @click.self="cancelLeave">
+      <div class="dialog">
+        <h3>Leave this game?</h3>
+        <p>
+          You will be removed from this room and returned to the home screen.
+        </p>
+        <div class="dialog-actions">
+          <button class="btn" @click="cancelLeave">Cancel</button>
+          <button class="btn danger" @click="confirmLeave">Leave</button>
         </div>
       </div>
     </div>

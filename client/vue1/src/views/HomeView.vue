@@ -15,7 +15,7 @@ const error = ref<string | null>(null)
 
 const lastRoom = computed(() => roomStore.lastRoomId)
 
-function returnToRoom() {
+function returnToGame() {
   if (lastRoom.value) {
     router.push(`/room/${lastRoom.value}`)
   }
@@ -135,8 +135,8 @@ async function joinRoom() {
       <div v-if="error" class="error">{{ error }}</div>
 
       <div v-if="lastRoom" class="return-section">
-        <button class="btn return-btn" @click="returnToRoom">
-          Return to Room {{ lastRoom }}
+        <button class="btn return-btn" @click="returnToGame">
+          Return to Game
         </button>
       </div>
     </div>
