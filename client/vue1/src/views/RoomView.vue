@@ -299,7 +299,7 @@ onUnmounted(() => {
                 :disabled="isPlayerReady"
                 @click="gameActions.markReadyForNext"
               >
-                I'm Ready For Next Game ({{ readyCount }}/{{ playerCount }})
+                Next Game ({{ readyCount }}/{{ playerCount }})
               </button>
             </template>
           </div>
