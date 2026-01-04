@@ -9,15 +9,44 @@ const roomStore = useRoomStore()
 
 const playerName = ref(roomStore.currentPlayerName ?? '')
 const joinRoomId = ref('')
+const isStartingSolo = ref(false)
 const isCreating = ref(false)
 const isJoining = ref(false)
+const showMultiplayer = ref(false)
 const error = ref<string | null>(null)
 
 const lastRoom = computed(() => roomStore.lastRoomId)
+const isLoading = computed(() => isStartingSolo.value || isCreating.value || isJoining.value)
 
 function returnToGame() {
   if (lastRoom.value) {
     router.push(`/room/${lastRoom.value}`)
+  }
+}
+
+async function startSoloGame() {
+  isStartingSolo.value = true
+  error.value = null
+
+  try {
+    // Create room with default name
+    const room = await bounceBotClient.createRoom({
+      playerName: 'Player',
+    })
+    const player = room.players[0]
+    if (player) {
+      roomStore.setCurrentPlayer(player.id, player.name)
+    }
+    roomStore.setSinglePlayer(true)
+
+    // Start game immediately
+    await bounceBotClient.startGame({ roomId: room.id })
+
+    router.push(`/room/${room.id}`)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to start game'
+  } finally {
+    isStartingSolo.value = false
   }
 }
 
@@ -39,6 +68,7 @@ async function createRoom() {
     if (player) {
       roomStore.setCurrentPlayer(player.id, player.name)
     }
+    roomStore.setSinglePlayer(false)
     router.push(`/room/${room.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to create room'
@@ -70,6 +100,7 @@ async function joinRoom() {
     if (player) {
       roomStore.setCurrentPlayer(player.id, player.name)
     }
+    roomStore.setSinglePlayer(false)
     router.push(`/room/${room.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to join room'
@@ -85,54 +116,76 @@ async function joinRoom() {
     <p class="subtitle">A Ricochet Robots puzzle game</p>
 
     <div class="card">
-      <div class="form-group">
-        <label for="playerName">Your Name</label>
-        <input
-          id="playerName"
-          v-model="playerName"
-          type="text"
-          placeholder="Enter your name"
-          maxlength="20"
-          @keyup.enter="createRoom"
-        />
-      </div>
-
+      <!-- Play Solo - Primary action -->
       <div class="actions">
         <button
-          class="btn primary"
-          :disabled="isCreating || isJoining"
-          @click="createRoom"
+          class="btn primary solo-btn"
+          :disabled="isLoading"
+          @click="startSoloGame"
         >
-          {{ isCreating ? 'Creating...' : 'Create Room' }}
+          {{ isStartingSolo ? 'Starting...' : 'Play Solo' }}
         </button>
       </div>
 
-      <div class="divider">
-        <span>or join existing</span>
-      </div>
-
-      <div class="form-group">
-        <label for="roomId">Room ID</label>
-        <input
-          id="roomId"
-          v-model="joinRoomId"
-          type="text"
-          placeholder="Enter room ID"
-          @keyup.enter="joinRoom"
-        />
-      </div>
-
-      <div class="actions">
+      <!-- Play with Friends - Secondary action -->
+      <div class="multiplayer-section">
         <button
-          class="btn secondary"
-          :disabled="isCreating || isJoining"
-          @click="joinRoom"
+          class="btn secondary multiplayer-toggle"
+          :class="{ expanded: showMultiplayer }"
+          :disabled="isLoading"
+          @click="showMultiplayer = !showMultiplayer"
         >
-          {{ isJoining ? 'Joining...' : 'Join Room' }}
+          Play with Friends
+          <span class="toggle-icon">{{ showMultiplayer ? '▲' : '▼' }}</span>
         </button>
+
+        <div v-if="showMultiplayer" class="multiplayer-options">
+          <div class="form-group">
+            <label for="playerName">Your Name</label>
+            <input
+              id="playerName"
+              v-model="playerName"
+              type="text"
+              placeholder="Enter your name"
+              maxlength="20"
+            />
+          </div>
+
+          <div class="multiplayer-buttons">
+            <button
+              class="btn"
+              :disabled="isLoading"
+              @click="createRoom"
+            >
+              {{ isCreating ? 'Creating...' : 'Create Room' }}
+            </button>
+
+            <div class="join-row">
+              <input
+                id="roomId"
+                v-model="joinRoomId"
+                type="text"
+                placeholder="Room ID"
+                class="room-id-input"
+                @keyup.enter="joinRoom"
+              />
+              <button
+                class="btn"
+                :disabled="isLoading"
+                @click="joinRoom"
+              >
+                {{ isJoining ? 'Joining...' : 'Join' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-if="error" class="error">{{ error }}</div>
+
+      <div class="help-link">
+        <router-link to="/help">How to Play</router-link>
+      </div>
 
       <div v-if="lastRoom" class="return-section">
         <button class="btn return-btn" @click="returnToGame">
@@ -235,24 +288,79 @@ async function joinRoom() {
   background: #444;
 }
 
-.divider {
+.solo-btn {
+  font-size: 1.1rem;
+  padding: 1rem;
+}
+
+.multiplayer-section {
+  margin-top: 1rem;
+}
+
+.multiplayer-toggle {
   display: flex;
   align-items: center;
-  margin: 1.5rem 0;
-  color: #666;
-  font-size: 0.85rem;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.divider::before,
-.divider::after {
-  content: '';
+.toggle-icon {
+  font-size: 0.7rem;
+}
+
+.multiplayer-options {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #242424;
+  border-radius: 8px;
+}
+
+.multiplayer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.room-id-input {
   flex: 1;
-  height: 1px;
-  background: #333;
+  padding: 0.75rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 1rem;
+  box-sizing: border-box;
+  text-transform: uppercase;
 }
 
-.divider span {
-  padding: 0 1rem;
+.room-id-input:focus {
+  outline: none;
+  border-color: #42b883;
+}
+
+.join-row .btn {
+  width: auto;
+  padding: 0.75rem 1.25rem;
+}
+
+.help-link {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.help-link a {
+  color: #888;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.help-link a:hover {
+  color: #42b883;
 }
 
 .error {

@@ -26,6 +26,7 @@ const pendingRetractAction = ref<(() => void) | null>(null)
 const gameEnded = ref(false)
 const showLeaderboard = ref(false)
 const showLeaveConfirm = ref(false)
+const showStatsDropdown = ref(false)
 
 // Room connection composable
 const {
@@ -84,6 +85,7 @@ const isPlayerReady = computed(() => {
 
 const readyCount = computed(() => room.value?.readyForNext.length ?? 0)
 const playerCount = computed(() => room.value?.players.length ?? 0)
+const isSinglePlayer = computed(() => roomStore.isSinglePlayer)
 
 const sortedSolutions = computed(() => {
   if (!room.value) return []
@@ -113,6 +115,23 @@ async function startGame() {
   gameEnded.value = false
   await doStartGame()
   isStarting.value = false
+  // Track puzzle attempt in single-player
+  if (isSinglePlayer.value) {
+    roomStore.recordPuzzleAttempted()
+  }
+}
+
+async function nextPuzzle() {
+  // For single-player: record stats and start a new game
+  if (gameStore.isSolved) {
+    roomStore.recordPuzzleSolved()
+  }
+  isStarting.value = true
+  gameActions.resetForNewGame()
+  gameEnded.value = false
+  await doStartGame()
+  isStarting.value = false
+  roomStore.recordPuzzleAttempted()
 }
 
 async function joinRoom() {
@@ -301,16 +320,48 @@ onUnmounted(() => {
       <GameBoard
         :on-before-retract="onBeforeRetract"
         :game-ended="gameEnded"
-        :player-solutions="sortedSolutions"
+        :player-solutions="isSinglePlayer ? [] : sortedSolutions"
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"
         :game-started-at="room.gameStartedAt"
         :game-number="room.gamesPlayed + 1"
         :input-blocked="showLeaderboard"
+        :single-player="isSinglePlayer"
       >
         <template #header>
           <div class="game-header">
-            <template v-if="!gameEnded">
+            <!-- Single-player mode: simplified header -->
+            <template v-if="isSinglePlayer">
+              <div class="solo-stats-wrapper">
+                <button
+                  class="solo-stats-btn"
+                  @click="showStatsDropdown = !showStatsDropdown"
+                >
+                  Solo · {{ roomStore.puzzlesSolved }}/{{ roomStore.puzzlesAttempted }}
+                  <span class="stats-toggle">{{ showStatsDropdown ? '▲' : '▼' }}</span>
+                </button>
+                <div v-if="showStatsDropdown" class="stats-dropdown">
+                  <div class="stats-row">
+                    <span class="stats-label">Puzzles solved</span>
+                    <span class="stats-value">{{ roomStore.puzzlesSolved }}</span>
+                  </div>
+                  <div class="stats-row">
+                    <span class="stats-label">Puzzles attempted</span>
+                    <span class="stats-value">{{ roomStore.puzzlesAttempted }}</span>
+                  </div>
+                </div>
+              </div>
+              <span v-if="gameStore.isSolved" class="solved-indicator">✓</span>
+              <button
+                class="btn primary next-puzzle-btn"
+                :disabled="isStarting"
+                @click="nextPuzzle"
+              >
+                {{ isStarting ? 'Loading...' : 'Next Puzzle' }}
+              </button>
+            </template>
+            <!-- Multiplayer mode: full header -->
+            <template v-else-if="!gameEnded">
               <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
               <button
                 v-if="!isPlayerFinished"
@@ -342,7 +393,7 @@ onUnmounted(() => {
                 :disabled="isPlayerReady"
                 @click="gameActions.markReadyForNext"
               >
-                I'm Ready For Next Game ({{ readyCount }}/{{ playerCount }})
+                Next Game ({{ readyCount }}/{{ playerCount }})
               </button>
             </template>
           </div>
@@ -536,6 +587,83 @@ onUnmounted(() => {
 }
 
 .next-game-btn {
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.solo-stats-wrapper {
+  position: relative;
+}
+
+.solo-stats-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: #242424;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.solo-stats-btn:hover {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.stats-toggle {
+  font-size: 0.6rem;
+  color: #666;
+}
+
+.stats-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  min-width: 180px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.stats-row:not(:last-child) {
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.stats-label {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.stats-value {
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.solved-indicator {
+  color: #42b883;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.next-puzzle-btn {
   margin-left: auto;
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
