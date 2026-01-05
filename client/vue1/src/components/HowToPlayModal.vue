@@ -148,4 +148,33 @@ kbd {
   font-family: inherit;
   font-size: 0.8rem;
 }
+
+@media (prefers-color-scheme: light) {
+  .modal {
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .close-btn {
+    color: #666;
+  }
+
+  .close-btn:hover {
+    color: #333;
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  h3 {
+    color: #333;
+  }
+
+  p, ul {
+    color: #555;
+  }
+
+  kbd {
+    background: #e0e0e0;
+    color: #333;
+  }
+}
 </style>

@@ -207,4 +207,46 @@ kbd {
   font-size: 0.85rem;
   border: 1px solid #ccc;
 }
+
+@media (prefers-color-scheme: dark) {
+  .help-view {
+    background: #1a1a1a;
+  }
+
+  .help-content {
+    background: #242424;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .back-btn {
+    color: #aaa;
+  }
+
+  .back-btn:hover {
+    color: #42b883;
+  }
+
+  h1 {
+    color: #42b883;
+  }
+
+  h2 {
+    color: #eee;
+    border-bottom-color: #444;
+  }
+
+  h3 {
+    color: #ddd;
+  }
+
+  p, ul {
+    color: #bbb;
+  }
+
+  kbd {
+    background: #333;
+    color: #fff;
+    border-color: #555;
+  }
+}
 </style>
