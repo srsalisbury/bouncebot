@@ -141,7 +141,6 @@ async function joinRoom() {
 
         <div v-if="showMultiplayer" class="multiplayer-options">
           <div class="form-group">
-            <label for="playerName">Your Name</label>
             <input
               id="playerName"
               v-model="playerName"
@@ -157,9 +156,9 @@ async function joinRoom() {
               :disabled="isLoading"
               @click="createRoom"
             >
-              {{ isCreating ? 'Creating...' : 'Create Room' }}
+              {{ isCreating ? 'Creating...' : 'Create New Room' }}
             </button>
-
+            <p class="join-text">or</p>
             <div class="join-row">
               <input
                 id="roomId"
@@ -174,7 +173,7 @@ async function joinRoom() {
                 :disabled="isLoading"
                 @click="joinRoom"
               >
-                {{ isJoining ? 'Joining...' : 'Join' }}
+                {{ isJoining ? 'Joining...' : 'Join Room' }}
               </button>
             </div>
           </div>
@@ -326,6 +325,12 @@ async function joinRoom() {
   gap: 0.5rem;
 }
 
+.join-text {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0 0 0;
+}
+
 .room-id-input {
   flex: 1;
   padding: 0.75rem;
@@ -335,7 +340,6 @@ async function joinRoom() {
   color: #fff;
   font-size: 1rem;
   box-sizing: border-box;
-  text-transform: uppercase;
 }
 
 .room-id-input:focus {
