@@ -302,7 +302,9 @@ function handleSwitchPlayerSolution(index: number) {
       <slot name="header"></slot>
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
-        <h1 class="title">BounceBot<span v-if="props.roomId && props.gameNumber" class="game-number"> - Game {{ props.roomId }}/{{ props.gameNumber }}</span></h1>
+        <h1 v-if="props.roomId && props.gameNumber" class="title">
+          <span class="game-number">Game {{ props.roomId }}/{{ props.gameNumber }}</span>
+        </h1>
         <!-- Board area (board + hints) -->
         <div class="board-area">
           <!-- Game board -->
@@ -316,6 +318,11 @@ function handleSwitchPlayerSolution(index: number) {
               :key="i"
               class="cell"
             />
+
+            <!-- Center logo -->
+            <div class="board-logo-bg"></div>
+            <img src="/favicon_light.svg" alt="" class="board-logo board-logo-light" />
+            <img src="/favicon_dark.svg" alt="" class="board-logo board-logo-dark" />
 
             <!-- Target marker -->
             <div class="target-container" :style="getTargetContainerStyle()">
@@ -516,6 +523,21 @@ function handleSwitchPlayerSolution(index: number) {
   </div>
 </template>
 
+<style>
+@font-face {
+  font-family: 'Conthrax';
+  src: url('/fonts/ConthraxRg-Bold.eot');
+  src: url('/fonts/ConthraxRg-Bold.eot?#iefix') format('embedded-opentype'),
+      url('/fonts/ConthraxRg-Bold.woff2') format('woff2'),
+      url('/fonts/ConthraxRg-Bold.woff') format('woff'),
+      url('/fonts/ConthraxRg-Bold.ttf') format('truetype'),
+      url('/fonts/ConthraxRg-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
+
 <style scoped>
 .game-container {
   display: flex;
@@ -545,16 +567,64 @@ function handleSwitchPlayerSolution(index: number) {
 .title {
   grid-column: 1;
   grid-row: 1;
-  color: #42b883;
   margin: 0;
+  margin-top: 1rem;
   font-size: 1.8rem;
   text-align: center;
 }
 
 .game-number {
-  font-size: 1.2rem;
-  font-weight: normal;
-  color: #333;
+  font-family: 'Conthrax', sans-serif;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #43a047;
+}
+
+.board-logo-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12.5%;
+  height: 12.5%;
+  background: #dddddd;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.board-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10%;
+  height: 10%;
+  opacity: 1;
+  z-index: 1;
+  pointer-events: none;
+  filter: grayscale(100%) brightness(0.3);
+}
+
+.board-logo-light {
+  display: block;
+}
+
+.board-logo-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .board-logo-bg {
+    background: #2a2a2a;
+  }
+  .board-logo-light {
+    display: none;
+  }
+  .board-logo-dark {
+    display: block;
+    filter: grayscale(100%) brightness(1.5);
+    opacity: 0.7;
+  }
 }
 
 .board-area {
@@ -617,7 +687,7 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .action-btn.new-solution-btn {
-  background: #2e7d32;
+  background: #43a047;
 }
 
 .action-btn.new-solution-btn:hover:not(:disabled) {
@@ -733,7 +803,7 @@ function handleSwitchPlayerSolution(index: number) {
 
 .solution-column.active {
   background: #dddddd;
-  box-shadow: 0 0 0 2px #42b883;
+  box-shadow: 0 0 0 2px #43a047;
 }
 
 .solution-header {
@@ -782,7 +852,7 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .move-item.animating {
-  background: #42b883;
+  background: #43a047;
 }
 
 .move-robot {
@@ -867,7 +937,7 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .solution-column.winner.active {
-  box-shadow: 0 0 0 2px #42b883;
+  box-shadow: 0 0 0 2px #43a047;
 }
 
 .board {
@@ -1038,10 +1108,6 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 @media (prefers-color-scheme: dark) {
-  .game-number {
-    color: #aaa;
-  }
-
   .board {
     --wall-color: #ccc;
     background: #2a2a2a;
