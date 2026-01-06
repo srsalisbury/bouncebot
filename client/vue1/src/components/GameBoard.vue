@@ -302,8 +302,9 @@ function handleSwitchPlayerSolution(index: number) {
       <slot name="header"></slot>
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
-        <h1 v-if="props.roomId && props.gameNumber" class="title">
-          <span class="game-number">Game {{ props.roomId }}/{{ props.gameNumber }}</span>
+        <h1 v-if="props.gameNumber != null" class="title">
+          <span class="game-label">GAME</span>
+          <span class="game-number">{{ props.gameNumber }}</span>
         </h1>
         <!-- Board area (board + hints) -->
         <div class="board-area">
@@ -573,11 +574,25 @@ function handleSwitchPlayerSolution(index: number) {
   text-align: center;
 }
 
+.game-label {
+  font-family: 'Conthrax', sans-serif;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #000;
+  margin-right: 0.4rem;
+}
+
 .game-number {
   font-family: 'Conthrax', sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   font-weight: bold;
-  color: #43a047;
+  color: #1e88e5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .game-label {
+    color: #fff;
+  }
 }
 
 .board-logo-bg {

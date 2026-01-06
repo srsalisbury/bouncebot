@@ -113,25 +113,26 @@ async function startGame() {
   isStarting.value = true
   gameActions.resetForNewGame()
   gameEnded.value = false
-  await doStartGame()
-  isStarting.value = false
-  // Track puzzle attempt in single-player
+  // Track puzzle attempt in single-player (before game starts so number is correct)
   if (isSinglePlayer.value) {
     roomStore.recordPuzzleAttempted()
   }
+  await doStartGame()
+  isStarting.value = false
 }
 
 async function nextPuzzle() {
   // For single-player: record stats and start a new game
-  if (gameStore.isSolved) {
+  if (gameStore.hasAnySolvedSolution) {
     roomStore.recordPuzzleSolved()
   }
   isStarting.value = true
   gameActions.resetForNewGame()
   gameEnded.value = false
+  // Increment before game starts so number is correct when rendered
+  roomStore.recordPuzzleAttempted()
   await doStartGame()
   isStarting.value = false
-  roomStore.recordPuzzleAttempted()
 }
 
 async function joinRoom() {
@@ -325,7 +326,7 @@ onUnmounted(() => {
         :get-player-color="getPlayerColorById"
         :game-started-at="room.gameStartedAt"
         :room-id="room.id"
-        :game-number="room.gamesPlayed + 1"
+        :game-number="(isSinglePlayer ? roomStore.puzzlesAttempted : room.gamesPlayed) + 1"
         :input-blocked="showLeaderboard"
         :single-player="isSinglePlayer"
       >

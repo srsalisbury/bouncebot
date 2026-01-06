@@ -141,6 +141,10 @@ export const useGameStore = defineStore('game', () => {
     return targetRobot.x === target.value.x && targetRobot.y === target.value.y
   })
 
+  const hasAnySolvedSolution = computed(() => {
+    return solutions.value.some(s => s.isSolved)
+  })
+
   const canStartNewSolution = computed(() => {
     return solutions.value.length < MAX_SOLUTIONS
   })
@@ -445,6 +449,7 @@ export const useGameStore = defineStore('game', () => {
     // Computed
     moveCount,
     isSolved,
+    hasAnySolvedSolution,
     canStartNewSolution,
     // Actions
     selectRobot,
