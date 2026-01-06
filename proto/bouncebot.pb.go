@@ -435,6 +435,7 @@ type Room struct {
 	FinishedSolving []string               `protobuf:"bytes,9,rep,name=finished_solving,json=finishedSolving,proto3" json:"finished_solving,omitempty"`  // player IDs who are finished solving (triggers game end)
 	ReadyForNext    []string               `protobuf:"bytes,10,rep,name=ready_for_next,json=readyForNext,proto3" json:"ready_for_next,omitempty"`        // player IDs who are ready for next game
 	IsSinglePlayer  bool                   `protobuf:"varint,11,opt,name=is_single_player,json=isSinglePlayer,proto3" json:"is_single_player,omitempty"` // If true, only the creator can be in this room
+	PendingPlayers  []*Player              `protobuf:"bytes,12,rep,name=pending_players,json=pendingPlayers,proto3" json:"pending_players,omitempty"`    // Players waiting for next game to start
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -544,6 +545,13 @@ func (x *Room) GetIsSinglePlayer() bool {
 		return x.IsSinglePlayer
 	}
 	return false
+}
+
+func (x *Room) GetPendingPlayers() []*Player {
+	if x != nil {
+		return x.PendingPlayers
+	}
+	return nil
 }
 
 type CreateRoomRequest struct {
@@ -1158,7 +1166,7 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x05moves\x18\x03 \x03(\v2\x11.bouncebot.BotPosR\x05moves\">\n" +
 	"\vPlayerScore\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x12\n" +
-	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\xfd\x03\n" +
+	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\xb9\x04\n" +
 	"\x04Room\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12+\n" +
 	"\aplayers\x18\x02 \x03(\v2\x11.bouncebot.PlayerR\aplayers\x129\n" +
@@ -1172,7 +1180,8 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x10finished_solving\x18\t \x03(\tR\x0ffinishedSolving\x12$\n" +
 	"\x0eready_for_next\x18\n" +
 	" \x03(\tR\freadyForNext\x12(\n" +
-	"\x10is_single_player\x18\v \x01(\bR\x0eisSinglePlayer\"^\n" +
+	"\x10is_single_player\x18\v \x01(\bR\x0eisSinglePlayer\x12:\n" +
+	"\x0fpending_players\x18\f \x03(\v2\x11.bouncebot.PlayerR\x0ependingPlayers\"^\n" +
 	"\x11CreateRoomRequest\x12\x1f\n" +
 	"\vplayer_name\x18\x01 \x01(\tR\n" +
 	"playerName\x12(\n" +
@@ -1268,29 +1277,30 @@ var file_bouncebot_proto_depIdxs = []int32{
 	20, // 11: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
 	5,  // 12: bouncebot.Room.solutions:type_name -> bouncebot.PlayerSolution
 	6,  // 13: bouncebot.Room.scores:type_name -> bouncebot.PlayerScore
-	2,  // 14: bouncebot.SubmitSolutionRequest.moves:type_name -> bouncebot.BotPos
-	5,  // 15: bouncebot.SubmitSolutionResponse.solution:type_name -> bouncebot.PlayerSolution
-	8,  // 16: bouncebot.BounceBot.CreateRoom:input_type -> bouncebot.CreateRoomRequest
-	9,  // 17: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
-	10, // 18: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
-	11, // 19: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
-	12, // 20: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
-	14, // 21: bouncebot.BounceBot.RetractSolution:input_type -> bouncebot.RetractSolutionRequest
-	16, // 22: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
-	18, // 23: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
-	7,  // 24: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.Room
-	7,  // 25: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.Room
-	7,  // 26: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
-	7,  // 27: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
-	13, // 28: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
-	15, // 29: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
-	17, // 30: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
-	19, // 31: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
-	24, // [24:32] is the sub-list for method output_type
-	16, // [16:24] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	4,  // 14: bouncebot.Room.pending_players:type_name -> bouncebot.Player
+	2,  // 15: bouncebot.SubmitSolutionRequest.moves:type_name -> bouncebot.BotPos
+	5,  // 16: bouncebot.SubmitSolutionResponse.solution:type_name -> bouncebot.PlayerSolution
+	8,  // 17: bouncebot.BounceBot.CreateRoom:input_type -> bouncebot.CreateRoomRequest
+	9,  // 18: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
+	10, // 19: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
+	11, // 20: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
+	12, // 21: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
+	14, // 22: bouncebot.BounceBot.RetractSolution:input_type -> bouncebot.RetractSolutionRequest
+	16, // 23: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
+	18, // 24: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
+	7,  // 25: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.Room
+	7,  // 26: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.Room
+	7,  // 27: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
+	7,  // 28: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
+	13, // 29: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
+	15, // 30: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
+	17, // 31: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
+	19, // 32: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
+	25, // [25:33] is the sub-list for method output_type
+	17, // [17:25] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_bouncebot_proto_init() }

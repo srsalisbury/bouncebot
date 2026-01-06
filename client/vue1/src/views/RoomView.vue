@@ -98,6 +98,10 @@ const isRoomCreator = computed(() => {
   const firstPlayer = room.value.players[0]
   return firstPlayer?.id === roomStore.currentPlayerId
 })
+const isPendingPlayer = computed(() => {
+  if (!room.value || !roomStore.currentPlayerId) return false
+  return room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
+})
 
 const sortedSolutions = computed(() => {
   if (!room.value) return []
@@ -338,8 +342,8 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Game in progress -->
-    <div v-else-if="hasGame && room" class="game-wrapper">
+    <!-- Game in progress (but not for pending players) -->
+    <div v-else-if="hasGame && room && !isPendingPlayer" class="game-wrapper">
       <GameBoard
         :on-before-retract="onBeforeRetract"
         :game-ended="gameEnded"
@@ -423,6 +427,36 @@ onUnmounted(() => {
           </div>
         </template>
       </GameBoard>
+    </div>
+
+    <!-- Pending player waiting for next game -->
+    <div v-else-if="room && isPendingPlayer" class="waiting-room">
+      <h1 class="waiting-title">WAITING <span class="room-text">ROOM</span></h1>
+
+      <div class="card">
+        <div class="room-info">
+          <div class="info-row">
+            <span class="label">Room ID</span>
+            <code class="room-id">{{ room.id }}</code>
+          </div>
+        </div>
+
+        <div class="players-section">
+          <h3>Players in game ({{ room.players.length }})</h3>
+          <PlayersPanel :players="room.players" hide-waiting-message />
+        </div>
+
+        <div v-if="room.pendingPlayers.length > 1" class="players-section">
+          <h3>Also waiting ({{ room.pendingPlayers.length - 1 }})</h3>
+          <PlayersPanel :players="room.pendingPlayers.filter(p => p.id !== roomStore.currentPlayerId)" hide-waiting-message />
+        </div>
+
+        <div class="start-options">
+          <p class="waiting-text">Waiting for next game...</p>
+        </div>
+
+        <p class="hint">You'll join the game when the current round ends.</p>
+      </div>
     </div>
 
     <!-- Waiting room -->

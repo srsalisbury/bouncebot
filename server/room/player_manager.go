@@ -35,11 +35,18 @@ func NewPlayerManager() PlayerManager {
 
 func (pm *playerManager) AddPlayer(room *Room, playerName string) ([]Signal, error) {
 	playerID := generatePlayerID()
-	room.Players = append(room.Players, Player{
+	player := Player{
 		ID:     playerID,
 		Name:   playerName,
 		Status: PlayerStatusConnected,
-	})
+	}
+
+	// If a game is in progress, add to pending players instead
+	if room.CurrentGame != nil {
+		room.PendingPlayers = append(room.PendingPlayers, player)
+	} else {
+		room.Players = append(room.Players, player)
+	}
 	room.LastActivityAt = time.Now()
 
 	signals := []Signal{

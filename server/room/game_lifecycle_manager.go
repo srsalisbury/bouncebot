@@ -185,6 +185,12 @@ func (gl *gameLifecycle) EndGame(room *Room) []Signal {
 }
 
 func (gl *gameLifecycle) StartNextGame(room *Room) []Signal {
+	// Move pending players to active players before starting new game
+	if len(room.PendingPlayers) > 0 {
+		room.Players = append(room.Players, room.PendingPlayers...)
+		room.PendingPlayers = nil
+	}
+
 	// Get winning game state for continuation (wins already credited in EndGame)
 	var winningGameState *model.Game
 	if room.CurrentGame != nil && len(room.Solutions) > 0 {

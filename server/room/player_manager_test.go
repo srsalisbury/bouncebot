@@ -421,3 +421,75 @@ func TestPlayerManager_RemovePlayer_NoTriggersIfNoPlayersLeft(t *testing.T) {
 		}
 	}
 }
+
+func TestPlayerManager_AddPlayer_PendingWhenGameInProgress(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID:             "TEST",
+		Players:        []Player{{ID: "alice", Name: "Alice", Status: PlayerStatusConnected}},
+		CurrentGame:    model.Game1(), // Game is in progress
+		CreatedAt:      time.Now(),
+		LastActivityAt: time.Now(),
+	}
+
+	signals, err := pm.AddPlayer(room, "Bob")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Check player was added to PendingPlayers, not Players
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 active player, got %d", len(room.Players))
+	}
+	if len(room.PendingPlayers) != 1 {
+		t.Errorf("expected 1 pending player, got %d", len(room.PendingPlayers))
+	}
+	if room.PendingPlayers[0].Name != "Bob" {
+		t.Errorf("expected pending player name 'Bob', got '%s'", room.PendingPlayers[0].Name)
+	}
+
+	// Check broadcast signal still sent
+	if len(signals) != 1 {
+		t.Errorf("expected 1 signal, got %d", len(signals))
+	}
+	broadcast, ok := signals[0].(BroadcastSignal)
+	if !ok {
+		t.Fatal("expected BroadcastSignal")
+	}
+	event, ok := broadcast.Event.(PlayerJoinedEvent)
+	if !ok {
+		t.Fatal("expected PlayerJoinedEvent")
+	}
+	if event.PlayerName != "Bob" {
+		t.Errorf("expected player name 'Bob' in event, got '%s'", event.PlayerName)
+	}
+}
+
+func TestPlayerManager_AddPlayer_ActiveWhenNoGame(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID:             "TEST",
+		Players:        []Player{{ID: "alice", Name: "Alice", Status: PlayerStatusConnected}},
+		CurrentGame:    nil, // No game in progress
+		CreatedAt:      time.Now(),
+		LastActivityAt: time.Now(),
+	}
+
+	_, err := pm.AddPlayer(room, "Bob")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Check player was added to Players, not PendingPlayers
+	if len(room.Players) != 2 {
+		t.Errorf("expected 2 active players, got %d", len(room.Players))
+	}
+	if len(room.PendingPlayers) != 0 {
+		t.Errorf("expected 0 pending players, got %d", len(room.PendingPlayers))
+	}
+	if room.Players[1].Name != "Bob" {
+		t.Errorf("expected second player name 'Bob', got '%s'", room.Players[1].Name)
+	}
+}
