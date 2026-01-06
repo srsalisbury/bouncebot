@@ -263,6 +263,29 @@ export const useGameStore = defineStore('game', () => {
     }, totalTime)
   }
 
+  function replaySolution() {
+    const targetMoves = solutions.value[activeSolutionIndex.value]?.moves
+    if (!targetMoves) return
+
+    selectedRobotId.value = null
+
+    // Reset to initial positions immediately
+    resetBoard()
+    committedMoves.value = []
+    animatingMoveIndex.value = null
+
+    // Wait before replaying solution
+    const resetDelay = 500
+
+    // Replay target moves after delay
+    const totalTime = replayMoves(targetMoves, resetDelay)
+
+    // Clear highlight after replay completes
+    setTimeout(() => {
+      animatingMoveIndex.value = null
+    }, totalTime)
+  }
+
   function startNewSolution() {
     if (!canStartNewSolution.value) return
 
@@ -461,6 +484,7 @@ export const useGameStore = defineStore('game', () => {
     undoMove,
     applyGame,
     switchSolution,
+    replaySolution,
     startNewSolution,
     deleteSolution,
     resetBoard,

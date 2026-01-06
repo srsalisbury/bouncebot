@@ -141,6 +141,12 @@ export function useReplay(
     resetAndReplay(solutions)
   }
 
+  function replayCurrentSolution(solutions: PlayerSolution[]) {
+    if (!solutions || !solutions.length) return
+    stopReplay()
+    resetAndReplay(solutions)
+  }
+
   function startInitialReplay(solutions: PlayerSolution[]) {
     if (solutions.length) {
       activePlayerSolutionIndex.value = 0
@@ -161,6 +167,7 @@ export function useReplay(
     replayMoveIndex,
     stopReplay,
     switchToPlayerSolution,
+    replayCurrentSolution,
     startInitialReplay,
     getPlayerSolutionMoves,
   }

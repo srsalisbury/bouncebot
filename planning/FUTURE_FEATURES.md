@@ -6,7 +6,7 @@
 - [x] Add full current attempt reset button
 - [x] Add new solution button for mobile
 - [x] Stop scrolling and pinch zooming on all devices
-- [ ] Slower solution replay
+- [x] Slower solution replay
 - [ ] Button to replay a solution (triangle/play button)
 
 ## Bug Fixes

@@ -23,6 +23,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   switchSolution: [index: number]
+  replaySolution: []
 }>()
 
 const isExpanded = ref(false)
@@ -104,6 +105,14 @@ function getActiveSolution() {
           :class="{ active: index === activeIndex, winner: index === 0 }"
           @click="emit('switchSolution', index)"
         >
+          <!-- Replay button on active solution -->
+          <button
+            v-if="index === activeIndex && solution.moves.length > 0"
+            class="replay-btn"
+            @click.stop="emit('replaySolution')"
+          >
+            <span class="play-icon">▶</span>
+          </button>
           <div class="player-solution-header">
             <div class="player-name-row">
               <span
@@ -234,6 +243,7 @@ function getActiveSolution() {
 }
 
 .solution-column {
+  position: relative;
   min-width: 70px;
   display: flex;
   flex-direction: column;
@@ -243,6 +253,41 @@ function getActiveSolution() {
   background: #2a2a2a;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.replay-btn {
+  /* Reset iOS button styling */
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #42b883;
+  color: #333;
+  border: 2px solid #1a1a1a;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.replay-btn:hover {
+  background: #3aa876;
+}
+
+.play-icon {
+  margin-left: 2px;
 }
 
 .solution-column:hover {

@@ -37,6 +37,7 @@ const {
   replayMoveIndex,
   isReplaying,
   switchToPlayerSolution,
+  replayCurrentSolution,
   startInitialReplay,
   stopReplay,
   getPlayerSolutionMoves,
@@ -518,6 +519,7 @@ function handleSwitchPlayerSolution(index: number) {
       :get-player-solution-moves="getPlayerSolutionMoves"
       :game-started-at="props.gameStartedAt"
       @switch-solution="(index) => handleSwitchPlayerSolution(index)"
+      @replay-solution="replayCurrentSolution(props.playerSolutions)"
     />
 
     <!-- How to Play modal -->

@@ -66,6 +66,14 @@ const solutionCount = computed(() => store.solutions.length)
           :class="{ active: index === store.activeSolutionIndex }"
           @click="store.switchSolution(index)"
         >
+          <!-- Replay button on active solution -->
+          <button
+            v-if="index === store.activeSolutionIndex && solution.moves.length > 0"
+            class="replay-btn"
+            @click.stop="store.replaySolution()"
+          >
+            <span class="play-icon">▶</span>
+          </button>
           <!-- Delete button on active solution (only if more than 1 solution) -->
           <button
             v-if="index === store.activeSolutionIndex && store.solutions.length > 1"
@@ -226,6 +234,41 @@ const solutionCount = computed(() => store.solutions.length)
 
 .delete-btn:hover {
   background: #c62828;
+}
+
+.replay-btn {
+  /* Reset iOS button styling */
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #42b883;
+  color: #333;
+  border: 2px solid #1a1a1a;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.replay-btn:hover {
+  background: #3aa876;
+}
+
+.play-icon {
+  margin-left: 2px;
 }
 
 .add-solution-btn {
