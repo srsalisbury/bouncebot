@@ -267,7 +267,7 @@ function getActiveSolution() {
   max-width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #42b883;
+  background: #43a047;
   color: #333;
   border: 2px solid #1a1a1a;
   font-size: 10px;
@@ -296,7 +296,7 @@ function getActiveSolution() {
 
 .solution-column.active {
   background: #2a2a2a;
-  box-shadow: 0 0 0 2px #42b883;
+  box-shadow: 0 0 0 2px #43a047;
 }
 
 .solution-column.winner {
@@ -305,7 +305,7 @@ function getActiveSolution() {
 }
 
 .solution-column.winner.active {
-  box-shadow: 0 0 0 2px #42b883;
+  box-shadow: 0 0 0 2px #43a047;
 }
 
 .player-solution-header {
@@ -370,7 +370,7 @@ function getActiveSolution() {
 }
 
 .move-item.animating {
-  background: #42b883;
+  background: #43a047;
 }
 
 .move-robot {

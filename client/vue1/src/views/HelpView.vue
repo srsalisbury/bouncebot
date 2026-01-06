@@ -1,20 +1,43 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const scrollOffset = ref(0)
 
 function goBack() {
   router.push('/')
 }
+
+function onScroll(event: Event) {
+  const target = event.target as HTMLElement
+  // Move pattern at 10% of scroll speed for subtle parallax
+  scrollOffset.value = target.scrollTop * 0.1
+}
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    goBack()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeyDown)
+})
 </script>
 
 <template>
-  <div class="help-view">
+  <div class="help-view" @scroll="onScroll">
+    <div
+      class="background-pattern"
+      :style="{ transform: `translate(-50%, calc(-50% - ${scrollOffset}px)) rotate(22.5deg)` }"
+    ></div>
+    <h1 class="page-title">How to <span class="play-text">Play</span></h1>
     <div class="help-content">
-      <button class="back-btn" @click="goBack">← Back</button>
-
-      <h1>How to Play BounceBot</h1>
-
       <section class="section">
         <h2>What is BounceBot?</h2>
         <p>
@@ -116,47 +139,109 @@ function goBack() {
           <li>Sometimes a longer-looking path is actually shorter in moves!</li>
         </ul>
       </section>
+
+      <button class="back-btn" @click="goBack">← Back</button>
     </div>
   </div>
 </template>
 
 <style scoped>
+@font-face {
+  font-family: 'Conthrax';
+  src: url('/fonts/ConthraxRg-Bold.eot');
+  src: url('/fonts/ConthraxRg-Bold.eot?#iefix') format('embedded-opentype'),
+      url('/fonts/ConthraxRg-Bold.woff2') format('woff2'),
+      url('/fonts/ConthraxRg-Bold.woff') format('woff'),
+      url('/fonts/ConthraxRg-Bold.ttf') format('truetype'),
+      url('/fonts/ConthraxRg-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 .help-view {
   height: 100vh;
   height: 100dvh;
   padding: 2rem;
-  background: #f5f5f5;
   overflow-y: auto;
   box-sizing: border-box;
+  position: relative;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.help-view::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.background-pattern {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 170vmax;
+  height: 170vmax;
+  background-image: url('/pattern_dark.svg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  z-index: 0;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: light) {
+  .background-pattern {
+    background-image: url('/pattern_light.svg');
+    opacity: 0.4;
+  }
 }
 
 .help-content {
   max-width: 550px;
   margin: 0 auto;
-  background: #fff;
+  background: #1a1a1a;
   padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .back-btn {
-  background: none;
+  display: inline-block;
+  background: #333;
   border: none;
-  color: #666;
-  font-size: 1rem;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 0.9rem;
   cursor: pointer;
-  padding: 0.5rem 0;
-  margin-bottom: 1rem;
+  padding: 0.5rem 1.25rem;
+  margin-top: 1rem;
+  transition: all 0.2s;
 }
 
 .back-btn:hover {
-  color: #42b883;
+  color: #fff;
+  background: #444;
 }
 
-h1 {
-  color: #2d7a5a;
-  margin: 0 0 2rem 0;
-  font-size: 1.75rem;
+.page-title {
+  font-family: 'Conthrax', sans-serif;
+  color: #fff;
+  margin: 0 auto 1rem;
+  font-size: 2.25rem;
+  text-align: center;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+.play-text {
+  color: #1e88e5;
+}
+
+@media (prefers-color-scheme: light) {
+  .page-title {
+    color: #000;
+  }
 }
 
 .section {
@@ -164,21 +249,21 @@ h1 {
 }
 
 h2 {
-  color: #222;
+  color: #eee;
   margin: 0 0 0.75rem 0;
   font-size: 1.2rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #444;
   padding-bottom: 0.5rem;
 }
 
 h3 {
-  color: #333;
+  color: #ddd;
   margin: 1rem 0 0.5rem 0;
   font-size: 1rem;
 }
 
 p {
-  color: #333;
+  color: #bbb;
   margin: 0 0 0.75rem 0;
   font-size: 0.95rem;
   line-height: 1.6;
@@ -188,7 +273,7 @@ p {
 ul {
   margin: 0 0 0.75rem 0;
   padding-left: 1.5rem;
-  color: #333;
+  color: #bbb;
   font-size: 0.95rem;
   line-height: 1.8;
   text-align: left;
@@ -199,54 +284,12 @@ li {
 }
 
 kbd {
-  background: #e8e8e8;
-  color: #333;
+  background: #333;
+  color: #fff;
   padding: 2px 8px;
   border-radius: 4px;
   font-family: inherit;
   font-size: 0.85rem;
-  border: 1px solid #ccc;
-}
-
-@media (prefers-color-scheme: dark) {
-  .help-view {
-    background: #1a1a1a;
-  }
-
-  .help-content {
-    background: #242424;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .back-btn {
-    color: #aaa;
-  }
-
-  .back-btn:hover {
-    color: #42b883;
-  }
-
-  h1 {
-    color: #42b883;
-  }
-
-  h2 {
-    color: #eee;
-    border-bottom-color: #444;
-  }
-
-  h3 {
-    color: #ddd;
-  }
-
-  p, ul {
-    color: #bbb;
-  }
-
-  kbd {
-    background: #333;
-    color: #fff;
-    border-color: #555;
-  }
+  border: 1px solid #555;
 }
 </style>

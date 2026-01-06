@@ -300,7 +300,7 @@ async function joinRoom() {
 
 .form-group input:focus {
   outline: none;
-  border-color: #42b883;
+  border-color: #43a047;
 }
 
 .form-group input:-webkit-autofill,
