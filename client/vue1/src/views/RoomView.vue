@@ -481,6 +481,29 @@ onUnmounted(() => {
 .room-view {
   min-height: 100vh;
   position: relative;
+  overflow: hidden;
+}
+
+.room-view::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 170vmax;
+  height: 170vmax;
+  background-image: url('/pattern_dark.svg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  transform: translate(-50%, -50%) rotate(22.5deg);
+  z-index: -1;
+  opacity: 0.7;
+}
+
+@media (prefers-color-scheme: light) {
+  .room-view::before {
+    background-image: url('/pattern_light.svg');
+    opacity: 0.4;
+  }
 }
 
 .loading {
@@ -535,18 +558,18 @@ onUnmounted(() => {
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;
-  background: #42b883;
+  background: #43a047;
 }
 
 .done-btn:hover {
-  background: #3aa876;
+  background: #388e3c;
 }
 
 .done-indicator {
   margin-left: auto;
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
-  color: #42b883;
+  color: #43a047;
   font-weight: 500;
 }
 
@@ -569,20 +592,20 @@ onUnmounted(() => {
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   white-space: nowrap;
-  background: #42b883;
+  background: #43a047;
   color: white;
-  border: 1px solid #42b883;
+  border: 1px solid #43a047;
 }
 
 .ready-btn:hover:not(.pressed) {
-  background: #3aa876;
-  border-color: #3aa876;
+  background: #388e3c;
+  border-color: #388e3c;
 }
 
 .ready-btn.pressed {
   background: #1a2e1a;
-  color: #42b883;
-  border-color: #42b883;
+  color: #43a047;
+  border-color: #43a047;
   cursor: default;
   opacity: 1;
 }
@@ -659,7 +682,7 @@ onUnmounted(() => {
 }
 
 .solved-indicator {
-  color: #42b883;
+  color: #43a047;
   font-size: 1.2rem;
   font-weight: bold;
 }
@@ -703,7 +726,7 @@ onUnmounted(() => {
 
 .form-group input:focus {
   outline: none;
-  border-color: #42b883;
+  border-color: #43a047;
 }
 
 .join-btn {
@@ -714,7 +737,7 @@ onUnmounted(() => {
 }
 
 .title {
-  color: #42b883;
+  color: #43a047;
   margin: 0;
   font-size: 2.5rem;
 }
@@ -758,7 +781,7 @@ onUnmounted(() => {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.85rem;
-  color: #42b883;
+  color: #43a047;
 }
 
 .btn-small {
@@ -810,12 +833,12 @@ onUnmounted(() => {
 }
 
 .btn.primary {
-  background: #42b883;
+  background: #43a047;
   color: #fff;
 }
 
 .btn.primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: #388e3c;
 }
 
 .btn.primary:disabled {

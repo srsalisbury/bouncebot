@@ -7,7 +7,8 @@ import { useRoomStore } from '../stores/roomStore'
 const router = useRouter()
 const roomStore = useRoomStore()
 
-const playerName = ref(roomStore.currentPlayerName ?? '')
+const storedName = roomStore.currentPlayerName
+const playerName = ref(storedName && storedName !== 'Player' ? storedName : '')
 const joinRoomId = ref('')
 const isStartingSolo = ref(false)
 const isCreating = ref(false)
@@ -103,7 +104,12 @@ async function joinRoom() {
     roomStore.setSinglePlayer(false)
     router.push(`/room/${room.id}`)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to join room'
+    const message = e instanceof Error ? e.message : 'Failed to join room'
+    if (message.toLowerCase().includes('not found') || message.toLowerCase().includes('invalid')) {
+      error.value = 'Room not found. Please check the Room ID.'
+    } else {
+      error.value = message
+    }
   } finally {
     isJoining.value = false
   }
@@ -112,8 +118,9 @@ async function joinRoom() {
 
 <template>
   <div class="home">
-    <h1 class="title">BounceBot</h1>
-    <p class="subtitle">A Ricochet Robots puzzle game</p>
+    <img src="/logo_color.svg" alt="BounceBot" class="logo" />
+    <img src="/name_light.svg" alt="BounceBot" class="name name-light" />
+    <img src="/name_dark.svg" alt="BounceBot" class="name name-dark" />
 
     <div class="card">
       <!-- Play Solo - Primary action -->
@@ -133,7 +140,7 @@ async function joinRoom() {
           class="btn secondary multiplayer-toggle"
           :class="{ expanded: showMultiplayer }"
           :disabled="isLoading"
-          @click="showMultiplayer = !showMultiplayer"
+          @click="showMultiplayer = !showMultiplayer; if (!showMultiplayer) error = null"
         >
           Play with Friends
           <span class="toggle-icon">{{ showMultiplayer ? '▲' : '▼' }}</span>
@@ -159,22 +166,22 @@ async function joinRoom() {
               {{ isCreating ? 'Creating...' : 'Create New Room' }}
             </button>
             <p class="join-text">or</p>
-            <div class="join-row">
+            <div
+              class="join-room-btn"
+              :class="{ disabled: isLoading }"
+              @click="joinRoom()"
+            >
+              <span class="join-label">{{ isJoining ? 'Joining...' : 'Join Room' }}</span>
               <input
-                id="roomId"
+                ref="roomIdInput"
                 v-model="joinRoomId"
                 type="text"
                 placeholder="Room ID"
-                class="room-id-input"
-                @keyup.enter="joinRoom"
-              />
-              <button
-                class="btn"
+                class="room-id-inline"
                 :disabled="isLoading"
-                @click="joinRoom"
-              >
-                {{ isJoining ? 'Joining...' : 'Join Room' }}
-              </button>
+                @keyup.enter="joinRoom"
+                @click.stop
+              />
             </div>
           </div>
         </div>
@@ -202,24 +209,69 @@ async function joinRoom() {
   align-items: center;
   padding: 2rem;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
-.title {
-  color: #42b883;
-  margin: 0;
-  font-size: 2.5rem;
+.home::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 170vmax;
+  height: 170vmax;
+  background-image: url('/pattern_dark.svg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  transform: translate(-50%, -50%) rotate(22.5deg);
+  z-index: -1;
+  opacity: 0.7;
 }
 
-.subtitle {
-  color: #888;
-  margin: 0.5rem 0 2rem;
+@media (prefers-color-scheme: light) {
+  .home::before {
+    background-image: url('/pattern_light.svg');
+    opacity: 0.4;
+  }
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 0.75rem;
+}
+
+.name {
+  width: 320px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+/* Base (dark mode): show dark name */
+.name-light {
+  display: none;
+}
+
+.name-dark {
+  display: block;
+}
+
+/* Light mode: show light name */
+@media (prefers-color-scheme: light) {
+  .name-light {
+    display: block;
+  }
+
+  .name-dark {
+    display: none;
+  }
 }
 
 .card {
   background: #1a1a1a;
   border-radius: 12px;
   padding: 2rem;
-  width: 100%;
+  width: calc(100% - 2rem);
   max-width: 360px;
 }
 
@@ -243,6 +295,7 @@ async function joinRoom() {
   color: #fff;
   font-size: 1rem;
   box-sizing: border-box;
+  text-align: center;
 }
 
 .form-group input:focus {
@@ -250,8 +303,16 @@ async function joinRoom() {
   border-color: #42b883;
 }
 
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #242424 inset;
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+}
+
 .actions {
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 .btn {
@@ -270,24 +331,25 @@ async function joinRoom() {
 }
 
 .btn.primary {
-  background: #42b883;
+  background: #43a047;
   color: #fff;
 }
 
 .btn.primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: #388e3c;
 }
 
 .btn.secondary {
-  background: #333;
+  background: #1e88e5;
   color: #fff;
 }
 
 .btn.secondary:hover:not(:disabled) {
-  background: #444;
+  background: #1976d2;
 }
 
-.solo-btn {
+.solo-btn,
+.multiplayer-toggle {
   font-size: 1.1rem;
   padding: 1rem;
 }
@@ -303,15 +365,20 @@ async function joinRoom() {
   gap: 0.5rem;
 }
 
+.multiplayer-toggle.expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .toggle-icon {
   font-size: 0.7rem;
 }
 
 .multiplayer-options {
-  margin-top: 1rem;
+  margin-top: 0;
   padding: 1rem;
-  background: #242424;
-  border-radius: 8px;
+  background: #1565c0;
+  border-radius: 0 0 8px 8px;
 }
 
 .multiplayer-buttons {
@@ -320,36 +387,70 @@ async function joinRoom() {
   gap: 0.75rem;
 }
 
-.join-row {
-  display: flex;
-  gap: 0.5rem;
+.multiplayer-buttons .btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 1rem;
+  height: 44px;
+}
+
+.multiplayer-buttons .btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .join-text {
-  color: #888;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.9rem;
   margin: 0 0 0;
 }
 
-.room-id-input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #333;
+.join-room-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 1rem;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.join-room-btn:hover:not(.disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.join-room-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.join-label {
+  color: #fff;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.room-id-inline {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
   background: #1a1a1a;
   color: #fff;
   font-size: 1rem;
-  box-sizing: border-box;
+  font-family: inherit;
+  width: 80px;
+  text-align: center;
 }
 
-.room-id-input:focus {
+.room-id-inline::placeholder {
+  color: #888;
+}
+
+.room-id-inline:focus {
   outline: none;
-  border-color: #42b883;
-}
-
-.join-row .btn {
-  width: auto;
-  padding: 0.75rem 1.25rem;
+  background: #242424;
 }
 
 .help-link {
@@ -358,23 +459,27 @@ async function joinRoom() {
 }
 
 .help-link a {
-  color: #888;
+  display: inline-block;
+  color: #ccc;
   text-decoration: none;
   font-size: 0.9rem;
+  padding: 0.5rem 1.25rem;
+  background: #333;
+  border: none;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .help-link a:hover {
-  color: #42b883;
+  color: #fff;
+  background: #444;
 }
 
 .error {
   margin-top: 1rem;
-  padding: 0.75rem;
-  background: rgba(229, 57, 53, 0.1);
-  border: 1px solid #e53935;
-  border-radius: 6px;
-  color: #e53935;
-  font-size: 0.9rem;
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 .return-section {

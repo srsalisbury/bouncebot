@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'Conthrax Rg';
+    src: url('ConthraxRg-Bold.eot');
+    src: url('ConthraxRg-Bold.eot?#iefix') format('embedded-opentype'),
+        url('ConthraxRg-Bold.woff2') format('woff2'),
+        url('ConthraxRg-Bold.woff') format('woff'),
+        url('ConthraxRg-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
