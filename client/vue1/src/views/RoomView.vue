@@ -93,6 +93,11 @@ const isPlayerReady = computed(() => {
 const readyCount = computed(() => room.value?.readyForNext.length ?? 0)
 const playerCount = computed(() => room.value?.players.length ?? 0)
 const isSinglePlayer = computed(() => roomStore.isSinglePlayer)
+const isRoomCreator = computed(() => {
+  if (!room.value || !roomStore.currentPlayerId) return false
+  const firstPlayer = room.value.players[0]
+  return firstPlayer?.id === roomStore.currentPlayerId
+})
 
 const sortedSolutions = computed(() => {
   if (!room.value) return []
@@ -148,8 +153,18 @@ async function joinRoom() {
   isJoining.value = false
 }
 
-function copyShareUrl() {
-  navigator.clipboard.writeText(shareUrl.value)
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(shareUrl.value)
+  } catch (err) {
+    // Fallback for older browsers or when clipboard API fails
+    const textArea = document.createElement('textarea')
+    textArea.value = shareUrl.value
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+  }
 }
 
 function goHome() {
@@ -432,12 +447,14 @@ onUnmounted(() => {
 
         <div class="start-options">
           <button
+            v-if="isSinglePlayer || isRoomCreator"
             class="btn primary start-btn"
             :disabled="isStarting"
             @click="startGame"
           >
             {{ isStarting ? 'Starting...' : 'Start Game' }}
           </button>
+          <p v-else class="waiting-text">Waiting for room creator to start game...</p>
         </div>
 
         <p class="hint">Share the link above with friends to play together!</p>
@@ -895,6 +912,13 @@ onUnmounted(() => {
   width: 100%;
   padding: 1rem;
   font-size: 1.1rem;
+}
+
+.waiting-text {
+  color: #888;
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
 }
 
 .fixed-board-option {
