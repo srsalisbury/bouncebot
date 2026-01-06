@@ -35,6 +35,7 @@ const CELL_PERCENT = 100 / BOARD_SIZE  // 6.25%
 const {
   activePlayerSolutionIndex,
   replayMoveIndex,
+  isReplaying,
   switchToPlayerSolution,
   startInitialReplay,
   stopReplay,
@@ -352,7 +353,7 @@ function handleSwitchPlayerSolution(index: number) {
               v-for="robot in store.robots"
               :key="`robot-${robot.id}`"
               class="robot"
-              :class="{ selected: store.selectedRobotId === robot.id }"
+              :class="{ selected: store.selectedRobotId === robot.id, replaying: isReplaying }"
               :style="getRobotStyle(robot)"
               @click="store.selectRobot(robot.id)"
             >
@@ -1029,6 +1030,10 @@ function handleSwitchPlayerSolution(index: number) {
   z-index: 2;
   border: 1px solid black;
   text-shadow: -0.5px -0.5px 0 black, 0.5px -0.5px 0 black, -0.5px 0.5px 0 black, 0.5px 0.5px 0 black;
+}
+
+.robot.replaying {
+  transition: left 0.4s ease-out, top 0.4s ease-out, transform 0.1s, box-shadow 0.1s;
 }
 
 .robot:hover {

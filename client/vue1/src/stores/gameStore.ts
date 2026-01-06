@@ -220,6 +220,7 @@ export const useGameStore = defineStore('game', () => {
   // Shared function to replay moves with animation, starting after a delay
   function replayMoves(movesToReplay: Move[], startDelay: number): number {
     movesToReplay.forEach((move, i) => {
+      const moveStartTime = startDelay + i * ANIMATION_TIMING.MOVE_DELAY
       setTimeout(() => {
         animatingMoveIndex.value = i
         const robot = findRobotById(move.robotId)
@@ -227,8 +228,11 @@ export const useGameStore = defineStore('game', () => {
           robot.x = move.toX
           robot.y = move.toY
         }
+      }, moveStartTime)
+      // Add dot after animation completes
+      setTimeout(() => {
         committedMoves.value.push(move)
-      }, startDelay + i * ANIMATION_TIMING.MOVE_DELAY)
+      }, moveStartTime + ANIMATION_TIMING.MOVE_ANIMATION)
     })
     return startDelay + movesToReplay.length * ANIMATION_TIMING.MOVE_DELAY
   }
@@ -406,7 +410,7 @@ export const useGameStore = defineStore('game', () => {
       const move: Move = { robotId, direction, fromX, fromY, toX: x, toY: y }
       setTimeout(() => {
         committedMoves.value.push(move)
-      }, ANIMATION_TIMING.MOVE_DELAY)
+      }, ANIMATION_TIMING.REPLAY_ANIMATION)
     }
   }
 
