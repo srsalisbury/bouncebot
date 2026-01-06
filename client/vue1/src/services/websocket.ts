@@ -52,22 +52,30 @@ export interface WebSocketEvent {
 }
 
 type EventHandler = (event: WebSocketEvent) => void
+type DisconnectHandler = () => void
 
 const RECONNECT_DELAY = 3000
+const MAX_RECONNECT_ATTEMPTS = 5
 
 class WebSocketService {
   private ws: WebSocket | null = null
   private roomId: string | null = null
   private playerId: string | null = null
   private eventHandler: EventHandler | null = null
+  private disconnectHandler: DisconnectHandler | null = null
   private reconnectTimeout: number | null = null
   private shouldReconnect = false
+  private reconnectAttempts = 0
+  private hasConnectedSuccessfully = false
 
-  connect(roomId: string, playerId: string, onEvent: EventHandler): void {
+  connect(roomId: string, playerId: string, onEvent: EventHandler, onDisconnect?: DisconnectHandler): void {
     this.roomId = roomId
     this.playerId = playerId
     this.eventHandler = onEvent
+    this.disconnectHandler = onDisconnect ?? null
     this.shouldReconnect = true
+    this.reconnectAttempts = 0
+    this.hasConnectedSuccessfully = false
     this.doConnect()
   }
 
@@ -81,6 +89,8 @@ class WebSocketService {
 
     this.ws.onopen = () => {
       console.log('WebSocket: connected')
+      this.hasConnectedSuccessfully = true
+      this.reconnectAttempts = 0
     }
 
     this.ws.onmessage = (event) => {
@@ -109,7 +119,25 @@ class WebSocketService {
   private scheduleReconnect(): void {
     if (this.reconnectTimeout) return
 
-    console.log(`WebSocket: reconnecting in ${RECONNECT_DELAY}ms`)
+    this.reconnectAttempts++
+
+    // If we've never connected successfully and hit max attempts,
+    // stop trying and notify the consumer (room may be gone)
+    if (!this.hasConnectedSuccessfully && this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.log('WebSocket: max reconnect attempts reached, giving up')
+      this.shouldReconnect = false
+      this.disconnectHandler?.()
+      return
+    }
+
+    // If we were connected before, keep trying indefinitely (network issue)
+    // but notify after a few failures so UI can show connection status
+    if (this.hasConnectedSuccessfully && this.reconnectAttempts === MAX_RECONNECT_ATTEMPTS) {
+      console.log('WebSocket: connection lost, notifying consumer')
+      this.disconnectHandler?.()
+    }
+
+    console.log(`WebSocket: reconnecting in ${RECONNECT_DELAY}ms (attempt ${this.reconnectAttempts})`)
     this.reconnectTimeout = window.setTimeout(() => {
       this.reconnectTimeout = null
       this.doConnect()
@@ -129,6 +157,9 @@ class WebSocketService {
     this.roomId = null
     this.playerId = null
     this.eventHandler = null
+    this.disconnectHandler = null
+    this.reconnectAttempts = 0
+    this.hasConnectedSuccessfully = false
   }
 }
 

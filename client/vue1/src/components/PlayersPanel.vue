@@ -300,7 +300,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 
 .player-item.current {
   background: #2a3a2a;
-  border: 1px solid #42b883;
+  border: 1px solid #43a047;
 }
 
 .player-dot {
@@ -317,7 +317,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 }
 
 .you-label {
-  color: #42b883;
+  color: #43a047;
   font-size: 0.8rem;
 }
 
@@ -333,7 +333,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 .solution-badge {
   margin-left: auto;
   padding: 0.15rem 0.4rem;
-  background: #42b883;
+  background: #43a047;
   color: #fff;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -346,7 +346,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 }
 
 .done-check {
-  color: #42b883;
+  color: #43a047;
   font-weight: bold;
   font-size: 1rem;
 }

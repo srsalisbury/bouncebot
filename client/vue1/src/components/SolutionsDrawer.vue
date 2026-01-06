@@ -169,7 +169,7 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .solved-indicator {
-  color: #42b883;
+  color: #43a047;
   margin-left: 0.3rem;
 }
 
@@ -248,7 +248,7 @@ const solutionCount = computed(() => store.solutions.length)
   max-width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #42b883;
+  background: #43a047;
   color: #333;
   border: 2px solid #1a1a1a;
   font-size: 10px;
@@ -281,8 +281,8 @@ const solutionCount = computed(() => store.solutions.length)
   height: 44px;
   border-radius: 50%;
   background: #333;
-  color: #42b883;
-  border: 2px solid #42b883;
+  color: #43a047;
+  border: 2px solid #43a047;
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
@@ -305,7 +305,7 @@ const solutionCount = computed(() => store.solutions.length)
 
 .solution-column.active {
   background: #2a2a2a;
-  box-shadow: 0 0 0 2px #42b883;
+  box-shadow: 0 0 0 2px #43a047;
 }
 
 .solution-header {
@@ -327,7 +327,7 @@ const solutionCount = computed(() => store.solutions.length)
 .solved-check {
   position: absolute;
   right: 0;
-  color: #42b883;
+  color: #43a047;
   opacity: 0;
 }
 
@@ -353,7 +353,7 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .move-item.animating {
-  background: #42b883;
+  background: #43a047;
 }
 
 .move-robot {

@@ -9,6 +9,7 @@
 - [x] Slower solution replay
 - [x] Button to replay a solution (triangle/play button)
 - [ ] Update how to play screen to focus on controls for mobile or desktop as appropriate
+- [ ] Close the drawer when playing back a solution
 
 ## Bug Fixes
 

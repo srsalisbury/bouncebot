@@ -70,6 +70,13 @@ const {
 const gameActions = useGameActions({
   roomId: normalizedRoomId,
   onRoomUpdated: () => loadRoom(),
+  onServerRejection: (reason) => {
+    // Server says room or player doesn't exist - clean up and go home
+    console.log('Server rejection:', reason)
+    roomStore.clearLastRoom()
+    roomStore.clear()
+    router.push('/')
+  },
 })
 
 const shareUrl = computed(() => window.location.href)
@@ -405,13 +412,12 @@ onUnmounted(() => {
 
     <!-- Waiting room -->
     <div v-else-if="room && hasJoined" class="waiting-room">
-      <h1 class="title">BounceBot</h1>
-      <p class="subtitle">Waiting Room</p>
+      <h1 class="waiting-title">WAITING <span class="room-text">ROOM</span></h1>
 
       <div class="card">
         <div class="room-info">
           <div class="info-row">
-            <span class="label">Room ID:</span>
+            <span class="label">Room ID</span>
             <code class="room-id">{{ room.id }}</code>
           </div>
           <button class="btn-small" @click="copyShareUrl">Copy Link</button>
@@ -479,6 +485,19 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+@font-face {
+  font-family: 'Conthrax';
+  src: url('/fonts/ConthraxRg-Bold.eot');
+  src: url('/fonts/ConthraxRg-Bold.eot?#iefix') format('embedded-opentype'),
+      url('/fonts/ConthraxRg-Bold.woff2') format('woff2'),
+      url('/fonts/ConthraxRg-Bold.woff') format('woff'),
+      url('/fonts/ConthraxRg-Bold.ttf') format('truetype'),
+      url('/fonts/ConthraxRg-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 .room-view {
   min-height: 100vh;
   position: relative;
@@ -748,12 +767,30 @@ onUnmounted(() => {
   margin: 0.5rem 0 2rem;
 }
 
+.waiting-title {
+  font-family: 'Conthrax', sans-serif;
+  color: #fff;
+  margin: 0 0 1.5rem;
+  font-size: 2.25rem;
+  text-align: center;
+}
+
+.room-text {
+  color: #1e88e5;
+}
+
+@media (prefers-color-scheme: light) {
+  .waiting-title {
+    color: #000;
+  }
+}
+
 .card {
   background: #1a1a1a;
   border-radius: 12px;
   padding: 2rem;
-  width: 100%;
-  max-width: 400px;
+  width: calc(100% - 2rem);
+  max-width: 360px;
 }
 
 .room-info {
@@ -761,8 +798,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 1rem;
   border-bottom: 1px solid #333;
+  padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
@@ -773,16 +810,17 @@ onUnmounted(() => {
 }
 
 .label {
-  color: #888;
+  color: #aaa;
   font-size: 0.9rem;
 }
 
 .room-id {
-  background: #242424;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  color: #43a047;
+  background: #1e88e5;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
 }
 
 .btn-small {
@@ -874,7 +912,7 @@ onUnmounted(() => {
 
 .hint {
   margin: 1rem 0 0;
-  color: #666;
+  color: #999;
   font-size: 0.85rem;
   text-align: center;
 }

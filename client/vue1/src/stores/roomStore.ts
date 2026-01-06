@@ -90,6 +90,10 @@ export const useRoomStore = defineStore('room', () => {
     puzzlesAttempted.value++
   }
 
+  function clearLastRoom() {
+    lastRoomId.value = null
+  }
+
   function clear() {
     currentPlayerId.value = null
     currentPlayerName.value = null
@@ -106,6 +110,7 @@ export const useRoomStore = defineStore('room', () => {
     puzzlesAttempted,
     setCurrentPlayer,
     setLastRoom,
+    clearLastRoom,
     setSinglePlayer,
     recordPuzzleSolved,
     recordPuzzleAttempted,

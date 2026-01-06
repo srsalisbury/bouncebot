@@ -171,7 +171,7 @@ function handleBackdropClick(event: MouseEvent) {
 
 h2 {
   margin: 0 0 0.25rem 0;
-  color: #42b883;
+  color: #43a047;
   font-size: 1.5rem;
 }
 
@@ -227,7 +227,7 @@ h2 {
 }
 
 .wins {
-  color: #42b883;
+  color: #43a047;
   font-size: 0.9rem;
   font-weight: 500;
 }
