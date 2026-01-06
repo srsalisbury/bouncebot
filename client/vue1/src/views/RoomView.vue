@@ -70,6 +70,13 @@ const {
 const gameActions = useGameActions({
   roomId: normalizedRoomId,
   onRoomUpdated: () => loadRoom(),
+  onServerRejection: (reason) => {
+    // Server says room or player doesn't exist - clean up and go home
+    console.log('Server rejection:', reason)
+    roomStore.clearLastRoom()
+    roomStore.clear()
+    router.push('/')
+  },
 })
 
 const shareUrl = computed(() => window.location.href)

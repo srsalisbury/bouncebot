@@ -2,6 +2,7 @@ import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { bounceBotClient } from '../services/connectClient'
 import { websocketService, type WebSocketEvent } from '../services/websocket'
 import { useRoomStore } from '../stores/roomStore'
+import { isRoomNotFoundError } from '../services/errorUtils'
 import type { Room } from '../gen/bouncebot_pb'
 
 export interface RoomConnectionOptions {
@@ -54,6 +55,11 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       error.value = null
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load room'
+      // If server says room doesn't exist, clear stored state
+      if (isRoomNotFoundError(e)) {
+        roomStore.clearLastRoom()
+        roomStore.clear()
+      }
     } finally {
       isLoading.value = false
     }
@@ -120,9 +126,21 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     }
   }
 
+  function handleWebSocketDisconnect() {
+    // When WebSocket disconnects persistently, check if room still exists
+    // This will trigger state cleanup if server returns 404
+    console.log('WebSocket disconnected, checking if room still exists')
+    loadRoom()
+  }
+
   function connectWebSocket() {
     if (hasJoined.value && roomStore.currentPlayerId) {
-      websocketService.connect(normalizedRoomId.value, roomStore.currentPlayerId, handleWebSocketEvent)
+      websocketService.connect(
+        normalizedRoomId.value,
+        roomStore.currentPlayerId,
+        handleWebSocketEvent,
+        handleWebSocketDisconnect
+      )
     }
   }
 

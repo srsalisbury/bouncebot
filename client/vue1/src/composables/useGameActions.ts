@@ -4,19 +4,29 @@ import { useGameStore } from '../stores/gameStore'
 import { useRoomStore } from '../stores/roomStore'
 import { create } from '@bufbuild/protobuf'
 import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
+import { getServerRejectionReason, type ServerRejectionReason } from '../services/errorUtils'
 
 export interface GameActionsOptions {
   roomId: Ref<string>
   onRoomUpdated?: () => void
+  onServerRejection?: (reason: ServerRejectionReason) => void
 }
 
 export function useGameActions(options: GameActionsOptions) {
-  const { roomId, onRoomUpdated } = options
+  const { roomId, onRoomUpdated, onServerRejection } = options
 
   const gameStore = useGameStore()
   const roomStore = useRoomStore()
 
   const bestSubmittedMoveCount = ref<number | null>(null)
+
+  function handleError(e: unknown, action: string) {
+    console.error(`Failed to ${action}:`, e)
+    const reason = getServerRejectionReason(e)
+    if (reason) {
+      onServerRejection?.(reason)
+    }
+  }
 
   async function submitSolution() {
     if (!roomStore.currentPlayerId) return
@@ -41,7 +51,7 @@ export function useGameActions(options: GameActionsOptions) {
       bestSubmittedMoveCount.value = moveCount
       onRoomUpdated?.()
     } catch (e) {
-      console.error('Failed to submit solution:', e)
+      handleError(e, 'submit solution')
     }
   }
 
@@ -55,7 +65,7 @@ export function useGameActions(options: GameActionsOptions) {
       })
       onRoomUpdated?.()
     } catch (e) {
-      console.error('Failed to retract solution:', e)
+      handleError(e, 'retract solution')
     }
   }
 
@@ -69,7 +79,7 @@ export function useGameActions(options: GameActionsOptions) {
       })
       onRoomUpdated?.()
     } catch (e) {
-      console.error('Failed to mark finished:', e)
+      handleError(e, 'mark finished')
     }
   }
 
@@ -83,7 +93,7 @@ export function useGameActions(options: GameActionsOptions) {
       })
       onRoomUpdated?.()
     } catch (e) {
-      console.error('Failed to mark ready:', e)
+      handleError(e, 'mark ready')
     }
   }
 

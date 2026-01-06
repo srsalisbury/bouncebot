@@ -7,7 +7,8 @@
 - [x] Add new solution button for mobile
 - [x] Stop scrolling and pinch zooming on all devices
 - [x] Slower solution replay
-- [ ] Button to replay a solution (triangle/play button)
+- [x] Button to replay a solution (triangle/play button)
+- [ ] Close the drawer when playing back a solution
 
 ## Bug Fixes
 
@@ -15,7 +16,7 @@
 - [ ] Don't allow multi player to join solo room
 - [ ] Stop replaying solution when jumping to another solution
 - [ ] Solutions shouldn't persist across games (investigate)
-- [ ] Solo mode should count game correct if any current solution is correct
+- [x] Solo mode should count game correct if any current solution is correct
 - [ ] Revisit robot touch target size
 
 ## New Functionality
