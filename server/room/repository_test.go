@@ -9,7 +9,7 @@ import (
 func TestRepository_Create(t *testing.T) {
 	repo := NewRoomRepository()
 
-	room := repo.Create("Alice")
+	room := repo.Create("Alice", false)
 
 	if room.ID == "" {
 		t.Error("expected room ID to be set")
@@ -45,7 +45,7 @@ func TestRepository_Create_UniqueIDs(t *testing.T) {
 
 	ids := make(map[string]bool)
 	for i := 0; i < 100; i++ {
-		room := repo.Create("Player")
+		room := repo.Create("Player", false)
 		if ids[room.ID] {
 			t.Errorf("duplicate room ID generated: %s", room.ID)
 		}
@@ -60,7 +60,7 @@ func TestRepository_Create_UniqueIDs(t *testing.T) {
 func TestRepository_Get(t *testing.T) {
 	repo := NewRoomRepository()
 
-	created := repo.Create("Alice")
+	created := repo.Create("Alice", false)
 
 	room := repo.Get(created.ID)
 	if room == nil {
@@ -83,7 +83,7 @@ func TestRepository_Get_NotFound(t *testing.T) {
 func TestRepository_Get_CaseInsensitive(t *testing.T) {
 	repo := NewRoomRepository()
 
-	created := repo.Create("Alice")
+	created := repo.Create("Alice", false)
 	lowercaseID := strings.ToLower(created.ID)
 
 	room := repo.Get(lowercaseID)
@@ -98,7 +98,7 @@ func TestRepository_Get_CaseInsensitive(t *testing.T) {
 func TestRepository_GetWithLock(t *testing.T) {
 	repo := NewRoomRepository()
 
-	created := repo.Create("Alice")
+	created := repo.Create("Alice", false)
 
 	room, unlock := repo.GetWithLock(created.ID)
 	if room == nil {
@@ -133,7 +133,7 @@ func TestRepository_GetWithLock_NotFound(t *testing.T) {
 func TestRepository_GetWithLock_CaseInsensitive(t *testing.T) {
 	repo := NewRoomRepository()
 
-	created := repo.Create("Alice")
+	created := repo.Create("Alice", false)
 	lowercaseID := strings.ToLower(created.ID)
 
 	room, unlock := repo.GetWithLock(lowercaseID)
@@ -147,7 +147,7 @@ func TestRepository_GetWithLock_CaseInsensitive(t *testing.T) {
 func TestRepository_Delete(t *testing.T) {
 	repo := NewRoomRepository()
 
-	room := repo.Create("Alice")
+	room := repo.Create("Alice", false)
 	roomID := room.ID
 
 	if repo.Count() != 1 {
@@ -167,7 +167,7 @@ func TestRepository_Delete(t *testing.T) {
 func TestRepository_Delete_CaseInsensitive(t *testing.T) {
 	repo := NewRoomRepository()
 
-	room := repo.Create("Alice")
+	room := repo.Create("Alice", false)
 	lowercaseID := strings.ToLower(room.ID)
 
 	repo.Delete(lowercaseID)
@@ -180,9 +180,9 @@ func TestRepository_Delete_CaseInsensitive(t *testing.T) {
 func TestRepository_All(t *testing.T) {
 	repo := NewRoomRepository()
 
-	repo.Create("Alice")
-	repo.Create("Bob")
-	repo.Create("Charlie")
+	repo.Create("Alice", false)
+	repo.Create("Bob", false)
+	repo.Create("Charlie", false)
 
 	all := repo.All()
 	if len(all) != 3 {
@@ -193,7 +193,7 @@ func TestRepository_All(t *testing.T) {
 func TestRepository_All_ReturnsCopy(t *testing.T) {
 	repo := NewRoomRepository()
 
-	room := repo.Create("Alice")
+	room := repo.Create("Alice", false)
 
 	all := repo.All()
 	// Modifying the returned map should not affect the repository
@@ -207,8 +207,8 @@ func TestRepository_All_ReturnsCopy(t *testing.T) {
 func TestRepository_Replace(t *testing.T) {
 	repo := NewRoomRepository()
 
-	repo.Create("Alice")
-	repo.Create("Bob")
+	repo.Create("Alice", false)
+	repo.Create("Bob", false)
 
 	// Replace with new rooms
 	newRooms := map[string]*Room{
@@ -227,7 +227,7 @@ func TestRepository_Replace(t *testing.T) {
 func TestRepository_Replace_Nil(t *testing.T) {
 	repo := NewRoomRepository()
 
-	repo.Create("Alice")
+	repo.Create("Alice", false)
 	repo.Replace(nil)
 
 	if repo.Count() != 0 {
@@ -258,12 +258,12 @@ func TestRepository_Count(t *testing.T) {
 		t.Errorf("expected 0 rooms initially, got %d", repo.Count())
 	}
 
-	repo.Create("Alice")
+	repo.Create("Alice", false)
 	if repo.Count() != 1 {
 		t.Errorf("expected 1 room, got %d", repo.Count())
 	}
 
-	repo.Create("Bob")
+	repo.Create("Bob", false)
 	if repo.Count() != 2 {
 		t.Errorf("expected 2 rooms, got %d", repo.Count())
 	}
@@ -273,7 +273,7 @@ func TestRepository_Concurrent(t *testing.T) {
 	repo := NewRoomRepository()
 
 	// Create initial room
-	room := repo.Create("Alice")
+	room := repo.Create("Alice", false)
 	roomID := room.ID
 
 	// Run concurrent operations
@@ -290,7 +290,7 @@ func TestRepository_Concurrent(t *testing.T) {
 		// Concurrent creates
 		go func() {
 			defer wg.Done()
-			repo.Create("Player")
+			repo.Create("Player", false)
 		}()
 
 		// Concurrent All()
@@ -310,7 +310,7 @@ func TestRepository_Concurrent(t *testing.T) {
 func TestRepository_GetWithLock_Concurrent(t *testing.T) {
 	repo := NewRoomRepository()
 
-	room := repo.Create("Alice")
+	room := repo.Create("Alice", false)
 	roomID := room.ID
 
 	// Multiple goroutines trying to modify the same room

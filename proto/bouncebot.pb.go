@@ -427,13 +427,14 @@ type Room struct {
 	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Players         []*Player              `protobuf:"bytes,2,rep,name=players,proto3" json:"players,omitempty"`
 	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	CurrentGame     *Game                  `protobuf:"bytes,4,opt,name=current_game,json=currentGame,proto3" json:"current_game,omitempty"`             // null if no game started yet
-	GameStartedAt   *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=game_started_at,json=gameStartedAt,proto3" json:"game_started_at,omitempty"`     // when current game started
-	Solutions       []*PlayerSolution      `protobuf:"bytes,6,rep,name=solutions,proto3" json:"solutions,omitempty"`                                    // players who have solved the current game
-	Scores          []*PlayerScore         `protobuf:"bytes,7,rep,name=scores,proto3" json:"scores,omitempty"`                                          // cumulative scores across games
-	GamesPlayed     int32                  `protobuf:"varint,8,opt,name=games_played,json=gamesPlayed,proto3" json:"games_played,omitempty"`            // total games completed in room
-	FinishedSolving []string               `protobuf:"bytes,9,rep,name=finished_solving,json=finishedSolving,proto3" json:"finished_solving,omitempty"` // player IDs who are finished solving (triggers game end)
-	ReadyForNext    []string               `protobuf:"bytes,10,rep,name=ready_for_next,json=readyForNext,proto3" json:"ready_for_next,omitempty"`       // player IDs who are ready for next game
+	CurrentGame     *Game                  `protobuf:"bytes,4,opt,name=current_game,json=currentGame,proto3" json:"current_game,omitempty"`              // null if no game started yet
+	GameStartedAt   *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=game_started_at,json=gameStartedAt,proto3" json:"game_started_at,omitempty"`      // when current game started
+	Solutions       []*PlayerSolution      `protobuf:"bytes,6,rep,name=solutions,proto3" json:"solutions,omitempty"`                                     // players who have solved the current game
+	Scores          []*PlayerScore         `protobuf:"bytes,7,rep,name=scores,proto3" json:"scores,omitempty"`                                           // cumulative scores across games
+	GamesPlayed     int32                  `protobuf:"varint,8,opt,name=games_played,json=gamesPlayed,proto3" json:"games_played,omitempty"`             // total games completed in room
+	FinishedSolving []string               `protobuf:"bytes,9,rep,name=finished_solving,json=finishedSolving,proto3" json:"finished_solving,omitempty"`  // player IDs who are finished solving (triggers game end)
+	ReadyForNext    []string               `protobuf:"bytes,10,rep,name=ready_for_next,json=readyForNext,proto3" json:"ready_for_next,omitempty"`        // player IDs who are ready for next game
+	IsSinglePlayer  bool                   `protobuf:"varint,11,opt,name=is_single_player,json=isSinglePlayer,proto3" json:"is_single_player,omitempty"` // If true, only the creator can be in this room
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -538,11 +539,19 @@ func (x *Room) GetReadyForNext() []string {
 	return nil
 }
 
+func (x *Room) GetIsSinglePlayer() bool {
+	if x != nil {
+		return x.IsSinglePlayer
+	}
+	return false
+}
+
 type CreateRoomRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlayerName    string                 `protobuf:"bytes,1,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	PlayerName     string                 `protobuf:"bytes,1,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
+	IsSinglePlayer bool                   `protobuf:"varint,2,opt,name=is_single_player,json=isSinglePlayer,proto3" json:"is_single_player,omitempty"` // If true, only the creator can be in this room
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *CreateRoomRequest) Reset() {
@@ -580,6 +589,13 @@ func (x *CreateRoomRequest) GetPlayerName() string {
 		return x.PlayerName
 	}
 	return ""
+}
+
+func (x *CreateRoomRequest) GetIsSinglePlayer() bool {
+	if x != nil {
+		return x.IsSinglePlayer
+	}
+	return false
 }
 
 type JoinRoomRequest struct {
@@ -1142,7 +1158,7 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x05moves\x18\x03 \x03(\v2\x11.bouncebot.BotPosR\x05moves\">\n" +
 	"\vPlayerScore\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x12\n" +
-	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\xd3\x03\n" +
+	"\x04wins\x18\x02 \x01(\x05R\x04wins\"\xfd\x03\n" +
 	"\x04Room\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12+\n" +
 	"\aplayers\x18\x02 \x03(\v2\x11.bouncebot.PlayerR\aplayers\x129\n" +
@@ -1155,10 +1171,12 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\fgames_played\x18\b \x01(\x05R\vgamesPlayed\x12)\n" +
 	"\x10finished_solving\x18\t \x03(\tR\x0ffinishedSolving\x12$\n" +
 	"\x0eready_for_next\x18\n" +
-	" \x03(\tR\freadyForNext\"4\n" +
+	" \x03(\tR\freadyForNext\x12(\n" +
+	"\x10is_single_player\x18\v \x01(\bR\x0eisSinglePlayer\"^\n" +
 	"\x11CreateRoomRequest\x12\x1f\n" +
 	"\vplayer_name\x18\x01 \x01(\tR\n" +
-	"playerName\"K\n" +
+	"playerName\x12(\n" +
+	"\x10is_single_player\x18\x02 \x01(\bR\x0eisSinglePlayer\"K\n" +
 	"\x0fJoinRoomRequest\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x1f\n" +
 	"\vplayer_name\x18\x02 \x01(\tR\n" +

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
+import { translateJoinRoomError } from '../services/errorMessages'
 import { useRoomStore } from '../stores/roomStore'
 
 const router = useRouter()
@@ -33,6 +34,7 @@ async function startSoloGame() {
     // Create room with default name
     const room = await bounceBotClient.createRoom({
       playerName: 'Player',
+      isSinglePlayer: true,
     })
     const player = room.players[0]
     if (player) {
@@ -104,12 +106,7 @@ async function joinRoom() {
     roomStore.setSinglePlayer(false)
     router.push(`/room/${room.id}`)
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Failed to join room'
-    if (message.toLowerCase().includes('not found') || message.toLowerCase().includes('invalid')) {
-      error.value = 'Room not found. Please check the Room ID.'
-    } else {
-      error.value = message
-    }
+    error.value = translateJoinRoomError(e)
   } finally {
     isJoining.value = false
   }

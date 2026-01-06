@@ -1,5 +1,6 @@
 import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { bounceBotClient } from '../services/connectClient'
+import { translateJoinRoomError } from '../services/errorMessages'
 import { websocketService, type WebSocketEvent } from '../services/websocket'
 import { useRoomStore } from '../stores/roomStore'
 import type { Room } from '../gen/bouncebot_pb'
@@ -79,7 +80,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       await loadRoom()
       return true
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Failed to join room'
+      error.value = translateJoinRoomError(e)
       return false
     }
   }

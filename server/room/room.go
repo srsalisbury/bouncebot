@@ -23,6 +23,7 @@ type Room struct {
 	GamesPlayed     int                     // Total games completed in room
 	FinishedSolving []string                // Player IDs who are finished solving (triggers game end)
 	ReadyForNext    []string                // Player IDs who are ready for next game
+	IsSinglePlayer  bool                    // If true, only the creator can be in this room
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -109,6 +110,7 @@ func (r *Room) ToProto() *pb.Room {
 		GamesPlayed:     int32(r.GamesPlayed),
 		FinishedSolving: r.FinishedSolving,
 		ReadyForNext:    r.ReadyForNext,
+		IsSinglePlayer:  r.IsSinglePlayer,
 	}
 
 	if r.CurrentGame != nil {

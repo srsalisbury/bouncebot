@@ -7,17 +7,19 @@
 - [x] Add new solution button for mobile
 - [x] Stop scrolling and pinch zooming on all devices
 - [x] Slower solution replay
-- [ ] Button to replay a solution (triangle/play button)
+- [x] Button to replay a solution (triangle/play button)
+- [ ] Update how to play screen to focus on controls for mobile or desktop as appropriate
 
 ## Bug Fixes
 
 - [x] Investigate rendering issues for iOS devices
-- [ ] Don't allow multi player to join solo room
+- [x] Don't allow multi player to join solo room
 - [ ] Stop replaying solution when jumping to another solution
 - [ ] Solutions shouldn't persist across games (investigate)
-- [ ] Solo mode should count game correct if any current solution is correct
+- [x] Solo mode should count game correct if any current solution is correct
 - [ ] Revisit robot touch target size
 
 ## New Functionality
 
 - [ ] Add client joining between games functionality
+- [ ] Only the room creator can start the game

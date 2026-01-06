@@ -82,10 +82,12 @@ message Room {
   int32 games_played = 8;  // total games completed in room
   repeated string finished_solving = 9;  // player IDs who are finished solving (triggers game end)
   repeated string ready_for_next = 10;  // player IDs who are ready for next game
+  bool is_single_player = 11;  // If true, only the creator can be in this room
 }
 
 message CreateRoomRequest {
   string player_name = 1;
+  bool is_single_player = 2;  // If true, only the creator can be in this room
 }
 
 message JoinRoomRequest {

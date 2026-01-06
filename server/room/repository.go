@@ -12,7 +12,8 @@ import (
 // Uses per-room locking for better concurrency.
 type RoomRepository interface {
 	// Create creates a new room with the given player.
-	Create(playerName string) *Room
+	// If isSinglePlayer is true, no other players can join.
+	Create(playerName string, isSinglePlayer bool) *Room
 
 	// Get retrieves a room by ID. Returns nil if not found.
 	Get(roomID string) *Room
@@ -67,7 +68,7 @@ func generatePlayerID() string {
 	return fmt.Sprintf("%016x", rand.Uint64())
 }
 
-func (r *roomRepository) Create(playerName string) *Room {
+func (r *roomRepository) Create(playerName string, isSinglePlayer bool) *Room {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -88,6 +89,7 @@ func (r *roomRepository) Create(playerName string) *Room {
 		CreatedAt:      now,
 		LastActivityAt: now,
 		Wins:           make(map[string]int),
+		IsSinglePlayer: isSinglePlayer,
 	}
 
 	r.rooms[roomID] = room

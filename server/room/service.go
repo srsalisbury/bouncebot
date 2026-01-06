@@ -120,8 +120,9 @@ func (s *RoomService) onTimerFired(roomID, playerID string) {
 // ---- Public API (backward compatible with old Store) ----
 
 // Create creates a new room with the given player.
-func (s *RoomService) Create(playerName string) *Room {
-	return s.repo.Create(playerName)
+// If isSinglePlayer is true, no other players can join.
+func (s *RoomService) Create(playerName string, isSinglePlayer bool) *Room {
+	return s.repo.Create(playerName, isSinglePlayer)
 }
 
 // Join adds a player to an existing room.
@@ -130,6 +131,12 @@ func (s *RoomService) Join(roomID, playerName string) (*Room, error) {
 	if room == nil {
 		unlock()
 		return nil, fmt.Errorf("room not found: %s", roomID)
+	}
+
+	// Reject joins to single player rooms
+	if room.IsSinglePlayer {
+		unlock()
+		return nil, fmt.Errorf("cannot join single player room")
 	}
 
 	signals, err := s.playerMgr.AddPlayer(room, playerName)
