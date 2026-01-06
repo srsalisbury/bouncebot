@@ -93,6 +93,15 @@ const isPlayerReady = computed(() => {
 const readyCount = computed(() => room.value?.readyForNext.length ?? 0)
 const playerCount = computed(() => room.value?.players.length ?? 0)
 const isSinglePlayer = computed(() => roomStore.isSinglePlayer)
+const isRoomCreator = computed(() => {
+  if (!room.value || !roomStore.currentPlayerId) return false
+  const firstPlayer = room.value.players[0]
+  return firstPlayer?.id === roomStore.currentPlayerId
+})
+const isPendingPlayer = computed(() => {
+  if (!room.value || !roomStore.currentPlayerId) return false
+  return room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
+})
 
 const sortedSolutions = computed(() => {
   if (!room.value) return []
@@ -148,8 +157,18 @@ async function joinRoom() {
   isJoining.value = false
 }
 
-function copyShareUrl() {
-  navigator.clipboard.writeText(shareUrl.value)
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(shareUrl.value)
+  } catch (err) {
+    // Fallback for older browsers or when clipboard API fails
+    const textArea = document.createElement('textarea')
+    textArea.value = shareUrl.value
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+  }
 }
 
 function goHome() {
@@ -323,8 +342,8 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Game in progress -->
-    <div v-else-if="hasGame && room" class="game-wrapper">
+    <!-- Game in progress (but not for pending players) -->
+    <div v-else-if="hasGame && room && !isPendingPlayer" class="game-wrapper">
       <GameBoard
         :on-before-retract="onBeforeRetract"
         :game-ended="gameEnded"
@@ -410,6 +429,36 @@ onUnmounted(() => {
       </GameBoard>
     </div>
 
+    <!-- Pending player waiting for next game -->
+    <div v-else-if="room && isPendingPlayer" class="waiting-room">
+      <h1 class="waiting-title">WAITING <span class="room-text">ROOM</span></h1>
+
+      <div class="card">
+        <div class="room-info">
+          <div class="info-row">
+            <span class="label">Room ID</span>
+            <code class="room-id">{{ room.id }}</code>
+          </div>
+        </div>
+
+        <div class="players-section">
+          <h3>Players in game ({{ room.players.length }})</h3>
+          <PlayersPanel :players="room.players" hide-waiting-message />
+        </div>
+
+        <div v-if="room.pendingPlayers.length > 1" class="players-section">
+          <h3>Also waiting ({{ room.pendingPlayers.length - 1 }})</h3>
+          <PlayersPanel :players="room.pendingPlayers.filter(p => p.id !== roomStore.currentPlayerId)" hide-waiting-message />
+        </div>
+
+        <div class="start-options">
+          <p class="waiting-text">Waiting for next game...</p>
+        </div>
+
+        <p class="hint">You'll join the game when the current round ends.</p>
+      </div>
+    </div>
+
     <!-- Waiting room -->
     <div v-else-if="room && hasJoined" class="waiting-room">
       <h1 class="waiting-title">WAITING <span class="room-text">ROOM</span></h1>
@@ -432,12 +481,14 @@ onUnmounted(() => {
 
         <div class="start-options">
           <button
+            v-if="isSinglePlayer || isRoomCreator"
             class="btn primary start-btn"
             :disabled="isStarting"
             @click="startGame"
           >
             {{ isStarting ? 'Starting...' : 'Start Game' }}
           </button>
+          <p v-else class="waiting-text">Waiting for room creator to start game...</p>
         </div>
 
         <p class="hint">Share the link above with friends to play together!</p>
@@ -895,6 +946,13 @@ onUnmounted(() => {
   width: 100%;
   padding: 1rem;
   font-size: 1.1rem;
+}
+
+.waiting-text {
+  color: #888;
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
 }
 
 .fixed-board-option {

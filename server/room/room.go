@@ -13,6 +13,7 @@ import (
 type Room struct {
 	ID              string
 	Players         []Player
+	PendingPlayers  []Player                // Players waiting for next game to start
 	CreatedAt       time.Time
 	LastActivityAt  time.Time               // Last user action timestamp (for cleanup)
 	CurrentGame     *model.Game
@@ -101,6 +102,15 @@ func (r *Room) ToProto() *pb.Room {
 		})
 	}
 
+	// Convert pending players
+	pendingPlayers := make([]*pb.Player, len(r.PendingPlayers))
+	for i, p := range r.PendingPlayers {
+		pendingPlayers[i] = &pb.Player{
+			Id:   p.ID,
+			Name: p.Name,
+		}
+	}
+
 	room := &pb.Room{
 		Id:              r.ID,
 		Players:         players,
@@ -111,6 +121,7 @@ func (r *Room) ToProto() *pb.Room {
 		FinishedSolving: r.FinishedSolving,
 		ReadyForNext:    r.ReadyForNext,
 		IsSinglePlayer:  r.IsSinglePlayer,
+		PendingPlayers:  pendingPlayers,
 	}
 
 	if r.CurrentGame != nil {

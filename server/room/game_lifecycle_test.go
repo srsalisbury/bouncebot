@@ -451,3 +451,71 @@ func TestGameLifecycle_StartNextGame(t *testing.T) {
 		t.Error("expected GameStartedEvent")
 	}
 }
+
+func TestGameLifecycle_StartNextGame_MovesPendingPlayers(t *testing.T) {
+	sm := NewSolutionManager()
+	gl := NewGameLifecycle(sm)
+
+	room := &Room{
+		ID: "TEST",
+		Players: []Player{
+			{ID: "alice", Name: "Alice", Status: PlayerStatusConnected},
+		},
+		PendingPlayers: []Player{
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+			{ID: "charlie", Name: "Charlie", Status: PlayerStatusConnected},
+		},
+		CurrentGame: model.Game1(),
+		Wins:        make(map[string]int),
+	}
+
+	gl.StartNextGame(room)
+
+	// Check pending players were moved to active
+	if len(room.Players) != 3 {
+		t.Errorf("expected 3 active players, got %d", len(room.Players))
+	}
+	if len(room.PendingPlayers) != 0 {
+		t.Errorf("expected 0 pending players, got %d", len(room.PendingPlayers))
+	}
+
+	// Check player names
+	playerNames := make(map[string]bool)
+	for _, p := range room.Players {
+		playerNames[p.Name] = true
+	}
+	if !playerNames["Alice"] {
+		t.Error("expected Alice in players")
+	}
+	if !playerNames["Bob"] {
+		t.Error("expected Bob in players")
+	}
+	if !playerNames["Charlie"] {
+		t.Error("expected Charlie in players")
+	}
+}
+
+func TestGameLifecycle_StartNextGame_NoPendingPlayers(t *testing.T) {
+	sm := NewSolutionManager()
+	gl := NewGameLifecycle(sm)
+
+	room := &Room{
+		ID: "TEST",
+		Players: []Player{
+			{ID: "alice", Name: "Alice", Status: PlayerStatusConnected},
+		},
+		PendingPlayers: nil,
+		CurrentGame:    model.Game1(),
+		Wins:           make(map[string]int),
+	}
+
+	gl.StartNextGame(room)
+
+	// Check players unchanged
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 active player, got %d", len(room.Players))
+	}
+	if room.Players[0].Name != "Alice" {
+		t.Errorf("expected Alice, got %s", room.Players[0].Name)
+	}
+}

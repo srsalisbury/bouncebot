@@ -22,5 +22,5 @@
 
 ## New Functionality
 
-- [ ] Add client joining between games functionality
+- [x] Add client joining between games functionality
 - [ ] Only the room creator can start the game

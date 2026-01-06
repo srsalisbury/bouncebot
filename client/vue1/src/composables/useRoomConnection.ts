@@ -39,6 +39,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       // Check if current player is still in the room (handle stale localStorage)
       if (roomStore.currentPlayerId) {
         const isPlayerInRoom = rm.players.some(p => p.id === roomStore.currentPlayerId)
+          || rm.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
         if (!isPlayerInRoom) {
           roomStore.clear()
         }
@@ -75,11 +76,15 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     error.value = null
 
     try {
+      const trimmedName = playerName.trim()
       const rm = await bounceBotClient.joinRoom({
         roomId: normalizedRoomId.value,
-        playerName: playerName.trim(),
+        playerName: trimmedName,
       })
-      const player = rm.players[rm.players.length - 1]
+      // Find the player we just added - could be in players or pendingPlayers
+      // depending on whether a game is in progress
+      const player = rm.players.find(p => p.name === trimmedName)
+        || rm.pendingPlayers.find(p => p.name === trimmedName)
       if (player) {
         roomStore.setCurrentPlayer(player.id, player.name)
       }

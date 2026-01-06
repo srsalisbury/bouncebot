@@ -12,6 +12,7 @@ const props = defineProps<{
   gameStartedAt?: Timestamp
   finishedSolving?: string[]
   compact?: boolean
+  hideWaitingMessage?: boolean
 }>()
 
 // Dropdown state for vertical layout
@@ -205,7 +206,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 
 <template>
   <div class="players-panel" :class="{ compact, 'dropdown-open': isDropdownOpen }">
-    <div v-if="players.length === 1 && !compact" class="waiting-message">
+    <div v-if="players.length === 1 && !compact && !hideWaitingMessage" class="waiting-message">
       Waiting for players...
     </div>
 
