@@ -108,6 +108,10 @@ export const useGameStore = defineStore('game', () => {
   // Committed moves (for history dots - delayed to match animation)
   const committedMoves = ref<Move[]>([])
 
+  // Track pending replay timeouts and animation frames so we can cancel them
+  const pendingTimeouts = ref<number[]>([])
+  const pendingAnimationFrame = ref<number | null>(null)
+
   // Persist solutions when they change
   function persistSolutions() {
     if (!currentRoomId.value || currentGameNumber.value === 0) return
@@ -217,11 +221,23 @@ export const useGameStore = defineStore('game', () => {
     activeSolution.value.isSolved = false
   }
 
+  // Cancel all pending replay timeouts and animation frames
+  function cancelPendingTimeouts() {
+    for (const id of pendingTimeouts.value) {
+      clearTimeout(id)
+    }
+    pendingTimeouts.value = []
+    if (pendingAnimationFrame.value !== null) {
+      cancelAnimationFrame(pendingAnimationFrame.value)
+      pendingAnimationFrame.value = null
+    }
+  }
+
   // Shared function to replay moves with animation, starting after a delay
   function replayMoves(movesToReplay: Move[], startDelay: number): number {
     movesToReplay.forEach((move, i) => {
       const moveStartTime = startDelay + i * ANIMATION_TIMING.MOVE_DELAY
-      setTimeout(() => {
+      const moveTimeoutId = window.setTimeout(() => {
         animatingMoveIndex.value = i
         const robot = findRobotById(move.robotId)
         if (robot) {
@@ -229,10 +245,12 @@ export const useGameStore = defineStore('game', () => {
           robot.y = move.toY
         }
       }, moveStartTime)
+      pendingTimeouts.value.push(moveTimeoutId)
       // Add dot after animation completes
-      setTimeout(() => {
+      const dotTimeoutId = window.setTimeout(() => {
         committedMoves.value.push(move)
       }, moveStartTime + ANIMATION_TIMING.MOVE_ANIMATION)
+      pendingTimeouts.value.push(dotTimeoutId)
     })
     return startDelay + movesToReplay.length * ANIMATION_TIMING.MOVE_DELAY
   }
@@ -240,6 +258,9 @@ export const useGameStore = defineStore('game', () => {
   function switchSolution(index: number) {
     if (index < 0 || index >= solutions.value.length) return
     if (index === activeSolutionIndex.value) return
+
+    // Cancel any in-progress replay
+    cancelPendingTimeouts()
 
     const targetMoves = solutions.value[index]!.moves
 
@@ -249,23 +270,32 @@ export const useGameStore = defineStore('game', () => {
     resetBoard()
     committedMoves.value = []
     animatingMoveIndex.value = null
-    activeSolutionIndex.value = index
 
-    // Wait before replaying new solution
-    const resetDelay = 500
+    // Wait a frame for reset to settle, then switch and replay
+    pendingAnimationFrame.value = requestAnimationFrame(() => {
+      pendingAnimationFrame.value = null
+      activeSolutionIndex.value = index
 
-    // Replay target moves after delay
-    const totalTime = replayMoves(targetMoves, resetDelay)
+      // Wait before replaying new solution
+      const resetDelay = 500
 
-    // Clear highlight after replay completes
-    setTimeout(() => {
-      animatingMoveIndex.value = null
-    }, totalTime)
+      // Replay target moves after delay
+      const totalTime = replayMoves(targetMoves, resetDelay)
+
+      // Clear highlight after replay completes
+      const clearTimeoutId = window.setTimeout(() => {
+        animatingMoveIndex.value = null
+      }, totalTime)
+      pendingTimeouts.value.push(clearTimeoutId)
+    })
   }
 
   function replaySolution() {
     const targetMoves = solutions.value[activeSolutionIndex.value]?.moves
     if (!targetMoves) return
+
+    // Cancel any in-progress replay
+    cancelPendingTimeouts()
 
     selectedRobotId.value = null
 
@@ -281,13 +311,17 @@ export const useGameStore = defineStore('game', () => {
     const totalTime = replayMoves(targetMoves, resetDelay)
 
     // Clear highlight after replay completes
-    setTimeout(() => {
+    const clearTimeoutId = window.setTimeout(() => {
       animatingMoveIndex.value = null
     }, totalTime)
+    pendingTimeouts.value.push(clearTimeoutId)
   }
 
   function startNewSolution() {
     if (!canStartNewSolution.value) return
+
+    // Cancel any in-progress replay
+    cancelPendingTimeouts()
 
     // Create new empty solution
     solutions.value.push({ moves: [], isSolved: false })
@@ -306,6 +340,9 @@ export const useGameStore = defineStore('game', () => {
     // Can't delete if only one solution remains
     if (solutions.value.length <= 1) return
     if (index < 0 || index >= solutions.value.length) return
+
+    // Cancel any in-progress replay
+    cancelPendingTimeouts()
 
     // If deleting the active solution, switch to another first
     if (index === activeSolutionIndex.value) {
@@ -330,9 +367,10 @@ export const useGameStore = defineStore('game', () => {
       // Replay new active solution
       const totalTime = replayMoves(targetMoves, resetDelay)
 
-      setTimeout(() => {
+      const clearTimeoutId = window.setTimeout(() => {
         animatingMoveIndex.value = null
       }, totalTime)
+      pendingTimeouts.value.push(clearTimeoutId)
     } else {
       // Not deleting active solution, just remove it
       solutions.value.splice(index, 1)
