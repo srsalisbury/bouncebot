@@ -18,7 +18,7 @@ func NewBounceBotServer(rooms *room.RoomService) *bounceBotServer {
 }
 
 func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.Room], error) {
-	r := s.rooms.Create(req.Msg.PlayerName)
+	r := s.rooms.Create(req.Msg.PlayerName, req.Msg.IsSinglePlayer)
 	return connect.NewResponse(r.ToProto()), nil
 }
 

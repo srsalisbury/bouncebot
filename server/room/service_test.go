@@ -14,7 +14,7 @@ import (
 func TestService_CreateAndGet(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	if room.ID == "" {
 		t.Error("expected room ID to be set")
 	}
@@ -46,7 +46,7 @@ func TestService_Get_NotFound(t *testing.T) {
 func TestService_Join(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	room, err := svc.Join(room.ID, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -72,7 +72,7 @@ func TestService_Join_NotFound(t *testing.T) {
 func TestService_StartGame(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	room, err := svc.StartGame(room.ID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -91,7 +91,7 @@ func TestService_SubmitSolution_ValidSolution(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	svc.StartGame(room.ID)
 	// Use fixed Game1 board so validSolution() works
 	room.CurrentGame = model.Game1()
@@ -126,7 +126,7 @@ func TestService_RetractSolution(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	svc.StartGame(room.ID)
 	// Use fixed Game1 board so validSolution() works
 	room.CurrentGame = model.Game1()
@@ -152,7 +152,7 @@ func TestService_RetractSolution(t *testing.T) {
 func TestService_DisconnectAndReconnect(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	aliceID := room.Players[0].ID
 
 	// Disconnect
@@ -191,7 +191,7 @@ func TestService_DisconnectAndReconnect(t *testing.T) {
 func TestService_RemovePlayer(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	svc.Join(room.ID, "Bob")
 	aliceID := room.Players[0].ID
 
@@ -213,7 +213,7 @@ func TestService_MarkFinishedSolving_TriggersGameEnd(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	svc.Join(room.ID, "Bob")
 	svc.StartGame(room.ID)
 
@@ -238,7 +238,7 @@ func TestService_MarkReadyForNext_StartsNextGame(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	svc.Join(room.ID, "Bob")
 
 	aliceID := room.Players[0].ID
@@ -260,7 +260,7 @@ func TestService_RemovePlayer_TriggersGameEnd(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	svc.Join(room.ID, "Bob")
 	svc.StartGame(room.ID)
 
@@ -285,7 +285,7 @@ func TestService_Persistence_SaveAndLoad(t *testing.T) {
 	filename := filepath.Join(tmpDir, "rooms.json")
 
 	svc1 := NewRoomService()
-	room := svc1.Create("Alice")
+	room := svc1.Create("Alice", false)
 	svc1.Join(room.ID, "Bob")
 
 	// Save
@@ -313,7 +313,7 @@ func TestService_StartAutoSave_SavesOnStop(t *testing.T) {
 	filename := filepath.Join(tmpDir, "rooms.json")
 
 	svc := NewRoomService()
-	svc.Create("Alice")
+	svc.Create("Alice", false)
 
 	// Start auto-save and immediately stop
 	stop := svc.StartAutoSave(filename, config.DefaultConfig().AutoSaveInterval)
@@ -368,7 +368,7 @@ func TestService_CleanupStaleRooms(t *testing.T) {
 func TestService_ToProto(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice")
+	room := svc.Create("Alice", false)
 	svc.Join(room.ID, "Bob")
 	svc.StartGame(room.ID)
 
