@@ -1,7 +1,9 @@
 // Animation timing constants
 export const ANIMATION_TIMING = {
-  MOVE_DELAY: 150,      // Delay between animated moves (ms)
-  REPLAY_DELAY: 500,    // Delay before starting replay after reset (ms)
+  MOVE_DELAY: 150,      // Delay between animated moves for in-game solution switching (ms)
+  MOVE_ANIMATION: 150,  // Duration of robot movement animation in-game (ms) - keep in sync with .robot CSS
+  REPLAY_DELAY: 600,    // Delay between moves during end-game player solution replay (ms)
+  REPLAY_ANIMATION: 400, // Duration of robot movement animation during replay (ms) - keep in sync with .robot.replaying CSS
 } as const
 
 // Schedule a sequence of callbacks with delays between them
