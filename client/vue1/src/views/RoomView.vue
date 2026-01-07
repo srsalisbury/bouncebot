@@ -100,15 +100,7 @@ const isRoomCreator = computed(() => {
 })
 const isPendingPlayer = computed(() => {
   if (!room.value || !roomStore.currentPlayerId) return false
-  const isPending = room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
-  console.log('[DEBUG] isPendingPlayer:', isPending, {
-    currentPlayerId: roomStore.currentPlayerId,
-    localStoragePlayerId: localStorage.getItem('bouncebot_player_id'),
-    pendingPlayers: room.value.pendingPlayers.map(p => p.id),
-    players: room.value.players.map(p => p.id),
-    hasGame: room.value.currentGame != null,
-  })
-  return isPending
+  return room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
 })
 
 const sortedSolutions = computed(() => {
