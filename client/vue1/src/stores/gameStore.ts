@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, toRaw } from 'vue'
 import type { Game } from '../gen/bouncebot_pb'
-import { MAX_SOLUTIONS, type Direction } from '../constants'
+import { MAX_SOLUTIONS, OPPOSITE_DIRECTION, type Direction } from '../constants'
 import { calculateDestination } from '../gamePhysics'
 import { ANIMATION_TIMING } from '../services/AnimationService'
 
@@ -108,6 +108,9 @@ export const useGameStore = defineStore('game', () => {
   // Committed moves (for history dots - delayed to match animation)
   const committedMoves = ref<Move[]>([])
 
+  // Track pending committed move timeouts so we can cancel them on forgiveness
+  const pendingMoveTimeouts = new Map<Move, number>()
+
   // Track pending replay timeouts and animation frames so we can cancel them
   const pendingTimeouts = ref<number[]>([])
   const pendingAnimationFrame = ref<number | null>(null)
@@ -169,6 +172,86 @@ export const useGameStore = defineStore('game', () => {
     const robot = findRobotById(selectedRobotId.value)
     if (!robot) return
 
+    const solutionMoves = activeSolution.value.moves
+    const lastMoveProxy = solutionMoves[solutionMoves.length - 1]
+    const lastMove = lastMoveProxy ? toRaw(lastMoveProxy) : undefined
+
+    // Input forgiveness: detect opposite direction move on same robot
+    if (lastMove && lastMove.robotId === robot.id && direction === OPPOSITE_DIRECTION[lastMove.direction]) {
+      // Calculate where the robot would go from the original position (before last move)
+      // We need to temporarily move the robot back to simulate from original position
+      const originalX = lastMove.fromX
+      const originalY = lastMove.fromY
+      const currentX = robot.x
+      const currentY = robot.y
+
+      // Temporarily move robot back to calculate destination from original position
+      robot.x = originalX
+      robot.y = originalY
+      const newDestination = calculateDestination(robot, direction, robots.value, vWalls.value, hWalls.value)
+      // Restore robot position
+      robot.x = currentX
+      robot.y = currentY
+
+      // Cancel pending timeout for the last move's committed dot
+      const pendingTimeout = pendingMoveTimeouts.get(lastMove)
+      if (pendingTimeout !== undefined) {
+        clearTimeout(pendingTimeout)
+        pendingMoveTimeouts.delete(lastMove)
+      }
+
+      if (newDestination.x === originalX && newDestination.y === originalY) {
+        // Robot would end up back at original position - undo both moves (treat as no move)
+        solutionMoves.pop()
+        robot.x = originalX
+        robot.y = originalY
+
+        // Remove from committedMoves if present
+        const committedIndex = committedMoves.value.indexOf(lastMove)
+        if (committedIndex !== -1) {
+          committedMoves.value.splice(committedIndex, 1)
+        }
+        return
+      } else {
+        // Robot ends up somewhere different - replace last move with direct move from original to new destination
+        solutionMoves.pop()
+
+        // Remove from committedMoves if present
+        const committedIndex = committedMoves.value.indexOf(lastMove)
+        if (committedIndex !== -1) {
+          committedMoves.value.splice(committedIndex, 1)
+        }
+
+        // Create new move from original position to new destination
+        const newMove: Move = {
+          robotId: robot.id,
+          direction,
+          fromX: originalX,
+          fromY: originalY,
+          toX: newDestination.x,
+          toY: newDestination.y,
+        }
+        solutionMoves.push(newMove)
+        robot.x = newDestination.x
+        robot.y = newDestination.y
+
+        // Delay adding to committedMoves to match animation
+        const timeoutId = window.setTimeout(() => {
+          pendingMoveTimeouts.delete(newMove)
+          committedMoves.value.push(newMove)
+        }, ANIMATION_TIMING.MOVE_DELAY)
+        pendingMoveTimeouts.set(newMove, timeoutId)
+
+        // Check if puzzle is now solved
+        const targetRobot = findRobotById(target.value.robotId)
+        if (targetRobot && targetRobot.x === target.value.x && targetRobot.y === target.value.y) {
+          activeSolution.value.isSolved = true
+        }
+        return
+      }
+    }
+
+    // Normal move processing
     const destination = calculateDestination(robot, direction, robots.value, vWalls.value, hWalls.value)
 
     // Only count as a move if the robot actually moved
@@ -186,9 +269,11 @@ export const useGameStore = defineStore('game', () => {
       robot.y = destination.y
 
       // Delay adding to committedMoves to match animation
-      setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
+        pendingMoveTimeouts.delete(move)
         committedMoves.value.push(move)
       }, ANIMATION_TIMING.MOVE_DELAY)
+      pendingMoveTimeouts.set(move, timeoutId)
 
       // Check if puzzle is now solved and mark the solution
       const targetRobot = findRobotById(target.value.robotId)
