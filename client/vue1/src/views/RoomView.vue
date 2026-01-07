@@ -441,6 +441,12 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <!-- Show current pending player -->
+        <div class="players-section">
+          <h3>You</h3>
+          <PlayersPanel :players="room.pendingPlayers.filter(p => p.id === roomStore.currentPlayerId)" hide-waiting-message />
+        </div>
+
         <div class="players-section">
           <h3>Players in game ({{ room.players.length }})</h3>
           <PlayersPanel :players="room.players" hide-waiting-message show-host />
