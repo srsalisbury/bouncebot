@@ -53,3 +53,10 @@ export const DIRECTION_ARROWS: Record<Direction, string> = {
   left: '←',
   right: '→',
 }
+
+export const OPPOSITE_DIRECTION: Record<Direction, Direction> = {
+  up: 'down',
+  down: 'up',
+  left: 'right',
+  right: 'left',
+}
