@@ -9,16 +9,20 @@
 - [x] Slower solution replay
 - [x] Button to replay a solution (triangle/play button)
 - [ ] Update how to play screen to focus on controls for mobile or desktop as appropriate
-- [ ] Close the drawer when playing back a solution
+- [x] Close the drawer when playing back a solution
 
 ## Bug Fixes
 
 - [x] Investigate rendering issues for iOS devices
 - [x] Don't allow multi player to join solo room
-- [ ] Stop replaying solution when jumping to another solution
+- [x] Stop replaying solution when jumping to another solution
 - [ ] Solutions shouldn't persist across games (investigate)
 - [x] Solo mode should count game correct if any current solution is correct
-- [ ] Revisit robot touch target size
+- [x] Revisit robot touch target size
+- [ ] On late player waiting room, doesn't show current player, and game board doesn't show current player. Seems like it's not connected to the server.
+- [ ] If host leaves, all other players get pushed into waiting room.
+- [ ] Player can see the game and click I'm finished even though they're not playing.
+
 
 ## New Functionality
 
