@@ -100,7 +100,15 @@ const isRoomCreator = computed(() => {
 })
 const isPendingPlayer = computed(() => {
   if (!room.value || !roomStore.currentPlayerId) return false
-  return room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
+  const isPending = room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
+  console.log('[DEBUG] isPendingPlayer:', isPending, {
+    currentPlayerId: roomStore.currentPlayerId,
+    localStoragePlayerId: localStorage.getItem('bouncebot_player_id'),
+    pendingPlayers: room.value.pendingPlayers.map(p => p.id),
+    players: room.value.players.map(p => p.id),
+    hasGame: room.value.currentGame != null,
+  })
+  return isPending
 })
 
 const sortedSolutions = computed(() => {
@@ -530,9 +538,9 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Leaderboard modal (only during game) -->
+    <!-- Leaderboard modal (only during game, not for pending players) -->
     <LeaderboardModal
-      v-if="room?.currentGame && hasJoined"
+      v-if="room?.currentGame && hasJoined && !isPendingPlayer"
       :show="showLeaderboard"
       :players="room?.players ?? []"
       :scores="room?.scores ?? []"
@@ -571,7 +579,8 @@ onUnmounted(() => {
   height: 185vmax;
   background-image: url('/pattern_dark.svg');
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: auto 100%;
+  background-position: center;
   transform: translate(-50%, -50%) rotate(22.5deg);
   z-index: -1;
   opacity: 0.7;

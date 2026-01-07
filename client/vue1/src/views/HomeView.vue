@@ -98,8 +98,11 @@ async function joinRoom() {
       roomId: joinRoomId.value.trim(),
       playerName: playerName.value.trim(),
     })
-    // Find ourselves in the players list (we're the last one added)
-    const player = room.players[room.players.length - 1]
+    // Find ourselves - we're the last one added to either players or pendingPlayers
+    // depending on whether a game is in progress
+    const player = room.currentGame
+      ? room.pendingPlayers[room.pendingPlayers.length - 1]
+      : room.players[room.players.length - 1]
     if (player) {
       roomStore.setCurrentPlayer(player.id, player.name)
     }
@@ -219,7 +222,8 @@ async function joinRoom() {
   height: 185vmax;
   background-image: url('/pattern_dark.svg');
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: auto 100%;
+  background-position: center;
   transform: translate(-50%, -50%) rotate(22.5deg);
   z-index: -1;
   opacity: 0.7;

@@ -82,9 +82,23 @@ export function useRoomConnection(options: RoomConnectionOptions) {
         playerName: trimmedName,
       })
       // Find the player we just added - could be in players or pendingPlayers
-      // depending on whether a game is in progress
-      const player = rm.players.find(p => p.name === trimmedName)
-        || rm.pendingPlayers.find(p => p.name === trimmedName)
+      // depending on whether a game is in progress.
+      // Search from end to handle duplicate names (new player is appended to end).
+      // Check pendingPlayers first if game is in progress (that's where new players go).
+      console.log('[DEBUG] JoinRoom response:', {
+        hasCurrentGame: rm.currentGame != null,
+        players: rm.players.map(p => ({ id: p.id, name: p.name })),
+        pendingPlayers: rm.pendingPlayers.map(p => ({ id: p.id, name: p.name })),
+        searchingForName: trimmedName,
+      })
+      const findLastByName = (list: typeof rm.players, name: string) =>
+        [...list].reverse().find(p => p.name === name)
+      const player = rm.currentGame
+        ? (findLastByName(rm.pendingPlayers, trimmedName)
+            || findLastByName(rm.players, trimmedName))
+        : (findLastByName(rm.players, trimmedName)
+            || findLastByName(rm.pendingPlayers, trimmedName))
+      console.log('[DEBUG] Found player:', player)
 
       // Update room.value BEFORE setting currentPlayerId to avoid race condition
       // where hasJoined becomes true but isPendingPlayer is still false
