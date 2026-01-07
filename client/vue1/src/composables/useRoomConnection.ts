@@ -85,10 +85,16 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       // depending on whether a game is in progress
       const player = rm.players.find(p => p.name === trimmedName)
         || rm.pendingPlayers.find(p => p.name === trimmedName)
+
+      // Update room.value BEFORE setting currentPlayerId to avoid race condition
+      // where hasJoined becomes true but isPendingPlayer is still false
+      room.value = rm
+
       if (player) {
         roomStore.setCurrentPlayer(player.id, player.name)
       }
-      await loadRoom()
+      // Still call loadRoom to trigger game state callbacks (onRoomUpdated)
+      await loadRoom(true)
       return true
     } catch (e) {
       error.value = translateJoinRoomError(e)
