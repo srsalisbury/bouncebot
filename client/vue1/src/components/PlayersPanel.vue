@@ -13,6 +13,7 @@ const props = defineProps<{
   finishedSolving?: string[]
   compact?: boolean
   hideWaitingMessage?: boolean
+  showHost?: boolean
 }>()
 
 // Dropdown state for vertical layout
@@ -182,6 +183,10 @@ function isFinishedSolving(player: Player): boolean {
   return props.finishedSolving?.includes(player.id) ?? false
 }
 
+function isHost(player: Player): boolean {
+  return props.showHost && props.players.length > 0 && player.id === props.players[0]?.id
+}
+
 function getSolveTime(solution: PlayerSolution): string | null {
   if (!props.gameStartedAt || !solution.solvedAt) return null
 
@@ -235,6 +240,9 @@ function getSolveTime(solution: PlayerSolution): string | null {
       >
         <span class="player-dot" :style="{ backgroundColor: getPlayerColorFor(player) }" />
         <span class="player-name">{{ player.name }}</span>
+        <svg v-if="isHost(player)" class="host-crown" title="Host" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+        </svg>
         <span v-if="isCurrentPlayer(player)" class="you-label">(you)</span>
         <span v-if="!compact && getPlayerWins(player) > 0" class="wins-badge">
           {{ getPlayerWins(player) }} {{ getPlayerWins(player) === 1 ? 'win' : 'wins' }}
@@ -315,6 +323,13 @@ function getSolveTime(solution: PlayerSolution): string | null {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.host-crown {
+  width: 14px;
+  height: 14px;
+  color: #ffd700;
+  flex-shrink: 0;
 }
 
 .you-label {

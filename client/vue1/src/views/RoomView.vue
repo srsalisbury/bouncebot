@@ -315,7 +315,7 @@ onUnmounted(() => {
       <div class="card">
         <div class="players-section">
           <h3>Players in room ({{ room.players.length }})</h3>
-          <PlayersPanel :players="room.players" />
+          <PlayersPanel :players="room.players" show-host />
         </div>
 
         <div class="form-group">
@@ -443,7 +443,7 @@ onUnmounted(() => {
 
         <div class="players-section">
           <h3>Players in game ({{ room.players.length }})</h3>
-          <PlayersPanel :players="room.players" hide-waiting-message />
+          <PlayersPanel :players="room.players" hide-waiting-message show-host />
         </div>
 
         <div v-if="room.pendingPlayers.length > 1" class="players-section">
@@ -474,7 +474,7 @@ onUnmounted(() => {
 
         <div class="players-section">
           <h3>Players ({{ room.players.length }})</h3>
-          <PlayersPanel :players="room.players" />
+          <PlayersPanel :players="room.players" show-host />
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
@@ -524,8 +524,9 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Leaderboard modal -->
+    <!-- Leaderboard modal (only during game) -->
     <LeaderboardModal
+      v-if="room?.currentGame && hasJoined"
       :show="showLeaderboard"
       :players="room?.players ?? []"
       :scores="room?.scores ?? []"
@@ -560,8 +561,8 @@ onUnmounted(() => {
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 170vmax;
-  height: 170vmax;
+  width: 185vmax;
+  height: 185vmax;
   background-image: url('/pattern_dark.svg');
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -824,6 +825,7 @@ onUnmounted(() => {
   margin: 0 0 1.5rem;
   font-size: 2.25rem;
   text-align: center;
+  white-space: nowrap;
 }
 
 .room-text {

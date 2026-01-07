@@ -215,8 +215,8 @@ async function joinRoom() {
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 170vmax;
-  height: 170vmax;
+  width: 185vmax;
+  height: 185vmax;
   background-image: url('/pattern_dark.svg');
   background-repeat: no-repeat;
   background-size: 100% 100%;
