@@ -94,20 +94,13 @@ async function joinRoom() {
   error.value = null
 
   try {
-    const room = await bounceBotClient.joinRoom({
+    const response = await bounceBotClient.joinRoom({
       roomId: joinRoomId.value.trim(),
       playerName: playerName.value.trim(),
     })
-    // Find ourselves - we're the last one added to either players or pendingPlayers
-    // depending on whether a game is in progress
-    const player = room.currentGame
-      ? room.pendingPlayers[room.pendingPlayers.length - 1]
-      : room.players[room.players.length - 1]
-    if (player) {
-      roomStore.setCurrentPlayer(player.id, player.name)
-    }
+    roomStore.setCurrentPlayer(response.playerId, playerName.value.trim())
     roomStore.setSinglePlayer(false)
-    router.push(`/room/${room.id}`)
+    router.push(`/room/${response.room?.id}`)
   } catch (e) {
     error.value = translateJoinRoomError(e)
   } finally {

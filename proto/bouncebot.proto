@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 service BounceBot {
   // Room management
   rpc CreateRoom (CreateRoomRequest) returns (Room) {}
-  rpc JoinRoom (JoinRoomRequest) returns (Room) {}
+  rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse) {}
   rpc GetRoom (GetRoomRequest) returns (Room) {}
   rpc StartGame (StartGameRequest) returns (Room) {}
   rpc SubmitSolution (SubmitSolutionRequest) returns (SubmitSolutionResponse) {}
@@ -94,6 +94,11 @@ message CreateRoomRequest {
 message JoinRoomRequest {
   string room_id = 1;
   string player_name = 2;
+}
+
+message JoinRoomResponse {
+  Room room = 1;
+  string player_id = 2;
 }
 
 message GetRoomRequest {

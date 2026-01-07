@@ -9,8 +9,8 @@ import (
 // Does NOT manage timers directly - returns signals for timer operations.
 type PlayerManager interface {
 	// AddPlayer adds a player to a room.
-	// Returns signals or error.
-	AddPlayer(room *Room, playerName string) ([]Signal, error)
+	// Returns the new player's ID, signals, or error.
+	AddPlayer(room *Room, playerName string) (string, []Signal, error)
 
 	// DisconnectPlayer marks a player as disconnected.
 	// Returns signals or error.
@@ -33,7 +33,7 @@ func NewPlayerManager() PlayerManager {
 	return &playerManager{}
 }
 
-func (pm *playerManager) AddPlayer(room *Room, playerName string) ([]Signal, error) {
+func (pm *playerManager) AddPlayer(room *Room, playerName string) (string, []Signal, error) {
 	playerID := generatePlayerID()
 	player := Player{
 		ID:     playerID,
@@ -57,7 +57,7 @@ func (pm *playerManager) AddPlayer(room *Room, playerName string) ([]Signal, err
 		}},
 	}
 
-	return signals, nil
+	return playerID, signals, nil
 }
 
 func (pm *playerManager) DisconnectPlayer(room *Room, playerID string) ([]Signal, error) {

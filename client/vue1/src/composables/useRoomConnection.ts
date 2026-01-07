@@ -77,29 +77,18 @@ export function useRoomConnection(options: RoomConnectionOptions) {
 
     try {
       const trimmedName = playerName.trim()
-      const rm = await bounceBotClient.joinRoom({
+      const response = await bounceBotClient.joinRoom({
         roomId: normalizedRoomId.value,
         playerName: trimmedName,
       })
-      // Find the player we just added - could be in players or pendingPlayers
-      // depending on whether a game is in progress.
-      // Search from end to handle duplicate names (new player is appended to end).
-      // Check pendingPlayers first if game is in progress (that's where new players go).
-      const findLastByName = (list: typeof rm.players, name: string) =>
-        [...list].reverse().find(p => p.name === name)
-      const player = rm.currentGame
-        ? (findLastByName(rm.pendingPlayers, trimmedName)
-            || findLastByName(rm.players, trimmedName))
-        : (findLastByName(rm.players, trimmedName)
-            || findLastByName(rm.pendingPlayers, trimmedName))
 
       // Update room.value BEFORE setting currentPlayerId to avoid race condition
       // where hasJoined becomes true but isPendingPlayer is still false
-      room.value = rm
+      room.value = response.room!
 
-      if (player) {
-        roomStore.setCurrentPlayer(player.id, player.name)
-      }
+      // Use the player ID from the response directly
+      roomStore.setCurrentPlayer(response.playerId, trimmedName)
+
       // Still call loadRoom to trigger game state callbacks (onRoomUpdated)
       await loadRoom(true)
       return true

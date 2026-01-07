@@ -59,7 +59,7 @@ const (
 type BounceBotClient interface {
 	// Room management
 	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
-	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error)
+	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.JoinRoomResponse], error)
 	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
@@ -85,7 +85,7 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("CreateRoom")),
 			connect.WithClientOptions(opts...),
 		),
-		joinRoom: connect.NewClient[proto.JoinRoomRequest, proto.Room](
+		joinRoom: connect.NewClient[proto.JoinRoomRequest, proto.JoinRoomResponse](
 			httpClient,
 			baseURL+BounceBotJoinRoomProcedure,
 			connect.WithSchema(bounceBotMethods.ByName("JoinRoom")),
@@ -133,7 +133,7 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 // bounceBotClient implements BounceBotClient.
 type bounceBotClient struct {
 	createRoom          *connect.Client[proto.CreateRoomRequest, proto.Room]
-	joinRoom            *connect.Client[proto.JoinRoomRequest, proto.Room]
+	joinRoom            *connect.Client[proto.JoinRoomRequest, proto.JoinRoomResponse]
 	getRoom             *connect.Client[proto.GetRoomRequest, proto.Room]
 	startGame           *connect.Client[proto.StartGameRequest, proto.Room]
 	submitSolution      *connect.Client[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse]
@@ -148,7 +148,7 @@ func (c *bounceBotClient) CreateRoom(ctx context.Context, req *connect.Request[p
 }
 
 // JoinRoom calls bouncebot.BounceBot.JoinRoom.
-func (c *bounceBotClient) JoinRoom(ctx context.Context, req *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error) {
+func (c *bounceBotClient) JoinRoom(ctx context.Context, req *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.JoinRoomResponse], error) {
 	return c.joinRoom.CallUnary(ctx, req)
 }
 
@@ -186,7 +186,7 @@ func (c *bounceBotClient) MarkReadyForNext(ctx context.Context, req *connect.Req
 type BounceBotHandler interface {
 	// Room management
 	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
-	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error)
+	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.JoinRoomResponse], error)
 	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
@@ -281,7 +281,7 @@ func (UnimplementedBounceBotHandler) CreateRoom(context.Context, *connect.Reques
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CreateRoom is not implemented"))
 }
 
-func (UnimplementedBounceBotHandler) JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.Room], error) {
+func (UnimplementedBounceBotHandler) JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.JoinRoomResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.JoinRoom is not implemented"))
 }
 
