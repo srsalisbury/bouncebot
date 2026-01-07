@@ -526,7 +526,7 @@ onUnmounted(() => {
 
     <!-- Leaderboard modal (only during game) -->
     <LeaderboardModal
-      v-if="room?.game && hasJoined"
+      v-if="room?.currentGame && hasJoined"
       :show="showLeaderboard"
       :players="room?.players ?? []"
       :scores="room?.scores ?? []"
