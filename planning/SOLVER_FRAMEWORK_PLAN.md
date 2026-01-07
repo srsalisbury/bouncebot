@@ -14,6 +14,13 @@ Add a framework for multiple board solvers that run asynchronously, with configu
 
 ---
 
+- [ ] Room-wide settings (set by host)
+  - [ ] Choose a solver
+  - [ ] Show solver move count
+  - [ ] Show solver solution (in multiplayer, it looks like another player but clearly distinguished, in single player, it shows before you go to the next puzzle in an end-game view like in multiplayer mode with your best and solver best solutions)
+
+---
+
 ## Phase 1: Core Framework
 
 ### 1.1 Create solver interface and types
@@ -23,15 +30,13 @@ Add a framework for multiple board solvers that run asynchronously, with configu
 ```go
 type Solution struct {
     Moves    []model.BotPosition
-    Duration time.Duration
 }
 
 type Result struct {
     SolverName   string
-    BestSolution *Solution
+    Solution     *Solution
     Error        error
     Completed    bool
-    Duration     time.Duration
 }
 
 type Solver interface {
@@ -53,9 +58,9 @@ type Solver interface {
 **File**: `solver/manager.go`
 
 - `Manager` struct with mutex-protected job storage
-- `StartJob(roomID, game, timeout)` launches all solvers concurrently
-- Each solver runs in its own goroutine with context timeout
-- Callback on each solver completion for WebSocket events
+- `StartJob(roomID, game, timeout, solverName)` launches one solver
+- Solver runs in its own goroutine with context timeout
+- Callback on solver completion for WebSocket events
 - `GetJob(jobID)` and `GetJobByRoom(roomID)` for retrieval
 
 ---
@@ -82,28 +87,19 @@ type Solver interface {
 **File**: `proto/bouncebot.proto`
 
 Add messages:
-- `SolverSolution` (moves, duration_ms)
-- `SolverResult` (solver_name, best_solution, error, completed, duration_ms)
-- `SolverJob` (job_id, room_id, status, results, timestamps)
-- `StartSolversRequest/Response`
-- `GetSolverResultsRequest/Response`
-
-Add RPC methods to `BounceBot` service:
-- `StartSolvers`
-- `GetSolverResults`
+- `SolverSolution` (moves)
+- `SolverResult` (solver_name, solution, error, completed)
 
 ### 3.2 Regenerate proto code
 
 Run `./proto/compile_protos.sh` and `npm run generate` in client
 
-### 3.3 Add RPC handlers
+### 3.3 Add Solvers to manager
 
 **File**: `server/main.go`
 
 - Import solver packages with `_` for init registration
 - Create `solver.Manager` in main
-- Add `StartSolvers` handler: validates room has game, starts job
-- Add `GetSolverResults` handler: returns job status and results
 
 ---
 
@@ -114,8 +110,7 @@ Run `./proto/compile_protos.sh` and `npm run generate` in client
 **File**: `server/ws/hub.go`
 
 Add broadcast methods:
-- `BroadcastSolverProgress(roomID, solverName, result)` - fired when each solver completes
-- `BroadcastSolversComplete(roomID, jobID)` - fired when all solvers done
+- `BroadcastSolverComplete(roomID, solverResult)` - fired when solver is done
 
 ### 4.2 Update EventBroadcaster interface
 
@@ -125,20 +120,9 @@ Add methods to `EventBroadcaster` interface (or create separate interface for so
 
 ---
 
-## Phase 5: Additional Solvers (Future)
+## Phase 5: Client Integration
 
-- `solver/random/` - Random/Monte Carlo sampling
-- `solver/iddfs/` - Iterative deepening DFS
-- `solver/astar/` - A* with heuristic
-
----
-
-## Phase 6: Client Integration (Future)
-
-- Add "Reveal Solutions" button
-- Call `StartSolvers` RPC
-- Listen for WebSocket events or poll `GetSolverResults`
-- Display comparison of solver results
+- Listen for WebSocket events or poll `GetSolverResult`
 - Animated playback of solutions
 
 ---
@@ -178,4 +162,4 @@ Add methods to `EventBroadcaster` interface (or create separate interface for so
 5. `proto/bouncebot.proto` - API definitions
 6. Regenerate proto code
 7. `server/main.go` - Wire up handlers
-8. `server/ws/hub.go` - Events (optional for Phase 1)
+8. `server/ws/hub.go` - Events

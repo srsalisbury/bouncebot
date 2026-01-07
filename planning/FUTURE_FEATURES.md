@@ -23,7 +23,6 @@
 - [ ] If host leaves, all other players get pushed into waiting room.
 - [ ] Player can see the game and click I'm finished even though they're not playing.
 
-
 ## New Functionality
 
 - [x] Add client joining between games functionality
