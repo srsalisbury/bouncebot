@@ -641,7 +641,7 @@ function handleSwitchPlayerSolution(index: number) {
   .board-logo-dark {
     display: block;
     filter: grayscale(100%) brightness(1.5);
-    opacity: 0.7;
+    opacity: 0.75;
   }
 }
 
@@ -1064,7 +1064,6 @@ function handleSwitchPlayerSolution(index: number) {
 
 .target-background {
   position: absolute;
-  border-radius: 4px;
 }
 
 .target-number {

@@ -8,6 +8,28 @@ const store = useGameStore()
 const isExpanded = ref(false)
 const drawerRef = ref<HTMLElement | null>(null)
 
+// Check if we're on mobile/vertical layout
+function isMobile(): boolean {
+  const aspectRatio = window.innerWidth / window.innerHeight
+  return aspectRatio < 6/5 || window.innerWidth <= 1050
+}
+
+// Switch solution and auto-collapse on mobile
+function handleSolutionClick(index: number) {
+  store.switchSolution(index)
+  if (isMobile()) {
+    isExpanded.value = false
+  }
+}
+
+// Replay solution and auto-collapse on mobile
+function handleReplayClick() {
+  store.replaySolution()
+  if (isMobile()) {
+    isExpanded.value = false
+  }
+}
+
 // Swipe to expand/collapse and switch solutions
 useSwipe({
   target: drawerRef,
@@ -64,13 +86,13 @@ const solutionCount = computed(() => store.solutions.length)
           :key="index"
           class="solution-column"
           :class="{ active: index === store.activeSolutionIndex }"
-          @click="store.switchSolution(index)"
+          @click="handleSolutionClick(index)"
         >
           <!-- Replay button on active solution -->
           <button
             v-if="index === store.activeSolutionIndex && solution.moves.length > 0"
             class="replay-btn"
-            @click.stop="store.replaySolution()"
+            @click.stop="handleReplayClick()"
           >
             <span class="play-icon">▶</span>
           </button>
@@ -188,7 +210,7 @@ const solutionCount = computed(() => store.solutions.length)
   gap: 0.5rem;
   justify-content: center;
   overflow-x: auto;
-  padding: 4px; /* Space for box-shadow outline */
+  padding: 12px; /* Space for delete/replay buttons that overflow */
   padding-bottom: 0.5rem;
 }
 

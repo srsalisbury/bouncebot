@@ -29,6 +29,28 @@ const emit = defineEmits<{
 const isExpanded = ref(false)
 const drawerRef = ref<HTMLElement | null>(null)
 
+// Check if we're on mobile/vertical layout
+function isMobile(): boolean {
+  const aspectRatio = window.innerWidth / window.innerHeight
+  return aspectRatio < 6/5 || window.innerWidth <= 1050
+}
+
+// Switch solution and auto-collapse on mobile
+function handleSolutionClick(index: number) {
+  emit('switchSolution', index)
+  if (isMobile()) {
+    isExpanded.value = false
+  }
+}
+
+// Replay solution and auto-collapse on mobile
+function handleReplayClick() {
+  emit('replaySolution')
+  if (isMobile()) {
+    isExpanded.value = false
+  }
+}
+
 // Swipe to expand/collapse and switch solutions
 useSwipe({
   target: drawerRef,
@@ -103,13 +125,13 @@ function getActiveSolution() {
           :key="solution.playerId"
           class="solution-column"
           :class="{ active: index === activeIndex, winner: index === 0 }"
-          @click="emit('switchSolution', index)"
+          @click="handleSolutionClick(index)"
         >
           <!-- Replay button on active solution -->
           <button
             v-if="index === activeIndex && solution.moves.length > 0"
             class="replay-btn"
-            @click.stop="emit('replaySolution')"
+            @click.stop="handleReplayClick()"
           >
             <span class="play-icon">▶</span>
           </button>
@@ -238,7 +260,7 @@ function getActiveSolution() {
   gap: 0.5rem;
   justify-content: center;
   overflow-x: auto;
-  padding: 4px;
+  padding: 12px;
   padding-bottom: 0.5rem;
 }
 
