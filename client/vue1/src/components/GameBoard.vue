@@ -1050,6 +1050,21 @@ function handleSwitchPlayerSolution(index: number) {
   transform: translate(-50%, -50%) scale(1.1);
 }
 
+/* Enlarged tap target for mobile - 2x robot size */
+@media (max-aspect-ratio: 6/5), (max-width: 1050px) {
+  .robot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translate(-50%, -50%);
+    /* Debug: uncomment to see tap target */
+    /* background: rgba(0, 150, 255, 0.3); */
+  }
+}
+
 .wall {
   position: absolute;
   z-index: 5;
