@@ -530,9 +530,9 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Leaderboard modal (only during game) -->
+    <!-- Leaderboard modal (only during game, not for pending players) -->
     <LeaderboardModal
-      v-if="room?.currentGame && hasJoined"
+      v-if="room?.currentGame && hasJoined && !isPendingPlayer"
       :show="showLeaderboard"
       :players="room?.players ?? []"
       :scores="room?.scores ?? []"
@@ -571,7 +571,8 @@ onUnmounted(() => {
   height: 185vmax;
   background-image: url('/pattern_dark.svg');
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: auto 100%;
+  background-position: center;
   transform: translate(-50%, -50%) rotate(22.5deg);
   z-index: -1;
   opacity: 0.7;

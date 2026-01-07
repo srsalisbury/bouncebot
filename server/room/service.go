@@ -126,28 +126,29 @@ func (s *RoomService) Create(playerName string, isSinglePlayer bool) *Room {
 }
 
 // Join adds a player to an existing room.
-func (s *RoomService) Join(roomID, playerName string) (*Room, error) {
+// Returns the room, the new player's ID, and any error.
+func (s *RoomService) Join(roomID, playerName string) (*Room, string, error) {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
-		return nil, fmt.Errorf("room not found: %s", roomID)
+		return nil, "", fmt.Errorf("room not found: %s", roomID)
 	}
 
 	// Reject joins to single player rooms
 	if room.IsSinglePlayer {
 		unlock()
-		return nil, fmt.Errorf("cannot join single player room")
+		return nil, "", fmt.Errorf("cannot join single player room")
 	}
 
-	signals, err := s.playerMgr.AddPlayer(room, playerName)
+	playerID, signals, err := s.playerMgr.AddPlayer(room, playerName)
 	unlock()
 
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	s.processSignals(signals)
-	return room, nil
+	return room, playerID, nil
 }
 
 // Get retrieves a room by ID.

@@ -182,7 +182,8 @@ onUnmounted(() => {
   height: 185vmax;
   background-image: url('/pattern_dark.svg');
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: auto 100%;
+  background-position: center;
   z-index: 0;
   opacity: 0.7;
   pointer-events: none;

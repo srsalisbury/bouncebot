@@ -94,17 +94,13 @@ async function joinRoom() {
   error.value = null
 
   try {
-    const room = await bounceBotClient.joinRoom({
+    const response = await bounceBotClient.joinRoom({
       roomId: joinRoomId.value.trim(),
       playerName: playerName.value.trim(),
     })
-    // Find ourselves in the players list (we're the last one added)
-    const player = room.players[room.players.length - 1]
-    if (player) {
-      roomStore.setCurrentPlayer(player.id, player.name)
-    }
+    roomStore.setCurrentPlayer(response.playerId, playerName.value.trim())
     roomStore.setSinglePlayer(false)
-    router.push(`/room/${room.id}`)
+    router.push(`/room/${response.room?.id}`)
   } catch (e) {
     error.value = translateJoinRoomError(e)
   } finally {
@@ -219,7 +215,8 @@ async function joinRoom() {
   height: 185vmax;
   background-image: url('/pattern_dark.svg');
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: auto 100%;
+  background-position: center;
   transform: translate(-50%, -50%) rotate(22.5deg);
   z-index: -1;
   opacity: 0.7;

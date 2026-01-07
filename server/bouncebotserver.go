@@ -22,12 +22,15 @@ func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.
 	return connect.NewResponse(r.ToProto()), nil
 }
 
-func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.JoinRoomRequest]) (*connect.Response[pb.Room], error) {
-	r, err := s.rooms.Join(req.Msg.RoomId, req.Msg.PlayerName)
+func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.JoinRoomRequest]) (*connect.Response[pb.JoinRoomResponse], error) {
+	r, playerID, err := s.rooms.Join(req.Msg.RoomId, req.Msg.PlayerName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(r.ToProto()), nil
+	return connect.NewResponse(&pb.JoinRoomResponse{
+		Room:     r.ToProto(),
+		PlayerId: playerID,
+	}), nil
 }
 
 func (s *bounceBotServer) GetRoom(_ context.Context, req *connect.Request[pb.GetRoomRequest]) (*connect.Response[pb.Room], error) {

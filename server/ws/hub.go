@@ -260,11 +260,21 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	var player room.Player
 	found := false
+	// Check both Players and PendingPlayers
 	for _, p := range rm.Players {
 		if p.ID == playerID {
 			player = p
 			found = true
 			break
+		}
+	}
+	if !found {
+		for _, p := range rm.PendingPlayers {
+			if p.ID == playerID {
+				player = p
+				found = true
+				break
+			}
 		}
 	}
 
