@@ -784,7 +784,7 @@ function handleSwitchPlayerSolution(index: number) {
     display: flex;
     justify-content: center;
     margin-top: 0.5rem;
-    margin-bottom: 4.5rem; /* Space above drawer */
+    margin-bottom: 5rem; /* Space above drawer */
     width: 100%;
   }
 
@@ -995,7 +995,7 @@ function handleSwitchPlayerSolution(index: number) {
   .board {
     /* Fill width in mobile, but constrain by height. Account for header, title, buttons, drawer */
     /* Leave 1rem (16px) on each side to reduce accidental browser back/forward gestures */
-    width: min(calc(100% - 2rem), calc(100dvh - 17rem), calc(100vh - 17rem));
+    width: min(calc(100% - 2rem), calc(100dvh - 19rem), calc(100vh - 19rem));
     margin: 0 auto;
   }
 }

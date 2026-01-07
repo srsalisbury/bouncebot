@@ -1,0 +1,17 @@
+{
+  "name": "BounceBot",
+  "short_name": "BounceBot",
+  "description": "A puzzle game based on Ricochet Robots",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#1e88e5",
+  "icons": [
+    {
+      "src": "/favicon_light.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
