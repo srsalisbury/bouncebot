@@ -147,8 +147,9 @@ const solutionCount = computed(() => store.solutions.length)
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   z-index: 100;
   transition: max-height 0.3s ease;
-  max-height: 60px;
+  max-height: calc(60px + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .solutions-drawer.expanded {
