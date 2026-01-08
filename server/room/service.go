@@ -294,6 +294,7 @@ func (s *RoomService) ReconnectPlayer(roomID, playerID string) error {
 }
 
 // RemovePlayer removes a player from a room.
+// If the room becomes empty (no players and no pending players), the room is deleted.
 func (s *RoomService) RemovePlayer(roomID, playerID string) {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
@@ -302,9 +303,18 @@ func (s *RoomService) RemovePlayer(roomID, playerID string) {
 	}
 
 	signals := s.playerMgr.RemovePlayer(room, playerID)
+
+	// Check if room is now empty and should be garbage collected
+	roomEmpty := len(room.Players) == 0 && len(room.PendingPlayers) == 0
 	unlock()
 
 	s.processSignals(signals)
+
+	// Delete the room if it's empty
+	if roomEmpty {
+		s.repo.Delete(roomID)
+		log.Printf("Room %s garbage collected (no players remaining)", roomID)
+	}
 }
 
 // ---- Persistence Methods ----
