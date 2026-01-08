@@ -16,12 +16,12 @@
 - [x] Investigate rendering issues for iOS devices
 - [x] Don't allow multi player to join solo room
 - [x] Stop replaying solution when jumping to another solution
-- [ ] Solutions shouldn't persist across games (investigate)
+- [x] Solutions shouldn't persist across games (investigate)
 - [x] Solo mode should count game correct if any current solution is correct
 - [x] Revisit robot touch target size
 - [x] On late player waiting room, doesn't show current player, and game board doesn't show current player. Seems like it's not connected to the server.
-- [ ] If host leaves, all other players get pushed into waiting room.
-- [ ] Player can see the game and click I'm finished even though they're not playing.
+- [x] If host leaves, all other players get pushed into waiting room.
+- [x] Player can see the game and click I'm finished even though they're not playing.
 
 ## New Functionality
 
