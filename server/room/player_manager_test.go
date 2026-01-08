@@ -20,9 +20,14 @@ func TestPlayerManager_AddPlayer(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 
-	signals, err := pm.AddPlayer(room, "Bob")
+	playerID, signals, err := pm.AddPlayer(room, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Check player ID was returned
+	if playerID == "" {
+		t.Error("expected player ID to be returned")
 	}
 
 	// Check player was added
@@ -34,6 +39,9 @@ func TestPlayerManager_AddPlayer(t *testing.T) {
 	}
 	if room.Players[1].ID == "" {
 		t.Error("expected player ID to be set")
+	}
+	if room.Players[1].ID != playerID {
+		t.Errorf("expected player ID '%s' to match returned ID '%s'", room.Players[1].ID, playerID)
 	}
 	if room.Players[1].Status != PlayerStatusConnected {
 		t.Errorf("expected player status 'connected', got '%s'", room.Players[1].Status)
@@ -433,9 +441,14 @@ func TestPlayerManager_AddPlayer_PendingWhenGameInProgress(t *testing.T) {
 		LastActivityAt: time.Now(),
 	}
 
-	signals, err := pm.AddPlayer(room, "Bob")
+	playerID, signals, err := pm.AddPlayer(room, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Check player ID was returned
+	if playerID == "" {
+		t.Error("expected player ID to be returned")
 	}
 
 	// Check player was added to PendingPlayers, not Players
@@ -447,6 +460,9 @@ func TestPlayerManager_AddPlayer_PendingWhenGameInProgress(t *testing.T) {
 	}
 	if room.PendingPlayers[0].Name != "Bob" {
 		t.Errorf("expected pending player name 'Bob', got '%s'", room.PendingPlayers[0].Name)
+	}
+	if room.PendingPlayers[0].ID != playerID {
+		t.Errorf("expected pending player ID '%s' to match returned ID '%s'", room.PendingPlayers[0].ID, playerID)
 	}
 
 	// Check broadcast signal still sent
@@ -477,9 +493,14 @@ func TestPlayerManager_AddPlayer_ActiveWhenNoGame(t *testing.T) {
 		LastActivityAt: time.Now(),
 	}
 
-	_, err := pm.AddPlayer(room, "Bob")
+	playerID, _, err := pm.AddPlayer(room, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Check player ID was returned
+	if playerID == "" {
+		t.Error("expected player ID to be returned")
 	}
 
 	// Check player was added to Players, not PendingPlayers
@@ -491,5 +512,8 @@ func TestPlayerManager_AddPlayer_ActiveWhenNoGame(t *testing.T) {
 	}
 	if room.Players[1].Name != "Bob" {
 		t.Errorf("expected second player name 'Bob', got '%s'", room.Players[1].Name)
+	}
+	if room.Players[1].ID != playerID {
+		t.Errorf("expected player ID '%s' to match returned ID '%s'", room.Players[1].ID, playerID)
 	}
 }
