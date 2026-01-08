@@ -208,6 +208,51 @@ func TestService_RemovePlayer(t *testing.T) {
 	}
 }
 
+func TestService_RemovePlayer_DeletesEmptyRoom(t *testing.T) {
+	svc := NewRoomService()
+
+	room := svc.Create("Alice", false)
+	roomID := room.ID
+	aliceID := room.Players[0].ID
+
+	// Must disconnect first
+	svc.DisconnectPlayer(roomID, aliceID)
+	svc.RemovePlayer(roomID, aliceID)
+
+	// Room should be garbage collected
+	_, err := svc.Get(roomID)
+	if err == nil {
+		t.Error("expected room to be deleted after last player removed")
+	}
+}
+
+func TestService_RemovePlayer_KeepsRoomWithPendingPlayers(t *testing.T) {
+	svc := NewRoomService()
+
+	room := svc.Create("Alice", false)
+	roomID := room.ID
+	aliceID := room.Players[0].ID
+
+	// Start a game so new players become pending
+	svc.StartGame(roomID)
+
+	// Bob joins as a pending player
+	svc.Join(roomID, "Bob")
+
+	// Alice disconnects and is removed
+	svc.DisconnectPlayer(roomID, aliceID)
+	svc.RemovePlayer(roomID, aliceID)
+
+	// Room should still exist because Bob is pending
+	room, err := svc.Get(roomID)
+	if err != nil {
+		t.Errorf("expected room to still exist with pending players, got error: %v", err)
+	}
+	if len(room.PendingPlayers) != 1 {
+		t.Errorf("expected 1 pending player, got %d", len(room.PendingPlayers))
+	}
+}
+
 func TestService_MarkFinishedSolving_TriggersGameEnd(t *testing.T) {
 	svc := NewRoomService()
 	mock := &mockBroadcaster{}
