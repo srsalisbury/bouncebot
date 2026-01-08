@@ -47,7 +47,7 @@ func TestService_Join(t *testing.T) {
 	svc := NewRoomService()
 
 	room := svc.Create("Alice", false)
-	room, err := svc.Join(room.ID, "Bob")
+	room, _, err := svc.Join(room.ID, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestService_Join(t *testing.T) {
 func TestService_Join_NotFound(t *testing.T) {
 	svc := NewRoomService()
 
-	_, err := svc.Join("nonexistent", "Bob")
+	_, _, err := svc.Join("nonexistent", "Bob")
 	if err == nil {
 		t.Error("expected error for nonexistent room")
 	}
