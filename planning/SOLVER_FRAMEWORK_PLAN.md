@@ -15,7 +15,7 @@ Add a framework for multiple board solvers that run asynchronously, with configu
 ---
 
 - [ ] Room-wide settings (set by host)
-  - [ ] Choose a solver
+  - [ ] Choose a solver (in dev mode, can choose more than one or 'all')
   - [ ] Show solver move count
   - [ ] Show solver solution (in multiplayer, it looks like another player but clearly distinguished, in single player, it shows before you go to the next puzzle in an end-game view like in multiplayer mode with your best and solver best solutions)
 
