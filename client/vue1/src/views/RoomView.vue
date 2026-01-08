@@ -9,6 +9,8 @@ import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
 import LeaderboardModal from '../components/LeaderboardModal.vue'
 import { getPlayerColor } from '../constants'
+import { create } from '@bufbuild/protobuf'
+import { PlayerSolutionSchema, BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 
 const props = defineProps<{
   roomId: string
@@ -36,6 +38,7 @@ const {
   normalizedRoomId,
   hasGame,
   hasJoined,
+  solverSolution,
   loadRoom,
   joinRoom: doJoinRoom,
   startGame: doStartGame,
@@ -103,8 +106,13 @@ const isPendingPlayer = computed(() => {
   return room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
 })
 
+// Special player ID for solver solutions
+const SOLVER_PLAYER_ID = '__solver__'
+
 const sortedSolutions = computed(() => {
   if (!room.value) return []
+
+  // Only player solutions, sorted by move count then time
   return [...room.value.solutions].sort((a, b) => {
     if (a.moves.length !== b.moves.length) {
       return a.moves.length - b.moves.length
@@ -115,14 +123,40 @@ const sortedSolutions = computed(() => {
   })
 })
 
+// Solver solution as a separate PlayerSolution-like object (for display to the right)
+const solverPlayerSolution = computed(() => {
+  if (!solverSolution.value || isSinglePlayer.value) return null
+
+  // Convert solver moves to BotPos format
+  const solverMoves = solverSolution.value.moves.map(m => {
+    const pos = create(PositionSchema, { x: m.x, y: m.y })
+    return create(BotPosSchema, { id: m.robotId, pos })
+  })
+
+  return create(PlayerSolutionSchema, {
+    playerId: SOLVER_PLAYER_ID,
+    moves: solverMoves,
+  })
+})
+
 function getPlayerName(playerId: string): string {
+  if (playerId === SOLVER_PLAYER_ID) {
+    return solverSolution.value?.solverName ?? 'Solver'
+  }
   const player = room.value?.players.find(p => p.id === playerId)
   return player?.name ?? 'Unknown'
 }
 
 function getPlayerColorById(playerId: string): string {
+  if (playerId === SOLVER_PLAYER_ID) {
+    return '#888888' // Gray for solver
+  }
   const index = room.value?.players.findIndex(p => p.id === playerId) ?? -1
   return index >= 0 ? getPlayerColor(index) : '#888888'
+}
+
+function isSolverSolution(playerId: string): boolean {
+  return playerId === SOLVER_PLAYER_ID
 }
 
 async function startGame() {
@@ -348,8 +382,10 @@ onUnmounted(() => {
         :on-before-retract="onBeforeRetract"
         :game-ended="gameEnded"
         :player-solutions="isSinglePlayer ? [] : sortedSolutions"
+        :solver-solution="solverPlayerSolution"
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"
+        :is-solver-solution="isSolverSolution"
         :game-started-at="room.gameStartedAt"
         :room-id="room.id"
         :game-number="(isSinglePlayer ? roomStore.puzzlesAttempted : room.gamesPlayed) + 1"

@@ -8,6 +8,9 @@ import (
 	"github.com/srsalisbury/bouncebot/model"
 )
 
+// GameStartCallback is called when a new game starts.
+type GameStartCallback func(room *Room)
+
 // RoomService is the facade that orchestrates all room operations.
 // It interprets signals and coordinates components.
 type RoomService struct {
@@ -20,6 +23,7 @@ type RoomService struct {
 
 	broadcaster           EventBroadcaster
 	disconnectGracePeriod time.Duration
+	onGameStart           GameStartCallback
 }
 
 // NewRoomService creates a new RoomService with all components.
@@ -46,6 +50,11 @@ func (s *RoomService) SetDisconnectGracePeriod(d time.Duration) {
 	s.disconnectGracePeriod = d
 }
 
+// SetOnGameStart sets the callback for when a new game starts.
+func (s *RoomService) SetOnGameStart(cb GameStartCallback) {
+	s.onGameStart = cb
+}
+
 // processSignals interprets and executes signals.
 // This is where the orchestration happens.
 func (s *RoomService) processSignals(signals []Signal) {
@@ -68,8 +77,14 @@ func (s *RoomService) processSignals(signals []Signal) {
 			room, unlock := s.repo.GetWithLock(signal.RoomID)
 			if room != nil {
 				newSignals := s.gameMgr.StartNextGame(room)
+				// Make a copy for callback (room might be modified after unlock)
+				roomCopy := *room
 				unlock()
 				s.processSignals(newSignals)
+				// Notify about game start (for solver etc)
+				if s.onGameStart != nil && roomCopy.CurrentGame != nil {
+					s.onGameStart(&roomCopy)
+				}
 			} else {
 				unlock()
 			}
@@ -169,6 +184,8 @@ func (s *RoomService) StartGame(roomID string) (*Room, error) {
 	}
 
 	signals, err := s.gameMgr.StartGame(room)
+	// Make a copy for callback (room might be modified after unlock)
+	roomCopy := *room
 	unlock()
 
 	if err != nil {
@@ -176,6 +193,12 @@ func (s *RoomService) StartGame(roomID string) (*Room, error) {
 	}
 
 	s.processSignals(signals)
+
+	// Notify about game start (for solver etc)
+	if s.onGameStart != nil && roomCopy.CurrentGame != nil {
+		s.onGameStart(&roomCopy)
+	}
+
 	return room, nil
 }
 

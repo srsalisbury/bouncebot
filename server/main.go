@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/rs/cors"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
@@ -74,6 +75,13 @@ func main() {
 
 	// Create solver manager with completion callback
 	solverMgr := solver.NewManager(solver.DefaultRegistry)
+
+	// Trigger solver when a game starts (for multiplayer)
+	rooms.SetOnGameStart(func(r *room.Room) {
+		if !r.IsSinglePlayer && r.CurrentGame != nil {
+			solverMgr.StartJob(r.ID, r.CurrentGame, 30*time.Second, "bfs")
+		}
+	})
 	solverMgr.SetCompletionCallback(func(job *solver.Job) {
 		if job.Result == nil {
 			return
@@ -103,9 +111,6 @@ func main() {
 			Completed:  job.Result.Completed,
 		})
 	})
-
-	// Store solver manager for use by game start handler
-	_ = solverMgr // TODO: wire up to game start
 
 	mux := http.NewServeMux()
 	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms))
