@@ -441,20 +441,14 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Show current pending player -->
         <div class="players-section">
-          <h3>You</h3>
-          <PlayersPanel :players="room.pendingPlayers.filter(p => p.id === roomStore.currentPlayerId)" hide-waiting-message />
-        </div>
-
-        <div class="players-section">
-          <h3>Players in game ({{ room.players.length }})</h3>
+          <h3>Players in game</h3>
           <PlayersPanel :players="room.players" hide-waiting-message show-host />
         </div>
 
-        <div v-if="room.pendingPlayers.length > 1" class="players-section">
-          <h3>Also waiting ({{ room.pendingPlayers.length - 1 }})</h3>
-          <PlayersPanel :players="room.pendingPlayers.filter(p => p.id !== roomStore.currentPlayerId)" hide-waiting-message />
+        <div class="players-section">
+          <h3>Waiting to join</h3>
+          <PlayersPanel :players="room.pendingPlayers" hide-waiting-message />
         </div>
 
         <div class="start-options">

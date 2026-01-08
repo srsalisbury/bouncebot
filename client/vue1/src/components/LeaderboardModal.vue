@@ -89,8 +89,6 @@ function handleBackdropClick(event: MouseEvent) {
             <span class="wins">{{ getPlayerWins(player.id) }} {{ getPlayerWins(player.id) === 1 ? 'win' : 'wins' }}</span>
           </div>
         </div>
-
-        <p class="hint">Press <kbd>L</kbd> or click outside to close</p>
       </div>
     </div>
   </Teleport>
@@ -230,22 +228,6 @@ h2 {
   color: #43a047;
   font-size: 0.9rem;
   font-weight: 500;
-}
-
-.hint {
-  margin: 1rem 0 0 0;
-  color: #666;
-  font-size: 0.8rem;
-  text-align: center;
-}
-
-kbd {
-  background: #333;
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: inherit;
-  font-size: 0.75rem;
 }
 
 /* Mobile dropdown styles */
