@@ -1190,6 +1190,75 @@ func (x *MarkReadyForNextResponse) GetSuccess() bool {
 	return false
 }
 
+// Solver result sent via WebSocket when solver completes
+type SolverResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SolverName    string                 `protobuf:"bytes,1,opt,name=solver_name,json=solverName,proto3" json:"solver_name,omitempty"`
+	Moves         []*BotPos              `protobuf:"bytes,2,rep,name=moves,proto3" json:"moves,omitempty"`          // empty if no solution found
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`          // empty if successful
+	Completed     bool                   `protobuf:"varint,4,opt,name=completed,proto3" json:"completed,omitempty"` // true if solver finished, false if timed out
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SolverResult) Reset() {
+	*x = SolverResult{}
+	mi := &file_bouncebot_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SolverResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SolverResult) ProtoMessage() {}
+
+func (x *SolverResult) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SolverResult.ProtoReflect.Descriptor instead.
+func (*SolverResult) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *SolverResult) GetSolverName() string {
+	if x != nil {
+		return x.SolverName
+	}
+	return ""
+}
+
+func (x *SolverResult) GetMoves() []*BotPos {
+	if x != nil {
+		return x.Moves
+	}
+	return nil
+}
+
+func (x *SolverResult) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *SolverResult) GetCompleted() bool {
+	if x != nil {
+		return x.Completed
+	}
+	return false
+}
+
 var File_bouncebot_proto protoreflect.FileDescriptor
 
 const file_bouncebot_proto_rawDesc = "" +
@@ -1269,7 +1338,13 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\"4\n" +
 	"\x18MarkReadyForNextResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\x83\x05\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x8c\x01\n" +
+	"\fSolverResult\x12\x1f\n" +
+	"\vsolver_name\x18\x01 \x01(\tR\n" +
+	"solverName\x12'\n" +
+	"\x05moves\x18\x02 \x03(\v2\x11.bouncebot.BotPosR\x05moves\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\x12\x1c\n" +
+	"\tcompleted\x18\x04 \x01(\bR\tcompleted2\x83\x05\n" +
 	"\tBounceBot\x12=\n" +
 	"\n" +
 	"CreateRoom\x12\x1c.bouncebot.CreateRoomRequest\x1a\x0f.bouncebot.Room\"\x00\x12E\n" +
@@ -1293,7 +1368,7 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_bouncebot_proto_goTypes = []any{
 	(*Position)(nil),                    // 0: bouncebot.Position
 	(*Board)(nil),                       // 1: bouncebot.Board
@@ -1316,7 +1391,8 @@ var file_bouncebot_proto_goTypes = []any{
 	(*MarkFinishedSolvingResponse)(nil), // 18: bouncebot.MarkFinishedSolvingResponse
 	(*MarkReadyForNextRequest)(nil),     // 19: bouncebot.MarkReadyForNextRequest
 	(*MarkReadyForNextResponse)(nil),    // 20: bouncebot.MarkReadyForNextResponse
-	(*timestamppb.Timestamp)(nil),       // 21: google.protobuf.Timestamp
+	(*SolverResult)(nil),                // 21: bouncebot.SolverResult
+	(*timestamppb.Timestamp)(nil),       // 22: google.protobuf.Timestamp
 }
 var file_bouncebot_proto_depIdxs = []int32{
 	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
@@ -1325,39 +1401,40 @@ var file_bouncebot_proto_depIdxs = []int32{
 	1,  // 3: bouncebot.Game.board:type_name -> bouncebot.Board
 	2,  // 4: bouncebot.Game.bots:type_name -> bouncebot.BotPos
 	2,  // 5: bouncebot.Game.target:type_name -> bouncebot.BotPos
-	21, // 6: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
+	22, // 6: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
 	2,  // 7: bouncebot.PlayerSolution.moves:type_name -> bouncebot.BotPos
 	4,  // 8: bouncebot.Room.players:type_name -> bouncebot.Player
-	21, // 9: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
+	22, // 9: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
 	3,  // 10: bouncebot.Room.current_game:type_name -> bouncebot.Game
-	21, // 11: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
+	22, // 11: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
 	5,  // 12: bouncebot.Room.solutions:type_name -> bouncebot.PlayerSolution
 	6,  // 13: bouncebot.Room.scores:type_name -> bouncebot.PlayerScore
 	4,  // 14: bouncebot.Room.pending_players:type_name -> bouncebot.Player
 	7,  // 15: bouncebot.JoinRoomResponse.room:type_name -> bouncebot.Room
 	2,  // 16: bouncebot.SubmitSolutionRequest.moves:type_name -> bouncebot.BotPos
 	5,  // 17: bouncebot.SubmitSolutionResponse.solution:type_name -> bouncebot.PlayerSolution
-	8,  // 18: bouncebot.BounceBot.CreateRoom:input_type -> bouncebot.CreateRoomRequest
-	9,  // 19: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
-	11, // 20: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
-	12, // 21: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
-	13, // 22: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
-	15, // 23: bouncebot.BounceBot.RetractSolution:input_type -> bouncebot.RetractSolutionRequest
-	17, // 24: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
-	19, // 25: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
-	7,  // 26: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.Room
-	10, // 27: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
-	7,  // 28: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
-	7,  // 29: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
-	14, // 30: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
-	16, // 31: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
-	18, // 32: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
-	20, // 33: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
-	26, // [26:34] is the sub-list for method output_type
-	18, // [18:26] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	2,  // 18: bouncebot.SolverResult.moves:type_name -> bouncebot.BotPos
+	8,  // 19: bouncebot.BounceBot.CreateRoom:input_type -> bouncebot.CreateRoomRequest
+	9,  // 20: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
+	11, // 21: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
+	12, // 22: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
+	13, // 23: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
+	15, // 24: bouncebot.BounceBot.RetractSolution:input_type -> bouncebot.RetractSolutionRequest
+	17, // 25: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
+	19, // 26: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
+	7,  // 27: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.Room
+	10, // 28: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
+	7,  // 29: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
+	7,  // 30: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
+	14, // 31: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
+	16, // 32: bouncebot.BounceBot.RetractSolution:output_type -> bouncebot.RetractSolutionResponse
+	18, // 33: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
+	20, // 34: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
+	27, // [27:35] is the sub-list for method output_type
+	19, // [19:27] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_bouncebot_proto_init() }
@@ -1371,7 +1448,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
