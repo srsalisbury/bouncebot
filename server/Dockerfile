@@ -12,6 +12,7 @@ COPY go.mod go.sum ./
 # Copy local packages that are referenced in go.mod replace directives
 COPY model/ ./model/
 COPY proto/ ./proto/
+COPY solver/ ./solver/
 
 # Download dependencies
 RUN go mod download

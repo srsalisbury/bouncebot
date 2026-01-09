@@ -67,6 +67,14 @@ type GameEndedPayload struct {
 	Moves      []room.MovePayload `json:"moves"`
 }
 
+// SolverResultPayload is the payload for solver_complete events.
+type SolverResultPayload struct {
+	SolverName string             `json:"solverName"`
+	Moves      []room.MovePayload `json:"moves"`
+	Error      string             `json:"error,omitempty"`
+	Completed  bool               `json:"completed"`
+}
+
 // Client represents a WebSocket client connection.
 type Client struct {
 	hub      *Hub
@@ -213,6 +221,14 @@ func (h *Hub) BroadcastGameEnded(roomID, winnerID, winnerName string, moves []ro
 			WinnerName: winnerName,
 			Moves:      moves,
 		},
+	})
+}
+
+// BroadcastSolverComplete broadcasts a solver_complete event to all clients in a room.
+func (h *Hub) BroadcastSolverComplete(roomID string, payload SolverResultPayload) {
+	h.Broadcast(roomID, Event{
+		Type:    "solver_complete",
+		Payload: payload,
 	})
 }
 

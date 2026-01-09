@@ -14,8 +14,12 @@ import (
 	"github.com/srsalisbury/bouncebot/server/config"
 	"github.com/srsalisbury/bouncebot/server/room"
 	"github.com/srsalisbury/bouncebot/server/ws"
+	"github.com/srsalisbury/bouncebot/solver"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+
+	// Register solvers via init()
+	_ "github.com/srsalisbury/bouncebot/solver/bfs"
 )
 
 var (
@@ -67,6 +71,41 @@ func main() {
 
 	wsHub := ws.NewHub(rooms, cfg)
 	rooms.SetBroadcaster(wsHub)
+
+	// Create solver manager with completion callback
+	solverMgr := solver.NewManager(solver.DefaultRegistry)
+	solverMgr.SetCompletionCallback(func(job *solver.Job) {
+		if job.Result == nil {
+			return
+		}
+
+		// Convert solution moves to MovePayload format
+		var moves []room.MovePayload
+		if job.Result.Solution != nil {
+			for _, m := range job.Result.Solution.Moves {
+				moves = append(moves, room.MovePayload{
+					RobotId: int(m.Id),
+					X:       int(m.Pos.X),
+					Y:       int(m.Pos.Y),
+				})
+			}
+		}
+
+		errorMsg := ""
+		if job.Result.Error != nil {
+			errorMsg = job.Result.Error.Error()
+		}
+
+		wsHub.BroadcastSolverComplete(job.RoomID, ws.SolverResultPayload{
+			SolverName: job.Result.SolverName,
+			Moves:      moves,
+			Error:      errorMsg,
+			Completed:  job.Result.Completed,
+		})
+	})
+
+	// Store solver manager for use by game start handler
+	_ = solverMgr // TODO: wire up to game start
 
 	mux := http.NewServeMux()
 	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms))

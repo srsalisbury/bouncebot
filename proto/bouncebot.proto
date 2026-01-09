@@ -145,3 +145,11 @@ message MarkReadyForNextRequest {
 message MarkReadyForNextResponse {
   bool success = 1;
 }
+
+// Solver result sent via WebSocket when solver completes
+message SolverResult {
+  string solver_name = 1;
+  repeated BotPos moves = 2;  // empty if no solution found
+  string error = 3;  // empty if successful
+  bool completed = 4;  // true if solver finished, false if timed out
+}
