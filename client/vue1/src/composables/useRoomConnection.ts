@@ -1,10 +1,16 @@
 import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { bounceBotClient } from '../services/connectClient'
 import { translateJoinRoomError } from '../services/errorMessages'
-import { websocketService, type WebSocketEvent } from '../services/websocket'
+import { websocketService, type WebSocketEvent, type SolverCompletePayload } from '../services/websocket'
 import { useRoomStore } from '../stores/roomStore'
 import { isRoomNotFoundError } from '../services/errorUtils'
 import type { Room } from '../gen/bouncebot_pb'
+
+export interface SolverSolution {
+  solverName: string
+  moves: { robotId: number; x: number; y: number }[]
+  completed: boolean
+}
 
 export interface RoomConnectionOptions {
   roomId: Ref<string>
@@ -22,6 +28,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
   const isLoading = ref(true)
   const error = ref<string | null>(null)
   const pollInterval = ref<number | null>(null)
+  const solverSolution = ref<SolverSolution | null>(null)
 
   const normalizedRoomId = computed(() => roomId.value.toUpperCase())
   const hasGame = computed(() => room.value?.currentGame != null)
@@ -117,6 +124,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       loadRoom()
     } else if (event.type === 'game_started') {
       onGameStarted?.()
+      solverSolution.value = null // Clear solver solution when new game starts
       loadRoom(true)
     } else if (event.type === 'player_solved') {
       loadRoom()
@@ -131,6 +139,15 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       loadRoom()
     } else if (event.type === 'player_left') {
       loadRoom()
+    } else if (event.type === 'solver_complete') {
+      const payload = event.payload as SolverCompletePayload
+      if (payload.completed && payload.moves.length > 0) {
+        solverSolution.value = {
+          solverName: payload.solverName,
+          moves: payload.moves,
+          completed: payload.completed,
+        }
+      }
     }
   }
 
@@ -187,6 +204,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     normalizedRoomId,
     hasGame,
     hasJoined,
+    solverSolution,
     loadRoom,
     joinRoom,
     startGame,

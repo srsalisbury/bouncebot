@@ -2,6 +2,7 @@ package solver
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -68,6 +69,8 @@ func (m *Manager) StartJob(roomID string, game *model.Game, timeout time.Duratio
 	m.roomJobs[roomID] = jobID
 	m.mu.Unlock()
 
+	log.Printf("Solver: starting job %s for room %s using %s", jobID, roomID, solverName)
+
 	// Run solver in goroutine
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -80,6 +83,12 @@ func (m *Manager) StartJob(roomID string, game *model.Game, timeout time.Duratio
 		job.Done = true
 		callback := m.callback
 		m.mu.Unlock()
+
+		if result.Completed && result.Solution != nil {
+			log.Printf("Solver: job %s completed with %d moves", jobID, len(result.Solution.Moves))
+		} else if result.Error != nil {
+			log.Printf("Solver: job %s failed: %v", jobID, result.Error)
+		}
 
 		if callback != nil {
 			callback(job)

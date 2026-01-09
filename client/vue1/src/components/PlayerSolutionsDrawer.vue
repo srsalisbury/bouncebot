@@ -13,10 +13,12 @@ interface MoveWithDirection {
 
 const props = defineProps<{
   playerSolutions: PlayerSolution[]
+  solverSolution?: PlayerSolution | null
   activeIndex: number
   replayMoveIndex: number
   getPlayerName: (playerId: string) => string
   getPlayerColor: (playerId: string) => string
+  isSolverSolution: (playerId: string) => boolean
   getPlayerSolutionMoves: (solution: PlayerSolution) => MoveWithDirection[]
   gameStartedAt?: Timestamp
 }>()
@@ -88,7 +90,15 @@ function formatSolveTime(solvedAt?: Timestamp): string {
 
 // Current active solution for collapsed header
 function getActiveSolution() {
+  if (props.activeIndex === props.playerSolutions.length && props.solverSolution) {
+    return props.solverSolution
+  }
   return props.playerSolutions[props.activeIndex]
+}
+
+// Check if current active solution is the solver
+function isActiveSolver() {
+  return props.activeIndex === props.playerSolutions.length && props.solverSolution
 }
 </script>
 
@@ -103,16 +113,22 @@ function getActiveSolution() {
       <div class="drawer-handle" />
       <div class="header-content">
         <div class="winner-info">
-          <span
-            class="player-dot"
-            :style="{ backgroundColor: getPlayerColor(getActiveSolution()?.playerId ?? '') }"
-          />
+          <template v-if="isActiveSolver()">
+            <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
+            <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
+          </template>
+          <template v-else>
+            <span
+              class="player-dot"
+              :style="{ backgroundColor: getPlayerColor(getActiveSolution()?.playerId ?? '') }"
+            />
+          </template>
           <span class="player-name">{{ getPlayerName(getActiveSolution()?.playerId ?? '') }}</span>
           <span class="move-count">
             {{ getActiveSolution()?.moves.length ?? 0 }}
             {{ getActiveSolution()?.moves.length === 1 ? 'move' : 'moves' }}
           </span>
-          <span v-if="activeIndex === 0" class="winner-badge">Winner</span>
+          <span v-if="activeIndex === 0 && !isActiveSolver()" class="winner-badge">Winner</span>
         </div>
       </div>
     </div>
@@ -120,6 +136,7 @@ function getActiveSolution() {
     <!-- Expanded content -->
     <div v-if="isExpanded" class="drawer-content">
       <div class="solutions-columns">
+        <!-- Player solutions -->
         <div
           v-for="(solution, index) in playerSolutions"
           :key="solution.playerId"
@@ -160,6 +177,46 @@ function getActiveSolution() {
             </div>
           </div>
         </div>
+
+        <!-- Divider and solver solution -->
+        <template v-if="solverSolution">
+          <div class="solutions-divider"></div>
+          <div
+            class="solution-column solver"
+            :class="{ active: activeIndex === playerSolutions.length }"
+            @click="handleSolutionClick(playerSolutions.length)"
+          >
+            <!-- Replay button on active solution -->
+            <button
+              v-if="activeIndex === playerSolutions.length && solverSolution.moves.length > 0"
+              class="replay-btn"
+              @click.stop="handleReplayClick()"
+            >
+              <span class="play-icon">▶</span>
+            </button>
+            <div class="player-solution-header">
+              <div class="player-name-row">
+                <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
+                <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
+                <span class="player-name">{{ getPlayerName(solverSolution.playerId) }}</span>
+              </div>
+              <span class="solution-moves">{{ solverSolution.moves.length }}</span>
+            </div>
+            <div class="move-list">
+              <div
+                v-for="(move, i) in getPlayerSolutionMoves(solverSolution)"
+                :key="i"
+                class="move-item"
+                :class="{ animating: activeIndex === playerSolutions.length && i < replayMoveIndex }"
+              >
+                <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
+                  {{ move.robotId + 1 }}
+                </span>
+                <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -226,6 +283,30 @@ function getActiveSolution() {
   flex-shrink: 0;
 }
 
+.winner-info .solver-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.winner-info .solver-icon-light {
+  display: block;
+}
+
+.winner-info .solver-icon-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .winner-info .solver-icon-light {
+    display: none;
+  }
+
+  .winner-info .solver-icon-dark {
+    display: block;
+  }
+}
+
 .winner-info .player-name {
   font-size: 1.1rem;
   font-weight: 600;
@@ -262,6 +343,14 @@ function getActiveSolution() {
   overflow-x: auto;
   padding: 12px;
   padding-bottom: 0.5rem;
+}
+
+.solutions-divider {
+  width: 1px;
+  background: #555;
+  align-self: stretch;
+  margin: 0 0.25rem;
+  flex-shrink: 0;
 }
 
 .solution-column {
@@ -351,6 +440,30 @@ function getActiveSolution() {
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.player-name-row .solver-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.player-name-row .solver-icon-light {
+  display: block;
+}
+
+.player-name-row .solver-icon-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .player-name-row .solver-icon-light {
+    display: none;
+  }
+
+  .player-name-row .solver-icon-dark {
+    display: block;
+  }
 }
 
 .player-name-row .player-name {
