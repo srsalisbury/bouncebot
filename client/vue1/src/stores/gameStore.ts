@@ -467,6 +467,9 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function applyGame(game: Game, roomId?: string, gameNumber?: number) {
+    // Cancel any pending replay timeouts before starting new game
+    cancelPendingTimeouts()
+
     // Parse robots
     const newRobots: Robot[] = game.bots.map(bot => ({
       id: bot.id,
@@ -554,14 +557,16 @@ export const useGameStore = defineStore('game', () => {
       // Add to committedMoves after animation delay so dot appears after robot arrives
       const direction = computeDirection(fromX, fromY, x, y)
       const move: Move = { robotId, direction, fromX, fromY, toX: x, toY: y }
-      setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         committedMoves.value.push(move)
       }, ANIMATION_TIMING.REPLAY_ANIMATION)
+      pendingTimeouts.value.push(timeoutId)
     }
   }
 
   // Clear committed moves (for replay reset)
   function clearCommittedMoves() {
+    cancelPendingTimeouts()
     committedMoves.value = []
   }
 
