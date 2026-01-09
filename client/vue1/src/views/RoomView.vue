@@ -38,7 +38,7 @@ const {
   normalizedRoomId,
   hasGame,
   hasJoined,
-  solverSolution,
+  solverSolutions,
   loadRoom,
   joinRoom: doJoinRoom,
   startGame: doStartGame,
@@ -134,32 +134,41 @@ const sortedSolutions = computed(() => {
   })
 })
 
-// Solver solution as a separate PlayerSolution-like object (for display to the right)
-const solverPlayerSolution = computed(() => {
-  if (!solverSolution.value || isSinglePlayer.value) return null
+// Solver solutions as PlayerSolution-like objects (for display)
+const solverPlayerSolutions = computed(() => {
+  if (solverSolutions.value.length === 0 || isSinglePlayer.value) return []
 
-  // Convert solver moves to BotPos format
-  const solverMoves = solverSolution.value.moves.map(m => {
-    const pos = create(PositionSchema, { x: m.x, y: m.y })
-    return create(BotPosSchema, { id: m.robotId, pos })
-  })
+  return solverSolutions.value.map(sol => {
+    const solverMoves = sol.moves.map(m => {
+      const pos = create(PositionSchema, { x: m.x, y: m.y })
+      return create(BotPosSchema, { id: m.robotId, pos })
+    })
 
-  return create(PlayerSolutionSchema, {
-    playerId: SOLVER_PLAYER_ID,
-    moves: solverMoves,
+    return create(PlayerSolutionSchema, {
+      playerId: `${SOLVER_PLAYER_ID}:${sol.solverName}`,
+      moves: solverMoves,
+    })
   })
 })
 
+// Minimum move count across all solver solutions
+const minSolverMoves = computed(() => {
+  if (solverSolutions.value.length === 0) return null
+  return Math.min(...solverSolutions.value.map(s => s.moves.length))
+})
+
 function getPlayerName(playerId: string): string {
-  if (playerId === SOLVER_PLAYER_ID) {
-    return solverSolution.value?.solverName ?? 'Solver'
+  if (playerId.startsWith(SOLVER_PLAYER_ID)) {
+    // Extract solver name from playerId format: "__solver__:solverName"
+    const solverName = playerId.split(':')[1]
+    return solverName ?? 'Solver'
   }
   const player = room.value?.players.find(p => p.id === playerId)
   return player?.name ?? 'Unknown'
 }
 
 function getPlayerColorById(playerId: string): string {
-  if (playerId === SOLVER_PLAYER_ID) {
+  if (playerId.startsWith(SOLVER_PLAYER_ID)) {
     return '#888888' // Gray for solver
   }
   const index = room.value?.players.findIndex(p => p.id === playerId) ?? -1
@@ -167,7 +176,7 @@ function getPlayerColorById(playerId: string): string {
 }
 
 function isSolverSolution(playerId: string): boolean {
-  return playerId === SOLVER_PLAYER_ID
+  return playerId.startsWith(SOLVER_PLAYER_ID)
 }
 
 async function startGame() {
@@ -393,7 +402,7 @@ onUnmounted(() => {
         :on-before-retract="onBeforeRetract"
         :game-ended="gameEnded"
         :player-solutions="isSinglePlayer ? [] : sortedSolutions"
-        :solver-solution="solverPlayerSolution"
+        :solver-solutions="solverPlayerSolutions"
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"
         :is-solver-solution="isSolverSolution"
@@ -438,10 +447,10 @@ onUnmounted(() => {
             <!-- Multiplayer mode: full header -->
             <template v-else-if="!gameEnded">
               <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
-              <div v-if="solverSolution" class="solver-status">
+              <div v-if="minSolverMoves !== null" class="solver-status">
                 <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
                 <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
-                <span class="solver-moves">{{ solverSolution.moves.length }}</span>
+                <span class="solver-moves">{{ minSolverMoves }}</span>
               </div>
               <button
                 v-if="!isPlayerFinished"

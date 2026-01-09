@@ -13,7 +13,7 @@ interface MoveWithDirection {
 
 const props = defineProps<{
   playerSolutions: PlayerSolution[]
-  solverSolution?: PlayerSolution | null
+  solverSolutions: PlayerSolution[]
   activeIndex: number
   replayMoveIndex: number
   getPlayerName: (playerId: string) => string
@@ -90,15 +90,16 @@ function formatSolveTime(solvedAt?: Timestamp): string {
 
 // Current active solution for collapsed header
 function getActiveSolution() {
-  if (props.activeIndex === props.playerSolutions.length && props.solverSolution) {
-    return props.solverSolution
+  const solverOffset = props.activeIndex - props.playerSolutions.length
+  if (solverOffset >= 0 && solverOffset < props.solverSolutions.length) {
+    return props.solverSolutions[solverOffset]
   }
   return props.playerSolutions[props.activeIndex]
 }
 
-// Check if current active solution is the solver
+// Check if current active solution is a solver
 function isActiveSolver() {
-  return props.activeIndex === props.playerSolutions.length && props.solverSolution
+  return props.activeIndex >= props.playerSolutions.length && props.solverSolutions.length > 0
 }
 </script>
 
@@ -178,17 +179,19 @@ function isActiveSolver() {
           </div>
         </div>
 
-        <!-- Divider and solver solution -->
-        <template v-if="solverSolution">
+        <!-- Divider and solver solutions -->
+        <template v-if="solverSolutions.length">
           <div class="solutions-divider"></div>
           <div
+            v-for="(solverSolution, solverIndex) in solverSolutions"
+            :key="solverSolution.playerId"
             class="solution-column solver"
-            :class="{ active: activeIndex === playerSolutions.length }"
-            @click="handleSolutionClick(playerSolutions.length)"
+            :class="{ active: activeIndex === playerSolutions.length + solverIndex }"
+            @click="handleSolutionClick(playerSolutions.length + solverIndex)"
           >
             <!-- Replay button on active solution -->
             <button
-              v-if="activeIndex === playerSolutions.length && solverSolution.moves.length > 0"
+              v-if="activeIndex === playerSolutions.length + solverIndex && solverSolution.moves.length > 0"
               class="replay-btn"
               @click.stop="handleReplayClick()"
             >
@@ -207,7 +210,7 @@ function isActiveSolver() {
                 v-for="(move, i) in getPlayerSolutionMoves(solverSolution)"
                 :key="i"
                 class="move-item"
-                :class="{ animating: activeIndex === playerSolutions.length && i < replayMoveIndex }"
+                :class="{ animating: activeIndex === playerSolutions.length + solverIndex && i < replayMoveIndex }"
               >
                 <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
                   {{ move.robotId + 1 }}

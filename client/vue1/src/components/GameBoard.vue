@@ -15,7 +15,7 @@ const props = defineProps<{
   onBeforeRetract?: (action: () => void) => void
   gameEnded?: boolean
   playerSolutions?: PlayerSolution[]
-  solverSolution?: PlayerSolution | null
+  solverSolutions?: PlayerSolution[]
   getPlayerName?: (playerId: string) => string
   getPlayerColor?: (playerId: string) => string
   isSolverSolution?: (playerId: string) => boolean
@@ -52,13 +52,11 @@ const {
   }
 )
 
-// Combined array of player solutions + solver solution for replay
+// Combined array of player solutions + solver solutions for replay
 const allSolutions = computed(() => {
   const solutions = props.playerSolutions ?? []
-  if (props.solverSolution) {
-    return [...solutions, props.solverSolution]
-  }
-  return solutions
+  const solverSols = props.solverSolutions ?? []
+  return [...solutions, ...solverSols]
 })
 
 // Wrap actions that could retract a solution
@@ -408,7 +406,7 @@ function handleSwitchPlayerSolution(index: number) {
         </div>
 
         <!-- Player solutions panel (when game ended, hidden in single-player) -->
-        <div v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolution) && !props.singlePlayer" class="solutions-panel">
+        <div v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length) && !props.singlePlayer" class="solutions-panel">
           <div class="solutions-columns">
             <!-- Player solutions -->
             <div
@@ -441,28 +439,30 @@ function handleSwitchPlayerSolution(index: number) {
               </div>
             </div>
 
-            <!-- Divider and solver solution -->
-            <template v-if="props.solverSolution">
+            <!-- Divider and solver solutions -->
+            <template v-if="props.solverSolutions?.length">
               <div class="solutions-divider"></div>
               <div
+                v-for="(solverSolution, solverIndex) in props.solverSolutions"
+                :key="solverSolution.playerId"
                 class="solution-column player-solution solver"
-                :class="{ active: activePlayerSolutionIndex === props.playerSolutions?.length }"
-                @click="handleSwitchPlayerSolution(props.playerSolutions?.length ?? 0)"
+                :class="{ active: activePlayerSolutionIndex === (props.playerSolutions?.length ?? 0) + solverIndex }"
+                @click="handleSwitchPlayerSolution((props.playerSolutions?.length ?? 0) + solverIndex)"
               >
                 <div class="player-solution-header">
                   <div class="player-name-row">
                     <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
                     <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
-                    <span class="player-name">{{ props.getPlayerName?.(props.solverSolution.playerId) ?? 'Solver' }}</span>
+                    <span class="player-name">{{ props.getPlayerName?.(solverSolution.playerId) ?? 'Solver' }}</span>
                   </div>
-                  <span class="solution-moves">{{ props.solverSolution.moves.length }}</span>
+                  <span class="solution-moves">{{ solverSolution.moves.length }}</span>
                 </div>
                 <div class="move-list">
                   <div
-                    v-for="(move, i) in getPlayerSolutionMoves(props.solverSolution)"
+                    v-for="(move, i) in getPlayerSolutionMoves(solverSolution)"
                     :key="i"
                     class="move-item"
-                    :class="{ animating: activePlayerSolutionIndex === props.playerSolutions?.length && i < replayMoveIndex }"
+                    :class="{ animating: activePlayerSolutionIndex === (props.playerSolutions?.length ?? 0) + solverIndex && i < replayMoveIndex }"
                   >
                     <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
                       {{ move.robotId + 1 }}
@@ -559,10 +559,10 @@ function handleSwitchPlayerSolution(index: number) {
 
     <!-- Mobile player solutions drawer (only after game ends, hidden on desktop, hidden in single-player) -->
     <PlayerSolutionsDrawer
-      v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolution) && !props.singlePlayer"
+      v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length) && !props.singlePlayer"
       class="mobile-drawer"
       :player-solutions="props.playerSolutions ?? []"
-      :solver-solution="props.solverSolution"
+      :solver-solutions="props.solverSolutions ?? []"
       :active-index="activePlayerSolutionIndex"
       :replay-move-index="replayMoveIndex"
       :get-player-name="props.getPlayerName ?? (() => 'Unknown')"

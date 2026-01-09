@@ -21,6 +21,7 @@ import (
 
 	// Register solvers via init()
 	_ "github.com/srsalisbury/bouncebot/solver/bfs"
+	_ "github.com/srsalisbury/bouncebot/solver/bfs2"
 )
 
 var (
@@ -76,10 +77,12 @@ func main() {
 	// Create solver manager with completion callback
 	solverMgr := solver.NewManager(solver.DefaultRegistry)
 
-	// Trigger solver when a game starts (for multiplayer)
+	// Trigger all registered solvers when a game starts (for multiplayer)
 	rooms.SetOnGameStart(func(r *room.Room) {
 		if !r.IsSinglePlayer && r.CurrentGame != nil {
-			solverMgr.StartJob(r.ID, r.CurrentGame, 30*time.Second, "bfs")
+			for _, solverName := range solver.DefaultRegistry.Names() {
+				solverMgr.StartJob(r.ID, r.CurrentGame, 30*time.Second, solverName)
+			}
 		}
 	})
 	solverMgr.SetCompletionCallback(func(job *solver.Job) {

@@ -340,14 +340,17 @@ func (s *RoomService) RemovePlayer(roomID, playerID string) {
 	}
 }
 
-// SetSolverResult stores the solver result in a room.
+// SetSolverResult stores a solver result in a room (upserts by solver name).
 func (s *RoomService) SetSolverResult(roomID string, result *SolverResult) {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
 		return
 	}
-	room.SolverResult = result
+	if room.SolverResults == nil {
+		room.SolverResults = make(map[string]*SolverResult)
+	}
+	room.SolverResults[result.SolverName] = result
 	unlock()
 }
 

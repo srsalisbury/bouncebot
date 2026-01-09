@@ -32,8 +32,8 @@ type Room struct {
 	GamesPlayed     int                     // Total games completed in room
 	FinishedSolving []string                // Player IDs who are finished solving (triggers game end)
 	ReadyForNext    []string                // Player IDs who are ready for next game
-	IsSinglePlayer  bool                    // If true, only the creator can be in this room
-	SolverResult    *SolverResult           // Solver solution for current game (if completed)
+	IsSinglePlayer  bool                       // If true, only the creator can be in this room
+	SolverResults   map[string]*SolverResult  // Solver solutions keyed by solver name
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -77,7 +77,7 @@ func (r *Room) ClearGameState() {
 	r.SolutionHistory = nil
 	r.FinishedSolving = nil
 	r.ReadyForNext = nil
-	r.SolverResult = nil
+	r.SolverResults = nil
 }
 
 // ToProto converts a Room to its protobuf representation.
@@ -142,19 +142,22 @@ func (r *Room) ToProto() *pb.Room {
 		room.GameStartedAt = timestamppb.New(*r.GameStartedAt)
 	}
 
-	if r.SolverResult != nil {
-		moves := make([]*pb.BotPos, len(r.SolverResult.Moves))
-		for i, move := range r.SolverResult.Moves {
-			moves[i] = &pb.BotPos{
-				Id:  int32(move.RobotId),
-				Pos: &pb.Position{X: int32(move.X), Y: int32(move.Y)},
+	if len(r.SolverResults) > 0 {
+		room.SolverResults = make([]*pb.SolverResult, 0, len(r.SolverResults))
+		for _, sr := range r.SolverResults {
+			moves := make([]*pb.BotPos, len(sr.Moves))
+			for i, move := range sr.Moves {
+				moves[i] = &pb.BotPos{
+					Id:  int32(move.RobotId),
+					Pos: &pb.Position{X: int32(move.X), Y: int32(move.Y)},
+				}
 			}
-		}
-		room.SolverResult = &pb.SolverResult{
-			SolverName: r.SolverResult.SolverName,
-			Moves:      moves,
-			Error:      r.SolverResult.Error,
-			Completed:  r.SolverResult.Completed,
+			room.SolverResults = append(room.SolverResults, &pb.SolverResult{
+				SolverName: sr.SolverName,
+				Moves:      moves,
+				Error:      sr.Error,
+				Completed:  sr.Completed,
+			})
 		}
 	}
 

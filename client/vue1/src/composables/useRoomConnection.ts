@@ -28,7 +28,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
   const isLoading = ref(true)
   const error = ref<string | null>(null)
   const pollInterval = ref<number | null>(null)
-  const solverSolution = ref<SolverSolution | null>(null)
+  const solverSolutions = ref<SolverSolution[]>([])
 
   const normalizedRoomId = computed(() => roomId.value.toUpperCase())
   const hasGame = computed(() => room.value?.currentGame != null)
@@ -61,17 +61,19 @@ export function useRoomConnection(options: RoomConnectionOptions) {
         }
       }
 
-      // Restore solver solution from room state (for page reloads)
-      if (rm.solverResult && rm.solverResult.completed && rm.solverResult.moves.length > 0) {
-        solverSolution.value = {
-          solverName: rm.solverResult.solverName,
-          moves: rm.solverResult.moves.map(m => ({
-            robotId: m.id,
-            x: m.pos?.x ?? 0,
-            y: m.pos?.y ?? 0,
-          })),
-          completed: rm.solverResult.completed,
-        }
+      // Restore solver solutions from room state (for page reloads)
+      if (rm.solverResults && rm.solverResults.length > 0) {
+        solverSolutions.value = rm.solverResults
+          .filter(sr => sr.completed && sr.moves.length > 0)
+          .map(sr => ({
+            solverName: sr.solverName,
+            moves: sr.moves.map(m => ({
+              robotId: m.id,
+              x: m.pos?.x ?? 0,
+              y: m.pos?.y ?? 0,
+            })),
+            completed: sr.completed,
+          }))
       }
 
       error.value = null
@@ -137,7 +139,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       loadRoom()
     } else if (event.type === 'game_started') {
       onGameStarted?.()
-      solverSolution.value = null // Clear solver solution when new game starts
+      solverSolutions.value = [] // Clear solver solutions when new game starts
       loadRoom(true)
     } else if (event.type === 'player_solved') {
       loadRoom()
@@ -155,10 +157,17 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     } else if (event.type === 'solver_complete') {
       const payload = event.payload as SolverCompletePayload
       if (payload.completed && payload.moves.length > 0) {
-        solverSolution.value = {
+        const newSolution: SolverSolution = {
           solverName: payload.solverName,
           moves: payload.moves,
           completed: payload.completed,
+        }
+        // Upsert by solver name
+        const existingIndex = solverSolutions.value.findIndex(s => s.solverName === payload.solverName)
+        if (existingIndex >= 0) {
+          solverSolutions.value[existingIndex] = newSolution
+        } else {
+          solverSolutions.value = [...solverSolutions.value, newSolution]
         }
       }
     }
@@ -217,7 +226,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     normalizedRoomId,
     hasGame,
     hasJoined,
-    solverSolution,
+    solverSolutions,
     loadRoom,
     joinRoom,
     startGame,
