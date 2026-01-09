@@ -9,6 +9,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// SolverResult represents the result from the automated solver.
+type SolverResult struct {
+	SolverName string
+	Moves      []MovePayload
+	Error      string
+	Completed  bool
+}
+
 // Room represents a multiplayer game room.
 type Room struct {
 	ID              string
@@ -25,6 +33,7 @@ type Room struct {
 	FinishedSolving []string                // Player IDs who are finished solving (triggers game end)
 	ReadyForNext    []string                // Player IDs who are ready for next game
 	IsSinglePlayer  bool                    // If true, only the creator can be in this room
+	SolverResult    *SolverResult           // Solver solution for current game (if completed)
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -68,6 +77,7 @@ func (r *Room) ClearGameState() {
 	r.SolutionHistory = nil
 	r.FinishedSolving = nil
 	r.ReadyForNext = nil
+	r.SolverResult = nil
 }
 
 // ToProto converts a Room to its protobuf representation.
@@ -130,6 +140,22 @@ func (r *Room) ToProto() *pb.Room {
 
 	if r.GameStartedAt != nil {
 		room.GameStartedAt = timestamppb.New(*r.GameStartedAt)
+	}
+
+	if r.SolverResult != nil {
+		moves := make([]*pb.BotPos, len(r.SolverResult.Moves))
+		for i, move := range r.SolverResult.Moves {
+			moves[i] = &pb.BotPos{
+				Id:  int32(move.RobotId),
+				Pos: &pb.Position{X: int32(move.X), Y: int32(move.Y)},
+			}
+		}
+		room.SolverResult = &pb.SolverResult{
+			SolverName: r.SolverResult.SolverName,
+			Moves:      moves,
+			Error:      r.SolverResult.Error,
+			Completed:  r.SolverResult.Completed,
+		}
 	}
 
 	return room

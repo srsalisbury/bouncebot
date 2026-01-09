@@ -119,12 +119,19 @@ onUnmounted(() => {
           <li><kbd>n</kbd> / <kbd>+</kbd> — Start a new solution attempt</li>
           <li><kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> — Switch between solutions</li>
           <li><kbd>Shift</kbd>+<kbd>D</kbd> — Delete current solution</li>
+          <li><kbd>p</kbd> — Replay current solution</li>
+        </ul>
+
+        <h3>After Game Ends (Multiplayer)</h3>
+        <ul>
+          <li><kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> — Switch between player solutions</li>
+          <li><kbd>p</kbd> — Replay current solution</li>
+          <li><kbd>l</kbd> — Toggle leaderboard</li>
         </ul>
 
         <h3>Other</h3>
         <ul>
           <li><kbd>?</kbd> — Show help overlay (during game)</li>
-          <li><kbd>l</kbd> — Toggle leaderboard (multiplayer, after game ends)</li>
           <li><kbd>x</kbd> — Leave game and return to home</li>
         </ul>
       </section>

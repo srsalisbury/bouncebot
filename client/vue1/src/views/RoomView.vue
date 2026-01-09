@@ -106,6 +106,17 @@ const isPendingPlayer = computed(() => {
   return room.value.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
 })
 
+// Game number for display - shows current game, not next game
+// gamesPlayed is incremented when game ends, so we use that directly when ended
+const displayedGameNumber = computed(() => {
+  if (isSinglePlayer.value) {
+    return roomStore.puzzlesAttempted
+  }
+  // When game ends, gamesPlayed is already incremented to include this game
+  // When game is active, gamesPlayed is the count before this game
+  return gameEnded.value ? room.value?.gamesPlayed ?? 1 : (room.value?.gamesPlayed ?? 0) + 1
+})
+
 // Special player ID for solver solutions
 const SOLVER_PLAYER_ID = '__solver__'
 
@@ -388,7 +399,7 @@ onUnmounted(() => {
         :is-solver-solution="isSolverSolution"
         :game-started-at="room.gameStartedAt"
         :room-id="room.id"
-        :game-number="(isSinglePlayer ? roomStore.puzzlesAttempted : room.gamesPlayed) + 1"
+        :game-number="displayedGameNumber"
         :input-blocked="showLeaderboard"
         :single-player="isSinglePlayer"
       >

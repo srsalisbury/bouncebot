@@ -21,6 +21,8 @@ export interface GameInputCallbacks {
   onSelectRobot: (index: number) => void
   onSwitchSolution: (delta: number) => void
   onSwitchPlayerSolution: (delta: number) => void
+  onReplaySolution: () => void
+  onReplayPlayerSolution: () => void
   onToggleHelp: () => void
   onCloseHelp: () => void
 }
@@ -64,7 +66,7 @@ export function useGameInput(callbacks: GameInputCallbacks, options: GameInputOp
       return
     }
 
-    // Game ended mode - only allow navigating player solutions
+    // Game ended mode - only allow navigating player solutions and replay
     if (gameEnded.value) {
       if (shiftKey) {
         if (key === 'ArrowLeft') {
@@ -77,6 +79,11 @@ export function useGameInput(callbacks: GameInputCallbacks, options: GameInputOp
           callbacks.onSwitchPlayerSolution(1)
           return
         }
+      }
+      // Replay current solution with 'p'
+      if (key === 'p') {
+        callbacks.onReplayPlayerSolution()
+        return
       }
       return // Ignore other keys in game-ended mode
     }
@@ -110,6 +117,12 @@ export function useGameInput(callbacks: GameInputCallbacks, options: GameInputOp
     // New solution
     if ((key === 'n' || key === '+') && canStartNewSolution.value) {
       callbacks.onNewSolution()
+      return
+    }
+
+    // Replay current solution
+    if (key === 'p') {
+      callbacks.onReplaySolution()
       return
     }
 

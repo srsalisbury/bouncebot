@@ -84,6 +84,7 @@ message Room {
   repeated string ready_for_next = 10;  // player IDs who are ready for next game
   bool is_single_player = 11;  // If true, only the creator can be in this room
   repeated Player pending_players = 12;  // Players waiting for next game to start
+  SolverResult solver_result = 13;  // Solver solution for current game (if completed)
 }
 
 message CreateRoomRequest {

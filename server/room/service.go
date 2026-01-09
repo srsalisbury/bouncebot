@@ -340,6 +340,17 @@ func (s *RoomService) RemovePlayer(roomID, playerID string) {
 	}
 }
 
+// SetSolverResult stores the solver result in a room.
+func (s *RoomService) SetSolverResult(roomID string, result *SolverResult) {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return
+	}
+	room.SolverResult = result
+	unlock()
+}
+
 // ---- Persistence Methods ----
 
 // Load loads rooms from the data file.

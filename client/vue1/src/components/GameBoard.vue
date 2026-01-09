@@ -136,8 +136,14 @@ useGameInput(
     onSelectRobot: (index) => store.selectRobot(index),
     onSwitchSolution: (delta) => store.switchSolution(store.activeSolutionIndex + delta),
     onSwitchPlayerSolution: (delta) => {
-      if (props.playerSolutions) {
-        switchToPlayerSolution(activePlayerSolutionIndex.value + delta, props.playerSolutions)
+      if (allSolutions.value.length) {
+        switchToPlayerSolution(activePlayerSolutionIndex.value + delta, allSolutions.value)
+      }
+    },
+    onReplaySolution: () => store.replaySolution(),
+    onReplayPlayerSolution: () => {
+      if (allSolutions.value.length) {
+        replayCurrentSolution(allSolutions.value)
       }
     },
     onToggleHelp: () => { showHowToPlay.value = !showHowToPlay.value },

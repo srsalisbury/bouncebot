@@ -61,6 +61,19 @@ export function useRoomConnection(options: RoomConnectionOptions) {
         }
       }
 
+      // Restore solver solution from room state (for page reloads)
+      if (rm.solverResult && rm.solverResult.completed && rm.solverResult.moves.length > 0) {
+        solverSolution.value = {
+          solverName: rm.solverResult.solverName,
+          moves: rm.solverResult.moves.map(m => ({
+            robotId: m.id,
+            x: m.pos?.x ?? 0,
+            y: m.pos?.y ?? 0,
+          })),
+          completed: rm.solverResult.completed,
+        }
+      }
+
       error.value = null
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load room'

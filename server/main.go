@@ -104,6 +104,14 @@ func main() {
 			errorMsg = job.Result.Error.Error()
 		}
 
+		// Store solver result in room for persistence across page reloads
+		rooms.SetSolverResult(job.RoomID, &room.SolverResult{
+			SolverName: job.Result.SolverName,
+			Moves:      moves,
+			Error:      errorMsg,
+			Completed:  job.Result.Completed,
+		})
+
 		wsHub.BroadcastSolverComplete(job.RoomID, ws.SolverResultPayload{
 			SolverName: job.Result.SolverName,
 			Moves:      moves,
