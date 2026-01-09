@@ -438,6 +438,11 @@ onUnmounted(() => {
             <!-- Multiplayer mode: full header -->
             <template v-else-if="!gameEnded">
               <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
+              <div v-if="solverSolution" class="solver-status">
+                <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
+                <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
+                <span class="solver-moves">{{ solverSolution.moves.length }}</span>
+              </div>
               <button
                 v-if="!isPlayerFinished"
                 class="btn done-btn"
@@ -691,6 +696,47 @@ onUnmounted(() => {
   font-size: 0.85rem;
   color: #43a047;
   font-weight: 500;
+}
+
+.solver-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  background: #242424;
+  border: 1px solid #333;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.solver-status .solver-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.solver-status .solver-icon-light {
+  display: block;
+}
+
+.solver-status .solver-icon-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .solver-status .solver-icon-light {
+    display: none;
+  }
+
+  .solver-status .solver-icon-dark {
+    display: block;
+  }
+}
+
+.solver-moves {
+  font-weight: 600;
+  color: #fff;
 }
 
 .leaderboard-btn {

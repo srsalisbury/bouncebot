@@ -277,6 +277,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
   gap: 0.5rem;
   padding: 0.4rem 0.6rem;
   background: #242424;
+  border: 1px solid #333;
   border-radius: 6px;
   color: #ddd;
   font-size: 0.9rem;
