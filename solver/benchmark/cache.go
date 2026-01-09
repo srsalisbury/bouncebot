@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/srsalisbury/bouncebot/model"
 )
 
 // CachedPuzzle represents a puzzle stored in the cache.
 type CachedPuzzle struct {
-	Seed         int64  `json:"seed"`
-	OptimalMoves int    `json:"optimal_moves"`
-	GameString   string `json:"game"`
+	Seed         int64    `json:"seed"`
+	OptimalMoves int      `json:"optimal_moves"`
+	GameLines    []string `json:"game"`
 }
 
 // CacheFile represents a cache file containing puzzles of a specific difficulty.
@@ -54,7 +55,8 @@ func LoadCachedPuzzles(difficulty int) []Puzzle {
 
 	puzzles := make([]Puzzle, 0, len(cache.Puzzles))
 	for _, cp := range cache.Puzzles {
-		game, err := model.ParseGameString(cp.GameString)
+		gameString := strings.Join(cp.GameLines, "\n")
+		game, err := model.ParseGameString(gameString)
 		if err != nil {
 			continue
 		}
@@ -79,7 +81,7 @@ func SaveCachedPuzzles(difficulty int, puzzles []Puzzle) error {
 		cache.Puzzles[i] = CachedPuzzle{
 			Seed:         p.Seed,
 			OptimalMoves: p.OptimalMoves,
-			GameString:   p.Game.String(),
+			GameLines:    strings.Split(p.Game.String(), "\n"),
 		}
 	}
 
