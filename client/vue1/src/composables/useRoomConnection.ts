@@ -143,8 +143,6 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       loadRoom(true)
     } else if (event.type === 'player_solved') {
       loadRoom()
-    } else if (event.type === 'solution_retracted') {
-      loadRoom()
     } else if (event.type === 'player_finished_solving') {
       loadRoom()
     } else if (event.type === 'player_ready_for_next') {

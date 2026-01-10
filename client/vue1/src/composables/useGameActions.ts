@@ -1,10 +1,47 @@
-import { ref, type Ref } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 import { bounceBotClient } from '../services/connectClient'
 import { useGameStore } from '../stores/gameStore'
 import { useRoomStore } from '../stores/roomStore'
 import { create } from '@bufbuild/protobuf'
 import { BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 import { getServerRejectionReason, type ServerRejectionReason } from '../services/errorUtils'
+
+const STORAGE_KEY_PREFIX = 'bouncebot_best_solution_'
+
+type BestSolutionInfo = {
+  index: number
+  moveCount: number
+}
+
+function getBestSolutionStorageKey(roomId: string): string {
+  return `${STORAGE_KEY_PREFIX}${roomId}`
+}
+
+function loadBestSolutionInfo(roomId: string): BestSolutionInfo | null {
+  try {
+    const stored = localStorage.getItem(getBestSolutionStorageKey(roomId))
+    if (!stored) return null
+    return JSON.parse(stored) as BestSolutionInfo
+  } catch {
+    return null
+  }
+}
+
+function saveBestSolutionInfo(roomId: string, info: BestSolutionInfo): void {
+  try {
+    localStorage.setItem(getBestSolutionStorageKey(roomId), JSON.stringify(info))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function clearBestSolutionStorage(roomId: string): void {
+  try {
+    localStorage.removeItem(getBestSolutionStorageKey(roomId))
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 export interface GameActionsOptions {
   roomId: Ref<string>
@@ -18,7 +55,22 @@ export function useGameActions(options: GameActionsOptions) {
   const gameStore = useGameStore()
   const roomStore = useRoomStore()
 
-  const bestSubmittedMoveCount = ref<number | null>(null)
+  // Track the best submitted solution by its index and move count
+  const bestSubmittedInfo = ref<BestSolutionInfo | null>(null)
+
+  // Load best solution from localStorage on init
+  function loadBestSolutionFromStorage() {
+    if (!roomId.value) return
+    bestSubmittedInfo.value = loadBestSolutionInfo(roomId.value)
+  }
+
+  // Load on init
+  loadBestSolutionFromStorage()
+
+  // Reload when roomId changes
+  watch(roomId, () => {
+    loadBestSolutionFromStorage()
+  })
 
   function handleError(e: unknown, action: string) {
     console.error(`Failed to ${action}:`, e)
@@ -31,11 +83,13 @@ export function useGameActions(options: GameActionsOptions) {
   async function submitSolution() {
     if (!roomStore.currentPlayerId) return
     const moveCount = gameStore.moveCount
+    const currentMoves = gameStore.moves
+    const currentIndex = gameStore.activeSolutionIndex
 
     // Only submit if this is better than our previous best (or first submission)
-    if (bestSubmittedMoveCount.value !== null && moveCount >= bestSubmittedMoveCount.value) return
+    if (bestSubmittedInfo.value !== null && moveCount >= bestSubmittedInfo.value.moveCount) return
 
-    const moves = gameStore.moves.map(move =>
+    const moves = currentMoves.map(move =>
       create(BotPosSchema, {
         id: move.robotId,
         pos: create(PositionSchema, { x: move.toX, y: move.toY }),
@@ -48,24 +102,12 @@ export function useGameActions(options: GameActionsOptions) {
         playerId: roomStore.currentPlayerId,
         moves,
       })
-      bestSubmittedMoveCount.value = moveCount
+      const info: BestSolutionInfo = { index: currentIndex, moveCount }
+      bestSubmittedInfo.value = info
+      saveBestSolutionInfo(roomId.value, info)
       onRoomUpdated?.()
     } catch (e) {
       handleError(e, 'submit solution')
-    }
-  }
-
-  async function retractSolution() {
-    if (!roomStore.currentPlayerId) return
-
-    try {
-      await bounceBotClient.retractSolution({
-        roomId: roomId.value,
-        playerId: roomStore.currentPlayerId,
-      })
-      onRoomUpdated?.()
-    } catch (e) {
-      handleError(e, 'retract solution')
     }
   }
 
@@ -98,25 +140,23 @@ export function useGameActions(options: GameActionsOptions) {
   }
 
   function resetForNewGame() {
-    bestSubmittedMoveCount.value = null
+    bestSubmittedInfo.value = null
+    if (roomId.value) {
+      clearBestSolutionStorage(roomId.value)
+    }
   }
 
-  function restoreBestMoveCount(moveCount: number) {
-    bestSubmittedMoveCount.value = moveCount
-  }
-
-  function clearBestMoveCount() {
-    bestSubmittedMoveCount.value = null
+  // Check if the given solution index is the best submitted solution
+  function isBestSubmittedSolution(solutionIndex: number): boolean {
+    if (bestSubmittedInfo.value === null) return false
+    return solutionIndex === bestSubmittedInfo.value.index
   }
 
   return {
-    bestSubmittedMoveCount,
     submitSolution,
-    retractSolution,
     markFinishedSolving,
     markReadyForNext,
     resetForNewGame,
-    restoreBestMoveCount,
-    clearBestMoveCount,
+    isBestSubmittedSolution,
   }
 }

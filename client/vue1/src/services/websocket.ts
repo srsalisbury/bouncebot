@@ -2,7 +2,7 @@
 
 import { config } from '../config'
 
-export type EventType = 'player_joined' | 'player_left' | 'game_started' | 'player_solved' | 'solution_retracted' | 'player_finished_solving' | 'player_ready_for_next' | 'game_ended' | 'solver_complete'
+export type EventType = 'player_joined' | 'player_left' | 'game_started' | 'player_solved' | 'player_finished_solving' | 'player_ready_for_next' | 'game_ended' | 'solver_complete'
 
 export interface PlayerJoinedPayload {
   playerId: string
@@ -20,10 +20,6 @@ export interface GameStartedPayload {
 export interface PlayerSolvedPayload {
   playerId: string
   moveCount: number
-}
-
-export interface SolutionRetractedPayload {
-  playerId: string
 }
 
 export interface PlayerFinishedSolvingPayload {
@@ -55,7 +51,7 @@ export interface SolverCompletePayload {
 
 export interface WebSocketEvent {
   type: EventType
-  payload: PlayerJoinedPayload | PlayerLeftPayload | GameStartedPayload | PlayerSolvedPayload | SolutionRetractedPayload | PlayerFinishedSolvingPayload | PlayerReadyForNextPayload | GameEndedPayload | SolverCompletePayload
+  payload: PlayerJoinedPayload | PlayerLeftPayload | GameStartedPayload | PlayerSolvedPayload | PlayerFinishedSolvingPayload | PlayerReadyForNextPayload | GameEndedPayload | SolverCompletePayload
 }
 
 type EventHandler = (event: WebSocketEvent) => void

@@ -14,7 +14,6 @@ service BounceBot {
   rpc GetRoom (GetRoomRequest) returns (Room) {}
   rpc StartGame (StartGameRequest) returns (Room) {}
   rpc SubmitSolution (SubmitSolutionRequest) returns (SubmitSolutionResponse) {}
-  rpc RetractSolution (RetractSolutionRequest) returns (RetractSolutionResponse) {}
   rpc MarkFinishedSolving (MarkFinishedSolvingRequest) returns (MarkFinishedSolvingResponse) {}
   rpc MarkReadyForNext (MarkReadyForNextRequest) returns (MarkReadyForNextResponse) {}
   rpc UpdateRoomSettings (UpdateRoomSettingsRequest) returns (UpdateRoomSettingsResponse) {}
@@ -126,15 +125,6 @@ message SubmitSolutionRequest {
 
 message SubmitSolutionResponse {
   PlayerSolution solution = 1;
-}
-
-message RetractSolutionRequest {
-  string room_id = 1;
-  string player_id = 2;
-}
-
-message RetractSolutionResponse {
-  bool success = 1;
 }
 
 message MarkFinishedSolvingRequest {

@@ -97,14 +97,6 @@ type PlayerSolvedEvent struct {
 
 func (PlayerSolvedEvent) broadcastEventMarker() {}
 
-// SolutionRetractedEvent is broadcast when a player retracts their solution.
-type SolutionRetractedEvent struct {
-	RoomID   string
-	PlayerID string
-}
-
-func (SolutionRetractedEvent) broadcastEventMarker() {}
-
 // GameEndedEvent is broadcast when the game ends.
 type GameEndedEvent struct {
 	RoomID     string

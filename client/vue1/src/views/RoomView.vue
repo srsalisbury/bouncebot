@@ -25,8 +25,7 @@ const roomStore = useRoomStore()
 const isStarting = ref(false)
 const isJoining = ref(false)
 const joinName = ref(roomStore.currentPlayerName ?? '')
-const showRetractConfirm = ref(false)
-const pendingRetractAction = ref<(() => void) | null>(null)
+const showProtectedSolutionDialog = ref(false)
 const gameEnded = ref(false)
 const showLeaderboard = ref(false)
 const showLeaveConfirm = ref(false)
@@ -61,13 +60,6 @@ const {
     // Restore gameEnded state from server
     if (rm.currentGame && rm.finishedSolving.length === rm.players.length && rm.players.length > 0) {
       gameEnded.value = true
-    }
-    // Restore bestSubmittedMoveCount from player's solution
-    if (roomStore.currentPlayerId && gameActions.bestSubmittedMoveCount.value === null) {
-      const mySolution = rm.solutions.find(s => s.playerId === roomStore.currentPlayerId)
-      if (mySolution) {
-        gameActions.restoreBestMoveCount(mySolution.moves.length)
-      }
     }
   },
 })
@@ -250,29 +242,21 @@ function goHome() {
   router.push('/')
 }
 
-// Called by GameBoard before undoing/deleting a solved solution
-function onBeforeRetract(action: () => void) {
-  if (gameActions.bestSubmittedMoveCount.value !== null) {
-    pendingRetractAction.value = action
-    showRetractConfirm.value = true
+// Called by GameBoard before modifying a solved solution
+// If it's the best submitted solution, show a blocking dialog
+function onBeforeModifyBest(solutionIndex: number, action: () => void) {
+  // Check if this solution is the best submitted one
+  if (gameActions.isBestSubmittedSolution(solutionIndex)) {
+    // Block the action and show info dialog
+    showProtectedSolutionDialog.value = true
   } else {
+    // Allow the action for non-best solutions
     action()
   }
 }
 
-async function confirmRetract() {
-  showRetractConfirm.value = false
-  await gameActions.retractSolution()
-  if (pendingRetractAction.value) {
-    pendingRetractAction.value()
-    pendingRetractAction.value = null
-  }
-  gameActions.clearBestMoveCount()
-}
-
-function cancelRetract() {
-  showRetractConfirm.value = false
-  pendingRetractAction.value = null
+function dismissProtectedDialog() {
+  showProtectedSolutionDialog.value = false
 }
 
 // Submit solution when puzzle is solved (or improved)
@@ -286,24 +270,20 @@ watch(
 )
 
 // Handle dialog keyboard events at window level
-function globalKeydownHandler(event: KeyboardEvent) {
-  if (!showRetractConfirm.value) return
-  if (event.key === 'Enter') {
+function protectedDialogKeyHandler(event: KeyboardEvent) {
+  if (!showProtectedSolutionDialog.value) return
+  if (event.key === 'Escape' || event.key === 'Enter') {
     event.preventDefault()
     event.stopPropagation()
-    confirmRetract()
-  } else if (event.key === 'Escape') {
-    event.preventDefault()
-    event.stopPropagation()
-    cancelRetract()
+    dismissProtectedDialog()
   }
 }
 
-watch(showRetractConfirm, (show) => {
+watch(showProtectedSolutionDialog, (show) => {
   if (show) {
-    window.addEventListener('keydown', globalKeydownHandler, true)
+    window.addEventListener('keydown', protectedDialogKeyHandler, true)
   } else {
-    window.removeEventListener('keydown', globalKeydownHandler, true)
+    window.removeEventListener('keydown', protectedDialogKeyHandler, true)
   }
 })
 
@@ -329,7 +309,7 @@ function cancelLeave() {
 
 function globalKeyHandler(event: KeyboardEvent) {
   // Don't handle if any dialog is open
-  if (showRetractConfirm.value || showLeaveConfirm.value || showSettings.value) return
+  if (showProtectedSolutionDialog.value || showLeaveConfirm.value || showSettings.value) return
 
   if (event.key === 'l' && (hasGame.value || gameEnded.value)) {
     event.preventDefault()
@@ -437,7 +417,7 @@ onUnmounted(() => {
     <!-- Game in progress (but not for pending players) -->
     <div v-else-if="hasGame && room && !isPendingPlayer" class="game-wrapper">
       <GameBoard
-        :on-before-retract="onBeforeRetract"
+        :on-before-modify-best="onBeforeModifyBest"
         :game-ended="gameEnded"
         :player-solutions="isSinglePlayer ? [] : sortedSolutions"
         :solver-solutions="solverPlayerSolutions"
@@ -604,17 +584,16 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Retract confirmation dialog -->
-    <div v-if="showRetractConfirm" class="dialog-overlay" @click.self="cancelRetract">
+    <!-- Best solution protected dialog -->
+    <div v-if="showProtectedSolutionDialog" class="dialog-overlay" @click.self="dismissProtectedDialog">
       <div class="dialog">
-        <h3>Retract Solution?</h3>
+        <h3>Solution Protected</h3>
         <p>
-          You have a submitted solution. This action will retract it and you'll
-          lose credit for finding this solution.
+          This is your best submitted solution. You can't undo or delete it,
+          but you can create another solution to try a different strategy.
         </p>
         <div class="dialog-actions">
-          <button class="btn" @click="cancelRetract">Cancel</button>
-          <button class="btn danger" @click="confirmRetract">Retract</button>
+          <button class="btn primary" @click="dismissProtectedDialog">OK</button>
         </div>
       </div>
     </div>

@@ -14,7 +14,7 @@ server/
 │   ├── repository.go   # RoomRepository - CRUD with per-room locking
 │   ├── player_manager.go    # PlayerManager - connection state
 │   ├── game_lifecycle_manager.go  # GameLifecycle - game state transitions
-│   ├── solution_manager.go  # SolutionManager - solution submission/retraction
+│   ├── solution_manager.go  # SolutionManager - solution submission
 │   ├── timer_manager.go     # TimerManager - disconnect grace timers
 │   ├── persistence_manager.go  # PersistenceManager - save/load/cleanup
 │   ├── signals.go      # Signal types for component communication
@@ -101,7 +101,7 @@ Multiplayer room state and operations, organized into components:
 | **RoomRepository** | `repository.go` | CRUD operations with per-room locking |
 | **PlayerManager** | `player_manager.go` | Add/disconnect/reconnect/remove players |
 | **GameLifecycle** | `game_lifecycle_manager.go` | Start/end games, mark finished/ready |
-| **SolutionManager** | `solution_manager.go` | Submit/retract solutions, determine winner |
+| **SolutionManager** | `solution_manager.go` | Submit solutions, determine winner |
 | **TimerManager** | `timer_manager.go` | Disconnect grace period timers |
 | **PersistenceManager** | `persistence_manager.go` | Save/load rooms, cleanup stale rooms |
 
@@ -113,7 +113,6 @@ Real-time event broadcasting to connected clients.
 - `player_left` - Player disconnected
 - `game_started` - New game began
 - `player_solved` - Player submitted solution
-- `solution_retracted` - Player retracted solution
 - `player_finished_solving` - Player marked done
 - `game_ended` - All players finished, winner determined
 
@@ -128,7 +127,6 @@ Defined in `proto/bouncebot.proto`, handled in `server/main.go`:
 | `GetRoom` | Get current room state |
 | `StartGame` | Start new game (random or fixed board) |
 | `SubmitSolution` | Submit solution moves (server validates) |
-| `RetractSolution` | Retract submitted solution |
 | `MarkFinishedSolving` | Player is done looking for solutions |
 | `MarkReadyForNext` | Player ready for next game |
 
