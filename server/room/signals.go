@@ -114,3 +114,10 @@ type GameEndedEvent struct {
 }
 
 func (GameEndedEvent) broadcastEventMarker() {}
+
+// RoomSettingsChangedEvent is broadcast when room settings are updated.
+type RoomSettingsChangedEvent struct {
+	RoomID string
+}
+
+func (RoomSettingsChangedEvent) broadcastEventMarker() {}

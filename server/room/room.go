@@ -9,6 +9,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// RoomSettings contains configurable settings for a room.
+type RoomSettings struct {
+	ShowSolverMoveCount bool // Show solver move count in header during game
+	ShowSolverSolutions bool // Show solver solutions in end game screen
+}
+
 // SolverResult represents the result from the automated solver.
 type SolverResult struct {
 	SolverName string
@@ -21,19 +27,20 @@ type SolverResult struct {
 type Room struct {
 	ID              string
 	Players         []Player
-	PendingPlayers  []Player                // Players waiting for next game to start
+	PendingPlayers  []Player                  // Players waiting for next game to start
 	CreatedAt       time.Time
-	LastActivityAt  time.Time               // Last user action timestamp (for cleanup)
+	LastActivityAt  time.Time                 // Last user action timestamp (for cleanup)
 	CurrentGame     *model.Game
 	GameStartedAt   *time.Time
-	Solutions       []PlayerSolution        // Current best solution per player
-	SolutionHistory []PlayerSolutionHistory // All solutions per player (for retraction)
-	Wins            map[string]int          // Wins per player ID
-	GamesPlayed     int                     // Total games completed in room
-	FinishedSolving []string                // Player IDs who are finished solving (triggers game end)
-	ReadyForNext    []string                // Player IDs who are ready for next game
-	IsSinglePlayer  bool                       // If true, only the creator can be in this room
+	Solutions       []PlayerSolution          // Current best solution per player
+	SolutionHistory []PlayerSolutionHistory   // All solutions per player (for retraction)
+	Wins            map[string]int            // Wins per player ID
+	GamesPlayed     int                       // Total games completed in room
+	FinishedSolving []string                  // Player IDs who are finished solving (triggers game end)
+	ReadyForNext    []string                  // Player IDs who are ready for next game
+	IsSinglePlayer  bool                      // If true, only the creator can be in this room
 	SolverResults   map[string]*SolverResult  // Solver solutions keyed by solver name
+	Settings        RoomSettings              // Room settings configurable by host
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -132,6 +139,10 @@ func (r *Room) ToProto() *pb.Room {
 		ReadyForNext:    r.ReadyForNext,
 		IsSinglePlayer:  r.IsSinglePlayer,
 		PendingPlayers:  pendingPlayers,
+		Settings: &pb.RoomSettings{
+			ShowSolverMoveCount: r.Settings.ShowSolverMoveCount,
+			ShowSolverSolutions: r.Settings.ShowSolverSolutions,
+		},
 	}
 
 	if r.CurrentGame != nil {
@@ -181,4 +192,5 @@ type EventBroadcaster interface {
 	BroadcastPlayerSolved(roomID, playerID string, moveCount int)
 	BroadcastSolutionRetracted(roomID, playerID string)
 	BroadcastGameEnded(roomID, winnerID, winnerName string, moves []MovePayload)
+	BroadcastRoomSettingsChanged(roomID string)
 }

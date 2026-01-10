@@ -99,3 +99,17 @@ func (s *bounceBotServer) MarkReadyForNext(_ context.Context, req *connect.Reque
 		Success: true,
 	}), nil
 }
+
+func (s *bounceBotServer) UpdateRoomSettings(_ context.Context, req *connect.Request[pb.UpdateRoomSettingsRequest]) (*connect.Response[pb.UpdateRoomSettingsResponse], error) {
+	settings := room.RoomSettings{
+		ShowSolverMoveCount: req.Msg.Settings.ShowSolverMoveCount,
+		ShowSolverSolutions: req.Msg.Settings.ShowSolverSolutions,
+	}
+	err := s.rooms.UpdateRoomSettings(req.Msg.RoomId, req.Msg.PlayerId, settings)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, err)
+	}
+	return connect.NewResponse(&pb.UpdateRoomSettingsResponse{
+		Success: true,
+	}), nil
+}

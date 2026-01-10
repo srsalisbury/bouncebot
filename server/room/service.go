@@ -125,6 +125,8 @@ func (s *RoomService) processBroadcast(event BroadcastEvent) {
 		s.broadcaster.BroadcastSolutionRetracted(e.RoomID, e.PlayerID)
 	case GameEndedEvent:
 		s.broadcaster.BroadcastGameEnded(e.RoomID, e.WinnerID, e.WinnerName, e.Moves)
+	case RoomSettingsChangedEvent:
+		s.broadcaster.BroadcastRoomSettingsChanged(e.RoomID)
 	}
 }
 
@@ -338,6 +340,31 @@ func (s *RoomService) RemovePlayer(roomID, playerID string) {
 		s.repo.Delete(roomID)
 		log.Printf("Room %s garbage collected (no players remaining)", roomID)
 	}
+}
+
+// UpdateRoomSettings updates the room settings. Only the host (first player) can change settings.
+func (s *RoomService) UpdateRoomSettings(roomID, playerID string, settings RoomSettings) error {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return fmt.Errorf("room not found: %s", roomID)
+	}
+
+	// Validate player is host (first player)
+	if len(room.Players) == 0 || room.Players[0].ID != playerID {
+		unlock()
+		return fmt.Errorf("only host can change settings")
+	}
+
+	room.Settings = settings
+	unlock()
+
+	// Broadcast the change to all clients
+	if s.broadcaster != nil {
+		s.broadcaster.BroadcastRoomSettingsChanged(roomID)
+	}
+
+	return nil
 }
 
 // SetSolverResult stores a solver result in a room (upserts by solver name).

@@ -5,9 +5,11 @@ import { useGameStore } from '../stores/gameStore'
 import { useRoomStore } from '../stores/roomStore'
 import { useRoomConnection } from '../composables/useRoomConnection'
 import { useGameActions } from '../composables/useGameActions'
+import { bounceBotClient } from '../services/connectClient'
 import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
 import LeaderboardModal from '../components/LeaderboardModal.vue'
+import SettingsModal from '../components/SettingsModal.vue'
 import { getPlayerColor } from '../constants'
 import { create } from '@bufbuild/protobuf'
 import { PlayerSolutionSchema, BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
@@ -29,6 +31,7 @@ const gameEnded = ref(false)
 const showLeaderboard = ref(false)
 const showLeaveConfirm = ref(false)
 const showStatsDropdown = ref(false)
+const showSettings = ref(false)
 
 // Room connection composable
 const {
@@ -110,7 +113,8 @@ const isPendingPlayer = computed(() => {
 // gamesPlayed is incremented when game ends, so we use that directly when ended
 const displayedGameNumber = computed(() => {
   if (isSinglePlayer.value) {
-    return roomStore.puzzlesAttempted
+    // puzzlesAttempted tracks completed puzzles, so current game = attempted + 1
+    return roomStore.puzzlesAttempted + 1
   }
   // When game ends, gamesPlayed is already incremented to include this game
   // When game is active, gamesPlayed is the count before this game
@@ -137,6 +141,8 @@ const sortedSolutions = computed(() => {
 // Solver solutions as PlayerSolution-like objects (for display)
 const solverPlayerSolutions = computed(() => {
   if (solverSolutions.value.length === 0 || isSinglePlayer.value) return []
+  // Respect showSolverSolutions setting
+  if (room.value?.settings?.showSolverSolutions === false) return []
 
   return solverSolutions.value.map(sol => {
     const solverMoves = sol.moves.map(m => {
@@ -154,6 +160,8 @@ const solverPlayerSolutions = computed(() => {
 // Minimum move count across all solver solutions
 const minSolverMoves = computed(() => {
   if (solverSolutions.value.length === 0) return null
+  // Respect showSolverMoveCount setting
+  if (room.value?.settings?.showSolverMoveCount === false) return null
   return Math.min(...solverSolutions.value.map(s => s.moves.length))
 })
 
@@ -187,10 +195,6 @@ async function startGame() {
   isStarting.value = true
   gameActions.resetForNewGame()
   gameEnded.value = false
-  // Track puzzle attempt in single-player (before game starts so number is correct)
-  if (isSinglePlayer.value) {
-    roomStore.recordPuzzleAttempted()
-  }
   await doStartGame()
   isStarting.value = false
 }
@@ -226,6 +230,19 @@ async function copyShareUrl() {
     textArea.select()
     document.execCommand('copy')
     document.body.removeChild(textArea)
+  }
+}
+
+async function updateSettings(settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean }) {
+  if (!roomStore.currentPlayerId) return
+  try {
+    await bounceBotClient.updateRoomSettings({
+      roomId: normalizedRoomId.value,
+      playerId: roomStore.currentPlayerId,
+      settings,
+    })
+  } catch (e) {
+    console.error('Failed to update settings:', e)
   }
 }
 
@@ -312,7 +329,7 @@ function cancelLeave() {
 
 function globalKeyHandler(event: KeyboardEvent) {
   // Don't handle if any dialog is open
-  if (showRetractConfirm.value || showLeaveConfirm.value) return
+  if (showRetractConfirm.value || showLeaveConfirm.value || showSettings.value) return
 
   if (event.key === 'l' && (hasGame.value || gameEnded.value)) {
     event.preventDefault()
@@ -341,6 +358,23 @@ watch(showLeaveConfirm, (show) => {
     window.addEventListener('keydown', leaveDialogKeyHandler, true)
   } else {
     window.removeEventListener('keydown', leaveDialogKeyHandler, true)
+  }
+})
+
+function settingsKeyHandler(event: KeyboardEvent) {
+  if (!showSettings.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    showSettings.value = false
+  }
+}
+
+watch(showSettings, (show) => {
+  if (show) {
+    window.addEventListener('keydown', settingsKeyHandler, true)
+  } else {
+    window.removeEventListener('keydown', settingsKeyHandler, true)
   }
 })
 
@@ -455,6 +489,9 @@ onUnmounted(() => {
                 <img src="/favicon_dark.svg" alt="" class="solver-icon" />
                 <span class="solver-moves">{{ minSolverMoves }}</span>
               </div>
+              <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="showSettings = true" title="Room Settings">
+                <img src="/gear.svg" alt="Settings" class="gear-icon" />
+              </button>
               <button
                 v-if="!isPlayerFinished"
                 class="btn done-btn"
@@ -479,6 +516,9 @@ onUnmounted(() => {
                 :games-played="room.gamesPlayed"
                 @close="toggleLeaderboard"
               />
+              <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="showSettings = true" title="Room Settings">
+                <img src="/gear.svg" alt="Settings" class="gear-icon" />
+              </button>
               <button
                 class="btn ready-btn"
                 :class="{ pressed: isPlayerReady }"
@@ -533,7 +573,12 @@ onUnmounted(() => {
             <span class="label">Room ID</span>
             <code class="room-id">{{ room.id }}</code>
           </div>
-          <button class="btn-small" @click="copyShareUrl">Copy Link</button>
+          <div class="room-actions">
+            <button class="btn-small" @click="copyShareUrl">Copy Link</button>
+            <button v-if="isRoomCreator" class="btn-small settings-btn" @click="showSettings = true" title="Room Settings">
+              <img src="/gear.svg" alt="Settings" class="gear-icon" />
+            </button>
+          </div>
         </div>
 
         <div class="players-section">
@@ -596,6 +641,14 @@ onUnmounted(() => {
       :scores="room?.scores ?? []"
       :games-played="room?.gamesPlayed ?? 0"
       @close="showLeaderboard = false"
+    />
+
+    <!-- Settings modal (only for room creator) -->
+    <SettingsModal
+      :show="showSettings"
+      :settings="room?.settings"
+      @close="showSettings = false"
+      @update="updateSettings"
     />
   </div>
 </template>
@@ -976,6 +1029,53 @@ onUnmounted(() => {
 
 .btn-small:hover {
   background: #444;
+}
+
+.room-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+}
+
+.gear-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+.settings-btn:hover .gear-icon {
+  opacity: 1;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.settings-btn-header .gear-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+}
+
+.settings-btn-header:hover .gear-icon {
+  opacity: 1;
 }
 
 .players-section h3 {
