@@ -24,6 +24,7 @@ func (m *mockBroadcaster) BroadcastSolutionRetracted(roomID, playerID string) {
 func (m *mockBroadcaster) BroadcastGameEnded(roomID, winnerID, winnerName string, moves []MovePayload) {
 	m.gameEndedCalled = true
 }
+func (m *mockBroadcaster) BroadcastRoomSettingsChanged(roomID string) {}
 
 // validSolution returns model.Game1Solution for convenience.
 func validSolution() []model.BotPosition {

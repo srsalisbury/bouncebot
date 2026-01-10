@@ -170,6 +170,8 @@ export function useRoomConnection(options: RoomConnectionOptions) {
           solverSolutions.value = [...solverSolutions.value, newSolution]
         }
       }
+    } else if (event.type === 'settings_changed') {
+      loadRoom()
     }
   }
 

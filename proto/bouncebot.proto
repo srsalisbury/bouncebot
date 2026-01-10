@@ -17,6 +17,7 @@ service BounceBot {
   rpc RetractSolution (RetractSolutionRequest) returns (RetractSolutionResponse) {}
   rpc MarkFinishedSolving (MarkFinishedSolvingRequest) returns (MarkFinishedSolvingResponse) {}
   rpc MarkReadyForNext (MarkReadyForNextRequest) returns (MarkReadyForNextResponse) {}
+  rpc UpdateRoomSettings (UpdateRoomSettingsRequest) returns (UpdateRoomSettingsResponse) {}
 }
 
 // Board grid position.
@@ -70,6 +71,12 @@ message PlayerScore {
   int32 wins = 2;  // number of games won
 }
 
+// Room settings configurable by the host
+message RoomSettings {
+  bool show_solver_move_count = 1;  // Show solver move count in header during game
+  bool show_solver_solutions = 2;   // Show solver solutions in end game screen
+}
+
 // Game room for multiplayer
 message Room {
   string id = 1;
@@ -85,6 +92,7 @@ message Room {
   bool is_single_player = 11;  // If true, only the creator can be in this room
   repeated Player pending_players = 12;  // Players waiting for next game to start
   repeated SolverResult solver_results = 13;  // Solver solutions keyed by solver name
+  RoomSettings settings = 14;  // Room settings configurable by host
 }
 
 message CreateRoomRequest {
@@ -153,4 +161,15 @@ message SolverResult {
   repeated BotPos moves = 2;  // empty if no solution found
   string error = 3;  // empty if successful
   bool completed = 4;  // true if solver finished, false if timed out
+}
+
+message UpdateRoomSettingsRequest {
+  string room_id = 1;
+  string player_id = 2;  // Must be host (first player)
+  RoomSettings settings = 3;
+}
+
+message UpdateRoomSettingsResponse {
+  bool success = 1;
+  string error = 2;
 }

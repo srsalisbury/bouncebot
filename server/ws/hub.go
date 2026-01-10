@@ -75,6 +75,11 @@ type SolverResultPayload struct {
 	Completed  bool               `json:"completed"`
 }
 
+// SettingsChangedPayload is the payload for settings_changed events.
+type SettingsChangedPayload struct {
+	// Settings are fetched via room refresh
+}
+
 // Client represents a WebSocket client connection.
 type Client struct {
 	hub      *Hub
@@ -229,6 +234,14 @@ func (h *Hub) BroadcastSolverComplete(roomID string, payload SolverResultPayload
 	h.Broadcast(roomID, Event{
 		Type:    "solver_complete",
 		Payload: payload,
+	})
+}
+
+// BroadcastRoomSettingsChanged broadcasts a settings_changed event to all clients in a room.
+func (h *Hub) BroadcastRoomSettingsChanged(roomID string) {
+	h.Broadcast(roomID, Event{
+		Type:    "settings_changed",
+		Payload: SettingsChangedPayload{},
 	})
 }
 
