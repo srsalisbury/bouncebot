@@ -70,11 +70,10 @@ func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result
 		}
 	}
 
-	// AStar queue and visited set
+	// AStar queue and closed set (states fully expanded)
 	pqueue := NewPriorityQueue()
 	pqueue.Enqueue(initialNode)
-	visited := make(map[string]bool)
-	visited[encodeState(initialNode.bots)] = true
+	closed := make(map[string]bool)
 
 	checkCount := 0
 	const checkInterval = 1000 // Check context every N iterations
@@ -98,6 +97,13 @@ func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result
 		// Dequeue
 		current := pqueue.Dequeue()
 
+		// Mark as closed (fully expanded) - only now, not when first seen
+		currentKey := encodeState(current.bots)
+		if closed[currentKey] {
+			continue // Already expanded via a better path
+		}
+		closed[currentKey] = true
+
 		// Try all moves: each bot in each direction
 		for botId := range current.bots {
 			for _, dir := range directions {
@@ -116,12 +122,11 @@ func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result
 				newBots := copyBots(current.bots)
 				newBots[botId] = dest
 
-				// Check if visited
+				// Skip if already fully expanded
 				stateKey := encodeState(newBots)
-				if visited[stateKey] {
+				if closed[stateKey] {
 					continue
 				}
-				visited[stateKey] = true
 
 				// Create new move
 				move := model.BotPosition{Id: botId, Pos: dest}
