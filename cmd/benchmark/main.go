@@ -9,7 +9,7 @@ import (
 	"github.com/srsalisbury/bouncebot/solver/benchmark"
 
 	// Register solvers via init()
-	_ "github.com/srsalisbury/bouncebot/solver/astar_steven"
+	_ "github.com/srsalisbury/bouncebot/solver/astar"
 	_ "github.com/srsalisbury/bouncebot/solver/bfs"
 )
 
