@@ -456,6 +456,7 @@ function handleSwitchPlayerSolution(index: number) {
                     <span class="player-name">{{ props.getPlayerName?.(solverSolution.playerId) ?? 'Solver' }}</span>
                   </div>
                   <span class="solution-moves">{{ solverSolution.moves.length }}</span>
+                  <span class="solution-time">&nbsp;</span>
                 </div>
                 <div class="move-list">
                   <div
@@ -862,6 +863,7 @@ function handleSwitchPlayerSolution(index: number) {
   gap: 0.25rem;
   padding: 0.4rem;
   border-radius: 6px;
+  border: 2px solid transparent;
   background: #dddddd;
   cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s;

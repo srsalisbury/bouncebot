@@ -452,8 +452,7 @@ onUnmounted(() => {
             <template v-else-if="!gameEnded">
               <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
               <div v-if="minSolverMoves !== null" class="solver-status">
-                <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
-                <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
+                <img src="/favicon_dark.svg" alt="" class="solver-icon" />
                 <span class="solver-moves">{{ minSolverMoves }}</span>
               </div>
               <button
@@ -727,24 +726,6 @@ onUnmounted(() => {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-}
-
-.solver-status .solver-icon-light {
-  display: block;
-}
-
-.solver-status .solver-icon-dark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  .solver-status .solver-icon-light {
-    display: none;
-  }
-
-  .solver-status .solver-icon-dark {
-    display: block;
-  }
 }
 
 .solver-moves {
