@@ -20,8 +20,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 
 	// Register solvers via init()
-	_ "github.com/srsalisbury/bouncebot/solver/bfs"
-	_ "github.com/srsalisbury/bouncebot/solver/bfs2"
+	_ "github.com/srsalisbury/bouncebot/solver/astar_steven"
 )
 
 var (

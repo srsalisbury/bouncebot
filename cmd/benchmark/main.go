@@ -2,15 +2,15 @@ package main
 
 import (
 	"flag"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/srsalisbury/bouncebot/solver/benchmark"
 
 	// Register solvers via init()
+	_ "github.com/srsalisbury/bouncebot/solver/astar_steven"
 	_ "github.com/srsalisbury/bouncebot/solver/bfs"
-	_ "github.com/srsalisbury/bouncebot/solver/bfs2"
 )
 
 func main() {
