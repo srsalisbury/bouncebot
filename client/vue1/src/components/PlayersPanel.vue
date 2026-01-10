@@ -258,7 +258,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
     </TransitionGroup>
     <!-- Timer display in compact mode (during game) - on right end -->
     <div v-if="compact && gameStartedAt" class="timer-display">
-      <span class="timer-icon">⏱</span>
+      <img src="/timer.svg" alt="" class="timer-icon" />
       <span class="timer-value">{{ elapsedTime }}</span>
     </div>
   </div>
@@ -281,6 +281,18 @@ function getSolveTime(solution: PlayerSolution): string | null {
   border-radius: 6px;
   color: #ddd;
   font-size: 0.9rem;
+}
+
+.timer-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.timer-value {
+  min-width: 2.8em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .waiting-message {
