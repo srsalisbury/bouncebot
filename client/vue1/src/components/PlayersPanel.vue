@@ -221,7 +221,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
         <span class="player-dot" :style="{ backgroundColor: getPlayerColorFor(leaderPlayer) }" />
         <span class="player-name">{{ leaderPlayer.name }}</span>
         <span class="solution-badge leader-badge">
-          {{ leaderSolution.moves.length }} {{ leaderSolution.moves.length === 1 ? 'move' : 'moves' }}
+          {{ leaderSolution.moves.length }}
         </span>
       </template>
       <template v-else>
@@ -248,9 +248,10 @@ function getSolveTime(solution: PlayerSolution): string | null {
           {{ getPlayerWins(player) }} {{ getPlayerWins(player) === 1 ? 'win' : 'wins' }}
         </span>
         <span v-if="getPlayerSolution(player)" class="solution-badge">
-          {{ getPlayerSolution(player)?.moves.length }} {{ getPlayerSolution(player)?.moves.length === 1 ? 'move' : 'moves' }}
-          <span v-if="getSolveTime(getPlayerSolution(player)!)" class="solve-time">
-            {{ getSolveTime(getPlayerSolution(player)!) }}
+          {{ getPlayerSolution(player)?.moves.length }}<span class="solution-details">
+            {{ getPlayerSolution(player)?.moves.length === 1 ? ' move' : ' moves' }}<span v-if="getSolveTime(getPlayerSolution(player)!)" class="solve-time">
+              {{ getSolveTime(getPlayerSolution(player)!) }}
+            </span>
           </span>
         </span>
         <span v-if="isFinishedSolving(player)" class="done-check" title="Finished solving">✓</span>
@@ -372,6 +373,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
 .solve-time {
   opacity: 0.85;
   margin-left: 0.3rem;
+}
+
+/* Hide details (moves word + time) by default in compact mode */
+.compact .solution-details {
+  display: none;
 }
 
 .done-check {
@@ -531,6 +537,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
   /* Show player list when dropdown is open */
   .compact.dropdown-open .players-list {
     display: flex;
+  }
+
+  /* Show solution details in expanded dropdown */
+  .compact.dropdown-open .solution-details {
+    display: inline;
   }
 
   .compact .player-item {
