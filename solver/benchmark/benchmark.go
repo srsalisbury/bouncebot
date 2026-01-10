@@ -14,6 +14,7 @@ type Config struct {
 	PuzzlesPerDifficulty int           // Number of puzzles per difficulty
 	Timeout              time.Duration // Timeout per puzzle solve
 	NoCache              bool          // If true, skip cache and regenerate puzzles
+	SolverName           string        // If set, only run this solver (default: all)
 }
 
 // DefaultConfig returns a reasonable default configuration.
@@ -43,10 +44,34 @@ func Run(cfg Config) {
 	fmt.Println()
 
 	// Get all registered solvers
-	solvers := solver.DefaultRegistry.All()
-	if len(solvers) == 0 {
+	allSolvers := solver.DefaultRegistry.All()
+	if len(allSolvers) == 0 {
 		fmt.Println("No solvers registered!")
 		return
+	}
+
+	// Filter to specific solver if requested
+	var solvers []solver.Solver
+	if cfg.SolverName != "" {
+		for _, s := range allSolvers {
+			if s.Name() == cfg.SolverName {
+				solvers = append(solvers, s)
+				break
+			}
+		}
+		if len(solvers) == 0 {
+			fmt.Printf("Solver %q not found. Available: ", cfg.SolverName)
+			for i, s := range allSolvers {
+				if i > 0 {
+					fmt.Print(", ")
+				}
+				fmt.Print(s.Name())
+			}
+			fmt.Println()
+			return
+		}
+	} else {
+		solvers = allSolvers
 	}
 
 	fmt.Printf("Registered solvers: ")
@@ -104,8 +129,12 @@ func benchmarkSolver(s solver.Solver, puzzles []Puzzle, timeout time.Duration) R
 
 		if solveResult.Completed && solveResult.Solution != nil {
 			result.SolvedCount++
-			if len(solveResult.Solution.Moves) == puzzle.OptimalMoves {
+			foundMoves := len(solveResult.Solution.Moves)
+			if foundMoves == puzzle.OptimalMoves {
 				result.OptimalCount++
+			} else {
+				fmt.Printf("  [%s] puzzle %d: found %d moves, optimal %d\n",
+					s.Name(), puzzle.Seed, foundMoves, puzzle.OptimalMoves)
 			}
 		}
 	}

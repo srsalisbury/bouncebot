@@ -19,6 +19,7 @@ func main() {
 	puzzlesPerDifficulty := flag.Int("puzzles", 10, "Number of puzzles per difficulty level")
 	timeout := flag.Duration("timeout", 30*time.Second, "Timeout per puzzle")
 	noCache := flag.Bool("no-cache", false, "Skip cache and regenerate puzzles")
+	solverName := flag.String("solver", "", "Run only this solver (default: all)")
 	flag.Parse()
 
 	// Parse difficulties
@@ -29,6 +30,7 @@ func main() {
 		PuzzlesPerDifficulty: *puzzlesPerDifficulty,
 		Timeout:              *timeout,
 		NoCache:              *noCache,
+		SolverName:           *solverName,
 	}
 
 	benchmark.Run(cfg)
