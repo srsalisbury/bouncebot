@@ -18,12 +18,6 @@ func (s *AStarSolver) Name() string {
 	return "A-Star"
 }
 
-// state represents the game state as a hashable key.
-type state struct {
-	// Bot positions encoded as a string for hashing.
-	key string
-}
-
 // stateNode is a node in the A* search tree.
 type stateNode struct {
 	bots      map[model.BotId]model.Position

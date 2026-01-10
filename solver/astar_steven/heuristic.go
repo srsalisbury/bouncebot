@@ -69,7 +69,7 @@ func markPathCells(start, end model.Position, currentDist, size int, dist *[256]
 	for pos != end {
 		pos = model.Position{X: pos.X + stepX, Y: pos.Y + stepY}
 		idx := int(pos.Y)*size + int(pos.X)
-		if dist[idx] == -1 {
+		if dist[idx] == -1 || dist[idx] > currentDist+1 {
 			dist[idx] = currentDist + 1
 			queue = append(queue, idx)
 		}
