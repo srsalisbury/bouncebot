@@ -123,7 +123,7 @@ Add methods to `EventBroadcaster` interface (or create separate interface for so
 
 ## Phase 5: Client Integration
 
-- Listen for WebSocket events or poll `GetSolverResult`
+- Listen for WebSocket events
 - Animated playback of solutions
 
 ---

@@ -159,6 +159,10 @@ const minSolverMoves = computed(() => {
 
 function getPlayerName(playerId: string): string {
   if (playerId.startsWith(SOLVER_PLAYER_ID)) {
+    // If only one solver, show "BBot" instead of the actual solver name
+    if (solverSolutions.value.length === 1) {
+      return 'BBot'
+    }
     // Extract solver name from playerId format: "__solver__:solverName"
     const solverName = playerId.split(':')[1]
     return solverName ?? 'Solver'
