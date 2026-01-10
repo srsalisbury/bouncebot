@@ -10,7 +10,6 @@ Create a configuration modal that lets the host user set room settings that are 
 - Settings synchronized to all players in room via WebSocket
 - Available in waiting room and during game
 - Host's preferences sticky in localStorage (for initial defaults when creating rooms)
-- Other players see settings but cannot change them
 
 ## Architecture
 
