@@ -406,7 +406,7 @@ onUnmounted(() => {
 
       <div class="card">
         <div class="players-section">
-          <h3>Players in room ({{ room.players.length }})</h3>
+          <h3>Players in room</h3>
           <PlayersPanel :players="room.players" show-host />
         </div>
 
@@ -424,13 +424,16 @@ onUnmounted(() => {
 
         <div v-if="error" class="error">{{ error }}</div>
 
-        <button
-          class="btn primary join-btn"
-          :disabled="isJoining"
-          @click="joinRoom"
-        >
-          {{ isJoining ? 'Joining...' : 'Join Room' }}
-        </button>
+        <div class="join-row">
+          <button
+            class="btn primary join-btn"
+            :disabled="isJoining"
+            @click="joinRoom"
+          >
+            {{ isJoining ? 'Joining...' : 'Join Room' }}
+          </button>
+          <span class="room-id-display">Room ID: {{ room.id }}</span>
+        </div>
       </div>
     </div>
 
@@ -942,11 +945,21 @@ onUnmounted(() => {
   border-color: #43a047;
 }
 
-.join-btn {
-  width: 100%;
-  padding: 1rem;
-  font-size: 1.1rem;
+.join-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin-top: 0.5rem;
+}
+
+.join-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.room-id-display {
+  font-size: 0.8rem;
+  color: #888;
 }
 
 .title {
