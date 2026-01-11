@@ -44,9 +44,6 @@ const (
 	// BounceBotSubmitSolutionProcedure is the fully-qualified name of the BounceBot's SubmitSolution
 	// RPC.
 	BounceBotSubmitSolutionProcedure = "/bouncebot.BounceBot/SubmitSolution"
-	// BounceBotRetractSolutionProcedure is the fully-qualified name of the BounceBot's RetractSolution
-	// RPC.
-	BounceBotRetractSolutionProcedure = "/bouncebot.BounceBot/RetractSolution"
 	// BounceBotMarkFinishedSolvingProcedure is the fully-qualified name of the BounceBot's
 	// MarkFinishedSolving RPC.
 	BounceBotMarkFinishedSolvingProcedure = "/bouncebot.BounceBot/MarkFinishedSolving"
@@ -66,7 +63,6 @@ type BounceBotClient interface {
 	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
-	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
 	MarkFinishedSolving(context.Context, *connect.Request[proto.MarkFinishedSolvingRequest]) (*connect.Response[proto.MarkFinishedSolvingResponse], error)
 	MarkReadyForNext(context.Context, *connect.Request[proto.MarkReadyForNextRequest]) (*connect.Response[proto.MarkReadyForNextResponse], error)
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
@@ -113,12 +109,6 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("SubmitSolution")),
 			connect.WithClientOptions(opts...),
 		),
-		retractSolution: connect.NewClient[proto.RetractSolutionRequest, proto.RetractSolutionResponse](
-			httpClient,
-			baseURL+BounceBotRetractSolutionProcedure,
-			connect.WithSchema(bounceBotMethods.ByName("RetractSolution")),
-			connect.WithClientOptions(opts...),
-		),
 		markFinishedSolving: connect.NewClient[proto.MarkFinishedSolvingRequest, proto.MarkFinishedSolvingResponse](
 			httpClient,
 			baseURL+BounceBotMarkFinishedSolvingProcedure,
@@ -147,7 +137,6 @@ type bounceBotClient struct {
 	getRoom             *connect.Client[proto.GetRoomRequest, proto.Room]
 	startGame           *connect.Client[proto.StartGameRequest, proto.Room]
 	submitSolution      *connect.Client[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse]
-	retractSolution     *connect.Client[proto.RetractSolutionRequest, proto.RetractSolutionResponse]
 	markFinishedSolving *connect.Client[proto.MarkFinishedSolvingRequest, proto.MarkFinishedSolvingResponse]
 	markReadyForNext    *connect.Client[proto.MarkReadyForNextRequest, proto.MarkReadyForNextResponse]
 	updateRoomSettings  *connect.Client[proto.UpdateRoomSettingsRequest, proto.UpdateRoomSettingsResponse]
@@ -178,11 +167,6 @@ func (c *bounceBotClient) SubmitSolution(ctx context.Context, req *connect.Reque
 	return c.submitSolution.CallUnary(ctx, req)
 }
 
-// RetractSolution calls bouncebot.BounceBot.RetractSolution.
-func (c *bounceBotClient) RetractSolution(ctx context.Context, req *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error) {
-	return c.retractSolution.CallUnary(ctx, req)
-}
-
 // MarkFinishedSolving calls bouncebot.BounceBot.MarkFinishedSolving.
 func (c *bounceBotClient) MarkFinishedSolving(ctx context.Context, req *connect.Request[proto.MarkFinishedSolvingRequest]) (*connect.Response[proto.MarkFinishedSolvingResponse], error) {
 	return c.markFinishedSolving.CallUnary(ctx, req)
@@ -206,7 +190,6 @@ type BounceBotHandler interface {
 	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
 	SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error)
-	RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error)
 	MarkFinishedSolving(context.Context, *connect.Request[proto.MarkFinishedSolvingRequest]) (*connect.Response[proto.MarkFinishedSolvingResponse], error)
 	MarkReadyForNext(context.Context, *connect.Request[proto.MarkReadyForNextRequest]) (*connect.Response[proto.MarkReadyForNextResponse], error)
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
@@ -249,12 +232,6 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("SubmitSolution")),
 		connect.WithHandlerOptions(opts...),
 	)
-	bounceBotRetractSolutionHandler := connect.NewUnaryHandler(
-		BounceBotRetractSolutionProcedure,
-		svc.RetractSolution,
-		connect.WithSchema(bounceBotMethods.ByName("RetractSolution")),
-		connect.WithHandlerOptions(opts...),
-	)
 	bounceBotMarkFinishedSolvingHandler := connect.NewUnaryHandler(
 		BounceBotMarkFinishedSolvingProcedure,
 		svc.MarkFinishedSolving,
@@ -285,8 +262,6 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 			bounceBotStartGameHandler.ServeHTTP(w, r)
 		case BounceBotSubmitSolutionProcedure:
 			bounceBotSubmitSolutionHandler.ServeHTTP(w, r)
-		case BounceBotRetractSolutionProcedure:
-			bounceBotRetractSolutionHandler.ServeHTTP(w, r)
 		case BounceBotMarkFinishedSolvingProcedure:
 			bounceBotMarkFinishedSolvingHandler.ServeHTTP(w, r)
 		case BounceBotMarkReadyForNextProcedure:
@@ -320,10 +295,6 @@ func (UnimplementedBounceBotHandler) StartGame(context.Context, *connect.Request
 
 func (UnimplementedBounceBotHandler) SubmitSolution(context.Context, *connect.Request[proto.SubmitSolutionRequest]) (*connect.Response[proto.SubmitSolutionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.SubmitSolution is not implemented"))
-}
-
-func (UnimplementedBounceBotHandler) RetractSolution(context.Context, *connect.Request[proto.RetractSolutionRequest]) (*connect.Response[proto.RetractSolutionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.RetractSolution is not implemented"))
 }
 
 func (UnimplementedBounceBotHandler) MarkFinishedSolving(context.Context, *connect.Request[proto.MarkFinishedSolvingRequest]) (*connect.Response[proto.MarkFinishedSolvingResponse], error) {

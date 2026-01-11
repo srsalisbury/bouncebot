@@ -27,3 +27,5 @@
 
 - [x] Add client joining between games functionality
 - [x] Only the room creator can start the game
+- [ ] Sort bot solutions to minimize different bot sequences (partial order sorting, constraints)
+- [ ] Replay of solution should highlight next bot to move when switching bots, with slight extra pause at that point

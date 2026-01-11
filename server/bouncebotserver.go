@@ -70,16 +70,6 @@ func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request
 	}), nil
 }
 
-func (s *bounceBotServer) RetractSolution(_ context.Context, req *connect.Request[pb.RetractSolutionRequest]) (*connect.Response[pb.RetractSolutionResponse], error) {
-	err := s.rooms.RetractSolution(req.Msg.RoomId, req.Msg.PlayerId)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, err)
-	}
-	return connect.NewResponse(&pb.RetractSolutionResponse{
-		Success: true,
-	}), nil
-}
-
 func (s *bounceBotServer) MarkFinishedSolving(_ context.Context, req *connect.Request[pb.MarkFinishedSolvingRequest]) (*connect.Response[pb.MarkFinishedSolvingResponse], error) {
 	err := s.rooms.MarkFinishedSolving(req.Msg.RoomId, req.Msg.PlayerId)
 	if err != nil {

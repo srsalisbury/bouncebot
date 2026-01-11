@@ -121,8 +121,6 @@ func (s *RoomService) processBroadcast(event BroadcastEvent) {
 		s.broadcaster.BroadcastPlayerReadyForNext(e.RoomID, e.PlayerID)
 	case PlayerSolvedEvent:
 		s.broadcaster.BroadcastPlayerSolved(e.RoomID, e.PlayerID, e.MoveCount)
-	case SolutionRetractedEvent:
-		s.broadcaster.BroadcastSolutionRetracted(e.RoomID, e.PlayerID)
 	case GameEndedEvent:
 		s.broadcaster.BroadcastGameEnded(e.RoomID, e.WinnerID, e.WinnerName, e.Moves)
 	case RoomSettingsChangedEvent:
@@ -221,25 +219,6 @@ func (s *RoomService) SubmitSolution(roomID, playerID string, moves []model.BotP
 
 	s.processSignals(signals)
 	return solution, nil
-}
-
-// RetractSolution removes a player's current solution.
-func (s *RoomService) RetractSolution(roomID, playerID string) error {
-	room, unlock := s.repo.GetWithLock(roomID)
-	if room == nil {
-		unlock()
-		return fmt.Errorf("room not found: %s", roomID)
-	}
-
-	signals, err := s.solutionMgr.RetractSolution(room, playerID)
-	unlock()
-
-	if err != nil {
-		return err
-	}
-
-	s.processSignals(signals)
-	return nil
 }
 
 // MarkFinishedSolving marks a player as finished solving.

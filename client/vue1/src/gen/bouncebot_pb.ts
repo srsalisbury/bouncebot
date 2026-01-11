@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file bouncebot.proto.
  */
 export const file_bouncebot: GenFile = /*@__PURE__*/
-  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiIgoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkidAoOUGxheWVyU29sdXRpb24SEQoJcGxheWVyX2lkGAEgASgJEi0KCXNvbHZlZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIi4KC1BsYXllclNjb3JlEhEKCXBsYXllcl9pZBgBIAEoCRIMCgR3aW5zGAIgASgFIk0KDFJvb21TZXR0aW5ncxIeChZzaG93X3NvbHZlcl9tb3ZlX2NvdW50GAEgASgIEh0KFXNob3dfc29sdmVyX3NvbHV0aW9ucxgCIAEoCCKCBAoEUm9vbRIKCgJpZBgBIAEoCRIiCgdwbGF5ZXJzGAIgAygLMhEuYm91bmNlYm90LlBsYXllchIuCgpjcmVhdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIlCgxjdXJyZW50X2dhbWUYBCABKAsyDy5ib3VuY2Vib3QuR2FtZRIzCg9nYW1lX3N0YXJ0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCXNvbHV0aW9ucxgGIAMoCzIZLmJvdW5jZWJvdC5QbGF5ZXJTb2x1dGlvbhImCgZzY29yZXMYByADKAsyFi5ib3VuY2Vib3QuUGxheWVyU2NvcmUSFAoMZ2FtZXNfcGxheWVkGAggASgFEhgKEGZpbmlzaGVkX3NvbHZpbmcYCSADKAkSFgoOcmVhZHlfZm9yX25leHQYCiADKAkSGAoQaXNfc2luZ2xlX3BsYXllchgLIAEoCBIqCg9wZW5kaW5nX3BsYXllcnMYDCADKAsyES5ib3VuY2Vib3QuUGxheWVyEi8KDnNvbHZlcl9yZXN1bHRzGA0gAygLMhcuYm91bmNlYm90LlNvbHZlclJlc3VsdBIpCghzZXR0aW5ncxgOIAEoCzIXLmJvdW5jZWJvdC5Sb29tU2V0dGluZ3MiQgoRQ3JlYXRlUm9vbVJlcXVlc3QSEwoLcGxheWVyX25hbWUYASABKAkSGAoQaXNfc2luZ2xlX3BsYXllchgCIAEoCCI3Cg9Kb2luUm9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRITCgtwbGF5ZXJfbmFtZRgCIAEoCSJEChBKb2luUm9vbVJlc3BvbnNlEh0KBHJvb20YASABKAsyDy5ib3VuY2Vib3QuUm9vbRIRCglwbGF5ZXJfaWQYAiABKAkiIQoOR2V0Um9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCSIjChBTdGFydEdhbWVSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkiXQoVU3VibWl0U29sdXRpb25SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSEQoJcGxheWVyX2lkGAIgASgJEiAKBW1vdmVzGAMgAygLMhEuYm91bmNlYm90LkJvdFBvcyJFChZTdWJtaXRTb2x1dGlvblJlc3BvbnNlEisKCHNvbHV0aW9uGAEgASgLMhkuYm91bmNlYm90LlBsYXllclNvbHV0aW9uIjwKFlJldHJhY3RTb2x1dGlvblJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIRCglwbGF5ZXJfaWQYAiABKAkiKgoXUmV0cmFjdFNvbHV0aW9uUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCJAChpNYXJrRmluaXNoZWRTb2x2aW5nUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhEKCXBsYXllcl9pZBgCIAEoCSIuChtNYXJrRmluaXNoZWRTb2x2aW5nUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCI9ChdNYXJrUmVhZHlGb3JOZXh0UmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhEKCXBsYXllcl9pZBgCIAEoCSIrChhNYXJrUmVhZHlGb3JOZXh0UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCJnCgxTb2x2ZXJSZXN1bHQSEwoLc29sdmVyX25hbWUYASABKAkSIAoFbW92ZXMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEg0KBWVycm9yGAMgASgJEhEKCWNvbXBsZXRlZBgEIAEoCCJqChlVcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSEQoJcGxheWVyX2lkGAIgASgJEikKCHNldHRpbmdzGAMgASgLMhcuYm91bmNlYm90LlJvb21TZXR0aW5ncyI8ChpVcGRhdGVSb29tU2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg0KBWVycm9yGAIgASgJMugFCglCb3VuY2VCb3QSPQoKQ3JlYXRlUm9vbRIcLmJvdW5jZWJvdC5DcmVhdGVSb29tUmVxdWVzdBoPLmJvdW5jZWJvdC5Sb29tIgASRQoISm9pblJvb20SGi5ib3VuY2Vib3QuSm9pblJvb21SZXF1ZXN0GhsuYm91bmNlYm90LkpvaW5Sb29tUmVzcG9uc2UiABI3CgdHZXRSb29tEhkuYm91bmNlYm90LkdldFJvb21SZXF1ZXN0Gg8uYm91bmNlYm90LlJvb20iABI7CglTdGFydEdhbWUSGy5ib3VuY2Vib3QuU3RhcnRHYW1lUmVxdWVzdBoPLmJvdW5jZWJvdC5Sb29tIgASVwoOU3VibWl0U29sdXRpb24SIC5ib3VuY2Vib3QuU3VibWl0U29sdXRpb25SZXF1ZXN0GiEuYm91bmNlYm90LlN1Ym1pdFNvbHV0aW9uUmVzcG9uc2UiABJaCg9SZXRyYWN0U29sdXRpb24SIS5ib3VuY2Vib3QuUmV0cmFjdFNvbHV0aW9uUmVxdWVzdBoiLmJvdW5jZWJvdC5SZXRyYWN0U29sdXRpb25SZXNwb25zZSIAEmYKE01hcmtGaW5pc2hlZFNvbHZpbmcSJS5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1JlcXVlc3QaJi5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1Jlc3BvbnNlIgASXQoQTWFya1JlYWR5Rm9yTmV4dBIiLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVxdWVzdBojLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVzcG9uc2UiABJjChJVcGRhdGVSb29tU2V0dGluZ3MSJC5ib3VuY2Vib3QuVXBkYXRlUm9vbVNldHRpbmdzUmVxdWVzdBolLmJvdW5jZWJvdC5VcGRhdGVSb29tU2V0dGluZ3NSZXNwb25zZSIAQihaJmdpdGh1Yi5jb20vc3JzYWxpc2J1cnkvYm91bmNlYm90L3Byb3RvYgZwcm90bzM", [file_google_protobuf_timestamp]);
+  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiIgoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkidAoOUGxheWVyU29sdXRpb24SEQoJcGxheWVyX2lkGAEgASgJEi0KCXNvbHZlZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIi4KC1BsYXllclNjb3JlEhEKCXBsYXllcl9pZBgBIAEoCRIMCgR3aW5zGAIgASgFIk0KDFJvb21TZXR0aW5ncxIeChZzaG93X3NvbHZlcl9tb3ZlX2NvdW50GAEgASgIEh0KFXNob3dfc29sdmVyX3NvbHV0aW9ucxgCIAEoCCKCBAoEUm9vbRIKCgJpZBgBIAEoCRIiCgdwbGF5ZXJzGAIgAygLMhEuYm91bmNlYm90LlBsYXllchIuCgpjcmVhdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIlCgxjdXJyZW50X2dhbWUYBCABKAsyDy5ib3VuY2Vib3QuR2FtZRIzCg9nYW1lX3N0YXJ0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCXNvbHV0aW9ucxgGIAMoCzIZLmJvdW5jZWJvdC5QbGF5ZXJTb2x1dGlvbhImCgZzY29yZXMYByADKAsyFi5ib3VuY2Vib3QuUGxheWVyU2NvcmUSFAoMZ2FtZXNfcGxheWVkGAggASgFEhgKEGZpbmlzaGVkX3NvbHZpbmcYCSADKAkSFgoOcmVhZHlfZm9yX25leHQYCiADKAkSGAoQaXNfc2luZ2xlX3BsYXllchgLIAEoCBIqCg9wZW5kaW5nX3BsYXllcnMYDCADKAsyES5ib3VuY2Vib3QuUGxheWVyEi8KDnNvbHZlcl9yZXN1bHRzGA0gAygLMhcuYm91bmNlYm90LlNvbHZlclJlc3VsdBIpCghzZXR0aW5ncxgOIAEoCzIXLmJvdW5jZWJvdC5Sb29tU2V0dGluZ3MiQgoRQ3JlYXRlUm9vbVJlcXVlc3QSEwoLcGxheWVyX25hbWUYASABKAkSGAoQaXNfc2luZ2xlX3BsYXllchgCIAEoCCI3Cg9Kb2luUm9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRITCgtwbGF5ZXJfbmFtZRgCIAEoCSJEChBKb2luUm9vbVJlc3BvbnNlEh0KBHJvb20YASABKAsyDy5ib3VuY2Vib3QuUm9vbRIRCglwbGF5ZXJfaWQYAiABKAkiIQoOR2V0Um9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCSIjChBTdGFydEdhbWVSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkiXQoVU3VibWl0U29sdXRpb25SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSEQoJcGxheWVyX2lkGAIgASgJEiAKBW1vdmVzGAMgAygLMhEuYm91bmNlYm90LkJvdFBvcyJFChZTdWJtaXRTb2x1dGlvblJlc3BvbnNlEisKCHNvbHV0aW9uGAEgASgLMhkuYm91bmNlYm90LlBsYXllclNvbHV0aW9uIkAKGk1hcmtGaW5pc2hlZFNvbHZpbmdSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSEQoJcGxheWVyX2lkGAIgASgJIi4KG01hcmtGaW5pc2hlZFNvbHZpbmdSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIj0KF01hcmtSZWFkeUZvck5leHRSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSEQoJcGxheWVyX2lkGAIgASgJIisKGE1hcmtSZWFkeUZvck5leHRSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIImcKDFNvbHZlclJlc3VsdBITCgtzb2x2ZXJfbmFtZRgBIAEoCRIgCgVtb3ZlcxgCIAMoCzIRLmJvdW5jZWJvdC5Cb3RQb3MSDQoFZXJyb3IYAyABKAkSEQoJY29tcGxldGVkGAQgASgIImoKGVVwZGF0ZVJvb21TZXR0aW5nc1JlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIRCglwbGF5ZXJfaWQYAiABKAkSKQoIc2V0dGluZ3MYAyABKAsyFy5ib3VuY2Vib3QuUm9vbVNldHRpbmdzIjwKGlVwZGF0ZVJvb21TZXR0aW5nc1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDQoFZXJyb3IYAiABKAkyjAUKCUJvdW5jZUJvdBI9CgpDcmVhdGVSb29tEhwuYm91bmNlYm90LkNyZWF0ZVJvb21SZXF1ZXN0Gg8uYm91bmNlYm90LlJvb20iABJFCghKb2luUm9vbRIaLmJvdW5jZWJvdC5Kb2luUm9vbVJlcXVlc3QaGy5ib3VuY2Vib3QuSm9pblJvb21SZXNwb25zZSIAEjcKB0dldFJvb20SGS5ib3VuY2Vib3QuR2V0Um9vbVJlcXVlc3QaDy5ib3VuY2Vib3QuUm9vbSIAEjsKCVN0YXJ0R2FtZRIbLmJvdW5jZWJvdC5TdGFydEdhbWVSZXF1ZXN0Gg8uYm91bmNlYm90LlJvb20iABJXCg5TdWJtaXRTb2x1dGlvbhIgLmJvdW5jZWJvdC5TdWJtaXRTb2x1dGlvblJlcXVlc3QaIS5ib3VuY2Vib3QuU3VibWl0U29sdXRpb25SZXNwb25zZSIAEmYKE01hcmtGaW5pc2hlZFNvbHZpbmcSJS5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1JlcXVlc3QaJi5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1Jlc3BvbnNlIgASXQoQTWFya1JlYWR5Rm9yTmV4dBIiLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVxdWVzdBojLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVzcG9uc2UiABJjChJVcGRhdGVSb29tU2V0dGluZ3MSJC5ib3VuY2Vib3QuVXBkYXRlUm9vbVNldHRpbmdzUmVxdWVzdBolLmJvdW5jZWJvdC5VcGRhdGVSb29tU2V0dGluZ3NSZXNwb25zZSIAQihaJmdpdGh1Yi5jb20vc3JzYWxpc2J1cnkvYm91bmNlYm90L3Byb3RvYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * Board grid position.
@@ -484,45 +484,6 @@ export const SubmitSolutionResponseSchema: GenMessage<SubmitSolutionResponse> = 
   messageDesc(file_bouncebot, 15);
 
 /**
- * @generated from message bouncebot.RetractSolutionRequest
- */
-export type RetractSolutionRequest = Message<"bouncebot.RetractSolutionRequest"> & {
-  /**
-   * @generated from field: string room_id = 1;
-   */
-  roomId: string;
-
-  /**
-   * @generated from field: string player_id = 2;
-   */
-  playerId: string;
-};
-
-/**
- * Describes the message bouncebot.RetractSolutionRequest.
- * Use `create(RetractSolutionRequestSchema)` to create a new message.
- */
-export const RetractSolutionRequestSchema: GenMessage<RetractSolutionRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 16);
-
-/**
- * @generated from message bouncebot.RetractSolutionResponse
- */
-export type RetractSolutionResponse = Message<"bouncebot.RetractSolutionResponse"> & {
-  /**
-   * @generated from field: bool success = 1;
-   */
-  success: boolean;
-};
-
-/**
- * Describes the message bouncebot.RetractSolutionResponse.
- * Use `create(RetractSolutionResponseSchema)` to create a new message.
- */
-export const RetractSolutionResponseSchema: GenMessage<RetractSolutionResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 17);
-
-/**
  * @generated from message bouncebot.MarkFinishedSolvingRequest
  */
 export type MarkFinishedSolvingRequest = Message<"bouncebot.MarkFinishedSolvingRequest"> & {
@@ -542,7 +503,7 @@ export type MarkFinishedSolvingRequest = Message<"bouncebot.MarkFinishedSolvingR
  * Use `create(MarkFinishedSolvingRequestSchema)` to create a new message.
  */
 export const MarkFinishedSolvingRequestSchema: GenMessage<MarkFinishedSolvingRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 18);
+  messageDesc(file_bouncebot, 16);
 
 /**
  * @generated from message bouncebot.MarkFinishedSolvingResponse
@@ -559,7 +520,7 @@ export type MarkFinishedSolvingResponse = Message<"bouncebot.MarkFinishedSolving
  * Use `create(MarkFinishedSolvingResponseSchema)` to create a new message.
  */
 export const MarkFinishedSolvingResponseSchema: GenMessage<MarkFinishedSolvingResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 19);
+  messageDesc(file_bouncebot, 17);
 
 /**
  * @generated from message bouncebot.MarkReadyForNextRequest
@@ -581,7 +542,7 @@ export type MarkReadyForNextRequest = Message<"bouncebot.MarkReadyForNextRequest
  * Use `create(MarkReadyForNextRequestSchema)` to create a new message.
  */
 export const MarkReadyForNextRequestSchema: GenMessage<MarkReadyForNextRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 20);
+  messageDesc(file_bouncebot, 18);
 
 /**
  * @generated from message bouncebot.MarkReadyForNextResponse
@@ -598,7 +559,7 @@ export type MarkReadyForNextResponse = Message<"bouncebot.MarkReadyForNextRespon
  * Use `create(MarkReadyForNextResponseSchema)` to create a new message.
  */
 export const MarkReadyForNextResponseSchema: GenMessage<MarkReadyForNextResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 21);
+  messageDesc(file_bouncebot, 19);
 
 /**
  * Solver result sent via WebSocket when solver completes
@@ -638,7 +599,7 @@ export type SolverResult = Message<"bouncebot.SolverResult"> & {
  * Use `create(SolverResultSchema)` to create a new message.
  */
 export const SolverResultSchema: GenMessage<SolverResult> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 22);
+  messageDesc(file_bouncebot, 20);
 
 /**
  * @generated from message bouncebot.UpdateRoomSettingsRequest
@@ -667,7 +628,7 @@ export type UpdateRoomSettingsRequest = Message<"bouncebot.UpdateRoomSettingsReq
  * Use `create(UpdateRoomSettingsRequestSchema)` to create a new message.
  */
 export const UpdateRoomSettingsRequestSchema: GenMessage<UpdateRoomSettingsRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 23);
+  messageDesc(file_bouncebot, 21);
 
 /**
  * @generated from message bouncebot.UpdateRoomSettingsResponse
@@ -689,7 +650,7 @@ export type UpdateRoomSettingsResponse = Message<"bouncebot.UpdateRoomSettingsRe
  * Use `create(UpdateRoomSettingsResponseSchema)` to create a new message.
  */
 export const UpdateRoomSettingsResponseSchema: GenMessage<UpdateRoomSettingsResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 24);
+  messageDesc(file_bouncebot, 22);
 
 /**
  * Service for client to fetch a game board and return results.
@@ -738,14 +699,6 @@ export const BounceBot: GenService<{
     methodKind: "unary";
     input: typeof SubmitSolutionRequestSchema;
     output: typeof SubmitSolutionResponseSchema;
-  },
-  /**
-   * @generated from rpc bouncebot.BounceBot.RetractSolution
-   */
-  retractSolution: {
-    methodKind: "unary";
-    input: typeof RetractSolutionRequestSchema;
-    output: typeof RetractSolutionResponseSchema;
   },
   /**
    * @generated from rpc bouncebot.BounceBot.MarkFinishedSolving

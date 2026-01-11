@@ -55,7 +55,6 @@ func TestGameLifecycle_StartGame_ClearsGameState(t *testing.T) {
 		CreatedAt:       time.Now(),
 		Wins:            map[string]int{},
 		Solutions:       []PlayerSolution{{PlayerID: "alice"}},
-		SolutionHistory: []PlayerSolutionHistory{{PlayerID: "alice"}},
 		FinishedSolving: []string{"alice"},
 		ReadyForNext:    []string{"alice"},
 	}
@@ -64,9 +63,6 @@ func TestGameLifecycle_StartGame_ClearsGameState(t *testing.T) {
 
 	if len(room.Solutions) != 0 {
 		t.Error("expected Solutions to be cleared")
-	}
-	if len(room.SolutionHistory) != 0 {
-		t.Error("expected SolutionHistory to be cleared")
 	}
 	if len(room.FinishedSolving) != 0 {
 		t.Error("expected FinishedSolving to be cleared")

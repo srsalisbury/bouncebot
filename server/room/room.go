@@ -33,7 +33,6 @@ type Room struct {
 	CurrentGame     *model.Game
 	GameStartedAt   *time.Time
 	Solutions       []PlayerSolution          // Current best solution per player
-	SolutionHistory []PlayerSolutionHistory   // All solutions per player (for retraction)
 	Wins            map[string]int            // Wins per player ID
 	GamesPlayed     int                       // Total games completed in room
 	FinishedSolving []string                  // Player IDs who are finished solving (triggers game end)
@@ -81,7 +80,6 @@ func removeStringAt(slice []string, i int) []string {
 // ClearGameState resets the game-related state for a new game.
 func (r *Room) ClearGameState() {
 	r.Solutions = nil
-	r.SolutionHistory = nil
 	r.FinishedSolving = nil
 	r.ReadyForNext = nil
 	r.SolverResults = nil
@@ -190,7 +188,6 @@ type EventBroadcaster interface {
 	BroadcastPlayerFinishedSolving(roomID, playerID string)
 	BroadcastPlayerReadyForNext(roomID, playerID string)
 	BroadcastPlayerSolved(roomID, playerID string, moveCount int)
-	BroadcastSolutionRetracted(roomID, playerID string)
 	BroadcastGameEnded(roomID, winnerID, winnerName string, moves []MovePayload)
 	BroadcastRoomSettingsChanged(roomID string)
 }

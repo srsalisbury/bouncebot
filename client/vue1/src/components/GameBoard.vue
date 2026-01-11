@@ -12,7 +12,7 @@ import type { PlayerSolution } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 
 const props = defineProps<{
-  onBeforeRetract?: (action: () => void) => void
+  onBeforeModifyBest?: (solutionIndex: number, action: () => void) => void
   gameEnded?: boolean
   playerSolutions?: PlayerSolution[]
   solverSolutions?: PlayerSolution[]
@@ -59,11 +59,11 @@ const allSolutions = computed(() => {
   return [...solutions, ...solverSols]
 })
 
-// Wrap actions that could retract a solution
+// Wrap actions that could modify the best submitted solution
 function doUndo() {
   const currentSolution = store.solutions[store.activeSolutionIndex]
-  if (currentSolution?.isSolved && props.onBeforeRetract) {
-    props.onBeforeRetract(() => store.undoMove())
+  if (currentSolution?.isSolved && props.onBeforeModifyBest) {
+    props.onBeforeModifyBest(store.activeSolutionIndex, () => store.undoMove())
   } else {
     store.undoMove()
   }
@@ -71,8 +71,8 @@ function doUndo() {
 
 function doDelete() {
   const solution = store.solutions[store.activeSolutionIndex]
-  if (solution?.isSolved && props.onBeforeRetract) {
-    props.onBeforeRetract(() => store.deleteSolution(store.activeSolutionIndex))
+  if (solution?.isSolved && props.onBeforeModifyBest) {
+    props.onBeforeModifyBest(store.activeSolutionIndex, () => store.deleteSolution(store.activeSolutionIndex))
   } else {
     store.deleteSolution(store.activeSolutionIndex)
   }
@@ -80,8 +80,8 @@ function doDelete() {
 
 function doReset() {
   const currentSolution = store.solutions[store.activeSolutionIndex]
-  if (currentSolution?.isSolved && props.onBeforeRetract) {
-    props.onBeforeRetract(() => store.resetCurrentSolution())
+  if (currentSolution?.isSolved && props.onBeforeModifyBest) {
+    props.onBeforeModifyBest(store.activeSolutionIndex, () => store.resetCurrentSolution())
   } else {
     store.resetCurrentSolution()
   }

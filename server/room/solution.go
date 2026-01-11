@@ -17,9 +17,3 @@ type PlayerSolution struct {
 func (s *PlayerSolution) MoveCount() int {
 	return len(s.Moves)
 }
-
-// PlayerSolutionHistory tracks all solutions a player has found (for restoring after retraction).
-type PlayerSolutionHistory struct {
-	PlayerID  string
-	Solutions []PlayerSolution
-}

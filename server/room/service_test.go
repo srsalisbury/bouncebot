@@ -121,34 +121,6 @@ func TestService_SubmitSolution_ValidSolution(t *testing.T) {
 	}
 }
 
-func TestService_RetractSolution(t *testing.T) {
-	svc := NewRoomService()
-	mock := &mockBroadcaster{}
-	svc.SetBroadcaster(mock)
-
-	room := svc.Create("Alice", false)
-	svc.StartGame(room.ID)
-	// Use fixed Game1 board so validSolution() works
-	room.CurrentGame = model.Game1()
-	aliceID := room.Players[0].ID
-
-	svc.SubmitSolution(room.ID, aliceID, validSolution())
-
-	err := svc.RetractSolution(room.ID, aliceID)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	room, _ = svc.Get(room.ID)
-	if len(room.Solutions) != 0 {
-		t.Errorf("expected 0 solutions after retraction, got %d", len(room.Solutions))
-	}
-
-	if !mock.solutionRetractedCalled {
-		t.Error("expected BroadcastSolutionRetracted to be called")
-	}
-}
-
 func TestService_DisconnectAndReconnect(t *testing.T) {
 	svc := NewRoomService()
 
