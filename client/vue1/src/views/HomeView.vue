@@ -159,12 +159,14 @@ async function joinRoom() {
               {{ isCreating ? 'Creating...' : 'Create New Room' }}
             </button>
             <p class="join-text">or</p>
-            <div
-              class="join-room-btn"
-              :class="{ disabled: isLoading }"
-              @click="joinRoom()"
-            >
-              <span class="join-label">{{ isJoining ? 'Joining...' : 'Join Room' }}</span>
+            <div class="join-row">
+              <button
+                class="btn join-room-btn"
+                :disabled="isLoading"
+                @click="joinRoom()"
+              >
+                {{ isJoining ? 'Joining...' : 'Join Room' }}
+              </button>
               <input
                 ref="roomIdInput"
                 v-model="joinRoomId"
@@ -173,7 +175,6 @@ async function joinRoom() {
                 class="room-id-inline"
                 :disabled="isLoading"
                 @keyup.enter="joinRoom"
-                @click.stop
               />
             </div>
           </div>
@@ -398,32 +399,14 @@ async function joinRoom() {
   margin: 0 0 0;
 }
 
-.join-room-btn {
+.join-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 44px;
-  padding: 0 1rem;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
+  gap: 0.75rem;
 }
 
-.join-room-btn:hover:not(.disabled) {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.join-room-btn.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.join-label {
-  color: #fff;
-  font-size: 1rem;
-  white-space: nowrap;
+.join-room-btn {
+  flex: 1;
 }
 
 .room-id-inline {

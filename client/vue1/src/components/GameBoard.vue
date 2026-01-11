@@ -393,6 +393,10 @@ function handleSwitchPlayerSolution(index: number) {
             />
           </div>
 
+          <!-- Room ID label (multiplayer only) -->
+          <div v-if="!props.singlePlayer && props.roomId" class="room-id-label">
+            Room ID: {{ props.roomId }}
+          </div>
         </div>
 
         <!-- Keyboard hints under board -->
@@ -701,6 +705,15 @@ function handleSwitchPlayerSolution(index: number) {
 .board-area {
   grid-column: 1;
   grid-row: 2;
+  position: relative;
+}
+
+.room-id-label {
+  position: absolute;
+  bottom: -1.25rem;
+  left: 0;
+  font-size: 0.8rem;
+  color: #888;
 }
 
 .solutions-panel {
