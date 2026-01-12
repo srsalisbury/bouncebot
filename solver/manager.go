@@ -78,17 +78,19 @@ func (m *Manager) StartJob(roomID string, game *model.Game, timeout time.Duratio
 
 		result := solver.Solve(ctx, game)
 
+		// Reorder solution before storing to avoid race conditions
+		if result.Completed && result.Solution != nil {
+			result.Solution.Moves = ReorderSolution(game, result.Solution.Moves)
+			log.Printf("Solver: job %s completed with %d moves", jobID, len(result.Solution.Moves))
+		} else if result.Error != nil {
+			log.Printf("Solver: job %s failed: %v", jobID, result.Error)
+		}
+
 		m.mu.Lock()
 		job.Result = &result
 		job.Done = true
 		callback := m.callback
 		m.mu.Unlock()
-
-		if result.Completed && result.Solution != nil {
-			log.Printf("Solver: job %s completed with %d moves", jobID, len(result.Solution.Moves))
-		} else if result.Error != nil {
-			log.Printf("Solver: job %s failed: %v", jobID, result.Error)
-		}
 
 		if callback != nil {
 			callback(job)
