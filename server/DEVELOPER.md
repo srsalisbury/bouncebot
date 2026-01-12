@@ -115,6 +115,8 @@ Real-time event broadcasting to connected clients.
 - `player_solved` - Player submitted solution
 - `player_finished_solving` - Player marked done
 - `game_ended` - All players finished, winner determined
+- `solver_complete` - Solver finished computing solution (sent to both solo and multiplayer rooms)
+- `room_settings_changed` - Room settings updated by host
 
 ## RPC Endpoints
 
@@ -129,6 +131,7 @@ Defined in `proto/bouncebot.proto`, handled in `server/main.go`:
 | `SubmitSolution` | Submit solution moves (server validates) |
 | `MarkFinishedSolving` | Player is done looking for solutions |
 | `MarkReadyForNext` | Player ready for next game |
+| `UpdateRoomSettings` | Update room settings (host only) |
 
 ## Conventions
 

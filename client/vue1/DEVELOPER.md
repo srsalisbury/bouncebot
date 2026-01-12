@@ -21,7 +21,8 @@ client/vue1/src/
 │   ├── GameBoard.vue   # Main game board with robots, walls, target
 │   ├── PlayersPanel.vue    # Player list and leaderboard
 │   ├── HowToPlayModal.vue  # Help modal
-│   └── LeaderboardModal.vue
+│   ├── LeaderboardModal.vue
+│   └── SettingsModal.vue   # Room settings (solver options)
 │
 ├── composables/        # Vue composition functions
 │   ├── useGameInput.ts     # Keyboard event handling
