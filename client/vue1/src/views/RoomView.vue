@@ -115,6 +115,8 @@ const displayedGameNumber = computed(() => {
 
 // Special player ID for solver solutions
 const SOLVER_PLAYER_ID = '__solver__'
+// Special player ID for solo player's own solution
+const SOLO_PLAYER_ID = '__solo__'
 
 const sortedSolutions = computed(() => {
   if (!room.value) return []
@@ -132,7 +134,7 @@ const sortedSolutions = computed(() => {
 
 // Solver solutions as PlayerSolution-like objects (for display)
 const solverPlayerSolutions = computed(() => {
-  if (solverSolutions.value.length === 0 || isSinglePlayer.value) return []
+  if (solverSolutions.value.length === 0) return []
   // Respect showSolverSolutions setting
   if (room.value?.settings?.showSolverSolutions === false) return []
 
@@ -157,7 +159,22 @@ const minSolverMoves = computed(() => {
   return Math.min(...solverSolutions.value.map(s => s.moves.length))
 })
 
+// Solo player's submitted solution (for display in review screen)
+const soloPlayerSolution = computed(() => {
+  if (!isSinglePlayer.value || !room.value) return []
+  const playerSolution = room.value.solutions.find(s => s.playerId === roomStore.currentPlayerId)
+  if (!playerSolution) return []
+
+  return [create(PlayerSolutionSchema, {
+    playerId: SOLO_PLAYER_ID,
+    moves: playerSolution.moves,
+  })]
+})
+
 function getPlayerName(playerId: string): string {
+  if (playerId === SOLO_PLAYER_ID) {
+    return 'You'
+  }
   if (playerId.startsWith(SOLVER_PLAYER_ID)) {
     // If only one solver, show "BBot" instead of the actual solver name
     if (solverSolutions.value.length === 1) {
@@ -192,8 +209,19 @@ async function startGame() {
 }
 
 async function nextPuzzle() {
-  // For single-player: record stats and start a new game
-  if (gameStore.hasAnySolvedSolution) {
+  // For single-player with showSolverSolutions: show review screen first
+  if (!gameEnded.value && room.value?.settings?.showSolverSolutions) {
+    // Record stats before showing review
+    if (gameStore.hasAnySolvedSolution) {
+      roomStore.recordPuzzleSolved()
+    }
+    gameEnded.value = true
+    return
+  }
+
+  // Start a new game (either from review screen or when showSolverSolutions is off)
+  if (!gameEnded.value && gameStore.hasAnySolvedSolution) {
+    // Only record if we didn't already record above
     roomStore.recordPuzzleSolved()
   }
   isStarting.value = true
@@ -422,7 +450,7 @@ onUnmounted(() => {
       <GameBoard
         :on-before-modify-best="onBeforeModifyBest"
         :game-ended="gameEnded"
-        :player-solutions="isSinglePlayer ? [] : sortedSolutions"
+        :player-solutions="isSinglePlayer ? soloPlayerSolution : sortedSolutions"
         :solver-solutions="solverPlayerSolutions"
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"
@@ -456,13 +484,20 @@ onUnmounted(() => {
                   </div>
                 </div>
               </div>
+              <div v-if="minSolverMoves !== null" class="solver-status">
+                <img src="/favicon_dark.svg" alt="" class="solver-icon" />
+                <span class="solver-moves">{{ minSolverMoves }}</span>
+              </div>
               <span v-if="gameStore.isSolved" class="solved-indicator">✓</span>
+              <button class="btn-icon settings-btn-header" @click="showSettings = true" title="Settings">
+                <img src="/gear.svg" alt="Settings" class="gear-icon" />
+              </button>
               <button
                 class="btn primary next-puzzle-btn"
                 :disabled="isStarting"
                 @click="nextPuzzle"
               >
-                {{ isStarting ? 'Loading...' : 'Next Puzzle' }}
+                {{ isStarting ? 'Loading...' : (gameEnded || !room?.settings?.showSolverSolutions ? 'Next Puzzle' : "I'm Finished") }}
               </button>
             </template>
             <!-- Multiplayer mode: full header -->

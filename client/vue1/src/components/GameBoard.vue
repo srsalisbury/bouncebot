@@ -409,8 +409,8 @@ function handleSwitchPlayerSolution(index: number) {
           </template>
         </div>
 
-        <!-- Player solutions panel (when game ended, hidden in single-player) -->
-        <div v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length) && !props.singlePlayer" class="solutions-panel">
+        <!-- Player solutions panel (when game ended) -->
+        <div v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length)" class="solutions-panel">
           <div class="solutions-columns">
             <!-- Player solutions -->
             <div
@@ -426,7 +426,7 @@ function handleSwitchPlayerSolution(index: number) {
                   <span class="player-name">{{ props.getPlayerName?.(solution.playerId) ?? 'Unknown' }}</span>
                 </div>
                 <span class="solution-moves">{{ solution.moves.length }}</span>
-                <span class="solution-time">{{ formatSolveTime(solution.solvedAt) }}</span>
+                <span v-if="!props.singlePlayer" class="solution-time">{{ formatSolveTime(solution.solvedAt) }}</span>
               </div>
               <div class="move-list">
                 <div
@@ -460,7 +460,7 @@ function handleSwitchPlayerSolution(index: number) {
                     <span class="player-name">{{ props.getPlayerName?.(solverSolution.playerId) ?? 'Solver' }}</span>
                   </div>
                   <span class="solution-moves">{{ solverSolution.moves.length }}</span>
-                  <span class="solution-time">&nbsp;</span>
+                  <span v-if="!props.singlePlayer" class="solution-time">&nbsp;</span>
                 </div>
                 <div class="move-list">
                   <div
@@ -562,9 +562,9 @@ function handleSwitchPlayerSolution(index: number) {
       class="mobile-drawer"
     />
 
-    <!-- Mobile player solutions drawer (only after game ends, hidden on desktop, hidden in single-player) -->
+    <!-- Mobile player solutions drawer (only after game ends, hidden on desktop) -->
     <PlayerSolutionsDrawer
-      v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length) && !props.singlePlayer"
+      v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length)"
       class="mobile-drawer"
       :player-solutions="props.playerSolutions ?? []"
       :solver-solutions="props.solverSolutions ?? []"

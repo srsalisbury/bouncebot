@@ -76,9 +76,9 @@ func main() {
 	// Create solver manager with completion callback
 	solverMgr := solver.NewManager(solver.DefaultRegistry)
 
-	// Trigger all registered solvers when a game starts (for multiplayer)
+	// Trigger all registered solvers when a game starts
 	rooms.SetOnGameStart(func(r *room.Room) {
-		if !r.IsSinglePlayer && r.CurrentGame != nil {
+		if r.CurrentGame != nil {
 			for _, solverName := range solver.DefaultRegistry.Names() {
 				solverMgr.StartJob(r.ID, r.CurrentGame, 30*time.Second, solverName)
 			}
