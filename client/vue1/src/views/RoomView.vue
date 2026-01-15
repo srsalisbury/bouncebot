@@ -71,8 +71,7 @@ const gameActions = useGameActions({
   onServerRejection: (reason) => {
     // Server says room or player doesn't exist - clean up and go home
     console.log('Server rejection:', reason)
-    roomStore.clearLastRoom()
-    roomStore.clear()
+    roomStore.clearRoom()
     router.push('/')
   },
 })
@@ -255,6 +254,10 @@ async function copyShareUrl() {
 
 async function updateSettings(settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean }) {
   if (!roomStore.currentPlayerId) return
+
+  // Persist settings locally for future sessions
+  roomStore.setSettings(settings)
+
   try {
     await bounceBotClient.updateRoomSettings({
       roomId: normalizedRoomId.value,
@@ -327,7 +330,7 @@ function promptLeaveGame() {
 
 function confirmLeave() {
   showLeaveConfirm.value = false
-  roomStore.clear()
+  roomStore.clearRoom()
   router.push('/')
 }
 

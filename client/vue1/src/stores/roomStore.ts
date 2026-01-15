@@ -7,6 +7,8 @@ const STORAGE_KEY_LAST_ROOM = 'bouncebot_last_room'
 const STORAGE_KEY_SINGLE_PLAYER = 'bouncebot_single_player'
 const STORAGE_KEY_PUZZLES_SOLVED = 'bouncebot_puzzles_solved'
 const STORAGE_KEY_PUZZLES_ATTEMPTED = 'bouncebot_puzzles_attempted'
+const STORAGE_KEY_SHOW_SOLVER_MOVE_COUNT = 'bouncebot_show_solver_move_count'
+const STORAGE_KEY_SHOW_SOLVER_SOLUTIONS = 'bouncebot_show_solver_solutions'
 
 export const useRoomStore = defineStore('room', () => {
   // Load from localStorage on init
@@ -16,6 +18,8 @@ export const useRoomStore = defineStore('room', () => {
   const storedSinglePlayer = localStorage.getItem(STORAGE_KEY_SINGLE_PLAYER)
   const storedPuzzlesSolved = localStorage.getItem(STORAGE_KEY_PUZZLES_SOLVED)
   const storedPuzzlesAttempted = localStorage.getItem(STORAGE_KEY_PUZZLES_ATTEMPTED)
+  const storedShowSolverMoveCount = localStorage.getItem(STORAGE_KEY_SHOW_SOLVER_MOVE_COUNT)
+  const storedShowSolverSolutions = localStorage.getItem(STORAGE_KEY_SHOW_SOLVER_SOLUTIONS)
 
   const currentPlayerName = ref<string | null>(storedName)
   const currentPlayerId = ref<string | null>(storedId)
@@ -23,6 +27,8 @@ export const useRoomStore = defineStore('room', () => {
   const isSinglePlayer = ref(storedSinglePlayer === 'true')
   const puzzlesSolved = ref(storedPuzzlesSolved ? parseInt(storedPuzzlesSolved, 10) : 0)
   const puzzlesAttempted = ref(storedPuzzlesAttempted ? parseInt(storedPuzzlesAttempted, 10) : 0)
+  const showSolverMoveCount = ref(storedShowSolverMoveCount === 'true')
+  const showSolverSolutions = ref(storedShowSolverSolutions === 'true')
 
   // Persist to localStorage when changed
   watch(currentPlayerName, (name) => {
@@ -65,9 +71,21 @@ export const useRoomStore = defineStore('room', () => {
     localStorage.setItem(STORAGE_KEY_PUZZLES_ATTEMPTED, count.toString())
   })
 
+  watch(showSolverMoveCount, (value) => {
+    localStorage.setItem(STORAGE_KEY_SHOW_SOLVER_MOVE_COUNT, value.toString())
+  })
+
+  watch(showSolverSolutions, (value) => {
+    localStorage.setItem(STORAGE_KEY_SHOW_SOLVER_SOLUTIONS, value.toString())
+  })
+
   function setCurrentPlayer(id: string, name: string) {
     currentPlayerId.value = id
     currentPlayerName.value = name
+  }
+
+  function setCurrentPlayerId(id: string) {
+    currentPlayerId.value = id
   }
 
   function setLastRoom(roomId: string) {
@@ -90,15 +108,20 @@ export const useRoomStore = defineStore('room', () => {
     puzzlesAttempted.value++
   }
 
+  function setSettings(settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean }) {
+    showSolverMoveCount.value = settings.showSolverMoveCount
+    showSolverSolutions.value = settings.showSolverSolutions
+  }
+
   function clearLastRoom() {
     lastRoomId.value = null
   }
 
-  function clear() {
+  function clearRoom() {
     currentPlayerId.value = null
-    currentPlayerName.value = null
     lastRoomId.value = null
     isSinglePlayer.value = false
+    // Note: currentPlayerName is intentionally preserved for future sessions
   }
 
   return {
@@ -108,12 +131,16 @@ export const useRoomStore = defineStore('room', () => {
     isSinglePlayer,
     puzzlesSolved,
     puzzlesAttempted,
+    showSolverMoveCount,
+    showSolverSolutions,
     setCurrentPlayer,
+    setCurrentPlayerId,
     setLastRoom,
     clearLastRoom,
+    clearRoom,
     setSinglePlayer,
     recordPuzzleSolved,
     recordPuzzleAttempted,
-    clear,
+    setSettings,
   }
 })
