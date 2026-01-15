@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor } from '../constants'
+import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor, UNDO_HOLD_DURATION_MS, DOUBLE_TAP_THRESHOLD_MS } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
 import SolutionsDrawer from './SolutionsDrawer.vue'
 import PlayerSolutionsDrawer from './PlayerSolutionsDrawer.vue'
@@ -100,7 +100,7 @@ function onUndoPointerDown() {
   undoHoldTimer = setTimeout(() => {
     undoDidReset = true
     doReset()
-  }, 1000)
+  }, UNDO_HOLD_DURATION_MS)
 }
 
 function onUndoPointerUp() {
@@ -214,7 +214,7 @@ watch(() => props.gameEnded, (ended) => {
 let lastTouchEnd = 0
 function preventDoubleTapZoom(event: TouchEvent) {
   const now = Date.now()
-  if (now - lastTouchEnd <= 300) {
+  if (now - lastTouchEnd <= DOUBLE_TAP_THRESHOLD_MS) {
     event.preventDefault()
   }
   lastTouchEnd = now

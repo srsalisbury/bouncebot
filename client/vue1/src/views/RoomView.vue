@@ -10,7 +10,7 @@ import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
 import LeaderboardModal from '../components/LeaderboardModal.vue'
 import SettingsModal from '../components/SettingsModal.vue'
-import { getPlayerColor } from '../constants'
+import { getPlayerColor, SOLVER_PLAYER_ID, SOLO_PLAYER_ID } from '../constants'
 import { create } from '@bufbuild/protobuf'
 import { PlayerSolutionSchema, BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 
@@ -112,11 +112,6 @@ const displayedGameNumber = computed(() => {
   // When game is active, gamesPlayed is the count before this game
   return gameEnded.value ? room.value?.gamesPlayed ?? 1 : (room.value?.gamesPlayed ?? 0) + 1
 })
-
-// Special player ID for solver solutions
-const SOLVER_PLAYER_ID = '__solver__'
-// Special player ID for solo player's own solution
-const SOLO_PLAYER_ID = '__solo__'
 
 const sortedSolutions = computed(() => {
   if (!room.value) return []

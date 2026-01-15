@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch, toRaw } from 'vue'
 import type { Game } from '../gen/bouncebot_pb'
-import { MAX_SOLUTIONS, OPPOSITE_DIRECTION, type Direction } from '../constants'
+import { MAX_SOLUTIONS, OPPOSITE_DIRECTION, SOLUTION_SWITCH_DELAY_MS, type Direction } from '../constants'
 import { calculateDestination } from '../gamePhysics'
 import { ANIMATION_TIMING } from '../services/AnimationService'
 
@@ -362,7 +362,7 @@ export const useGameStore = defineStore('game', () => {
       activeSolutionIndex.value = index
 
       // Wait before replaying new solution
-      const resetDelay = 500
+      const resetDelay = SOLUTION_SWITCH_DELAY_MS
 
       // Replay target moves after delay
       const totalTime = replayMoves(targetMoves, resetDelay)
@@ -390,7 +390,7 @@ export const useGameStore = defineStore('game', () => {
     animatingMoveIndex.value = null
 
     // Wait before replaying solution
-    const resetDelay = 500
+    const resetDelay = SOLUTION_SWITCH_DELAY_MS
 
     // Replay target moves after delay
     const totalTime = replayMoves(targetMoves, resetDelay)
@@ -447,7 +447,7 @@ export const useGameStore = defineStore('game', () => {
       activeSolutionIndex.value = index > 0 ? index - 1 : 0
 
       // Wait before replaying new solution
-      const resetDelay = 500
+      const resetDelay = SOLUTION_SWITCH_DELAY_MS
 
       // Replay new active solution
       const totalTime = replayMoves(targetMoves, resetDelay)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { DIRECTION_ARROWS, getRobotColor } from '../constants'
+import { DIRECTION_ARROWS, getRobotColor, MOBILE_ASPECT_RATIO, MOBILE_WIDTH_BREAKPOINT } from '../constants'
 import { useSwipe } from '../composables/useSwipe'
 import type { PlayerSolution } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
@@ -34,7 +34,7 @@ const drawerRef = ref<HTMLElement | null>(null)
 // Check if we're on mobile/vertical layout
 function isMobile(): boolean {
   const aspectRatio = window.innerWidth / window.innerHeight
-  return aspectRatio < 6/5 || window.innerWidth <= 1050
+  return aspectRatio < MOBILE_ASPECT_RATIO || window.innerWidth <= MOBILE_WIDTH_BREAKPOINT
 }
 
 // Switch solution and auto-collapse on mobile

@@ -4,6 +4,7 @@ import { translateJoinRoomError } from '../services/errorMessages'
 import { websocketService, type WebSocketEvent, type SolverCompletePayload } from '../services/websocket'
 import { useRoomStore } from '../stores/roomStore'
 import { isRoomNotFoundError } from '../services/errorUtils'
+import { ROOM_POLL_INTERVAL_MS } from '../constants'
 import type { Room } from '../gen/bouncebot_pb'
 
 export interface SolverSolution {
@@ -208,7 +209,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     if (hasJoined.value) {
       connectWebSocket()
     } else {
-      pollInterval.value = window.setInterval(loadRoom, 3000)
+      pollInterval.value = window.setInterval(loadRoom, ROOM_POLL_INTERVAL_MS)
     }
   })
 

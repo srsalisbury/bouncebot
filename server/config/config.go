@@ -30,6 +30,9 @@ type Config struct {
 	CleanupInterval       time.Duration
 	RoomMaxAge            time.Duration
 	DisconnectGracePeriod time.Duration
+
+	// Solver settings
+	SolverTimeout time.Duration
 }
 
 // DefaultConfig returns configuration with sensible defaults.
@@ -43,6 +46,7 @@ func DefaultConfig() *Config {
 		CleanupInterval:       1 * time.Hour,
 		RoomMaxAge:            24 * time.Hour,
 		DisconnectGracePeriod: 30 * time.Second,
+		SolverTimeout:         30 * time.Second,
 	}
 }
 
@@ -56,6 +60,7 @@ func DefaultConfig() *Config {
 //   - CLEANUP_INTERVAL: Cleanup interval in seconds (default: 3600)
 //   - ROOM_MAX_AGE: Room max age in seconds (default: 86400)
 //   - DISCONNECT_GRACE_PERIOD: Player disconnect grace period in seconds (default: 30)
+//   - SOLVER_TIMEOUT: Solver timeout in seconds (default: 30)
 func LoadFromEnv() *Config {
 	cfg := DefaultConfig()
 
@@ -105,6 +110,12 @@ func LoadFromEnv() *Config {
 	if v := os.Getenv("DISCONNECT_GRACE_PERIOD"); v != "" {
 		if secs, err := strconv.Atoi(v); err == nil {
 			cfg.DisconnectGracePeriod = time.Duration(secs) * time.Second
+		}
+	}
+
+	if v := os.Getenv("SOLVER_TIMEOUT"); v != "" {
+		if secs, err := strconv.Atoi(v); err == nil {
+			cfg.SolverTimeout = time.Duration(secs) * time.Second
 		}
 	}
 
