@@ -1,12 +1,16 @@
 package room
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/srsalisbury/bouncebot/model"
 )
+
+// ErrRoomNotFound is returned when a room doesn't exist.
+var ErrRoomNotFound = errors.New("room not found")
 
 // GameStartCallback is called when a new game starts.
 type GameStartCallback func(room *Room)
@@ -64,14 +68,9 @@ func (s *RoomService) processSignals(signals []Signal) {
 			s.processBroadcast(signal.Event)
 
 		case EndGameSignal:
-			room, unlock := s.repo.GetWithLock(signal.RoomID)
-			if room != nil {
-				newSignals := s.gameMgr.EndGame(room)
-				unlock()
-				s.processSignals(newSignals)
-			} else {
-				unlock()
-			}
+			_ = s.withRoomLock(signal.RoomID, func(room *Room) []Signal {
+				return s.gameMgr.EndGame(room)
+			})
 
 		case StartNextGameSignal:
 			room, unlock := s.repo.GetWithLock(signal.RoomID)
@@ -130,6 +129,43 @@ func (s *RoomService) processBroadcast(event BroadcastEvent) {
 
 func (s *RoomService) onTimerFired(roomID, playerID string) {
 	s.RemovePlayer(roomID, playerID)
+}
+
+// withRoomLock acquires a lock on the room, executes fn, and processes any signals.
+// Returns ErrRoomNotFound if the room doesn't exist.
+// The lock is released before processing signals to avoid deadlocks.
+func (s *RoomService) withRoomLock(roomID string, fn func(room *Room) []Signal) error {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return ErrRoomNotFound
+	}
+
+	signals := fn(room)
+	unlock() // Release lock before processing signals (signals may acquire locks)
+
+	s.processSignals(signals)
+	return nil
+}
+
+// withRoomLockErr is like withRoomLock but the callback can return an error.
+// If fn returns an error, signals are not processed and the error is returned.
+func (s *RoomService) withRoomLockErr(roomID string, fn func(room *Room) ([]Signal, error)) error {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return ErrRoomNotFound
+	}
+
+	signals, err := fn(room)
+	unlock() // Release lock before processing signals (signals may acquire locks)
+
+	if err != nil {
+		return err
+	}
+
+	s.processSignals(signals)
+	return nil
 }
 
 // ---- Public API (backward compatible with old Store) ----
@@ -223,78 +259,30 @@ func (s *RoomService) SubmitSolution(roomID, playerID string, moves []model.BotP
 
 // MarkFinishedSolving marks a player as finished solving.
 func (s *RoomService) MarkFinishedSolving(roomID, playerID string) error {
-	room, unlock := s.repo.GetWithLock(roomID)
-	if room == nil {
-		unlock()
-		return fmt.Errorf("room not found: %s", roomID)
-	}
-
-	signals, err := s.gameMgr.MarkFinishedSolving(room, playerID)
-	unlock()
-
-	if err != nil {
-		return err
-	}
-
-	s.processSignals(signals)
-	return nil
+	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+		return s.gameMgr.MarkFinishedSolving(room, playerID)
+	})
 }
 
 // MarkReadyForNext marks a player as ready for the next game.
 func (s *RoomService) MarkReadyForNext(roomID, playerID string) error {
-	room, unlock := s.repo.GetWithLock(roomID)
-	if room == nil {
-		unlock()
-		return fmt.Errorf("room not found: %s", roomID)
-	}
-
-	signals, err := s.gameMgr.MarkReadyForNext(room, playerID)
-	unlock()
-
-	if err != nil {
-		return err
-	}
-
-	s.processSignals(signals)
-	return nil
+	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+		return s.gameMgr.MarkReadyForNext(room, playerID)
+	})
 }
 
 // DisconnectPlayer marks a player as disconnected.
 func (s *RoomService) DisconnectPlayer(roomID, playerID string) error {
-	room, unlock := s.repo.GetWithLock(roomID)
-	if room == nil {
-		unlock()
-		return fmt.Errorf("room not found: %s", roomID)
-	}
-
-	signals, err := s.playerMgr.DisconnectPlayer(room, playerID)
-	unlock()
-
-	if err != nil {
-		return err
-	}
-
-	s.processSignals(signals)
-	return nil
+	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+		return s.playerMgr.DisconnectPlayer(room, playerID)
+	})
 }
 
 // ReconnectPlayer marks a player as connected.
 func (s *RoomService) ReconnectPlayer(roomID, playerID string) error {
-	room, unlock := s.repo.GetWithLock(roomID)
-	if room == nil {
-		unlock()
-		return fmt.Errorf("room not found: %s", roomID)
-	}
-
-	signals, err := s.playerMgr.ReconnectPlayer(room, playerID)
-	unlock()
-
-	if err != nil {
-		return err
-	}
-
-	s.processSignals(signals)
-	return nil
+	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+		return s.playerMgr.ReconnectPlayer(room, playerID)
+	})
 }
 
 // RemovePlayer removes a player from a room.
