@@ -5,6 +5,7 @@ import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor, UNDO_HOLD_DURA
 import HowToPlayModal from './HowToPlayModal.vue'
 import SolutionsDrawer from './SolutionsDrawer.vue'
 import PlayerSolutionsDrawer from './PlayerSolutionsDrawer.vue'
+import GameBoardPlayerSolutions from './GameBoardPlayerSolutions.vue'
 import { useGameInput } from '../composables/useGameInput'
 import { useReplay } from '../composables/useReplay'
 import { useSwipe } from '../composables/useSwipe'
@@ -188,18 +189,6 @@ useSwipe({
   },
   enabled: computed(() => !props.inputBlocked && !props.gameEnded),
 })
-
-// Format solve time relative to game start
-function formatSolveTime(solvedAt?: Timestamp): string {
-  if (!solvedAt || !props.gameStartedAt) return ''
-  const solvedMs = Number(solvedAt.seconds) * 1000 + Math.floor(solvedAt.nanos / 1_000_000)
-  const startMs = Number(props.gameStartedAt.seconds) * 1000 + Math.floor(props.gameStartedAt.nanos / 1_000_000)
-  const diffSeconds = Math.floor((solvedMs - startMs) / 1000)
-  if (diffSeconds < 0) return ''
-  const minutes = Math.floor(diffSeconds / 60)
-  const seconds = diffSeconds % 60
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
 
 // When game ends, start showing solutions; when new round starts, stop replay
 watch(() => props.gameEnded, (ended) => {
@@ -410,75 +399,19 @@ function handleSwitchPlayerSolution(index: number) {
         </div>
 
         <!-- Player solutions panel (when game ended) -->
-        <div v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length)" class="solutions-panel">
-          <div class="solutions-columns">
-            <!-- Player solutions -->
-            <div
-              v-for="(solution, index) in props.playerSolutions"
-              :key="solution.playerId"
-              class="solution-column player-solution"
-              :class="{ active: index === activePlayerSolutionIndex, winner: index === 0 }"
-              @click="handleSwitchPlayerSolution(index)"
-            >
-              <div class="player-solution-header">
-                <div class="player-name-row">
-                  <span class="player-dot" :style="{ backgroundColor: props.getPlayerColor?.(solution.playerId) ?? '#888888' }"></span>
-                  <span class="player-name">{{ props.getPlayerName?.(solution.playerId) ?? 'Unknown' }}</span>
-                </div>
-                <span class="solution-moves">{{ solution.moves.length }}</span>
-                <span v-if="!props.singlePlayer" class="solution-time">{{ formatSolveTime(solution.solvedAt) }}</span>
-              </div>
-              <div class="move-list">
-                <div
-                  v-for="(move, i) in getPlayerSolutionMoves(solution)"
-                  :key="i"
-                  class="move-item"
-                  :class="{ animating: index === activePlayerSolutionIndex && i < replayMoveIndex }"
-                >
-                  <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
-                    {{ move.robotId + 1 }}
-                  </span>
-                  <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Divider and solver solutions -->
-            <template v-if="props.solverSolutions?.length">
-              <div class="solutions-divider"></div>
-              <div
-                v-for="(solverSolution, solverIndex) in props.solverSolutions"
-                :key="solverSolution.playerId"
-                class="solution-column player-solution solver"
-                :class="{ active: activePlayerSolutionIndex === (props.playerSolutions?.length ?? 0) + solverIndex }"
-                @click="handleSwitchPlayerSolution((props.playerSolutions?.length ?? 0) + solverIndex)"
-              >
-                <div class="player-solution-header">
-                  <div class="player-name-row">
-                    <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
-                    <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
-                    <span class="player-name">{{ props.getPlayerName?.(solverSolution.playerId) ?? 'Solver' }}</span>
-                  </div>
-                  <span class="solution-moves">{{ solverSolution.moves.length }}</span>
-                  <span v-if="!props.singlePlayer" class="solution-time">&nbsp;</span>
-                </div>
-                <div class="move-list">
-                  <div
-                    v-for="(move, i) in getPlayerSolutionMoves(solverSolution)"
-                    :key="i"
-                    class="move-item"
-                    :class="{ animating: activePlayerSolutionIndex === (props.playerSolutions?.length ?? 0) + solverIndex && i < replayMoveIndex }"
-                  >
-                    <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
-                      {{ move.robotId + 1 }}
-                    </span>
-                    <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
+        <GameBoardPlayerSolutions
+          v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length)"
+          :player-solutions="props.playerSolutions ?? []"
+          :solver-solutions="props.solverSolutions ?? []"
+          :active-index="activePlayerSolutionIndex"
+          :replay-move-index="replayMoveIndex"
+          :get-player-name="props.getPlayerName ?? (() => 'Unknown')"
+          :get-player-color="props.getPlayerColor ?? (() => '#888888')"
+          :get-player-solution-moves="getPlayerSolutionMoves"
+          :single-player="props.singlePlayer"
+          :game-started-at="props.gameStartedAt"
+          @switch-solution="handleSwitchPlayerSolution"
+        />
 
         <!-- Normal solutions panel (during game) -->
         <div v-else-if="!props.gameEnded" class="solutions-panel">
@@ -967,85 +900,6 @@ function handleSwitchPlayerSolution(index: number) {
   font-family: monospace;
 }
 
-/* Player solution column styles */
-.solution-column.player-solution {
-  min-width: 3.375rem;
-}
-
-.player-solution-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  padding-bottom: 0.4rem;
-  margin-bottom: 0.25rem;
-  border-bottom: 1px solid #999;
-}
-
-.player-solution-header .player-name-row {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.player-solution-header .player-dot {
-  width: 0.625rem;
-  height: 0.625rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.player-solution-header .solver-icon {
-  width: 0.875rem;
-  height: 0.875rem;
-  flex-shrink: 0;
-}
-
-.player-solution-header .solver-icon-light {
-  display: block;
-}
-
-.player-solution-header .solver-icon-dark {
-  display: none;
-}
-
-.solutions-divider {
-  width: 1px;
-  background: #999;
-  align-self: stretch;
-  margin: 0 0.25rem;
-}
-
-.player-solution-header .player-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #333;
-  max-width: 4.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.player-solution-header .solution-moves {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.player-solution-header .solution-time {
-  font-size: 0.8rem;
-  color: #666;
-}
-
-.solution-column.winner {
-  background: #fff8dc;
-  border: 2px solid #ffd700;
-}
-
-.solution-column.winner.active {
-  box-shadow: 0 0 0 2px #43a047;
-}
-
 .board {
   --wall-color: #2a2a2a;
   display: grid;
@@ -1253,41 +1107,17 @@ function handleSwitchPlayerSolution(index: number) {
     background: #3a3a3a;
   }
 
-  .solution-column.winner {
-    background: #3d3820;
-    border-color: #b8960b;
-  }
-
   .solution-header {
     border-bottom-color: #555;
   }
 
   .solution-moves,
-  .move-arrow,
-  .player-solution-header .player-name,
-  .player-solution-header .solution-moves {
+  .move-arrow {
     color: #ddd;
   }
 
-  .move-pos,
-  .player-solution-header .solution-time {
+  .move-pos {
     color: #999;
-  }
-
-  .player-solution-header {
-    border-bottom-color: #555;
-  }
-
-  .player-solution-header .solver-icon-light {
-    display: none;
-  }
-
-  .player-solution-header .solver-icon-dark {
-    display: block;
-  }
-
-  .solutions-divider {
-    background: #555;
   }
 
   .target-number {
