@@ -20,8 +20,11 @@ RUN go mod download
 # Copy server source code
 COPY server/ ./server/
 
-# Build the server binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bouncebot-server ./server
+# Version is passed as build arg (defaults to dev)
+ARG VERSION=dev
+
+# Build the server binary with version embedded
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X main.Version=${VERSION}" -o /bouncebot-server ./server
 
 # Runtime stage
 FROM alpine:latest

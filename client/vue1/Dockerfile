@@ -12,8 +12,11 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Version is passed as build arg (defaults to dev)
+ARG VERSION=dev
+
+# Build the application with version embedded
+RUN VITE_APP_VERSION=${VERSION} npm run build
 
 # Runtime stage
 FROM nginx:alpine

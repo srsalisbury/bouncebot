@@ -23,6 +23,9 @@ import (
 	_ "github.com/srsalisbury/bouncebot/solver/astar"
 )
 
+// Version is set at build time via ldflags
+var Version = "dev"
+
 var (
 	port     = flag.Int("port", 0, "The server port (overrides PORT env var)")
 	dataFile = flag.String("data", "", "Path to room data file (overrides DATA_FILE env var)")
@@ -42,6 +45,7 @@ func main() {
 		cfg.DataFile = *dataFile
 	}
 
+	log.Printf("BounceBot server version %s", Version)
 	log.Printf("Configuration: port=%d, data=%s, origins=%v", cfg.Port, cfg.DataFile, cfg.AllowedOrigins)
 
 	rooms := room.NewRoomService()

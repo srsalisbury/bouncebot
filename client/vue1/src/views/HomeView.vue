@@ -19,6 +19,7 @@ const error = ref<string | null>(null)
 
 const lastRoom = computed(() => roomStore.lastRoomId)
 const isLoading = computed(() => isStartingSolo.value || isCreating.value || isJoining.value)
+const appVersion = __APP_VERSION__
 
 function returnToGame() {
   if (lastRoom.value) {
@@ -193,6 +194,8 @@ async function joinRoom() {
         </button>
       </div>
     </div>
+
+    <div class="version">{{ appVersion }}</div>
   </div>
 </template>
 
@@ -472,5 +475,13 @@ async function joinRoom() {
 
 .btn.return-btn:hover:not(:disabled) {
   background: #1976d2;
+}
+
+.version {
+  position: fixed;
+  bottom: 0.5rem;
+  right: 0.75rem;
+  color: #666;
+  font-size: 0.75rem;
 }
 </style>
