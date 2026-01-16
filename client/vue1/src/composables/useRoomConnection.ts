@@ -45,10 +45,18 @@ export function useRoomConnection(options: RoomConnectionOptions) {
 
       // Check if current player is still in the room (handle stale localStorage)
       if (roomStore.currentPlayerId) {
-        const isPlayerInRoom = rm.players.some(p => p.id === roomStore.currentPlayerId)
-          || rm.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
-        if (!isPlayerInRoom) {
-          roomStore.clear()
+        const player = rm.players.find(p => p.id === roomStore.currentPlayerId)
+          || rm.pendingPlayers.find(p => p.id === roomStore.currentPlayerId)
+        if (player) {
+          // Re-save player info to ensure it's persisted (e.g., on page reload in lobby)
+          // For solo mode, only save the ID to avoid overwriting saved multiplayer name
+          if (rm.isSinglePlayer) {
+            roomStore.setCurrentPlayerId(player.id)
+          } else {
+            roomStore.setCurrentPlayer(player.id, player.name)
+          }
+        } else {
+          roomStore.clearRoom()
         }
       }
 
@@ -79,10 +87,9 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       error.value = null
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load room'
-      // If server says room doesn't exist, clear stored state
+      // If server says room doesn't exist, clear stored room state (preserve player name)
       if (isRoomNotFoundError(e)) {
-        roomStore.clearLastRoom()
-        roomStore.clear()
+        roomStore.clearRoom()
       }
     } finally {
       isLoading.value = false

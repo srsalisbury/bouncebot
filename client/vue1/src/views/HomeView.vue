@@ -39,9 +39,22 @@ async function startSoloGame() {
     })
     const player = room.players[0]
     if (player) {
-      roomStore.setCurrentPlayer(player.id, player.name)
+      // Only set the ID for solo mode - don't overwrite saved multiplayer name
+      roomStore.setCurrentPlayerId(player.id)
     }
     roomStore.setSinglePlayer(true)
+
+    // Apply saved settings if any
+    if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions) {
+      await bounceBotClient.updateRoomSettings({
+        roomId: room.id,
+        playerId: player!.id,
+        settings: {
+          showSolverMoveCount: roomStore.showSolverMoveCount,
+          showSolverSolutions: roomStore.showSolverSolutions,
+        },
+      })
+    }
 
     // Start game immediately
     await bounceBotClient.startGame({ roomId: room.id })
@@ -73,6 +86,19 @@ async function createRoom() {
       roomStore.setCurrentPlayer(player.id, player.name)
     }
     roomStore.setSinglePlayer(false)
+
+    // Apply saved settings if any
+    if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions) {
+      await bounceBotClient.updateRoomSettings({
+        roomId: room.id,
+        playerId: player!.id,
+        settings: {
+          showSolverMoveCount: roomStore.showSolverMoveCount,
+          showSolverSolutions: roomStore.showSolverSolutions,
+        },
+      })
+    }
+
     router.push(`/room/${room.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to create room'
