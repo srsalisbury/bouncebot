@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/rs/cors"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
@@ -84,7 +83,7 @@ func main() {
 	rooms.SetOnGameStart(func(r *room.Room) {
 		if r.CurrentGame != nil {
 			for _, solverName := range solver.DefaultRegistry.Names() {
-				solverMgr.StartJob(r.ID, r.CurrentGame, 30*time.Second, solverName)
+				solverMgr.StartJob(r.ID, r.CurrentGame, cfg.SolverTimeout, solverName)
 			}
 		}
 	})

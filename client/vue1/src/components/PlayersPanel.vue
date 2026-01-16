@@ -3,7 +3,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { Player, PlayerSolution, PlayerScore } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import { useRoomStore } from '../stores/roomStore'
-import { getPlayerColor } from '../constants'
+import { getPlayerColor, MAX_GAME_TIMER_SECONDS } from '../constants'
 
 const props = defineProps<{
   players: Player[]
@@ -27,11 +27,9 @@ function toggleDropdown() {
 const elapsedTime = ref<string>('0:00')
 const timerInterval = ref<number | null>(null)
 
-const MAX_TIMER_SECONDS = 30 * 60 // 30 minutes
-
 function formatElapsedTime(seconds: number): string {
   // Cap at 30 minutes
-  const cappedSeconds = Math.min(seconds, MAX_TIMER_SECONDS)
+  const cappedSeconds = Math.min(seconds, MAX_GAME_TIMER_SECONDS)
   const mins = Math.floor(cappedSeconds / 60)
   const secs = Math.floor(cappedSeconds % 60)
   return `${mins}:${secs.toString().padStart(2, '0')}`
