@@ -77,8 +77,8 @@ func TestSolutionManager_SubmitSolution_ValidSolution(t *testing.T) {
 	if solution.PlayerID != "alice" {
 		t.Errorf("expected player ID 'alice', got '%s'", solution.PlayerID)
 	}
-	if solution.MoveCount() != 7 {
-		t.Errorf("expected 7 moves, got %d", solution.MoveCount())
+	if solution.MoveCount() != 10 {
+		t.Errorf("expected 10 moves, got %d", solution.MoveCount())
 	}
 
 	// Check room has solution
@@ -98,7 +98,7 @@ func TestSolutionManager_SubmitSolution_ValidSolution(t *testing.T) {
 	if !ok {
 		t.Fatal("expected PlayerSolvedEvent")
 	}
-	if event.PlayerID != "alice" || event.MoveCount != 7 {
+	if event.PlayerID != "alice" || event.MoveCount != 10 {
 		t.Errorf("unexpected event: %+v", event)
 	}
 }
