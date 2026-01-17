@@ -68,8 +68,8 @@ func (s *RoomService) processSignals(signals []Signal) {
 			s.processBroadcast(signal.Event)
 
 		case EndGameSignal:
-			_ = s.withRoomLock(signal.RoomID, func(room *Room) []Signal {
-				return s.gameMgr.EndGame(room)
+			_ = s.withRoomLock(signal.RoomID, func(room *Room) ([]Signal, error) {
+				return s.gameMgr.EndGame(room), nil
 			})
 
 		case StartNextGameSignal:
@@ -133,24 +133,9 @@ func (s *RoomService) onTimerFired(roomID, playerID string) {
 
 // withRoomLock acquires a lock on the room, executes fn, and processes any signals.
 // Returns ErrRoomNotFound if the room doesn't exist.
-// The lock is released before processing signals to avoid deadlocks.
-func (s *RoomService) withRoomLock(roomID string, fn func(room *Room) []Signal) error {
-	room, unlock := s.repo.GetWithLock(roomID)
-	if room == nil {
-		unlock()
-		return ErrRoomNotFound
-	}
-
-	signals := fn(room)
-	unlock() // Release lock before processing signals (signals may acquire locks)
-
-	s.processSignals(signals)
-	return nil
-}
-
-// withRoomLockErr is like withRoomLock but the callback can return an error.
 // If fn returns an error, signals are not processed and the error is returned.
-func (s *RoomService) withRoomLockErr(roomID string, fn func(room *Room) ([]Signal, error)) error {
+// The lock is released before processing signals to avoid deadlocks.
+func (s *RoomService) withRoomLock(roomID string, fn func(room *Room) ([]Signal, error)) error {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
@@ -259,28 +244,28 @@ func (s *RoomService) SubmitSolution(roomID, playerID string, moves []model.BotP
 
 // MarkFinishedSolving marks a player as finished solving.
 func (s *RoomService) MarkFinishedSolving(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.gameMgr.MarkFinishedSolving(room, playerID)
 	})
 }
 
 // MarkReadyForNext marks a player as ready for the next game.
 func (s *RoomService) MarkReadyForNext(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.gameMgr.MarkReadyForNext(room, playerID)
 	})
 }
 
 // DisconnectPlayer marks a player as disconnected.
 func (s *RoomService) DisconnectPlayer(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.playerMgr.DisconnectPlayer(room, playerID)
 	})
 }
 
 // ReconnectPlayer marks a player as connected.
 func (s *RoomService) ReconnectPlayer(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.playerMgr.ReconnectPlayer(room, playerID)
 	})
 }
