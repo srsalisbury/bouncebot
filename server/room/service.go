@@ -66,40 +66,55 @@ func (s *RoomService) processSignals(signals []Signal) {
 		switch signal := sig.(type) {
 		case BroadcastSignal:
 			s.processBroadcast(signal.Event)
-
 		case EndGameSignal:
-			_ = s.withRoomLock(signal.RoomID, func(room *Room) ([]Signal, error) {
-				return s.gameMgr.EndGame(room), nil
-			})
-
+			s.handleEndGame(signal)
 		case StartNextGameSignal:
-			room, unlock := s.repo.GetWithLock(signal.RoomID)
-			if room != nil {
-				newSignals := s.gameMgr.StartNextGame(room)
-				// Make a copy for callback (room might be modified after unlock)
-				roomCopy := *room
-				unlock()
-				s.processSignals(newSignals)
-				// Notify about game start (for solver etc)
-				if s.onGameStart != nil && roomCopy.CurrentGame != nil {
-					s.onGameStart(&roomCopy)
-				}
-			} else {
-				unlock()
-			}
-
+			s.handleStartNextGame(signal)
 		case StartTimerSignal:
-			s.timerMgr.StartTimer(
-				signal.RoomID,
-				signal.PlayerID,
-				s.disconnectGracePeriod,
-				s.onTimerFired,
-			)
-
+			s.handleStartTimer(signal)
 		case CancelTimerSignal:
-			s.timerMgr.CancelTimer(signal.PlayerID)
+			s.handleCancelTimer(signal)
 		}
 	}
+}
+
+func (s *RoomService) handleEndGame(signal EndGameSignal) {
+	_ = s.withRoomLock(signal.RoomID, func(room *Room) ([]Signal, error) {
+		return s.gameMgr.EndGame(room), nil
+	})
+}
+
+func (s *RoomService) handleStartNextGame(signal StartNextGameSignal) {
+	room, unlock := s.repo.GetWithLock(signal.RoomID)
+	if room == nil {
+		unlock()
+		return
+	}
+
+	newSignals := s.gameMgr.StartNextGame(room)
+	// Make a copy for callback (room might be modified after unlock)
+	roomCopy := *room
+	unlock()
+
+	s.processSignals(newSignals)
+
+	// Notify about game start (for solver etc)
+	if s.onGameStart != nil && roomCopy.CurrentGame != nil {
+		s.onGameStart(&roomCopy)
+	}
+}
+
+func (s *RoomService) handleStartTimer(signal StartTimerSignal) {
+	s.timerMgr.StartTimer(
+		signal.RoomID,
+		signal.PlayerID,
+		s.disconnectGracePeriod,
+		s.onTimerFired,
+	)
+}
+
+func (s *RoomService) handleCancelTimer(signal CancelTimerSignal) {
+	s.timerMgr.CancelTimer(signal.PlayerID)
 }
 
 func (s *RoomService) processBroadcast(event BroadcastEvent) {
