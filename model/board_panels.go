@@ -1,0 +1,159 @@
+package model
+
+import "fmt"
+
+// BuildBoardFromPanels constructs a full Board from four Board panels in clockwise order:
+// topLeft, topRight, bottomRight, bottomLeft.
+// Each panel should have the same Size and represents a quarter of a full Board,
+// with exterior walls on the top and left edges.
+/*
+   +---- +---- +---- +----     +--------+
+   | a   | b   | c   | d    -> | a    b |
+   |     |     |     |         |        |
+                               |        |
+                               | d    c |
+                               +--------+
+*/
+func BuildBoardFromPanels(a, b, c, d Board) Board {
+	if a.Size() != b.Size() || a.Size() != c.Size() || a.Size() != d.Size() {
+		panic("all Panels must have the same Size")
+	}
+	size := a.Size()
+	vWalls := make([]Position, 0)
+	hWalls := make([]Position, 0)
+	possibleTargets := make([]Position, 0)
+
+	appendPanelData := func(p Board, xOffset, yOffset BoardDim) {
+		for _, pos := range p.VWalls() {
+			vWalls = append(vWalls, Position{X: pos.X + xOffset, Y: pos.Y + yOffset})
+		}
+		for _, pos := range p.HWalls() {
+			hWalls = append(hWalls, Position{X: pos.X + xOffset, Y: pos.Y + yOffset})
+		}
+		for _, pos := range p.PossibleTargets() {
+			possibleTargets = append(possibleTargets, Position{X: pos.X + xOffset, Y: pos.Y + yOffset})
+		}
+	}
+	appendPanelData(a, 0, 0)
+	appendPanelData(b.Rotate90cw(), size, 0)
+	appendPanelData(c.Rotate90cw().Rotate90cw(), size, size)
+	appendPanelData(d.Rotate90cw().Rotate90cw().Rotate90cw(), 0, size)
+
+	return NewBoardWithTargets(size*2, vWalls, hWalls, possibleTargets)
+}
+
+// Panel1 returns a sample panel.
+func Panel1() Board {
+	return MustParsePanelString(`
+		+----+----+----+----+----+----+----+----+
+		|         |
+		+    +    +    +    +----+    +    +    +
+		|                   | []
+		+    +----+    +    +    +    +    +    +
+		|      [] |
+		+    +    +    +    +    +    +    +    +
+		|                               [] |
+		+    +    +    +    +    +    +----+    +
+		|
+		+    +    +    +    +    +    +    +    +
+		|
+		+----+    +    +    +    +    +    +    +
+		|              | []
+		+    +    +    +----+    +    +    +----+
+		|                                  |
+		+    +    +    +    +    +    +    +    +
+	`)
+}
+
+// Panel2 returns a sample panel.
+func Panel2() Board {
+	return MustParsePanelString(`
+		+----+----+----+----+----+----+----+----+
+		|                        |
+		+    +    +----+    +    +    +    +    +
+		|         | []
+		+    +    +    +    +    +    +    +    +
+		|
+		+    +    +    +    +    +    +    +    +
+		|                             | []
+		+    +    +    +    +    +    +----+    +
+		|
+		+----+    +    +    +----+    +    +    +
+		|                     [] |
+		+    +    +    +    +    +    +    +    +
+		|      [] |
+		+    +----+    +    +    +    +    +----+
+		|                                  |
+		+    +    +    +    +    +    +    +    +
+	`)
+}
+
+// Panel3 returns a sample panel.
+func Panel3() Board {
+	return MustParsePanelString(`
+		+----+----+----+----+----+----+----+----+
+		|                   |
+		+    +    +    +    +    +    +    +    +
+		|    | []
+		+    +----+    +    +    +    +----+    +
+		|                               [] |
+		+    +    +    +    +    +    +    +    +
+		|
+		+    +    +    +    +    +    +    +    +
+		|           [] |
+		+    +    +----+    +    +    +    +----+
+		|                                  | []
+		+----+    +    +    +    +    +    +    +
+		|
+		+    +    +    +    +    +    +    +----+
+		|                                  |
+		+    +    +    +    +    +    +    +    +
+	`)
+}
+
+// Panel4 returns a sample panel.
+func Panel4() Board {
+	return MustParsePanelString(`
+		+----+----+----+----+----+----+----+----+
+		|                   |
+		+    +    +    +    +    +    +    +    +
+		|                             | []
+		+    +    +    +    +    +    +----+    +
+		|
+		+    +----+    +    +    +    +    +    +
+		|      [] |
+		+    +    +    +    +    +----+    +    +
+		|                        | []
+		+    +    +    +    +    +    +    +    +
+		|           [] |                     [] |
+		+    +    +----+    +    +    +    +----+
+		|
+		+----+    +    +    +    +    +    +----+
+		|                                  |
+		+    +    +    +    +    +    +    +    +
+	`)
+}
+
+// BuildBoard constructs a full Board from four panel IDs in clockwise order.
+func BuildBoard(panel1, panel2, panel3, panel4 int) Board {
+	makePanel := func(id int) Board {
+		switch id {
+		case 1:
+			return Panel1()
+		case 2:
+			return Panel2()
+		case 3:
+			return Panel3()
+		case 4:
+			return Panel4()
+		default:
+			panic(fmt.Sprintf("unknown panel id: %d", id))
+		}
+	}
+	return BuildBoardFromPanels(
+		makePanel(panel1),
+		makePanel(panel2),
+		makePanel(panel3),
+		makePanel(panel4),
+	)
+}
