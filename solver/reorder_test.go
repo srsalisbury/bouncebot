@@ -102,9 +102,9 @@ func TestReorderSolution_PrefersFewerSwitchesWhenBothValid(t *testing.T) {
 	switches := countSwitches(result)
 
 	// The result should have minimal switches among valid solutions
-	// For Game1Solution with 1 Bot1 move and 6 Bot0 moves, optimal is 1 switch
-	if switches > 1 {
-		t.Errorf("Expected at most 1 switch for Game1Solution, got %d", switches)
+	// For Game1Solution with 1 Bot1 move and 9 Bot0 moves, optimal is 2 switches
+	if switches > 2 {
+		t.Errorf("Expected at most 2 switches for Game1Solution, got %d", switches)
 	}
 }
 

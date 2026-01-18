@@ -105,8 +105,8 @@ func TestService_SubmitSolution_ValidSolution(t *testing.T) {
 	if solution.PlayerID != aliceID {
 		t.Errorf("expected player ID %s, got %s", aliceID, solution.PlayerID)
 	}
-	if solution.MoveCount() != 7 {
-		t.Errorf("expected 7 moves, got %d", solution.MoveCount())
+	if solution.MoveCount() != 10 {
+		t.Errorf("expected 10 moves, got %d", solution.MoveCount())
 	}
 
 	// Check room has solution

@@ -12,16 +12,11 @@ func mustBuildNewGame(board Board, bots map[BotId]Position, botTarget BotPositio
 }
 
 // NewRandomGame generates a new game with random configuration:
-// - Random permutation of panels 1-4
+// - Random selection of panels
 // - Random target from possible target locations
 // - Random robot placement (avoiding each other, target, and center cells)
 func NewRandomGame() *Game {
-	// Shuffle panels 1-4 into random positions
-	panels := []int{1, 2, 3, 4}
-	rand.Shuffle(len(panels), func(i, j int) {
-		panels[i], panels[j] = panels[j], panels[i]
-	})
-	board := BuildBoard(panels[0], panels[1], panels[2], panels[3])
+	board := NewRandomBoard()
 
 	// Pick a random target from possible targets
 	possibleTargets := board.PossibleTargets()
