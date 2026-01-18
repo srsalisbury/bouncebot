@@ -380,11 +380,11 @@ function handleSwitchPlayerSolution(index: number) {
               class="wall"
               :style="getHWallStyle(wall)"
             />
-          </div>
 
-          <!-- Room ID label (multiplayer only) -->
-          <div v-if="!props.singlePlayer && props.roomId" class="room-id-label">
-            Room ID: {{ props.roomId }}
+            <!-- Room ID label (multiplayer only) -->
+            <div v-if="!props.singlePlayer && props.roomId" class="room-id-label">
+              Room ID: {{ props.roomId }}
+            </div>
           </div>
         </div>
 
