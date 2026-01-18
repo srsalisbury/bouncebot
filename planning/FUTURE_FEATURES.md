@@ -34,5 +34,5 @@
 - [x] Add client joining between games functionality
 - [x] Only the room creator can start the game
 - [x] Sort bot solutions to minimize different bot sequences (partial order sorting, constraints)
-- [ ] Auto-delete your worst solution
+- [x] Auto-delete your worst solution
 - [ ] 
