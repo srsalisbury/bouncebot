@@ -150,28 +150,28 @@ func (s *RoomService) SubmitSolution(roomID, playerID string, moves []model.BotP
 
 // MarkFinishedSolving marks a player as finished solving.
 func (s *RoomService) MarkFinishedSolving(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.gameMgr.MarkFinishedSolving(room, playerID)
 	})
 }
 
 // MarkReadyForNext marks a player as ready for the next game.
 func (s *RoomService) MarkReadyForNext(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.gameMgr.MarkReadyForNext(room, playerID)
 	})
 }
 
 // DisconnectPlayer marks a player as disconnected.
 func (s *RoomService) DisconnectPlayer(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.playerMgr.DisconnectPlayer(room, playerID)
 	})
 }
 
 // ReconnectPlayer marks a player as connected.
 func (s *RoomService) ReconnectPlayer(roomID, playerID string) error {
-	return s.withRoomLockErr(roomID, func(room *Room) ([]Signal, error) {
+	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.playerMgr.ReconnectPlayer(room, playerID)
 	})
 }
