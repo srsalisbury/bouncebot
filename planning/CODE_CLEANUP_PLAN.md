@@ -10,11 +10,8 @@ A comprehensive list of cleanup and refactoring opportunities for the BounceBot 
 
 #### 1. Split Large Components
 
-**GameBoard.vue (1,297 lines)**
-- Extract board rendering into `GameBoardContent.vue`
-- Extract solutions panel into `GameBoardSolutions.vue`
-- Move style helper functions to `gameBoardStyles.ts`
-- Move 700+ lines of styles to separate file or use CSS modules
+**~~GameBoard.vue (1,297 lines)~~** ✅ PR #160
+- ~~Extract solutions panel into `GameBoardSolutions.vue`~~
 
 **RoomView.vue (1,276 lines)**
 - Extract game header into `GameHeaderBar.vue` with solo/multiplayer/ended variants
@@ -47,21 +44,9 @@ A comprehensive list of cleanup and refactoring opportunities for the BounceBot 
 
 ### Medium Priority
 
-#### 3. Move Hardcoded Values to Constants
+#### ~~3. Move Hardcoded Values to Constants~~ ✅ PR #159
 
-| Value | Location | Suggested Constant |
-|-------|----------|-------------------|
-| `1000` (undo hold timer) | `GameBoard.vue:103` | `UNDO_HOLD_DURATION_MS` |
-| `300` (double-tap threshold) | `GameBoard.vue:217` | `DOUBLE_TAP_THRESHOLD_MS` |
-| `30 * 60` (max timer) | `PlayersPanel.vue:30` | `MAX_GAME_TIMER_SECONDS` |
-| `3000` (poll interval) | `useRoomConnection.ts:211` | `ROOM_POLL_INTERVAL_MS` |
-| `500` (reset delay) | `gameStore.ts` | `SOLUTION_SWITCH_DELAY_MS` |
-| `'__solver__'` | `RoomView.vue:117` | `SOLVER_PLAYER_ID` |
-| `'__solo__'` | `RoomView.vue:119` | `SOLO_PLAYER_ID` |
-| `6/5` (aspect ratio) | Multiple files | `MOBILE_ASPECT_RATIO` |
-| `1050` (width breakpoint) | Multiple files | `MOBILE_WIDTH_BREAKPOINT` |
-
-#### 4. Standardize Error Handling
+### 4. Standardize Error Handling
 
 - Create `useErrorHandler.ts` composable for centralized error handling
 - Some components log errors, some swallow silently - make consistent
@@ -118,45 +103,15 @@ A comprehensive list of cleanup and refactoring opportunities for the BounceBot 
 
 → Convert to proper error returns
 
-#### 3. Refactor Service Lock Pattern
+#### ~~3. Refactor Service Lock Pattern~~ ✅ PR #161, #164
 
-**`server/room/service.go`** repeats this pattern 8+ times:
-```go
-room, unlock := s.repo.GetWithLock(roomID)
-if room != nil {
-    // do work
-    unlock()
-}
-// process signals
-```
-
-→ Extract to `withRoomLock(roomID, fn)` helper
+~~Extract to `withRoomLock(roomID, fn)` helper~~
 
 ### Medium Priority
 
-#### 4. Split Large Files
+#### ~~4. Split Large Files~~ ✅ PR #162
 
-**`service.go` (459 lines)** - combines too many responsibilities:
-- Signal processing
-- Public API
-- Persistence management
-- Room cleanup
-
-→ Split into:
-- `service.go` - API and orchestration
-- `persistence_service.go` - Auto-save, cleanup, load/save
-- `signal_processor.go` - Signal handling
-
-**`model/game.go` (378 lines)**:
-→ Split into:
-- `game.go` - Core struct and public API
-- `game_movement.go` - Movement computation
-- `game_solution.go` - Solution verification
-
-**`model/games.go` (293 lines)**:
-→ Split into:
-- `game_generator.go` - NewRandomGame, NewContinuationGame
-- `board_panels.go` - Panel definitions
+~~**`service.go`** - Split signal processing into `service_signals.go`~~
 
 #### 5. Extract Duplicate String Helpers
 
@@ -167,9 +122,6 @@ if room != nil {
 → Move to `server/room/helpers.go` or `server/util/strings.go`
 
 #### 6. Reduce Function Complexity
-
-**`RoomService.processSignals()`** - large switch with 5 cases
-→ Extract each case to separate handler methods
 
 **`PlayerManager.RemovePlayer()`** - handles too many concerns
 → Split into `cleanupPlayerState()` and `determineGameStateSignals()`
@@ -186,13 +138,12 @@ if room != nil {
 | `30*time.Second` | `main.go:87` | `config.SolverTimeout` |
 | `256` (buffer size) | `ws/hub.go:320` | `WSClientBufferSize` |
 
-#### 8. Test Coverage Gaps
+#### ~~8. Test Coverage Gaps~~ ✅ PR #166
 
-Missing tests for:
-- `bouncebotserver.go` (105 lines)
-- `solver/solver.go`, `solver/registry.go`, `solver/manager.go`
-- `model/game.go`, `model/games.go`, `model/render.go`, `model/board.go`
-- `solver/benchmark/*` (>500 lines)
+~~Added tests for `bouncebotserver.go` and `solver/astar/astar.go`~~
+
+Remaining gaps (lower priority):
+- `solver/benchmark/*` (benchmark tooling)
 
 #### 9. Remove Dead Code
 
@@ -214,16 +165,14 @@ Error messages use inconsistent formats throughout `service.go`:
 
 | Area | High Priority | Medium Priority | Low Priority |
 |------|--------------|-----------------|--------------|
-| Frontend | 2 items | 3 items | 3 items |
-| Backend | 3 items | 3 items | 4 items |
+| Frontend | 2 items | 2 items | 3 items |
+| Backend | 2 items | 2 items | 3 items |
 
-### Suggested Order of Implementation
+### Completed PRs
 
-1. Extract duplicated solver code (backend) - quick win
-2. Move hardcoded values to constants (both) - easy, reduces bugs
-3. Split GameBoard.vue (frontend) - biggest impact on maintainability
-4. Refactor service lock pattern (backend) - reduces boilerplate
-5. Convert panics to errors (backend) - improves reliability
-6. Extract duplicate frontend utilities - reduces duplication
-7. Split large backend files - improves navigation
-8. Add missing tests - improves confidence
+- PR #159: Move hardcoded values to constants (frontend)
+- PR #160: Split GameBoard.vue (extract solutions panel)
+- PR #161: Refactor service lock pattern
+- PR #162: Split service.go (extract service_signals.go)
+- PR #164: Simplify withRoomLock (combine with withRoomLockErr)
+- PR #166: Add test coverage (bouncebotserver, A* solver)
