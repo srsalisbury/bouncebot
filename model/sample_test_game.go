@@ -50,7 +50,7 @@ func Game1() *Game {
 	return mustBuildNewGame(board, bots, target)
 }
 
-// Game1Solution returns a valid 10-move solution for Game1.
+// Game1OptimalSolution returns a valid 10-move solution for Game1.
 // Target is bot 0 at (4, 13), starting at (5, 4).
 //
 // Solution steps:
@@ -65,7 +65,7 @@ func Game1() *Game {
 //	 8. B1: (10,12) -> (0,12)  left
 //	 9. B0: (0,15)  -> (0,13)  up
 //	10. B0: (0,13)  -> (4,13)  right (reaches target T0)
-func Game1Solution() []BotPosition {
+func Game1OptimalSolution() []BotPosition {
 	return []BotPosition{
 		{Id: 0, Pos: Position{X: 5, Y: 0}},
 		{Id: 0, Pos: Position{X: 2, Y: 0}},

@@ -185,7 +185,7 @@ func TestBounceBotServer_SubmitSolution(t *testing.T) {
 	r, _ = svc.Get(r.ID)
 	r.CurrentGame = model.Game1()
 
-	validMoves := model.Game1Solution()
+	validMoves := model.Game1OptimalSolution()
 	protoMoves := make([]*pb.BotPos, len(validMoves))
 	for i, m := range validMoves {
 		protoMoves[i] = m.ToProto()

@@ -22,7 +22,7 @@ func (m *mockBroadcaster) BroadcastGameEnded(roomID, winnerID, winnerName string
 }
 func (m *mockBroadcaster) BroadcastRoomSettingsChanged(roomID string) {}
 
-// validSolution returns model.Game1Solution for convenience.
+// validSolution returns model.Game1OptimalSolution for convenience.
 func validSolution() []model.BotPosition {
-	return model.Game1Solution()
+	return model.Game1OptimalSolution()
 }

@@ -104,8 +104,7 @@ func TestAStarSolver_OptimalSolution(t *testing.T) {
 	}
 
 	// A* should find the optimal (shortest) solution
-	// Game1 has a known optimal solution length of 7
-	expectedMoves := 7
+	expectedMoves := len(model.Game1OptimalSolution())
 	if len(result.Solution.Moves) != expectedMoves {
 		t.Errorf("expected optimal solution of %d moves, got %d", expectedMoves, len(result.Solution.Moves))
 	}

@@ -47,7 +47,7 @@ func positionsEqual(a, b []model.Position) bool {
 func TestReorderSolution_ReturnsValidSolution(t *testing.T) {
 	// Use Game1 which has a known valid solution
 	game := model.Game1()
-	solution := model.Game1Solution()
+	solution := model.Game1OptimalSolution()
 
 	result := ReorderSolution(game, solution)
 
@@ -59,16 +59,16 @@ func TestReorderSolution_ReturnsValidSolution(t *testing.T) {
 }
 
 func TestReorderSolution_KeepsValidOrderWhenReorderingWouldInvalidate(t *testing.T) {
-	// Game1Solution: Bot 1 must move first to clear the path for Bot 0
+	// Game1OptimalSolution: Bot 1 must move first to clear the path for Bot 0
 	// Original: [Bot1, Bot0, Bot0, Bot0, Bot0, Bot0, Bot0] - 1 switch
 	// If we tried [Bot0, Bot0, Bot0, Bot0, Bot0, Bot0, Bot1] - still 1 switch but likely invalid
 	game := model.Game1()
-	solution := model.Game1Solution()
+	solution := model.Game1OptimalSolution()
 
 	// Verify original solution is valid
 	isValid, _ := game.CheckSolution(solution)
 	if !isValid {
-		t.Fatalf("Original Game1Solution should be valid")
+		t.Fatalf("Original Game1OptimalSolution should be valid")
 	}
 
 	result := ReorderSolution(game, solution)
@@ -94,7 +94,7 @@ func TestReorderSolution_PrefersFewerSwitchesWhenBothValid(t *testing.T) {
 	// Create a scenario where multiple orderings are valid
 	// but we want the one with fewer switches
 	game := model.Game1()
-	solution := model.Game1Solution()
+	solution := model.Game1OptimalSolution()
 
 	result := ReorderSolution(game, solution)
 
@@ -102,9 +102,9 @@ func TestReorderSolution_PrefersFewerSwitchesWhenBothValid(t *testing.T) {
 	switches := countSwitches(result)
 
 	// The result should have minimal switches among valid solutions
-	// For Game1Solution with 1 Bot1 move and 9 Bot0 moves, optimal is 2 switches
+	// For Game1OptimalSolution with 1 Bot1 move and 9 Bot0 moves, optimal is 2 switches
 	if switches > 2 {
-		t.Errorf("Expected at most 2 switches for Game1Solution, got %d", switches)
+		t.Errorf("Expected at most 2 switches for Game1OptimalSolution, got %d", switches)
 	}
 }
 
@@ -112,7 +112,7 @@ func TestReorderSolution_ValidityCheck_OrderDependent(t *testing.T) {
 	// This test verifies that when move order matters for validity,
 	// the reorder function respects that constraint
 	game := model.Game1()
-	solution := model.Game1Solution()
+	solution := model.Game1OptimalSolution()
 
 	// Try reversing the solution (putting all Bot0 moves before Bot1)
 	// This should be invalid because Bot1 needs to move first
@@ -166,7 +166,7 @@ func TestReorderSolution_ValidityCheck_OrderDependent(t *testing.T) {
 
 func TestReorderSolution_PreservesTotalMoves(t *testing.T) {
 	game := model.Game1()
-	solution := model.Game1Solution()
+	solution := model.Game1OptimalSolution()
 
 	result := ReorderSolution(game, solution)
 
@@ -177,7 +177,7 @@ func TestReorderSolution_PreservesTotalMoves(t *testing.T) {
 
 func TestReorderSolution_ContainsSameMoves(t *testing.T) {
 	game := model.Game1()
-	solution := model.Game1Solution()
+	solution := model.Game1OptimalSolution()
 
 	result := ReorderSolution(game, solution)
 
