@@ -8,6 +8,7 @@ type Player struct {
 	Name           string
 	Status         PlayerStatus
 	DisconnectedAt time.Time
+	ColorIndex     int32 // 0-7 for the 8 available player colors
 }
 
 // PlayerStatus represents the connection status of a player.

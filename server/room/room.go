@@ -90,8 +90,9 @@ func (r *Room) ToProto() *pb.Room {
 	players := make([]*pb.Player, len(r.Players))
 	for i, p := range r.Players {
 		players[i] = &pb.Player{
-			Id:   p.ID,
-			Name: p.Name,
+			Id:         p.ID,
+			Name:       p.Name,
+			ColorIndex: p.ColorIndex,
 		}
 	}
 
@@ -121,8 +122,9 @@ func (r *Room) ToProto() *pb.Room {
 	pendingPlayers := make([]*pb.Player, len(r.PendingPlayers))
 	for i, p := range r.PendingPlayers {
 		pendingPlayers[i] = &pb.Player{
-			Id:   p.ID,
-			Name: p.Name,
+			Id:         p.ID,
+			Name:       p.Name,
+			ColorIndex: p.ColorIndex,
 		}
 	}
 

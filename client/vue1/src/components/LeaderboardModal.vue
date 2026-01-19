@@ -31,18 +31,9 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 
-// Map player IDs to their color index (based on join order)
-const playerColorMap = computed(() => {
-  const map = new Map<string, number>()
-  props.players.forEach((player, index) => {
-    map.set(player.id, index)
-  })
-  return map
-})
-
 function getPlayerColorById(playerId: string): string {
-  const index = playerColorMap.value.get(playerId) ?? 0
-  return getPlayerColor(index)
+  const player = props.players.find(p => p.id === playerId)
+  return player ? getPlayerColor(player.colorIndex) : '#888888'
 }
 
 function getPlayerWins(playerId: string): number {

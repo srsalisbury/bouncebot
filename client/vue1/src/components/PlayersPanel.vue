@@ -85,15 +85,6 @@ onUnmounted(() => {
 
 const roomStore = useRoomStore()
 
-// Map player IDs to their color index (based on join order, so colors stay stable when sorting)
-const playerColorMap = computed(() => {
-  const map = new Map<string, number>()
-  props.players.forEach((player, index) => {
-    map.set(player.id, index)
-  })
-  return map
-})
-
 // Sort players: solved players first (by move count, then by time), then unsolved
 const sortedPlayers = computed(() => {
   if (!props.solutions || props.solutions.length === 0) {
@@ -165,8 +156,7 @@ function getPlayerWins(player: Player): number {
 }
 
 function getPlayerColorFor(player: Player): string {
-  const index = playerColorMap.value.get(player.id) ?? 0
-  return getPlayerColor(index)
+  return getPlayerColor(player.colorIndex)
 }
 
 function isCurrentPlayer(player: Player): boolean {

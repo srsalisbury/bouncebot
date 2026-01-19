@@ -186,8 +186,13 @@ function getPlayerColorById(playerId: string): string {
   if (playerId.startsWith(SOLVER_PLAYER_ID)) {
     return '#888888' // Gray for solver
   }
-  const index = room.value?.players.findIndex(p => p.id === playerId) ?? -1
-  return index >= 0 ? getPlayerColor(index) : '#888888'
+  // Find player in either players or pendingPlayers
+  const player = room.value?.players.find(p => p.id === playerId)
+    ?? room.value?.pendingPlayers.find(p => p.id === playerId)
+  if (player) {
+    return getPlayerColor(player.colorIndex)
+  }
+  return '#888888'
 }
 
 function isSolverSolution(playerId: string): boolean {
