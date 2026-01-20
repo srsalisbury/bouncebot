@@ -28,6 +28,7 @@
 - [x] On late player waiting room, doesn't show current player, and game board doesn't show current player. Seems like it's not connected to the server.
 - [x] If host leaves, all other players get pushed into waiting room.
 - [x] Player can see the game and click I'm finished even though they're not playing.
+- [x] Fix waiting room player colors
 
 ## New Functionality
 
