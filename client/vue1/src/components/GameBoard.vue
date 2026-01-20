@@ -76,19 +76,17 @@ const allSolutions = computed(() => {
     return [...solutions, ...solverSols]
   }
 
-  // Multiplayer mode: combine top 3, solver solutions, and current player (if not in top 3)
+  // Multiplayer mode: combine top solutions, solver solutions, and current player (if not in top 3)
   const combined: PlayerSolution[] = []
 
-  // Add top 3 solutions first (only if more than 1 player)
+  // Add top solutions first
   const topThree = props.topThreeSolutions ?? []
-  if (topThree.length > 1) {
-    combined.push(...topThree)
-  }
+  combined.push(...topThree)
 
   // Add solver solutions
   combined.push(...solverSols)
 
-  // Add current player's solution last (only if not in top 3)
+  // Add current player's solution last (only if not already in top solutions)
   if (props.currentPlayerSolution && !isCurrentPlayerInTopThree.value) {
     combined.push(props.currentPlayerSolution)
   }

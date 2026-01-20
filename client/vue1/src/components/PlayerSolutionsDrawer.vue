@@ -68,8 +68,8 @@ const solverStartIndex = computed(() => {
   if (props.singlePlayer) {
     return props.playerSolutions.length
   }
-  // Multiplayer: top 3 (if more than 1)
-  return props.topThreeSolutions.length > 1 ? props.topThreeSolutions.length : 0
+  // Multiplayer: after top solutions
+  return props.topThreeSolutions.length
 })
 
 // Calculate the starting index for current player's solution (after solver)
@@ -91,10 +91,10 @@ const hasTopThreeSolutions = computed(() => {
   if (props.singlePlayer) {
     return props.playerSolutions.length > 0
   }
-  return props.topThreeSolutions.length > 1
+  return props.topThreeSolutions.length > 0
 })
 
-// Check if current player solution should be shown (not in top 3)
+// Check if current player solution should be shown (not already in top 3)
 const showCurrentPlayerSolution = computed(() => {
   return !!props.currentPlayerSolution && !isCurrentPlayerInTopThree.value
 })
@@ -147,8 +147,8 @@ function getActiveSolution(): PlayerSolution | undefined {
 
   // Multiplayer mode - new order: [top 3, solver, current player]
 
-  // Top 3 solutions
-  if (props.topThreeSolutions.length > 1 && props.activeIndex < props.topThreeSolutions.length) {
+  // Top solutions
+  if (props.activeIndex < props.topThreeSolutions.length) {
     return props.topThreeSolutions[props.activeIndex]
   }
 
@@ -257,8 +257,8 @@ function isActiveSolver() {
         <!-- Multiplayer mode: grouped layout -->
         <!-- Order: Top 3 | Bot | Current player (if not in top 3) -->
         <template v-else>
-          <!-- Top 3 solutions (skip if only 1 player) -->
-          <template v-if="topThreeSolutions.length > 1">
+          <!-- Top solutions (best players) -->
+          <template v-if="topThreeSolutions.length > 0">
             <div
               v-for="(solution, index) in topThreeSolutions"
               :key="'top-' + solution.playerId"
@@ -413,7 +413,6 @@ function isActiveSolver() {
                 <span class="player-name">{{ getPlayerName(solverSolution.playerId) }}</span>
               </div>
               <span class="solution-moves">{{ solverSolution.moves.length }}</span>
-              <span class="solution-time">&nbsp;</span>
             </div>
             <div class="move-list">
               <div
