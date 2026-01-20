@@ -311,7 +311,7 @@ function dismissProtectedDialog() {
 watch(
   () => gameStore.isSolved,
   (solved) => {
-    if (solved && hasGame.value) {
+    if (solved && hasGame.value && !gameEnded.value) {
       gameActions.submitSolution()
     }
   }
@@ -577,7 +577,6 @@ onUnmounted(() => {
                 Leaderboard
               </button>
               <LeaderboardModal
-                class="mobile-only"
                 :show="showLeaderboard"
                 :players="room.players"
                 :scores="room.scores"
