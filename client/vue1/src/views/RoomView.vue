@@ -126,6 +126,17 @@ const sortedSolutions = computed(() => {
   })
 })
 
+// Current player's solution (may be null if they didn't solve)
+const currentPlayerSolution = computed(() => {
+  if (!roomStore.currentPlayerId || !room.value) return null
+  return room.value.solutions.find(s => s.playerId === roomStore.currentPlayerId) ?? null
+})
+
+// Top 3 solutions (sorted by moves, then time)
+const topThreeSolutions = computed(() => {
+  return sortedSolutions.value.slice(0, 3)
+})
+
 // Solver solutions as PlayerSolution-like objects (for display)
 const solverPlayerSolutions = computed(() => {
   if (solverSolutions.value.length === 0) return []
@@ -449,6 +460,8 @@ onUnmounted(() => {
         :on-before-modify-best="onBeforeModifyBest"
         :game-ended="gameEnded"
         :player-solutions="isSinglePlayer ? soloPlayerSolution : sortedSolutions"
+        :current-player-solution="currentPlayerSolution"
+        :top-three-solutions="topThreeSolutions"
         :solver-solutions="solverPlayerSolutions"
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"

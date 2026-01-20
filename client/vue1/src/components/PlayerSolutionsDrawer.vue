@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { DIRECTION_ARROWS, getRobotColor, MOBILE_ASPECT_RATIO, MOBILE_WIDTH_BREAKPOINT } from '../constants'
 import { useSwipe } from '../composables/useSwipe'
 import type { PlayerSolution } from '../gen/bouncebot_pb'
@@ -13,6 +13,8 @@ interface MoveWithDirection {
 
 const props = defineProps<{
   playerSolutions: PlayerSolution[]
+  currentPlayerSolution?: PlayerSolution | null
+  topThreeSolutions: PlayerSolution[]
   solverSolutions: PlayerSolution[]
   activeIndex: number
   replayMoveIndex: number
@@ -20,6 +22,7 @@ const props = defineProps<{
   getPlayerColor: (playerId: string) => string
   isSolverSolution: (playerId: string) => boolean
   getPlayerSolutionMoves: (solution: PlayerSolution) => MoveWithDirection[]
+  singlePlayer?: boolean
   gameStartedAt?: Timestamp
 }>()
 
@@ -53,6 +56,49 @@ function handleReplayClick() {
   }
 }
 
+// Check if current player is in top 3
+const isCurrentPlayerInTopThree = computed(() => {
+  if (!props.currentPlayerSolution) return false
+  return props.topThreeSolutions.some(s => s.playerId === props.currentPlayerSolution?.playerId)
+})
+
+// Calculate the starting index for solver solutions in the combined array
+// New order: [top 3, solver, current player (if not in top 3)]
+const solverStartIndex = computed(() => {
+  if (props.singlePlayer) {
+    return props.playerSolutions.length
+  }
+  // Multiplayer: top 3 (if more than 1)
+  return props.topThreeSolutions.length > 1 ? props.topThreeSolutions.length : 0
+})
+
+// Calculate the starting index for current player's solution (after solver)
+const currentPlayerStartIndex = computed(() => {
+  return solverStartIndex.value + props.solverSolutions.length
+})
+
+// Total count of solutions for swipe navigation
+const totalSolutionCount = computed(() => {
+  let count = solverStartIndex.value + props.solverSolutions.length
+  if (props.currentPlayerSolution && !isCurrentPlayerInTopThree.value) {
+    count += 1
+  }
+  return count
+})
+
+// Check if any player solutions are displayed before solver (for divider logic)
+const hasTopThreeSolutions = computed(() => {
+  if (props.singlePlayer) {
+    return props.playerSolutions.length > 0
+  }
+  return props.topThreeSolutions.length > 1
+})
+
+// Check if current player solution should be shown (not in top 3)
+const showCurrentPlayerSolution = computed(() => {
+  return !!props.currentPlayerSolution && !isCurrentPlayerInTopThree.value
+})
+
 // Swipe to expand/collapse and switch solutions
 useSwipe({
   target: drawerRef,
@@ -62,8 +108,8 @@ useSwipe({
     } else if (direction === 'up' && !isExpanded.value) {
       isExpanded.value = true
     } else if (!isExpanded.value) {
-      // Swipe left/right on collapsed drawer to switch player solutions
-      if (direction === 'left' && props.activeIndex < props.playerSolutions.length - 1) {
+      // Swipe left/right on collapsed drawer to switch solutions
+      if (direction === 'left' && props.activeIndex < totalSolutionCount.value - 1) {
         emit('switchSolution', props.activeIndex + 1)
       } else if (direction === 'right' && props.activeIndex > 0) {
         emit('switchSolution', props.activeIndex - 1)
@@ -89,18 +135,46 @@ function formatSolveTime(solvedAt?: Timestamp): string {
 }
 
 // Current active solution for collapsed header
-function getActiveSolution() {
-  const solverOffset = props.activeIndex - props.playerSolutions.length
+// New order: [top 3, solver, current player (if not in top 3)]
+function getActiveSolution(): PlayerSolution | undefined {
+  if (props.singlePlayer) {
+    const solverOffset = props.activeIndex - props.playerSolutions.length
+    if (solverOffset >= 0 && solverOffset < props.solverSolutions.length) {
+      return props.solverSolutions[solverOffset]
+    }
+    return props.playerSolutions[props.activeIndex]
+  }
+
+  // Multiplayer mode - new order: [top 3, solver, current player]
+
+  // Top 3 solutions
+  if (props.topThreeSolutions.length > 1 && props.activeIndex < props.topThreeSolutions.length) {
+    return props.topThreeSolutions[props.activeIndex]
+  }
+
+  // Solver solutions
+  const solverOffset = props.activeIndex - solverStartIndex.value
   if (solverOffset >= 0 && solverOffset < props.solverSolutions.length) {
     return props.solverSolutions[solverOffset]
   }
-  return props.playerSolutions[props.activeIndex]
+
+  // Current player's solution (at the end, if not in top 3)
+  if (showCurrentPlayerSolution.value && props.activeIndex === currentPlayerStartIndex.value) {
+    return props.currentPlayerSolution!
+  }
+
+  return undefined
 }
 
 // Check if current active solution is a solver
 function isActiveSolver() {
-  return props.activeIndex >= props.playerSolutions.length && props.solverSolutions.length > 0
+  if (props.singlePlayer) {
+    return props.activeIndex >= props.playerSolutions.length && props.solverSolutions.length > 0
+  }
+  const solverOffset = props.activeIndex - solverStartIndex.value
+  return solverOffset >= 0 && solverOffset < props.solverSolutions.length
 }
+
 </script>
 
 <template>
@@ -129,7 +203,7 @@ function isActiveSolver() {
             {{ getActiveSolution()?.moves.length ?? 0 }}
             {{ getActiveSolution()?.moves.length === 1 ? 'move' : 'moves' }}
           </span>
-          <span v-if="activeIndex === 0 && !isActiveSolver()" class="winner-badge">Winner</span>
+          <span v-if="!singlePlayer && topThreeSolutions.length > 1 && activeIndex === 0" class="winner-badge">Winner</span>
         </div>
       </div>
     </div>
@@ -137,61 +211,196 @@ function isActiveSolver() {
     <!-- Expanded content -->
     <div v-if="isExpanded" class="drawer-content">
       <div class="solutions-columns">
-        <!-- Player solutions -->
-        <div
-          v-for="(solution, index) in playerSolutions"
-          :key="solution.playerId"
-          class="solution-column"
-          :class="{ active: index === activeIndex, winner: index === 0 }"
-          @click="handleSolutionClick(index)"
-        >
-          <!-- Replay button on active solution -->
-          <button
-            v-if="index === activeIndex && solution.moves.length > 0"
-            class="replay-btn"
-            @click.stop="handleReplayClick()"
+        <!-- Single player mode: use playerSolutions directly -->
+        <template v-if="singlePlayer">
+          <div
+            v-for="(solution, index) in playerSolutions"
+            :key="solution.playerId"
+            class="solution-column"
+            :class="{ active: index === activeIndex }"
+            @click="handleSolutionClick(index)"
           >
-            <span class="play-icon">▶</span>
-          </button>
-          <div class="player-solution-header">
-            <div class="player-name-row">
-              <span
-                class="player-dot"
-                :style="{ backgroundColor: getPlayerColor(solution.playerId) }"
-              />
-              <span class="player-name">{{ getPlayerName(solution.playerId) }}</span>
-            </div>
-            <span class="solution-moves">{{ solution.moves.length }}</span>
-            <span class="solution-time">{{ formatSolveTime(solution.solvedAt) }}</span>
-          </div>
-          <div class="move-list">
-            <div
-              v-for="(move, i) in getPlayerSolutionMoves(solution)"
-              :key="i"
-              class="move-item"
-              :class="{ animating: index === activeIndex && i < replayMoveIndex }"
+            <!-- Replay button on active solution -->
+            <button
+              v-if="index === activeIndex && solution.moves.length > 0"
+              class="replay-btn"
+              @click.stop="handleReplayClick()"
             >
-              <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
-                {{ move.robotId + 1 }}
-              </span>
-              <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+              <span class="play-icon">▶</span>
+            </button>
+            <div class="player-solution-header">
+              <div class="player-name-row">
+                <span
+                  class="player-dot"
+                  :style="{ backgroundColor: getPlayerColor(solution.playerId) }"
+                />
+                <span class="player-name">{{ getPlayerName(solution.playerId) }}</span>
+              </div>
+              <span class="solution-moves">{{ solution.moves.length }}</span>
+            </div>
+            <div class="move-list">
+              <div
+                v-for="(move, i) in getPlayerSolutionMoves(solution)"
+                :key="i"
+                class="move-item"
+                :class="{ animating: index === activeIndex && i < replayMoveIndex }"
+              >
+                <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
+                  {{ move.robotId + 1 }}
+                </span>
+                <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+              </div>
             </div>
           </div>
-        </div>
+        </template>
 
-        <!-- Divider and solver solutions -->
-        <template v-if="solverSolutions.length">
-          <div class="solutions-divider"></div>
+        <!-- Multiplayer mode: grouped layout -->
+        <!-- Order: Top 3 | Bot | Current player (if not in top 3) -->
+        <template v-else>
+          <!-- Top 3 solutions (skip if only 1 player) -->
+          <template v-if="topThreeSolutions.length > 1">
+            <div
+              v-for="(solution, index) in topThreeSolutions"
+              :key="'top-' + solution.playerId"
+              class="solution-column"
+              :class="{ active: activeIndex === index, winner: index === 0 }"
+              @click="handleSolutionClick(index)"
+            >
+              <!-- Replay button on active solution -->
+              <button
+                v-if="activeIndex === index && solution.moves.length > 0"
+                class="replay-btn"
+                @click.stop="handleReplayClick()"
+              >
+                <span class="play-icon">▶</span>
+              </button>
+              <div class="player-solution-header">
+                <div class="player-name-row">
+                  <span
+                    class="player-dot"
+                    :style="{ backgroundColor: getPlayerColor(solution.playerId) }"
+                  />
+                  <span class="player-name">{{ getPlayerName(solution.playerId) }}</span>
+                </div>
+                <span class="solution-moves">{{ solution.moves.length }}</span>
+                <span class="solution-time">{{ formatSolveTime(solution.solvedAt) }}</span>
+              </div>
+              <div class="move-list">
+                <div
+                  v-for="(move, i) in getPlayerSolutionMoves(solution)"
+                  :key="i"
+                  class="move-item"
+                  :class="{ animating: activeIndex === index && i < replayMoveIndex }"
+                >
+                  <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
+                    {{ move.robotId + 1 }}
+                  </span>
+                  <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Divider and solver solutions -->
+          <template v-if="solverSolutions.length">
+            <div v-if="hasTopThreeSolutions" class="solutions-divider"></div>
+            <div
+              v-for="(solverSolution, solverIndex) in solverSolutions"
+              :key="solverSolution.playerId"
+              class="solution-column solver"
+              :class="{ active: activeIndex === solverStartIndex + solverIndex }"
+              @click="handleSolutionClick(solverStartIndex + solverIndex)"
+            >
+              <!-- Replay button on active solution -->
+              <button
+                v-if="activeIndex === solverStartIndex + solverIndex && solverSolution.moves.length > 0"
+                class="replay-btn"
+                @click.stop="handleReplayClick()"
+              >
+                <span class="play-icon">▶</span>
+              </button>
+              <div class="player-solution-header">
+                <div class="player-name-row">
+                  <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
+                  <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
+                  <span class="player-name">{{ getPlayerName(solverSolution.playerId) }}</span>
+                </div>
+                <span class="solution-moves">{{ solverSolution.moves.length }}</span>
+                <span class="solution-time">&nbsp;</span>
+              </div>
+              <div class="move-list">
+                <div
+                  v-for="(move, i) in getPlayerSolutionMoves(solverSolution)"
+                  :key="i"
+                  class="move-item"
+                  :class="{ animating: activeIndex === solverStartIndex + solverIndex && i < replayMoveIndex }"
+                >
+                  <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
+                    {{ move.robotId + 1 }}
+                  </span>
+                  <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Current player's solution (only if not in top 3) -->
+          <template v-if="showCurrentPlayerSolution">
+            <div v-if="hasTopThreeSolutions || solverSolutions.length" class="solutions-divider"></div>
+            <div
+              class="solution-column current-player"
+              :class="{ active: activeIndex === currentPlayerStartIndex }"
+              @click="handleSolutionClick(currentPlayerStartIndex)"
+            >
+              <!-- Replay button on active solution -->
+              <button
+                v-if="activeIndex === currentPlayerStartIndex && currentPlayerSolution!.moves.length > 0"
+                class="replay-btn"
+                @click.stop="handleReplayClick()"
+              >
+                <span class="play-icon">▶</span>
+              </button>
+              <div class="player-solution-header">
+                <div class="player-name-row">
+                  <span
+                    class="player-dot"
+                    :style="{ backgroundColor: getPlayerColor(currentPlayerSolution!.playerId) }"
+                  />
+                  <span class="player-name">{{ getPlayerName(currentPlayerSolution!.playerId) }}</span>
+                </div>
+                <span class="solution-moves">{{ currentPlayerSolution!.moves.length }}</span>
+                <span class="solution-time">{{ formatSolveTime(currentPlayerSolution!.solvedAt) }}</span>
+              </div>
+              <div class="move-list">
+                <div
+                  v-for="(move, i) in getPlayerSolutionMoves(currentPlayerSolution!)"
+                  :key="i"
+                  class="move-item"
+                  :class="{ animating: activeIndex === currentPlayerStartIndex && i < replayMoveIndex }"
+                >
+                  <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
+                    {{ move.robotId + 1 }}
+                  </span>
+                  <span class="move-arrow">{{ DIRECTION_ARROWS[move.direction] }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+
+        <!-- Solver solutions for single player mode -->
+        <template v-if="singlePlayer && solverSolutions.length">
+          <div v-if="playerSolutions.length > 0" class="solutions-divider"></div>
           <div
             v-for="(solverSolution, solverIndex) in solverSolutions"
             :key="solverSolution.playerId"
             class="solution-column solver"
-            :class="{ active: activeIndex === playerSolutions.length + solverIndex }"
-            @click="handleSolutionClick(playerSolutions.length + solverIndex)"
+            :class="{ active: activeIndex === solverStartIndex + solverIndex }"
+            @click="handleSolutionClick(solverStartIndex + solverIndex)"
           >
             <!-- Replay button on active solution -->
             <button
-              v-if="activeIndex === playerSolutions.length + solverIndex && solverSolution.moves.length > 0"
+              v-if="activeIndex === solverStartIndex + solverIndex && solverSolution.moves.length > 0"
               class="replay-btn"
               @click.stop="handleReplayClick()"
             >
@@ -204,13 +413,14 @@ function isActiveSolver() {
                 <span class="player-name">{{ getPlayerName(solverSolution.playerId) }}</span>
               </div>
               <span class="solution-moves">{{ solverSolution.moves.length }}</span>
+              <span class="solution-time">&nbsp;</span>
             </div>
             <div class="move-list">
               <div
                 v-for="(move, i) in getPlayerSolutionMoves(solverSolution)"
                 :key="i"
                 class="move-item"
-                :class="{ animating: activeIndex === playerSolutions.length + solverIndex && i < replayMoveIndex }"
+                :class="{ animating: activeIndex === solverStartIndex + solverIndex && i < replayMoveIndex }"
               >
                 <span class="move-robot" :style="{ backgroundColor: getRobotColor(move.robotId) }">
                   {{ move.robotId + 1 }}
