@@ -458,6 +458,8 @@ onUnmounted(() => {
         :game-number="displayedGameNumber"
         :input-blocked="showLeaderboard"
         :single-player="isSinglePlayer"
+        :get-best-submitted-index="gameActions.getBestSubmittedIndex"
+        :on-solution-deleted="gameActions.notifySolutionDeleted"
       >
         <template #header>
           <div class="game-header">

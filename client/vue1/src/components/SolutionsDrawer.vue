@@ -4,6 +4,11 @@ import { useGameStore } from '../stores/gameStore'
 import { DIRECTION_ARROWS, getRobotColor, MOBILE_ASPECT_RATIO, MOBILE_WIDTH_BREAKPOINT } from '../constants'
 import { useSwipe } from '../composables/useSwipe'
 
+const props = defineProps<{
+  getBestSubmittedIndex?: () => number | null
+  onSolutionDeleted?: (index: number) => void
+}>()
+
 const store = useGameStore()
 const isExpanded = ref(false)
 const drawerRef = ref<HTMLElement | null>(null)
@@ -54,6 +59,21 @@ function toggleExpanded() {
   isExpanded.value = !isExpanded.value
 }
 
+// Start a new solution, handling auto-delete if at max capacity
+function handleNewSolution() {
+  const bestIndex = props.getBestSubmittedIndex?.() ?? null
+  const result = store.startNewSolution(bestIndex)
+  if (result.deletedIndex !== null) {
+    props.onSolutionDeleted?.(result.deletedIndex)
+  }
+}
+
+// Delete a solution and notify parent
+function handleDeleteSolution(index: number) {
+  store.deleteSolution(index)
+  props.onSolutionDeleted?.(index)
+}
+
 const activeSolution = computed(() => store.solutions[store.activeSolutionIndex])
 const moveCount = computed(() => activeSolution.value?.moves.length ?? 0)
 const isSolved = computed(() => activeSolution.value?.isSolved ?? false)
@@ -100,7 +120,7 @@ const solutionCount = computed(() => store.solutions.length)
           <button
             v-if="index === store.activeSolutionIndex && store.solutions.length > 1"
             class="delete-btn"
-            @click.stop="store.deleteSolution(index)"
+            @click.stop="handleDeleteSolution(index)"
           >
             ×
           </button>
@@ -122,11 +142,10 @@ const solutionCount = computed(() => store.solutions.length)
             </div>
           </div>
         </div>
-        <!-- Add new solution button -->
+        <!-- Add new solution button (always visible, auto-deletes worst if at max) -->
         <button
-          v-if="store.canStartNewSolution"
           class="add-solution-btn"
-          @click="store.startNewSolution()"
+          @click="handleNewSolution()"
         >
           +
         </button>

@@ -25,6 +25,8 @@ const props = defineProps<{
   gameNumber?: number
   inputBlocked?: boolean
   singlePlayer?: boolean
+  getBestSubmittedIndex?: () => number | null
+  onSolutionDeleted?: (index: number) => void
 }>()
 
 const store = useGameStore()
@@ -88,6 +90,15 @@ function doReset() {
   }
 }
 
+// Start a new solution, handling auto-delete if at max capacity
+function doNewSolution() {
+  const bestIndex = props.getBestSubmittedIndex?.() ?? null
+  const result = store.startNewSolution(bestIndex)
+  if (result.deletedIndex !== null) {
+    props.onSolutionDeleted?.(result.deletedIndex)
+  }
+}
+
 // Press-and-hold detection for reset functionality
 let undoHoldTimer: ReturnType<typeof setTimeout> | null = null
 let undoDidReset = false
@@ -131,7 +142,7 @@ useGameInput(
     onMove: (direction) => store.moveRobot(direction),
     onUndo: doUndo,
     onDelete: doDelete,
-    onNewSolution: () => store.startNewSolution(),
+    onNewSolution: doNewSolution,
     onSelectRobot: (index) => store.selectRobot(index),
     onSwitchSolution: (delta) => store.switchSolution(store.activeSolutionIndex + delta),
     onSwitchPlayerSolution: (delta) => {
@@ -152,7 +163,6 @@ useGameInput(
     inputBlocked: computed(() => props.inputBlocked ?? false),
     gameEnded: computed(() => props.gameEnded ?? false),
     helpOpen: showHowToPlay,
-    canStartNewSolution: computed(() => store.canStartNewSolution),
     selectedRobotId: computed(() => store.selectedRobotId),
     robotCount: computed(() => store.robots.length),
   }
@@ -457,8 +467,7 @@ function handleSwitchPlayerSolution(index: number) {
             >Undo Move</button>
             <button
               class="action-btn new-solution-btn"
-              :disabled="!store.canStartNewSolution"
-              @click="store.startNewSolution()"
+              @click="doNewSolution()"
             >
               New Solution
             </button>
@@ -481,8 +490,7 @@ function handleSwitchPlayerSolution(index: number) {
         >Undo Move</button>
         <button
           class="action-btn new-solution-btn"
-          :disabled="!store.canStartNewSolution"
-          @click="store.startNewSolution()"
+          @click="doNewSolution()"
         >
           New Solution
         </button>
@@ -493,6 +501,8 @@ function handleSwitchPlayerSolution(index: number) {
     <SolutionsDrawer
       v-if="!props.gameEnded"
       class="mobile-drawer"
+      :get-best-submitted-index="props.getBestSubmittedIndex"
+      :on-solution-deleted="props.onSolutionDeleted"
     />
 
     <!-- Mobile player solutions drawer (only after game ends, hidden on desktop) -->

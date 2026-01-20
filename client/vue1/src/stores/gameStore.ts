@@ -156,6 +156,53 @@ export const useGameStore = defineStore('game', () => {
     return solutions.value.length < MAX_SOLUTIONS
   })
 
+  // Find the index of the worst solution to delete when making room for a new one.
+  // bestSubmittedIndex is the index of the best solution that has been submitted to the server (if any).
+  // Returns -1 if no solution should be deleted.
+  //
+  // Deletion priority:
+  // 1. If any unsolved solutions exist -> delete the most recent unsolved (highest index)
+  // 2. If all solutions are solved -> delete the longest one (most moves)
+  function findWorstSolutionIndex(bestSubmittedIndex: number | null): number {
+    if (solutions.value.length < MAX_SOLUTIONS) {
+      return -1 // No need to delete anything
+    }
+
+    // Find indices that are candidates for deletion (not the best submitted)
+    const candidates: number[] = []
+    for (let i = 0; i < solutions.value.length; i++) {
+      if (i !== bestSubmittedIndex) {
+        candidates.push(i)
+      }
+    }
+
+    if (candidates.length === 0) {
+      return -1 // Can't delete anything (only best submitted exists)
+    }
+
+    // Check if any candidate is unsolved
+    const unsolvedCandidates = candidates.filter(i => !solutions.value[i]!.isSolved)
+
+    if (unsolvedCandidates.length > 0) {
+      // Delete the most recent unsolved solution (highest index)
+      return Math.max(...unsolvedCandidates)
+    }
+
+    // All candidates are solved - delete the longest one (most moves)
+    let worstIndex = candidates[0]!
+    let worstMoveCount = solutions.value[worstIndex]!.moves.length
+    for (let i = 1; i < candidates.length; i++) {
+      const candidateIndex = candidates[i]!
+      const moveCount = solutions.value[candidateIndex]!.moves.length
+      if (moveCount > worstMoveCount) {
+        worstMoveCount = moveCount
+        worstIndex = candidateIndex
+      }
+    }
+
+    return worstIndex
+  }
+
   // Actions
   function selectRobot(robotId: number) {
     if (selectedRobotId.value === robotId) {
@@ -402,11 +449,39 @@ export const useGameStore = defineStore('game', () => {
     pendingTimeouts.value.push(clearTimeoutId)
   }
 
-  function startNewSolution() {
-    if (!canStartNewSolution.value) return
+  type StartNewSolutionResult = {
+    newIndex: number
+    deletedIndex: number | null
+  }
 
+  // Start a new solution slot. If at max capacity, auto-deletes the worst solution first.
+  // bestSubmittedIndex: the index of the best submitted solution to protect from deletion.
+  // Returns an object with the new active solution index and the deleted index (if any).
+  // Returns newIndex: -1 if a new solution couldn't be created.
+  function startNewSolution(bestSubmittedIndex: number | null = null): StartNewSolutionResult {
     // Cancel any in-progress replay
     cancelPendingTimeouts()
+
+    let deletedIndex: number | null = null
+
+    // If at max capacity, delete the worst solution first
+    if (solutions.value.length >= MAX_SOLUTIONS) {
+      const worstIndex = findWorstSolutionIndex(bestSubmittedIndex)
+      if (worstIndex === -1) {
+        // Can't delete anything, can't create new solution
+        return { newIndex: -1, deletedIndex: null }
+      }
+      // Delete the worst solution (internally, not through deleteSolution to avoid animation)
+      solutions.value.splice(worstIndex, 1)
+      deletedIndex = worstIndex
+      // Adjust active index if needed
+      if (activeSolutionIndex.value > worstIndex) {
+        activeSolutionIndex.value--
+      } else if (activeSolutionIndex.value === worstIndex) {
+        // We just deleted the active solution, pick the first one
+        activeSolutionIndex.value = 0
+      }
+    }
 
     // Create new empty solution
     solutions.value.push({ moves: [], isSolved: false })
@@ -419,6 +494,8 @@ export const useGameStore = defineStore('game', () => {
     committedMoves.value = []
     animatingMoveIndex.value = null
     activeSolutionIndex.value = newIndex
+
+    return { newIndex, deletedIndex }
   }
 
   function deleteSolution(index: number) {

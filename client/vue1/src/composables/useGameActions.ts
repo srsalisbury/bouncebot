@@ -152,11 +152,41 @@ export function useGameActions(options: GameActionsOptions) {
     return solutionIndex === bestSubmittedInfo.value.index
   }
 
+  // Get the current best submitted solution index (or null if none submitted)
+  function getBestSubmittedIndex(): number | null {
+    return bestSubmittedInfo.value?.index ?? null
+  }
+
+  // Notify that a solution at the given index was deleted.
+  // This adjusts the best submitted index if needed.
+  function notifySolutionDeleted(deletedIndex: number): void {
+    if (bestSubmittedInfo.value === null) return
+
+    if (deletedIndex === bestSubmittedInfo.value.index) {
+      // The best submitted solution was deleted
+      bestSubmittedInfo.value = null
+      if (roomId.value) {
+        clearBestSolutionStorage(roomId.value)
+      }
+    } else if (deletedIndex < bestSubmittedInfo.value.index) {
+      // A solution before the best submitted was deleted, shift index down
+      bestSubmittedInfo.value = {
+        ...bestSubmittedInfo.value,
+        index: bestSubmittedInfo.value.index - 1,
+      }
+      if (roomId.value) {
+        saveBestSolutionInfo(roomId.value, bestSubmittedInfo.value)
+      }
+    }
+  }
+
   return {
     submitSolution,
     markFinishedSolving,
     markReadyForNext,
     resetForNewGame,
     isBestSubmittedSolution,
+    getBestSubmittedIndex,
+    notifySolutionDeleted,
   }
 }
