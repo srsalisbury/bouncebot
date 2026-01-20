@@ -63,6 +63,11 @@ const {
       gameEnded.value = true
     }
   },
+  onPlayerBooted: () => {
+    // Player was booted from the room - clear state and redirect
+    roomStore.clearRoom()
+    router.push('/')
+  },
 })
 
 // Game actions composable
@@ -348,6 +353,27 @@ function confirmLeave() {
 
 function cancelLeave() {
   showLeaveConfirm.value = false
+}
+
+// Boot player (host only)
+async function bootPlayer(targetPlayerId: string) {
+  if (!roomStore.currentPlayerId) return
+
+  try {
+    await bounceBotClient.bootPlayer({
+      roomId: normalizedRoomId.value,
+      hostPlayerId: roomStore.currentPlayerId,
+      targetPlayerId,
+    })
+    // If host booted themselves, redirect to home
+    if (targetPlayerId === roomStore.currentPlayerId) {
+      roomStore.clearRoom()
+      router.push('/')
+    }
+    // Otherwise, room will update via player_left WebSocket event
+  } catch (e) {
+    console.error('Failed to boot player:', e)
+  }
 }
 
 function globalKeyHandler(event: KeyboardEvent) {
@@ -688,8 +714,11 @@ onUnmounted(() => {
     <SettingsModal
       :show="showSettings"
       :settings="room?.settings"
+      :players="room?.players ?? []"
+      :show-boot-player="!isSinglePlayer"
       @close="showSettings = false"
       @update="updateSettings"
+      @boot-player="bootPlayer"
     />
   </div>
 </template>

@@ -405,3 +405,118 @@ func TestService_ToProto(t *testing.T) {
 		t.Error("expected game_started_at in proto")
 	}
 }
+
+func TestService_BootPlayer_HostCanBoot(t *testing.T) {
+	svc := NewRoomService()
+	mock := &mockBroadcaster{}
+	svc.SetBroadcaster(mock)
+
+	room := svc.Create("Alice", false)
+	svc.Join(room.ID, "Bob")
+	aliceID := room.Players[0].ID
+	bobID := room.Players[1].ID
+
+	err := svc.BootPlayer(room.ID, aliceID, bobID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	room, _ = svc.Get(room.ID)
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 player after boot, got %d", len(room.Players))
+	}
+	if room.Players[0].ID != aliceID {
+		t.Errorf("expected Alice to remain, got %s", room.Players[0].Name)
+	}
+
+	// Verify player_left was broadcast
+	if !mock.playerLeftCalled {
+		t.Error("expected BroadcastPlayerLeft to be called")
+	}
+}
+
+func TestService_BootPlayer_NonHostCannotBoot(t *testing.T) {
+	svc := NewRoomService()
+
+	room := svc.Create("Alice", false)
+	svc.Join(room.ID, "Bob")
+	aliceID := room.Players[0].ID
+	bobID := room.Players[1].ID
+
+	// Bob (non-host) tries to boot Alice
+	err := svc.BootPlayer(room.ID, bobID, aliceID)
+	if err == nil {
+		t.Error("expected error when non-host tries to boot")
+	}
+
+	// Verify no one was removed
+	room, _ = svc.Get(room.ID)
+	if len(room.Players) != 2 {
+		t.Errorf("expected 2 players (no one booted), got %d", len(room.Players))
+	}
+}
+
+func TestService_BootPlayer_TargetNotFound(t *testing.T) {
+	svc := NewRoomService()
+
+	room := svc.Create("Alice", false)
+	aliceID := room.Players[0].ID
+
+	err := svc.BootPlayer(room.ID, aliceID, "nonexistent")
+	if err == nil {
+		t.Error("expected error for nonexistent target player")
+	}
+}
+
+func TestService_BootPlayer_RoomNotFound(t *testing.T) {
+	svc := NewRoomService()
+
+	err := svc.BootPlayer("nonexistent", "host", "target")
+	if err == nil {
+		t.Error("expected error for nonexistent room")
+	}
+}
+
+func TestService_BootPlayer_HostCanBootSelf(t *testing.T) {
+	svc := NewRoomService()
+
+	room := svc.Create("Alice", false)
+	svc.Join(room.ID, "Bob")
+	aliceID := room.Players[0].ID
+	bobID := room.Players[1].ID
+
+	// Alice (host) boots herself
+	err := svc.BootPlayer(room.ID, aliceID, aliceID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	room, _ = svc.Get(room.ID)
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 player after self-boot, got %d", len(room.Players))
+	}
+	// Bob should now be the host (first player)
+	if room.Players[0].ID != bobID {
+		t.Errorf("expected Bob to be new host, got %s", room.Players[0].Name)
+	}
+}
+
+func TestService_BootPlayer_LastPlayerDeletesRoom(t *testing.T) {
+	svc := NewRoomService()
+
+	room := svc.Create("Alice", false)
+	roomID := room.ID
+	aliceID := room.Players[0].ID
+
+	// Alice boots herself (the only player)
+	err := svc.BootPlayer(roomID, aliceID, aliceID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Room should be garbage collected
+	_, err = svc.Get(roomID)
+	if err == nil {
+		t.Error("expected room to be deleted after last player booted")
+	}
+}

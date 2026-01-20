@@ -1,20 +1,77 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import type { RoomSettings } from '../gen/bouncebot_pb'
+import { ref, watch, computed } from 'vue'
+import type { RoomSettings, Player } from '../gen/bouncebot_pb'
+import { getPlayerColor } from '../constants'
 
 const props = defineProps<{
   show: boolean
   settings: RoomSettings | undefined
+  players?: Player[]
+  showBootPlayer?: boolean
 }>()
 
 const emit = defineEmits<{
   close: []
   update: [settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean }]
+  bootPlayer: [playerId: string]
 }>()
 
 // Local state for the toggles
 const showSolverMoveCount = ref(false)
 const showSolverSolutions = ref(false)
+
+// Boot player state
+const showPlayerList = ref(false)
+const showBootConfirm = ref(false)
+const playerToBootId = ref<string | null>(null)
+
+const playerToBootName = computed(() => {
+  if (!playerToBootId.value || !props.players) return ''
+  const player = props.players.find(p => p.id === playerToBootId.value)
+  return player?.name ?? 'this player'
+})
+
+// Map player IDs to their color index
+const playerColorMap = computed(() => {
+  const map = new Map<string, number>()
+  props.players?.forEach((player, index) => {
+    map.set(player.id, index)
+  })
+  return map
+})
+
+function getPlayerColorById(playerId: string): string {
+  const index = playerColorMap.value.get(playerId) ?? 0
+  return getPlayerColor(index)
+}
+
+function openPlayerList() {
+  showPlayerList.value = true
+}
+
+function closePlayerList() {
+  showPlayerList.value = false
+}
+
+function selectPlayerToBoot(playerId: string) {
+  playerToBootId.value = playerId
+  showPlayerList.value = false
+  showBootConfirm.value = true
+}
+
+function confirmBoot() {
+  if (playerToBootId.value) {
+    emit('bootPlayer', playerToBootId.value)
+  }
+  showBootConfirm.value = false
+  playerToBootId.value = null
+  emit('close')
+}
+
+function cancelBoot() {
+  showBootConfirm.value = false
+  playerToBootId.value = null
+}
 
 // Sync local state when props change
 watch(() => props.settings, (newSettings) => {
@@ -72,6 +129,48 @@ function updateSetting(key: 'showSolverMoveCount' | 'showSolverSolutions', value
             <span class="toggle-text">Show solver solutions after game</span>
           </label>
           <p class="setting-description">Include the bot's solution in the end-game solution viewer.</p>
+        </div>
+
+        <!-- Boot Player button -->
+        <div v-if="showBootPlayer && players && players.length > 0" class="boot-section">
+          <button class="boot-player-btn" @click="openPlayerList">
+            Boot Player
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Player selection modal -->
+  <Teleport to="body">
+    <div v-if="showPlayerList" class="modal-backdrop player-list-backdrop" @click.self="closePlayerList">
+      <div class="modal player-list-modal">
+        <button class="close-btn" @click="closePlayerList">×</button>
+        <h2>Select Player to Remove</h2>
+        <div class="player-list">
+          <button
+            v-for="player in players"
+            :key="player.id"
+            class="player-item"
+            @click="selectPlayerToBoot(player.id)"
+          >
+            <span class="player-dot" :style="{ backgroundColor: getPlayerColorById(player.id) }" />
+            <span class="player-name">{{ player.name }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Boot confirmation dialog -->
+  <Teleport to="body">
+    <div v-if="showBootConfirm" class="modal-backdrop confirm-backdrop" @click.self="cancelBoot">
+      <div class="modal confirm-modal">
+        <h3>Remove Player</h3>
+        <p>Are you sure you want to remove <strong>{{ playerToBootName }}</strong> from the room?</p>
+        <div class="dialog-actions">
+          <button class="btn" @click="cancelBoot">Cancel</button>
+          <button class="btn danger" @click="confirmBoot">Remove</button>
         </div>
       </div>
     </div>
@@ -163,6 +262,121 @@ h2 {
   color: #888;
   font-size: 0.8rem;
   line-height: 1.4;
+}
+
+/* Boot player section */
+.boot-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #333;
+}
+
+.boot-player-btn {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #eee;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.boot-player-btn:hover {
+  background: #444;
+  border-color: #555;
+}
+
+/* Player list modal */
+.player-list-backdrop,
+.confirm-backdrop {
+  z-index: 200;
+}
+
+.player-list-modal {
+  max-width: 320px;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #242424;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.player-item:hover {
+  background: #2a2a2a;
+  border-color: #e53935;
+}
+
+.player-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.player-name {
+  color: #eee;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+/* Confirmation dialog */
+.confirm-modal {
+  max-width: 400px;
+}
+
+.confirm-modal h3 {
+  margin: 0 0 1rem;
+  color: #eee;
+  font-size: 1.1rem;
+}
+
+.confirm-modal p {
+  margin: 0 0 1.5rem;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #333;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.btn:hover {
+  background: #444;
+}
+
+.btn.danger {
+  background: #e53935;
+}
+
+.btn.danger:hover {
+  background: #c62828;
 }
 
 @media (prefers-color-scheme: light) {

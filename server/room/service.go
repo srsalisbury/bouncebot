@@ -225,6 +225,52 @@ func (s *RoomService) UpdateRoomSettings(roomID, playerID string, settings RoomS
 	return nil
 }
 
+// BootPlayer removes a player from the room. Only the host (first player) can boot players.
+// The host can boot themselves, in which case the next player becomes host.
+func (s *RoomService) BootPlayer(roomID, hostPlayerID, targetPlayerID string) error {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return fmt.Errorf("room not found: %s", roomID)
+	}
+
+	// Validate caller is host (first player)
+	if len(room.Players) == 0 || room.Players[0].ID != hostPlayerID {
+		unlock()
+		return fmt.Errorf("only host can boot players")
+	}
+
+	// Find target player
+	targetIdx := -1
+	for i, p := range room.Players {
+		if p.ID == targetPlayerID {
+			targetIdx = i
+			break
+		}
+	}
+	if targetIdx == -1 {
+		unlock()
+		return fmt.Errorf("target player not found: %s", targetPlayerID)
+	}
+
+	// Use ForceRemovePlayer to remove regardless of connection status
+	signals := s.playerMgr.ForceRemovePlayer(room, targetPlayerID)
+
+	// Check if room is now empty and should be garbage collected
+	roomEmpty := len(room.Players) == 0 && len(room.PendingPlayers) == 0
+	unlock()
+
+	s.processSignals(signals)
+
+	// Delete the room if it's empty
+	if roomEmpty {
+		s.repo.Delete(roomID)
+		log.Printf("Room %s garbage collected (no players remaining)", roomID)
+	}
+
+	return nil
+}
+
 // SetSolverResult stores a solver result in a room (upserts by solver name).
 func (s *RoomService) SetSolverResult(roomID string, result *SolverResult) {
 	room, unlock := s.repo.GetWithLock(roomID)

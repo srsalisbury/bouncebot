@@ -103,3 +103,13 @@ func (s *bounceBotServer) UpdateRoomSettings(_ context.Context, req *connect.Req
 		Success: true,
 	}), nil
 }
+
+func (s *bounceBotServer) BootPlayer(_ context.Context, req *connect.Request[pb.BootPlayerRequest]) (*connect.Response[pb.BootPlayerResponse], error) {
+	err := s.rooms.BootPlayer(req.Msg.RoomId, req.Msg.HostPlayerId, req.Msg.TargetPlayerId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, err)
+	}
+	return connect.NewResponse(&pb.BootPlayerResponse{
+		Success: true,
+	}), nil
+}
