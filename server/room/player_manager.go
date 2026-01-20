@@ -37,12 +37,40 @@ func NewPlayerManager() PlayerManager {
 	return &playerManager{}
 }
 
+// NumPlayerColors is the number of available player colors.
+const NumPlayerColors = 8
+
+// assignColorIndex finds the first available color index (0-7) not used by any
+// current player or pending player. If all colors are in use, it wraps around.
+func (pm *playerManager) assignColorIndex(room *Room) int32 {
+	usedColors := make(map[int32]bool)
+	for _, p := range room.Players {
+		usedColors[p.ColorIndex] = true
+	}
+	for _, p := range room.PendingPlayers {
+		usedColors[p.ColorIndex] = true
+	}
+
+	// Find first available color
+	for i := int32(0); i < NumPlayerColors; i++ {
+		if !usedColors[i] {
+			return i
+		}
+	}
+
+	// All colors used, wrap around
+	totalPlayers := len(room.Players) + len(room.PendingPlayers)
+	return int32(totalPlayers % NumPlayerColors)
+}
+
 func (pm *playerManager) AddPlayer(room *Room, playerName string) (string, []Signal, error) {
 	playerID := generatePlayerID()
+	colorIndex := pm.assignColorIndex(room)
 	player := Player{
-		ID:     playerID,
-		Name:   playerName,
-		Status: PlayerStatusConnected,
+		ID:         playerID,
+		Name:       playerName,
+		Status:     PlayerStatusConnected,
+		ColorIndex: colorIndex,
 	}
 
 	// If a game is in progress, add to pending players instead

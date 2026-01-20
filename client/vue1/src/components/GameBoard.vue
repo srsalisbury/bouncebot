@@ -16,6 +16,8 @@ const props = defineProps<{
   onBeforeModifyBest?: (solutionIndex: number, action: () => void) => void
   gameEnded?: boolean
   playerSolutions?: PlayerSolution[]
+  currentPlayerSolution?: PlayerSolution | null
+  topThreeSolutions?: PlayerSolution[]
   solverSolutions?: PlayerSolution[]
   getPlayerName?: (playerId: string) => string
   getPlayerColor?: (playerId: string) => string
@@ -25,6 +27,8 @@ const props = defineProps<{
   gameNumber?: number
   inputBlocked?: boolean
   singlePlayer?: boolean
+  getBestSubmittedIndex?: () => number | null
+  onSolutionDeleted?: (index: number) => void
 }>()
 
 const store = useGameStore()
@@ -53,11 +57,43 @@ const {
   }
 )
 
+// Check if current player is in top 3
+const isCurrentPlayerInTopThree = computed(() => {
+  if (!props.currentPlayerSolution) return false
+  const topThree = props.topThreeSolutions ?? []
+  return topThree.some(s => s.playerId === props.currentPlayerSolution?.playerId)
+})
+
 // Combined array of player solutions + solver solutions for replay
+// In multiplayer: [top 3, solver solutions, current player (if not in top 3)]
+// In single player: [playerSolutions, solverSolutions]
 const allSolutions = computed(() => {
-  const solutions = props.playerSolutions ?? []
   const solverSols = props.solverSolutions ?? []
-  return [...solutions, ...solverSols]
+
+  if (props.singlePlayer) {
+    // Single player mode: use playerSolutions directly
+    const solutions = props.playerSolutions ?? []
+    return [...solutions, ...solverSols]
+  }
+
+  // Multiplayer mode: combine top 3, solver solutions, and current player (if not in top 3)
+  const combined: PlayerSolution[] = []
+
+  // Add top 3 solutions first (only if more than 1 player)
+  const topThree = props.topThreeSolutions ?? []
+  if (topThree.length > 1) {
+    combined.push(...topThree)
+  }
+
+  // Add solver solutions
+  combined.push(...solverSols)
+
+  // Add current player's solution last (only if not in top 3)
+  if (props.currentPlayerSolution && !isCurrentPlayerInTopThree.value) {
+    combined.push(props.currentPlayerSolution)
+  }
+
+  return combined
 })
 
 // Wrap actions that could modify the best submitted solution
@@ -85,6 +121,15 @@ function doReset() {
     props.onBeforeModifyBest(store.activeSolutionIndex, () => store.resetCurrentSolution())
   } else {
     store.resetCurrentSolution()
+  }
+}
+
+// Start a new solution, handling auto-delete if at max capacity
+function doNewSolution() {
+  const bestIndex = props.getBestSubmittedIndex?.() ?? null
+  const result = store.startNewSolution(bestIndex)
+  if (result.deletedIndex !== null) {
+    props.onSolutionDeleted?.(result.deletedIndex)
   }
 }
 
@@ -131,7 +176,7 @@ useGameInput(
     onMove: (direction) => store.moveRobot(direction),
     onUndo: doUndo,
     onDelete: doDelete,
-    onNewSolution: () => store.startNewSolution(),
+    onNewSolution: doNewSolution,
     onSelectRobot: (index) => store.selectRobot(index),
     onSwitchSolution: (delta) => store.switchSolution(store.activeSolutionIndex + delta),
     onSwitchPlayerSolution: (delta) => {
@@ -152,7 +197,6 @@ useGameInput(
     inputBlocked: computed(() => props.inputBlocked ?? false),
     gameEnded: computed(() => props.gameEnded ?? false),
     helpOpen: showHowToPlay,
-    canStartNewSolution: computed(() => store.canStartNewSolution),
     selectedRobotId: computed(() => store.selectedRobotId),
     robotCount: computed(() => store.robots.length),
   }
@@ -380,11 +424,11 @@ function handleSwitchPlayerSolution(index: number) {
               class="wall"
               :style="getHWallStyle(wall)"
             />
-          </div>
 
-          <!-- Room ID label (multiplayer only) -->
-          <div v-if="!props.singlePlayer && props.roomId" class="room-id-label">
-            Room ID: {{ props.roomId }}
+            <!-- Room ID label (multiplayer only) -->
+            <div v-if="!props.singlePlayer && props.roomId" class="room-id-label">
+              Room ID: {{ props.roomId }}
+            </div>
           </div>
         </div>
 
@@ -400,8 +444,10 @@ function handleSwitchPlayerSolution(index: number) {
 
         <!-- Player solutions panel (when game ended) -->
         <GameBoardPlayerSolutions
-          v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length)"
+          v-if="props.gameEnded && (props.currentPlayerSolution || props.topThreeSolutions?.length || props.playerSolutions?.length || props.solverSolutions?.length)"
           :player-solutions="props.playerSolutions ?? []"
+          :current-player-solution="props.currentPlayerSolution"
+          :top-three-solutions="props.topThreeSolutions ?? []"
           :solver-solutions="props.solverSolutions ?? []"
           :active-index="activePlayerSolutionIndex"
           :replay-move-index="replayMoveIndex"
@@ -457,8 +503,7 @@ function handleSwitchPlayerSolution(index: number) {
             >Undo Move</button>
             <button
               class="action-btn new-solution-btn"
-              :disabled="!store.canStartNewSolution"
-              @click="store.startNewSolution()"
+              @click="doNewSolution()"
             >
               New Solution
             </button>
@@ -481,8 +526,7 @@ function handleSwitchPlayerSolution(index: number) {
         >Undo Move</button>
         <button
           class="action-btn new-solution-btn"
-          :disabled="!store.canStartNewSolution"
-          @click="store.startNewSolution()"
+          @click="doNewSolution()"
         >
           New Solution
         </button>
@@ -493,13 +537,17 @@ function handleSwitchPlayerSolution(index: number) {
     <SolutionsDrawer
       v-if="!props.gameEnded"
       class="mobile-drawer"
+      :get-best-submitted-index="props.getBestSubmittedIndex"
+      :on-solution-deleted="props.onSolutionDeleted"
     />
 
     <!-- Mobile player solutions drawer (only after game ends, hidden on desktop) -->
     <PlayerSolutionsDrawer
-      v-if="props.gameEnded && (props.playerSolutions?.length || props.solverSolutions?.length)"
+      v-if="props.gameEnded && (props.currentPlayerSolution || props.topThreeSolutions?.length || props.playerSolutions?.length || props.solverSolutions?.length)"
       class="mobile-drawer"
       :player-solutions="props.playerSolutions ?? []"
+      :current-player-solution="props.currentPlayerSolution"
+      :top-three-solutions="props.topThreeSolutions ?? []"
       :solver-solutions="props.solverSolutions ?? []"
       :active-index="activePlayerSolutionIndex"
       :replay-move-index="replayMoveIndex"
@@ -507,6 +555,7 @@ function handleSwitchPlayerSolution(index: number) {
       :get-player-color="props.getPlayerColor ?? (() => '#888888')"
       :is-solver-solution="props.isSolverSolution ?? (() => false)"
       :get-player-solution-moves="getPlayerSolutionMoves"
+      :single-player="props.singlePlayer"
       :game-started-at="props.gameStartedAt"
       @switch-solution="(index) => handleSwitchPlayerSolution(index)"
       @replay-solution="replayCurrentSolution(allSolutions)"

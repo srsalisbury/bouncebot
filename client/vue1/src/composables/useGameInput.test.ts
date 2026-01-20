@@ -23,7 +23,6 @@ function createOptions(overrides: Partial<GameInputOptions> = {}): GameInputOpti
     inputBlocked: ref(false),
     gameEnded: ref(false),
     helpOpen: ref(false),
-    canStartNewSolution: ref(true),
     selectedRobotId: ref(0),
     robotCount: ref(4),
     ...overrides,
@@ -131,16 +130,6 @@ describe('useGameInput', () => {
 
       handleKeydown(keyEvent(key))
       expect(callbacks.onNewSolution).toHaveBeenCalled()
-    })
-
-    it('does not create new solution when at max', () => {
-      const callbacks = createMockCallbacks()
-      const { handleKeydown } = useGameInput(callbacks, createOptions({
-        canStartNewSolution: ref(false),
-      }))
-
-      handleKeydown(keyEvent('n'))
-      expect(callbacks.onNewSolution).not.toHaveBeenCalled()
     })
   })
 

@@ -259,6 +259,7 @@ type Player struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ColorIndex    int32                  `protobuf:"varint,3,opt,name=color_index,json=colorIndex,proto3" json:"color_index,omitempty"` // 0-7 for the 8 available player colors
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -305,6 +306,13 @@ func (x *Player) GetName() string {
 		return x.Name
 	}
 	return ""
+}
+
+func (x *Player) GetColorIndex() int32 {
+	if x != nil {
+		return x.ColorIndex
+	}
+	return 0
 }
 
 // Player's solution result
@@ -1474,10 +1482,12 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x04Game\x12&\n" +
 	"\x05board\x18\x01 \x01(\v2\x10.bouncebot.BoardR\x05board\x12%\n" +
 	"\x04bots\x18\x02 \x03(\v2\x11.bouncebot.BotPosR\x04bots\x12)\n" +
-	"\x06target\x18\x03 \x01(\v2\x11.bouncebot.BotPosR\x06target\",\n" +
+	"\x06target\x18\x03 \x01(\v2\x11.bouncebot.BotPosR\x06target\"M\n" +
 	"\x06Player\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"\x8f\x01\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
+	"\vcolor_index\x18\x03 \x01(\x05R\n" +
+	"colorIndex\"\x8f\x01\n" +
 	"\x0ePlayerSolution\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x127\n" +
 	"\tsolved_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\bsolvedAt\x12'\n" +

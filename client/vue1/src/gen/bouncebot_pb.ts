@@ -139,6 +139,13 @@ export type Player = Message<"bouncebot.Player"> & {
    * @generated from field: string name = 2;
    */
   name: string;
+
+  /**
+   * 0-7 for the 8 available player colors
+   *
+   * @generated from field: int32 color_index = 3;
+   */
+  colorIndex: number;
 };
 
 /**

@@ -31,6 +31,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
   const error = ref<string | null>(null)
   const pollInterval = ref<number | null>(null)
   const solverSolutions = ref<SolverSolution[]>([])
+  const wasRemovedFromRoom = ref(false)
 
   const normalizedRoomId = computed(() => roomId.value.toUpperCase())
   const hasGame = computed(() => room.value?.currentGame != null)
@@ -42,10 +43,8 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       const hadGame = hasGame.value
       room.value = rm
 
-      // Remember this room for easy return if user navigates away
-      roomStore.setLastRoom(normalizedRoomId.value)
-
       // Check if current player is still in the room (handle stale localStorage)
+      // Must check before updating lastRoomId
       if (roomStore.currentPlayerId) {
         const player = rm.players.find(p => p.id === roomStore.currentPlayerId)
           || rm.pendingPlayers.find(p => p.id === roomStore.currentPlayerId)
@@ -58,9 +57,17 @@ export function useRoomConnection(options: RoomConnectionOptions) {
             roomStore.setCurrentPlayer(player.id, player.name)
           }
         } else {
+          // Player not found in room - only show "removed" message if this is the same room
+          // they were in before (not when visiting a different room)
+          if (roomStore.lastRoomId === normalizedRoomId.value) {
+            wasRemovedFromRoom.value = true
+          }
           roomStore.clearRoom()
         }
       }
+
+      // Remember this room for easy return if user navigates away
+      roomStore.setLastRoom(normalizedRoomId.value)
 
       // Notify when game first appears or when forced
       if (rm.currentGame && (!hadGame || forceApplyGame)) {
@@ -105,6 +112,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     }
 
     error.value = null
+    wasRemovedFromRoom.value = false
 
     try {
       const trimmedName = playerName.trim()
@@ -188,11 +196,31 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     }
   }
 
-  function handleWebSocketDisconnect() {
-    // When WebSocket disconnects persistently, check if room still exists
-    // This will trigger state cleanup if server returns 404
-    console.log('WebSocket disconnected, checking if room still exists')
-    loadRoom()
+  async function handleWebSocketDisconnect() {
+    // When WebSocket disconnects persistently, check if player is still in the room
+    console.log('WebSocket: persistent disconnect, checking room membership')
+
+    try {
+      const rm = await bounceBotClient.getRoom({ roomId: normalizedRoomId.value })
+      const stillInRoom = rm.players.some(p => p.id === roomStore.currentPlayerId)
+        || rm.pendingPlayers.some(p => p.id === roomStore.currentPlayerId)
+
+      if (!stillInRoom && roomStore.currentPlayerId) {
+        // Player was removed from room (disconnect timeout)
+        console.log('Player was removed from room due to disconnect timeout')
+        wasRemovedFromRoom.value = true
+        roomStore.clearRoom()
+        room.value = rm // Update room state so UI shows current players
+      } else {
+        // Still in room, just network issues - reload and continue
+        room.value = rm
+      }
+    } catch (e) {
+      // Room may not exist anymore
+      if (isRoomNotFoundError(e)) {
+        roomStore.clearRoom()
+      }
+    }
   }
 
   function connectWebSocket() {
@@ -217,6 +245,13 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     }
   })
 
+  function handleVisibilityChange() {
+    // When page becomes visible again (e.g., phone wakes up), check if still in room
+    if (document.visibilityState === 'visible' && hasJoined.value) {
+      loadRoom()
+    }
+  }
+
   onMounted(async () => {
     await loadRoom()
 
@@ -225,6 +260,8 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     } else {
       pollInterval.value = window.setInterval(loadRoom, ROOM_POLL_INTERVAL_MS)
     }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
   })
 
   onUnmounted(() => {
@@ -232,6 +269,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       clearInterval(pollInterval.value)
     }
     websocketService.disconnect()
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
   })
 
   return {
@@ -242,6 +280,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
     hasGame,
     hasJoined,
     solverSolutions,
+    wasRemovedFromRoom,
     loadRoom,
     joinRoom,
     startGame,

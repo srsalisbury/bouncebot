@@ -106,9 +106,10 @@ class WebSocketService {
       }
     }
 
-    this.ws.onclose = () => {
-      console.log('WebSocket: disconnected')
+    this.ws.onclose = (event) => {
+      console.log('WebSocket: disconnected', event.code)
       this.ws = null
+
       if (this.shouldReconnect) {
         this.scheduleReconnect()
       }

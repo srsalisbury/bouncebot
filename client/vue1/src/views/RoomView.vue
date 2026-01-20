@@ -41,6 +41,7 @@ const {
   hasGame,
   hasJoined,
   solverSolutions,
+  wasRemovedFromRoom,
   loadRoom,
   joinRoom: doJoinRoom,
   startGame: doStartGame,
@@ -131,6 +132,17 @@ const sortedSolutions = computed(() => {
   })
 })
 
+// Current player's solution (may be null if they didn't solve)
+const currentPlayerSolution = computed(() => {
+  if (!roomStore.currentPlayerId || !room.value) return null
+  return room.value.solutions.find(s => s.playerId === roomStore.currentPlayerId) ?? null
+})
+
+// Top 3 solutions (sorted by moves, then time)
+const topThreeSolutions = computed(() => {
+  return sortedSolutions.value.slice(0, 3)
+})
+
 // Solver solutions as PlayerSolution-like objects (for display)
 const solverPlayerSolutions = computed(() => {
   if (solverSolutions.value.length === 0) return []
@@ -191,8 +203,13 @@ function getPlayerColorById(playerId: string): string {
   if (playerId.startsWith(SOLVER_PLAYER_ID)) {
     return '#888888' // Gray for solver
   }
-  const index = room.value?.players.findIndex(p => p.id === playerId) ?? -1
-  return index >= 0 ? getPlayerColor(index) : '#888888'
+  // Find player in either players or pendingPlayers
+  const player = room.value?.players.find(p => p.id === playerId)
+    ?? room.value?.pendingPlayers.find(p => p.id === playerId)
+  if (player) {
+    return getPlayerColor(player.colorIndex)
+  }
+  return '#888888'
 }
 
 function isSolverSolution(playerId: string): boolean {
@@ -436,6 +453,11 @@ onUnmounted(() => {
       <h1 class="title">BounceBot</h1>
       <p class="subtitle">Join Room</p>
 
+      <div v-if="wasRemovedFromRoom" class="removed-message">
+        You were disconnected for too long and removed from the room.
+        Please rejoin to continue playing.
+      </div>
+
       <div class="card">
         <div class="players-section">
           <h3>Players in room</h3>
@@ -475,6 +497,8 @@ onUnmounted(() => {
         :on-before-modify-best="onBeforeModifyBest"
         :game-ended="gameEnded"
         :player-solutions="isSinglePlayer ? soloPlayerSolution : sortedSolutions"
+        :current-player-solution="currentPlayerSolution"
+        :top-three-solutions="topThreeSolutions"
         :solver-solutions="solverPlayerSolutions"
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"
@@ -484,6 +508,8 @@ onUnmounted(() => {
         :game-number="displayedGameNumber"
         :input-blocked="showLeaderboard"
         :single-player="isSinglePlayer"
+        :get-best-submitted-index="gameActions.getBestSubmittedIndex"
+        :on-solution-deleted="gameActions.notifySolutionDeleted"
       >
         <template #header>
           <div class="game-header">
@@ -959,6 +985,17 @@ onUnmounted(() => {
   padding: 2rem;
 }
 
+.removed-message {
+  background: #5c3a1e;
+  border: 1px solid #8b5a2b;
+  color: #ffd699;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+  max-width: 400px;
+}
+
 .form-group {
   margin-bottom: 1rem;
 }
@@ -1030,6 +1067,12 @@ onUnmounted(() => {
 @media (prefers-color-scheme: light) {
   .waiting-title {
     color: #000;
+  }
+
+  .removed-message {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
   }
 }
 

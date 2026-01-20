@@ -31,7 +31,6 @@ export interface GameInputOptions {
   inputBlocked: Ref<boolean>
   gameEnded: Ref<boolean>
   helpOpen: Ref<boolean>
-  canStartNewSolution: Ref<boolean>
   selectedRobotId: Ref<number | null>
   robotCount: Ref<number>
 }
@@ -41,7 +40,6 @@ export function useGameInput(callbacks: GameInputCallbacks, options: GameInputOp
     inputBlocked,
     gameEnded,
     helpOpen,
-    canStartNewSolution,
     selectedRobotId,
     robotCount,
   } = options
@@ -114,8 +112,8 @@ export function useGameInput(callbacks: GameInputCallbacks, options: GameInputOp
       }
     }
 
-    // New solution
-    if ((key === 'n' || key === '+') && canStartNewSolution.value) {
+    // New solution (always allowed, auto-deletes worst if at max)
+    if (key === 'n' || key === '+') {
       callbacks.onNewSolution()
       return
     }
