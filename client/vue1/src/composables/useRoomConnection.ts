@@ -1,7 +1,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { bounceBotClient } from '../services/connectClient'
 import { translateJoinRoomError } from '../services/errorMessages'
-import { websocketService, type WebSocketEvent, type SolverCompletePayload } from '../services/websocket'
+import { websocketService, type WebSocketEvent, type SolverCompletePayload, type PlayerLeftPayload } from '../services/websocket'
 import { useRoomStore } from '../stores/roomStore'
 import { isRoomNotFoundError } from '../services/errorUtils'
 import { ROOM_POLL_INTERVAL_MS } from '../constants'
@@ -18,10 +18,11 @@ export interface RoomConnectionOptions {
   onGameStarted?: () => void
   onGameEnded?: () => void
   onRoomUpdated?: (room: Room) => void
+  onPlayerBooted?: () => void
 }
 
 export function useRoomConnection(options: RoomConnectionOptions) {
-  const { roomId, onGameStarted, onGameEnded, onRoomUpdated } = options
+  const { roomId, onGameStarted, onGameEnded, onRoomUpdated, onPlayerBooted } = options
 
   const roomStore = useRoomStore()
 
@@ -159,6 +160,12 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       onGameEnded?.()
       loadRoom()
     } else if (event.type === 'player_left') {
+      const payload = event.payload as PlayerLeftPayload
+      // Check if the current player was booted
+      if (payload.playerId === roomStore.currentPlayerId) {
+        onPlayerBooted?.()
+        return
+      }
       loadRoom()
     } else if (event.type === 'solver_complete') {
       const payload = event.payload as SolverCompletePayload

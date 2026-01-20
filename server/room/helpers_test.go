@@ -7,10 +7,11 @@ type mockBroadcaster struct {
 	gameEndedCalled    bool
 	gameStartedCalled  bool
 	playerSolvedCalled bool
+	playerLeftCalled   bool
 }
 
 func (m *mockBroadcaster) BroadcastPlayerJoined(roomID, playerID, playerName string) {}
-func (m *mockBroadcaster) BroadcastPlayerLeft(roomID, playerID string)               {}
+func (m *mockBroadcaster) BroadcastPlayerLeft(roomID, playerID string)               { m.playerLeftCalled = true }
 func (m *mockBroadcaster) BroadcastGameStarted(roomID string)                         { m.gameStartedCalled = true }
 func (m *mockBroadcaster) BroadcastPlayerFinishedSolving(roomID, playerID string)     {}
 func (m *mockBroadcaster) BroadcastPlayerReadyForNext(roomID, playerID string)        {}

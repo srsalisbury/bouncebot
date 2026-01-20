@@ -17,6 +17,7 @@ service BounceBot {
   rpc MarkFinishedSolving (MarkFinishedSolvingRequest) returns (MarkFinishedSolvingResponse) {}
   rpc MarkReadyForNext (MarkReadyForNextRequest) returns (MarkReadyForNextResponse) {}
   rpc UpdateRoomSettings (UpdateRoomSettingsRequest) returns (UpdateRoomSettingsResponse) {}
+  rpc BootPlayer (BootPlayerRequest) returns (BootPlayerResponse) {}
 }
 
 // Board grid position.
@@ -160,6 +161,17 @@ message UpdateRoomSettingsRequest {
 }
 
 message UpdateRoomSettingsResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message BootPlayerRequest {
+  string room_id = 1;
+  string host_player_id = 2;  // Must be host (first player)
+  string target_player_id = 3;  // Player to remove
+}
+
+message BootPlayerResponse {
   bool success = 1;
   string error = 2;
 }
