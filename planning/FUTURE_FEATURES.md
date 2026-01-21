@@ -12,10 +12,9 @@
 - [x] Close the drawer when playing back a solution
 - [ ] Update location of roomid on mobile
 - [x] Update solution spacing on mobile to match desktop
-- [ ] When a player is dropped from a game and they came back online, there should be some reasonable indication in their UI and a way to reconnect.
+- [x] When a player is dropped from a game and they came back online, there should be some reasonable indication in their UI and a way to reconnect.
 - [ ] A player should be able to leave and disconnect immediately
 - [x] Solution bin should only solutions from the top three players plus bot
-- [ ] 
 
 ## Bug Fixes
 
@@ -30,10 +29,13 @@
 - [x] Player can see the game and click I'm finished even though they're not playing.
 - [x] Fix waiting room player colors
 
+## Code Cleanup
+
+- [ ] There is significant logic duplication between `GameBoardPlayerSolutions.vue` and `PlayerSolutionsDrawer.vue` regarding the index calculations and list construction.
+
 ## New Functionality
 
 - [x] Add client joining between games functionality
 - [x] Only the room creator can start the game
 - [x] Sort bot solutions to minimize different bot sequences (partial order sorting, constraints)
 - [x] Auto-delete your worst solution
-- [ ] 
