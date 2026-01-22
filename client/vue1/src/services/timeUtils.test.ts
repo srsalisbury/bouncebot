@@ -17,6 +17,10 @@ describe('timeUtils', () => {
       expect(formatDuration(65.12, 2)).toBe('1:05.12')
       expect(formatDuration(65.89, 2)).toBe('1:05.89')
     })
+
+    it('handles floating point precision correctly', () => {
+      expect(formatDuration(1.2, 1)).toBe('0:01.2')
+    })
   })
 
   describe('getFormattedTimes (Smart Collision Resolution)', () => {

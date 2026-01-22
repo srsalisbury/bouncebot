@@ -17,9 +17,9 @@ export function formatDuration(seconds: number, precision: number = 0): string {
     // Use Math.floor to consistently truncate, avoiding rounding inconsistencies
     // e.g. 65.99 should be 1:05.9, not 1:06.0, matching the 1:05 base
     const factor = Math.pow(10, precision)
-    // Handle floating point precision issues by adding a tiny epsilon before flooring?
-    // Or just be simple. (seconds % 1) might be 0.11999999. * 10 = 1.1999. Floor = 1.
-    const fractionalPartVal = Math.floor((seconds % 1) * factor)
+    // Avoid (seconds % 1) as it introduces precision errors (e.g. 1.2 % 1 ~= 0.1999)
+    // Instead, shift the decimal point first, then modulo by factor to get the fractional digits.
+    const fractionalPartVal = Math.floor((seconds * factor) % factor)
     const fractionalPart = fractionalPartVal.toString().padStart(precision, '0')
     timeStr += `.${fractionalPart}`
   }
