@@ -4,6 +4,7 @@ import type { Player, PlayerSolution, PlayerScore } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import { useRoomStore } from '../stores/roomStore'
 import { getPlayerColor, MAX_GAME_TIMER_SECONDS } from '../constants'
+import { getFormattedTimes, calculateDurationSeconds } from '../services/timeUtils'
 
 const props = defineProps<{
   players: Player[]
@@ -175,25 +176,21 @@ function isHost(player: Player): boolean {
   return props.showHost && props.players.length > 0 && player.id === props.players[0]?.id
 }
 
+const formattedTimesMap = computed(() => {
+  if (!props.solutions || !props.gameStartedAt) return new Map<string, string>()
+
+  const timeData = props.solutions
+    .filter(s => s.solvedAt)
+    .map(s => ({
+      id: s.playerId,
+      seconds: calculateDurationSeconds(props.gameStartedAt!, s.solvedAt!)
+    }))
+
+  return getFormattedTimes(timeData)
+})
+
 function getSolveTime(solution: PlayerSolution): string | null {
-  if (!props.gameStartedAt || !solution.solvedAt) return null
-
-  const startSeconds = Number(props.gameStartedAt.seconds ?? 0)
-  const startNanos = Number(props.gameStartedAt.nanos ?? 0)
-  const solvedSeconds = Number(solution.solvedAt.seconds ?? 0)
-  const solvedNanos = Number(solution.solvedAt.nanos ?? 0)
-
-  const elapsedSeconds = (solvedSeconds - startSeconds) + (solvedNanos - startNanos) / 1e9
-
-  if (elapsedSeconds < 60) {
-    return `${elapsedSeconds.toFixed(1)}s`
-  } else {
-    // Round total seconds first to avoid "7:60" display bug
-    const totalRoundedSeconds = Math.round(elapsedSeconds)
-    const minutes = Math.floor(totalRoundedSeconds / 60)
-    const seconds = totalRoundedSeconds % 60
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
+  return formattedTimesMap.value.get(solution.playerId) ?? null
 }
 </script>
 
