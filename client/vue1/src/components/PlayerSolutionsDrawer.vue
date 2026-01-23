@@ -440,7 +440,7 @@ function isActiveSolver() {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #1a1a1a;
+  background: var(--color-bg-dark);
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
@@ -538,7 +538,7 @@ function isActiveSolver() {
   font-size: 0.7rem;
   font-weight: 600;
   color: #000;
-  background: #ffd700;
+  background: var(--color-winner);
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
 }
@@ -573,7 +573,7 @@ function isActiveSolver() {
   gap: 0.25rem;
   padding: 0.4rem;
   border-radius: 6px;
-  background: #2a2a2a;
+  background: var(--color-bg-panel);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -590,9 +590,9 @@ function isActiveSolver() {
   max-width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #43a047;
+  background: var(--color-accent);
   color: #333;
-  border: 2px solid #1a1a1a;
+  border: 2px solid var(--color-bg-dark);
   font-size: 10px;
   font-weight: bold;
   line-height: 1;
@@ -606,7 +606,7 @@ function isActiveSolver() {
 }
 
 .replay-btn:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .play-icon {
@@ -614,21 +614,21 @@ function isActiveSolver() {
 }
 
 .solution-column:hover {
-  background: #333;
+  background: var(--color-bg-surface);
 }
 
 .solution-column.active {
-  background: #2a2a2a;
-  box-shadow: 0 0 0 2px #43a047;
+  background: var(--color-bg-panel);
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .solution-column.winner {
-  background: #3d3820;
-  border: 2px solid #b8960b;
+  background: var(--color-winner-bg);
+  border: 2px solid var(--color-winner-border);
 }
 
 .solution-column.winner.active {
-  box-shadow: 0 0 0 2px #43a047;
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .player-solution-header {
@@ -717,7 +717,7 @@ function isActiveSolver() {
 }
 
 .move-item.animating {
-  background: #43a047;
+  background: var(--color-accent);
 }
 
 .move-robot {

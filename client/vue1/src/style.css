@@ -11,6 +11,36 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Theme colors */
+  --color-accent: #43a047;
+  --color-accent-hover: #388e3c;
+  --color-danger: #e53935;
+  --color-danger-hover: #c62828;
+  --color-info: #1e88e5;
+  --color-info-hover: #1976d2;
+
+  /* Background colors (dark theme default) */
+  --color-bg-dark: #1a1a1a;
+  --color-bg-panel: #2a2a2a;
+  --color-bg-surface: #3a3a3a;
+  --color-bg-surface-hover: #454545;
+  --color-wall: #2a2a2a;
+
+  /* Light mode panel backgrounds */
+  --color-bg-panel-light: #dddddd;
+  --color-bg-panel-light-hover: #cccccc;
+
+  /* Winner colors */
+  --color-winner: #ffd700;
+  --color-winner-border: #b8960b;
+  --color-winner-bg: #3d3820;
+  --color-winner-bg-light: #fff8dc;
+
+  /* Text colors */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #888888;
+  --color-text-muted: #666666;
 }
 
 html {
@@ -47,5 +77,10 @@ body {
   :root {
     color: #213547;
     background-color: #ffffff;
+
+    /* Light mode text colors */
+    --color-text-primary: #333333;
+    --color-text-secondary: #666666;
+    --color-text-muted: #999999;
   }
 }
