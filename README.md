@@ -1,95 +1,73 @@
 # BounceBot
 
-BounceBot is a real-time, multiplayer web-based implementation of the board game "Ricochet Robots". Players compete to find the shortest sequence of moves to guide a colored robot to its target location on a grid-based board with walls.
+BounceBot is a real-time, multiplayer web implementation of the board game **Ricochet Robots**. 
+
+Players compete in a shared room to find the shortest sequence of moves to guide a designated robot to its target. The catch? Robots only stop when they hit a wall or another robot.
+
+While players calculate their moves, a server-side **A* solver** runs in the background to establish a "gold standard" for the puzzle's difficulty and provide hints.
 
 ![BounceBot game board mid-game](docs/screenshot.png)
 
-## Architecture
+## Core Architecture
 
-The project follows a modern client-server architecture with a Go backend and a Vue.js single-page application frontend.
+BounceBot utilizes an **authoritative server model** to ensure game state integrity and synchronization across all players.
 
+*   **Go Backend (Authoritative)**: Manages room state, validates all moves, and orchestrates the game lifecycle (lobby -> playing -> results). It uses a signal-based component architecture to decouple player management from game logic.
+*   **Vue 3 Frontend (Optimistic)**: A responsive SPA that uses the same physics engine as the server to provide **optimistic UI updates**. Moves are calculated locally for instant feedback and then synchronized with the server.
+*   **Dual-Channel Communication**:
+    *   **Connect-RPC**: Handles transactional actions (creating rooms, submitting solutions) over HTTP/2.
+    *   **WebSockets**: Provides a real-time stream of state changes (player joins, solver completions, game starts) to all connected clients.
+*   **Background Solvers**: The backend registers automated solvers (like A*) that trigger immediately when a new board is generated, allowing the system to know the optimal solution count within seconds.
+
+## Prerequisites
+
+To develop or run BounceBot locally, you need the following tools:
+
+### Backend & Tooling
+*   **Go (v1.24+)**: The core language for the backend server and solver logic.
+*   **Protocol Buffers (`protoc`)**: The compiler used to generate type-safe code from `.proto` definitions.
+*   **Go Protobuf Plugins**: Required for the server to handle gRPC and Connect-RPC traffic:
+    ```bash
+    go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+    go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
+    ```
+
+### Frontend
+*   **Node.js (v18+) & npm**: Required to build the Vue application and manage dependencies.
+*   **Vite & Vue 3**: (Managed via `npm`) The frontend uses Vite for extremely fast HMR (Hot Module Replacement) and Vue 3 for component logic.
+
+## Getting Started
+
+### 1. Run the Backend Server
+The server manages the game state and persistence.
+
+```bash
+# From the root directory
+go run ./server
 ```
-+------------------------+      +-------------------------+
-|                        |      |                         |
-|   Vue.js Frontend      |      |      Go Backend         |
-| (Vite, Pinia, TS)      |      |                         |
-|                        |      |                         |
-+------------------------+      +-------------------------+
-           |                             ^
-           |         (gRPC / Connect)    | (WebSockets)
-           +--------- RPC Actions ------->
-           |                             |
-           <------ Real-time State ------+
-                     Updates
+*The server defaults to port `8080`. Room state is persisted to `bouncebot_rooms.json`.*
+
+### 2. Run the Frontend Client
+The client provides the interactive game board and lobby.
+
+```bash
+cd client/vue1
+npm install
+npm run dev
 ```
+*The client will typically start at `http://localhost:5173`. Open this in your browser to play.*
 
-### Backend (Go)
+### 3. Development: Modifying the API
+If you modify the API definitions in `proto/bouncebot.proto`, you must regenerate both the Go and TypeScript codebases. We provide a centralized script for this:
 
-The Go server is the authoritative source for all game logic and state.
-
--   **Responsibilities**:
-    -   Managing game rooms (creating, joining).
-    -   Enforcing game rules (validating moves, checking solutions).
-    -   Persisting room state.
-    -   Broadcasting state changes to clients.
--   **Key Technologies**:
-    -   **Connect**: Used to generate a type-safe gRPC-style API for client-initiated actions (e.g., `SubmitSolution`).
-    -   **WebSockets**: Used for real-time, server-to-client communication. When one player's action changes the game state, the server broadcasts the new state to all clients in the room.
-
-### Frontend (Vue.js)
-
-The frontend is a single-page application responsible for rendering the game state and capturing user input.
-
--   **Responsibilities**:
-    -   Displaying the game board, robots, and targets.
-    -   Accepting user input (primarily keyboard-based) to move the robots.
-    -   Communicating with the backend via the Connect RPC and WebSocket services.
-    -   Managing client-side state for responsive UI updates.
--   **Key Technologies**:
-    -   **Vue 3**: Core frontend framework (using the Composition API).
-    -   **Vite**: Build tooling.
-    -   **Pinia**: Centralized state management.
-    -   **TypeScript**: For type safety.
-
-### Communication (Connect + WebSockets)
-
-BounceBot uses a dual-channel communication model to provide a responsive user experience:
-
-1.  **RPC Actions (Client-to-Server)**: The client uses a type-safe RPC client generated from the `.proto` definition to send specific commands to the server, such as creating a room or submitting a move sequence. This is a standard request/response model.
-2.  **Real-time State Updates (Server-to-Client)**: The server uses a WebSocket to push updates to all clients in a room whenever the state changes. This ensures that all players see the same game state in real-time without needing to poll the server.
-
-## Core Game Logic
-
-The game is played on a 16x16 grid with walls. The objective is to move a designated robot to a target square.
-
--   **Movement**: Robots move in one of the four cardinal directions (Up, Down, Left, Right).
--   **Ricochet Mechanic**: Once a robot starts moving, it continues in a straight line until it hits an obstacle (another robot, a wall, or the edge of the board). It does not stop on an empty square.
--   **Solving**: Players find a sequence of moves (e.g., "Red Up, Blue Left, Red Right") and submit it. The server validates if the solution is correct and if it's the shortest one found so far.
-
-## Room Persistence
-
-Rooms are persisted to a JSON file (`rooms.json` by default) to survive server restarts. The server:
-- Loads existing rooms on startup
-- Auto-saves every 30 seconds
-- Saves on graceful shutdown (SIGINT/SIGTERM)
-
-```sh
-# Use a custom data file path
-go run ./server -data /path/to/rooms.json
+```bash
+./proto/compile_protos.sh
 ```
 
-### Scaling to Multiple Servers
+## Deployment
 
-The current JSON file persistence works well for single-server deployments. For multi-server deployments (e.g., Kubernetes with multiple replicas), you'll need a shared room store like Redis:
-
-1. **Add Redis dependency**: `go get github.com/redis/go-redis/v9`
-2. **Implement a Redis-backed RoomRepository**: Replace the file-based `Load`/`Save` methods with Redis operations
-3. **Use Redis pub/sub**: Replace the in-memory WebSocket hub with Redis pub/sub for cross-server broadcasting
-4. **Room affinity**: Alternatively, use sticky sessions to route players to the same server instance
-
-## How to Run
-
-### Option 1: Docker (Recommended)
+### Docker (Recommended)
 
 **Pull and run from GitHub Container Registry:**
 ```sh
@@ -107,54 +85,18 @@ docker compose up
 - Client: http://localhost (port 80)
 - Server: http://localhost:8080
 
-### Option 2: Local Development
+## Documentation
 
-#### Prerequisites
-- Go 1.24+
-- Node.js & npm
-- `protoc` compiler
-- Go plugins for protoc:
-  ```sh
-  go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-  go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
-  ```
+*   **[server/README.md](./server/README.md)** - Backend code layout, RPC endpoints, WebSocket events.
+*   **[client/vue1/README.md](./client/vue1/README.md)** - Frontend architecture, Pinia stores, and composables.
+*   **`model/`**: Pure game logic (physics, board generation) shared between the server and the solvers.
+*   **`solver/`**: Implementation of the A* and BFS algorithms used to solve puzzles automatically.
 
-#### 1. Run the Backend Server
+## Appendix: Scaling to Multiple Servers
 
-```sh
-go run ./server
-```
-The server will start on `localhost:8080`.
+The current JSON file persistence (`bouncebot_rooms.json`) works well for single-server deployments. For multi-server deployments (e.g., Kubernetes with multiple replicas), you'll need a shared room store like Redis:
 
-```sh
-# Or with custom port
-go run ./server -port 9000
-
-# Or build and run
-go build -o bouncebot-server ./server
-./bouncebot-server
-```
-
-#### 2. Run the Frontend Client
-
-```sh
-cd client/vue1
-npm install
-npm run dev
-```
-The frontend development server will start on `localhost:5173`. Open this URL in your browser to play.
-
-#### 3. Compile Protobuf Definitions
-
-If you make changes to `proto/bouncebot.proto`, regenerate both the Go (server) and TypeScript (client) code using the provided script:
-
-```sh
-# From repo root
-./proto/compile_protos.sh
-```
-
-## Developer Documentation
-
-- **[server/DEVELOPER.md](./server/DEVELOPER.md)** - Backend code layout, RPC endpoints, WebSocket events
-- **[client/vue1/DEVELOPER.md](./client/vue1/DEVELOPER.md)** - Frontend code layout and conventions
+1. **Add Redis dependency**: `go get github.com/redis/go-redis/v9`
+2. **Implement a Redis-backed RoomRepository**: Replace the file-based `Load`/`Save` methods with Redis operations.
+3. **Use Redis pub/sub**: Replace the in-memory WebSocket hub with Redis pub/sub for cross-server broadcasting.
+4. **Room affinity**: Alternatively, use sticky sessions to route players to the same server instance.
