@@ -112,9 +112,13 @@ docker compose up
 #### Prerequisites
 - Go 1.24+
 - Node.js & npm
-- `protoc-gen-go` and `protoc-gen-connect-go` (for compiling protos)
-  - `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest`
-  - `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest`
+- `protoc` compiler
+- Go plugins for protoc:
+  ```sh
+  go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+  go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
+  ```
 
 #### 1. Run the Backend Server
 
@@ -143,20 +147,14 @@ The frontend development server will start on `localhost:5173`. Open this URL in
 
 #### 3. Compile Protobuf Definitions
 
-If you make changes to `proto/bouncebot.proto`, regenerate the Go and TypeScript code:
+If you make changes to `proto/bouncebot.proto`, regenerate both the Go (server) and TypeScript (client) code using the provided script:
 
-**Go (from repo root):**
 ```sh
+# From repo root
 ./proto/compile_protos.sh
-```
-
-**TypeScript (from client/vue1):**
-```sh
-npm run generate
 ```
 
 ## Developer Documentation
 
 - **[server/DEVELOPER.md](./server/DEVELOPER.md)** - Backend code layout, RPC endpoints, WebSocket events
 - **[client/vue1/DEVELOPER.md](./client/vue1/DEVELOPER.md)** - Frontend code layout and conventions
-- **[client/vue1/PROGRESS.md](./client/vue1/PROGRESS.md)** - Implementation history and PR links
