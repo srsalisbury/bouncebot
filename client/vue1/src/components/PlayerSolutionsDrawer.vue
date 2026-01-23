@@ -2,10 +2,10 @@
 import { ref, computed } from 'vue'
 import { DIRECTION_ARROWS, getRobotColor, MOBILE_ASPECT_RATIO, MOBILE_WIDTH_BREAKPOINT } from '../constants'
 import { useSwipe } from '../composables/useSwipe'
+import { useSolutionDisplay } from '../composables/useSolutionDisplay'
 import type { PlayerSolution } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import type { Direction } from '../constants'
-import { getFormattedTimes, calculateDurationSeconds } from '../services/timeUtils'
 
 interface MoveWithDirection {
   robotId: number
@@ -35,6 +35,15 @@ const emit = defineEmits<{
 const isExpanded = ref(false)
 const drawerRef = ref<HTMLElement | null>(null)
 
+const {
+  isCurrentPlayerInTopThree,
+  solverStartIndex,
+  currentPlayerStartIndex,
+  hasTopThreeSolutions,
+  showCurrentPlayerSolution,
+  getSolveTime
+} = useSolutionDisplay(props)
+
 // Check if we're on mobile/vertical layout
 function isMobile(): boolean {
   const aspectRatio = window.innerWidth / window.innerHeight
@@ -57,27 +66,6 @@ function handleReplayClick() {
   }
 }
 
-// Check if current player is in top 3
-const isCurrentPlayerInTopThree = computed(() => {
-  if (!props.currentPlayerSolution) return false
-  return props.topThreeSolutions.some(s => s.playerId === props.currentPlayerSolution?.playerId)
-})
-
-// Calculate the starting index for solver solutions in the combined array
-// New order: [top 3, solver, current player (if not in top 3)]
-const solverStartIndex = computed(() => {
-  if (props.singlePlayer) {
-    return props.playerSolutions.length
-  }
-  // Multiplayer: after top solutions
-  return props.topThreeSolutions.length
-})
-
-// Calculate the starting index for current player's solution (after solver)
-const currentPlayerStartIndex = computed(() => {
-  return solverStartIndex.value + props.solverSolutions.length
-})
-
 // Total count of solutions for swipe navigation
 const totalSolutionCount = computed(() => {
   let count = solverStartIndex.value + props.solverSolutions.length
@@ -85,19 +73,6 @@ const totalSolutionCount = computed(() => {
     count += 1
   }
   return count
-})
-
-// Check if any player solutions are displayed before solver (for divider logic)
-const hasTopThreeSolutions = computed(() => {
-  if (props.singlePlayer) {
-    return props.playerSolutions.length > 0
-  }
-  return props.topThreeSolutions.length > 0
-})
-
-// Check if current player solution should be shown (not already in top 3)
-const showCurrentPlayerSolution = computed(() => {
-  return !!props.currentPlayerSolution && !isCurrentPlayerInTopThree.value
 })
 
 // Swipe to expand/collapse and switch solutions
@@ -122,32 +97,6 @@ useSwipe({
 
 function toggleExpanded() {
   isExpanded.value = !isExpanded.value
-}
-
-const formattedTimesMap = computed(() => {
-  if (!props.gameStartedAt) return new Map<string, string>()
-
-  // Gather all solutions we know about to ensure consistent collision resolution
-  const allSols = [
-    ...(props.playerSolutions ?? []),
-    ...(props.topThreeSolutions ?? []),
-    props.currentPlayerSolution
-  ].filter((s): s is PlayerSolution => !!s && !!s.solvedAt)
-
-  // Deduplicate by ID
-  const uniqueSols = new Map<string, PlayerSolution>()
-  allSols.forEach(s => uniqueSols.set(s.playerId, s))
-
-  const timeData = Array.from(uniqueSols.values()).map(s => ({
-    id: s.playerId,
-    seconds: calculateDurationSeconds(props.gameStartedAt!, s.solvedAt!)
-  }))
-
-  return getFormattedTimes(timeData)
-})
-
-function getSolveTime(playerId: string): string {
-  return formattedTimesMap.value.get(playerId) ?? ''
 }
 
 // Current active solution for collapsed header
