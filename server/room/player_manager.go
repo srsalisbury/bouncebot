@@ -9,8 +9,8 @@ import (
 // Does NOT manage timers directly - returns signals for timer operations.
 type PlayerManager interface {
 	// AddPlayer adds a player to a room.
-	// Returns the new player's ID, signals, or error.
-	AddPlayer(room *Room, playerName string) (string, []Signal, error)
+	// Returns the new player's ID, session token, signals, or error.
+	AddPlayer(room *Room, playerName string) (playerID string, sessionToken string, signals []Signal, err error)
 
 	// DisconnectPlayer marks a player as disconnected.
 	// Returns signals or error.
@@ -63,14 +63,16 @@ func (pm *playerManager) assignColorIndex(room *Room) int32 {
 	return int32(totalPlayers % NumPlayerColors)
 }
 
-func (pm *playerManager) AddPlayer(room *Room, playerName string) (string, []Signal, error) {
+func (pm *playerManager) AddPlayer(room *Room, playerName string) (string, string, []Signal, error) {
 	playerID := generatePlayerID()
+	sessionToken := generateSessionToken()
 	colorIndex := pm.assignColorIndex(room)
 	player := Player{
-		ID:         playerID,
-		Name:       playerName,
-		Status:     PlayerStatusConnected,
-		ColorIndex: colorIndex,
+		ID:           playerID,
+		SessionToken: sessionToken,
+		Name:         playerName,
+		Status:       PlayerStatusConnected,
+		ColorIndex:   colorIndex,
 	}
 
 	// If a game is in progress, add to pending players instead
@@ -89,7 +91,7 @@ func (pm *playerManager) AddPlayer(room *Room, playerName string) (string, []Sig
 		}},
 	}
 
-	return playerID, signals, nil
+	return playerID, sessionToken, signals, nil
 }
 
 func (pm *playerManager) DisconnectPlayer(room *Room, playerID string) ([]Signal, error) {

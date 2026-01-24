@@ -5,6 +5,7 @@ import "time"
 // Player represents a player in a room.
 type Player struct {
 	ID             string
+	SessionToken   string // Secret auth token for player actions
 	Name           string
 	Status         PlayerStatus
 	DisconnectedAt time.Time

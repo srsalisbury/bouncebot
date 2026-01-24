@@ -275,10 +275,12 @@ async function updateSettings(settings: { showSolverMoveCount: boolean; showSolv
   // Persist settings locally for future sessions
   roomStore.setSettings(settings)
 
+  if (!roomStore.currentSessionToken) return
+
   try {
     await bounceBotClient.updateRoomSettings({
       roomId: normalizedRoomId.value,
-      playerId: roomStore.currentPlayerId,
+      sessionToken: roomStore.currentSessionToken,
       settings,
     })
   } catch (e) {
@@ -357,12 +359,12 @@ function cancelLeave() {
 
 // Boot player (host only)
 async function bootPlayer(targetPlayerId: string) {
-  if (!roomStore.currentPlayerId) return
+  if (!roomStore.currentSessionToken) return
 
   try {
     await bounceBotClient.bootPlayer({
       roomId: normalizedRoomId.value,
-      hostPlayerId: roomStore.currentPlayerId,
+      sessionToken: roomStore.currentSessionToken,
       targetPlayerId,
     })
     // If host booted themselves, redirect to home

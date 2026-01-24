@@ -81,7 +81,7 @@ export function useGameActions(options: GameActionsOptions) {
   }
 
   async function submitSolution() {
-    if (!roomStore.currentPlayerId) return
+    if (!roomStore.currentSessionToken) return
     const moveCount = gameStore.moveCount
     const currentMoves = gameStore.moves
     const currentIndex = gameStore.activeSolutionIndex
@@ -99,7 +99,7 @@ export function useGameActions(options: GameActionsOptions) {
     try {
       await bounceBotClient.submitSolution({
         roomId: roomId.value,
-        playerId: roomStore.currentPlayerId,
+        sessionToken: roomStore.currentSessionToken,
         moves,
       })
       const info: BestSolutionInfo = { index: currentIndex, moveCount }
@@ -112,12 +112,12 @@ export function useGameActions(options: GameActionsOptions) {
   }
 
   async function markFinishedSolving() {
-    if (!roomStore.currentPlayerId) return
+    if (!roomStore.currentSessionToken) return
 
     try {
       await bounceBotClient.markFinishedSolving({
         roomId: roomId.value,
-        playerId: roomStore.currentPlayerId,
+        sessionToken: roomStore.currentSessionToken,
       })
       onRoomUpdated?.()
     } catch (e) {
@@ -126,12 +126,12 @@ export function useGameActions(options: GameActionsOptions) {
   }
 
   async function markReadyForNext() {
-    if (!roomStore.currentPlayerId) return
+    if (!roomStore.currentSessionToken) return
 
     try {
       await bounceBotClient.markReadyForNext({
         roomId: roomId.value,
-        playerId: roomStore.currentPlayerId,
+        sessionToken: roomStore.currentSessionToken,
       })
       onRoomUpdated?.()
     } catch (e) {

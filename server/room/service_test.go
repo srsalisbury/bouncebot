@@ -14,7 +14,7 @@ import (
 func TestService_CreateAndGet(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
+	room, _, _ := svc.Create("Alice", false)
 	if room.ID == "" {
 		t.Error("expected room ID to be set")
 	}
@@ -46,8 +46,8 @@ func TestService_Get_NotFound(t *testing.T) {
 func TestService_Join(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
-	room, _, err := svc.Join(room.ID, "Bob")
+	room, _, _ := svc.Create("Alice", false)
+	room, _, _, err := svc.Join(room.ID, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestService_Join(t *testing.T) {
 func TestService_Join_NotFound(t *testing.T) {
 	svc := NewRoomService()
 
-	_, _, err := svc.Join("nonexistent", "Bob")
+	_, _, _, err := svc.Join("nonexistent", "Bob")
 	if err == nil {
 		t.Error("expected error for nonexistent room")
 	}
@@ -72,7 +72,7 @@ func TestService_Join_NotFound(t *testing.T) {
 func TestService_StartGame(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
+	room, _, _ := svc.Create("Alice", false)
 	room, err := svc.StartGame(room.ID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -91,13 +91,13 @@ func TestService_SubmitSolution_ValidSolution(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice", false)
+	room, _, aliceToken := svc.Create("Alice", false)
 	svc.StartGame(room.ID)
 	// Use fixed Game1 board so validSolution() works
 	room.CurrentGame = model.Game1()
 	aliceID := room.Players[0].ID
 
-	solution, err := svc.SubmitSolution(room.ID, aliceID, validSolution())
+	solution, err := svc.SubmitSolution(room.ID, aliceToken, validSolution())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestService_SubmitSolution_ValidSolution(t *testing.T) {
 func TestService_DisconnectAndReconnect(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
+	room, _, _ := svc.Create("Alice", false)
 	aliceID := room.Players[0].ID
 
 	// Disconnect
@@ -163,8 +163,8 @@ func TestService_DisconnectAndReconnect(t *testing.T) {
 func TestService_RemovePlayer(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
+	room, _, _ := svc.Create("Alice", false)
+	_, _, _, _ = svc.Join(room.ID, "Bob")
 	aliceID := room.Players[0].ID
 
 	// Must disconnect first
@@ -183,7 +183,7 @@ func TestService_RemovePlayer(t *testing.T) {
 func TestService_RemovePlayer_DeletesEmptyRoom(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
+	room, _, _ := svc.Create("Alice", false)
 	roomID := room.ID
 	aliceID := room.Players[0].ID
 
@@ -201,7 +201,7 @@ func TestService_RemovePlayer_DeletesEmptyRoom(t *testing.T) {
 func TestService_RemovePlayer_KeepsRoomWithPendingPlayers(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
+	room, _, _ := svc.Create("Alice", false)
 	roomID := room.ID
 	aliceID := room.Players[0].ID
 
@@ -209,7 +209,7 @@ func TestService_RemovePlayer_KeepsRoomWithPendingPlayers(t *testing.T) {
 	svc.StartGame(roomID)
 
 	// Bob joins as a pending player
-	svc.Join(roomID, "Bob")
+	_, _, _, _ = svc.Join(roomID, "Bob")
 
 	// Alice disconnects and is removed
 	svc.DisconnectPlayer(roomID, aliceID)
@@ -230,21 +230,18 @@ func TestService_MarkFinishedSolving_TriggersGameEnd(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
+	room, _, aliceToken := svc.Create("Alice", false)
+	_, _, bobToken, _ := svc.Join(room.ID, "Bob")
 	svc.StartGame(room.ID)
 
-	aliceID := room.Players[0].ID
-	bobID := room.Players[1].ID
-
 	// Alice finishes
-	svc.MarkFinishedSolving(room.ID, aliceID)
+	svc.MarkFinishedSolving(room.ID, aliceToken)
 	if mock.gameEndedCalled {
 		t.Error("game should not have ended yet")
 	}
 
 	// Bob finishes - should trigger game end
-	svc.MarkFinishedSolving(room.ID, bobID)
+	svc.MarkFinishedSolving(room.ID, bobToken)
 	if !mock.gameEndedCalled {
 		t.Error("expected game to end when all players finished")
 	}
@@ -255,18 +252,15 @@ func TestService_MarkReadyForNext_StartsNextGame(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
-
-	aliceID := room.Players[0].ID
-	bobID := room.Players[1].ID
+	room, _, aliceToken := svc.Create("Alice", false)
+	_, _, bobToken, _ := svc.Join(room.ID, "Bob")
 
 	// Alice is ready
-	svc.MarkReadyForNext(room.ID, aliceID)
+	svc.MarkReadyForNext(room.ID, aliceToken)
 	mock.gameStartedCalled = false
 
 	// Bob is ready - should start next game
-	svc.MarkReadyForNext(room.ID, bobID)
+	svc.MarkReadyForNext(room.ID, bobToken)
 	if !mock.gameStartedCalled {
 		t.Error("expected next game to start when all players ready")
 	}
@@ -277,15 +271,12 @@ func TestService_RemovePlayer_TriggersGameEnd(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
+	room, _, aliceToken := svc.Create("Alice", false)
+	_, bobID, _, _ := svc.Join(room.ID, "Bob")
 	svc.StartGame(room.ID)
 
-	aliceID := room.Players[0].ID
-	bobID := room.Players[1].ID
-
 	// Alice marks finished
-	svc.MarkFinishedSolving(room.ID, aliceID)
+	svc.MarkFinishedSolving(room.ID, aliceToken)
 
 	// Bob disconnects and is removed
 	svc.DisconnectPlayer(room.ID, bobID)
@@ -302,7 +293,7 @@ func TestService_Persistence_SaveAndLoad(t *testing.T) {
 	filename := filepath.Join(tmpDir, "rooms.json")
 
 	svc1 := NewRoomService()
-	room := svc1.Create("Alice", false)
+	room, _, _ := svc1.Create("Alice", false)
 	svc1.Join(room.ID, "Bob")
 
 	// Save
@@ -330,7 +321,7 @@ func TestService_StartAutoSave_SavesOnStop(t *testing.T) {
 	filename := filepath.Join(tmpDir, "rooms.json")
 
 	svc := NewRoomService()
-	svc.Create("Alice", false)
+	_, _, _ = svc.Create("Alice", false)
 
 	// Start auto-save and immediately stop
 	stop := svc.StartAutoSave(filename, config.DefaultConfig().AutoSaveInterval)
@@ -385,8 +376,8 @@ func TestService_CleanupStaleRooms(t *testing.T) {
 func TestService_ToProto(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
+	room, _, _ := svc.Create("Alice", false)
+	_, _, _, _ = svc.Join(room.ID, "Bob")
 	svc.StartGame(room.ID)
 
 	room, _ = svc.Get(room.ID)
@@ -411,12 +402,11 @@ func TestService_BootPlayer_HostCanBoot(t *testing.T) {
 	mock := &mockBroadcaster{}
 	svc.SetBroadcaster(mock)
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
+	room, _, aliceToken := svc.Create("Alice", false)
+	_, bobID, _, _ := svc.Join(room.ID, "Bob")
 	aliceID := room.Players[0].ID
-	bobID := room.Players[1].ID
 
-	err := svc.BootPlayer(room.ID, aliceID, bobID)
+	err := svc.BootPlayer(room.ID, aliceToken, bobID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -438,13 +428,12 @@ func TestService_BootPlayer_HostCanBoot(t *testing.T) {
 func TestService_BootPlayer_NonHostCannotBoot(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
+	room, _, _ := svc.Create("Alice", false)
+	_, _, bobToken, _ := svc.Join(room.ID, "Bob")
 	aliceID := room.Players[0].ID
-	bobID := room.Players[1].ID
 
 	// Bob (non-host) tries to boot Alice
-	err := svc.BootPlayer(room.ID, bobID, aliceID)
+	err := svc.BootPlayer(room.ID, bobToken, aliceID)
 	if err == nil {
 		t.Error("expected error when non-host tries to boot")
 	}
@@ -459,10 +448,9 @@ func TestService_BootPlayer_NonHostCannotBoot(t *testing.T) {
 func TestService_BootPlayer_TargetNotFound(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
-	aliceID := room.Players[0].ID
+	room, _, aliceToken := svc.Create("Alice", false)
 
-	err := svc.BootPlayer(room.ID, aliceID, "nonexistent")
+	err := svc.BootPlayer(room.ID, aliceToken, "nonexistent")
 	if err == nil {
 		t.Error("expected error for nonexistent target player")
 	}
@@ -480,13 +468,11 @@ func TestService_BootPlayer_RoomNotFound(t *testing.T) {
 func TestService_BootPlayer_HostCanBootSelf(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
-	svc.Join(room.ID, "Bob")
-	aliceID := room.Players[0].ID
-	bobID := room.Players[1].ID
+	room, aliceID, aliceToken := svc.Create("Alice", false)
+	_, bobID, _, _ := svc.Join(room.ID, "Bob")
 
 	// Alice (host) boots herself
-	err := svc.BootPlayer(room.ID, aliceID, aliceID)
+	err := svc.BootPlayer(room.ID, aliceToken, aliceID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -504,12 +490,11 @@ func TestService_BootPlayer_HostCanBootSelf(t *testing.T) {
 func TestService_BootPlayer_LastPlayerDeletesRoom(t *testing.T) {
 	svc := NewRoomService()
 
-	room := svc.Create("Alice", false)
+	room, aliceID, aliceToken := svc.Create("Alice", false)
 	roomID := room.ID
-	aliceID := room.Players[0].ID
 
 	// Alice boots herself (the only player)
-	err := svc.BootPlayer(roomID, aliceID, aliceID)
+	err := svc.BootPlayer(roomID, aliceToken, aliceID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

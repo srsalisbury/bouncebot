@@ -20,7 +20,7 @@ func TestPlayerManager_AddPlayer(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 
-	playerID, signals, err := pm.AddPlayer(room, "Bob")
+	playerID, _, signals, err := pm.AddPlayer(room, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -441,7 +441,7 @@ func TestPlayerManager_AddPlayer_PendingWhenGameInProgress(t *testing.T) {
 		LastActivityAt: time.Now(),
 	}
 
-	playerID, signals, err := pm.AddPlayer(room, "Bob")
+	playerID, _, signals, err := pm.AddPlayer(room, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -493,7 +493,7 @@ func TestPlayerManager_AddPlayer_ActiveWhenNoGame(t *testing.T) {
 		LastActivityAt: time.Now(),
 	}
 
-	playerID, _, err := pm.AddPlayer(room, "Bob")
+	playerID, _, _, err := pm.AddPlayer(room, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

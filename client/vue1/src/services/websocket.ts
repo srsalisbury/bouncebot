@@ -63,7 +63,7 @@ const MAX_RECONNECT_ATTEMPTS = 5
 class WebSocketService {
   private ws: WebSocket | null = null
   private roomId: string | null = null
-  private playerId: string | null = null
+  private sessionToken: string | null = null
   private eventHandler: EventHandler | null = null
   private disconnectHandler: DisconnectHandler | null = null
   private reconnectTimeout: number | null = null
@@ -71,9 +71,9 @@ class WebSocketService {
   private reconnectAttempts = 0
   private hasConnectedSuccessfully = false
 
-  connect(roomId: string, playerId: string, onEvent: EventHandler, onDisconnect?: DisconnectHandler): void {
+  connect(roomId: string, sessionToken: string, onEvent: EventHandler, onDisconnect?: DisconnectHandler): void {
     this.roomId = roomId
-    this.playerId = playerId
+    this.sessionToken = sessionToken
     this.eventHandler = onEvent
     this.disconnectHandler = onDisconnect ?? null
     this.shouldReconnect = true
@@ -83,9 +83,9 @@ class WebSocketService {
   }
 
   private doConnect(): void {
-    if (!this.roomId || !this.playerId) return
+    if (!this.roomId || !this.sessionToken) return
 
-    const url = `${config.wsUrl}?roomId=${this.roomId}&playerId=${this.playerId}`
+    const url = `${config.wsUrl}?roomId=${this.roomId}&sessionToken=${this.sessionToken}`
     console.log('WebSocket: connecting to', url)
 
     this.ws = new WebSocket(url)
@@ -159,7 +159,7 @@ class WebSocketService {
       this.ws = null
     }
     this.roomId = null
-    this.playerId = null
+    this.sessionToken = null
     this.eventHandler = null
     this.disconnectHandler = null
     this.reconnectAttempts = 0

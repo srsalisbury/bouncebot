@@ -35,7 +35,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
 
   const normalizedRoomId = computed(() => roomId.value.toUpperCase())
   const hasGame = computed(() => room.value?.currentGame != null)
-  const hasJoined = computed(() => roomStore.currentPlayerId != null)
+  const hasJoined = computed(() => roomStore.currentPlayerId != null && roomStore.currentSessionToken != null)
 
   async function loadRoom(forceApplyGame = false) {
     try {
@@ -48,15 +48,7 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       if (roomStore.currentPlayerId) {
         const player = rm.players.find(p => p.id === roomStore.currentPlayerId)
           || rm.pendingPlayers.find(p => p.id === roomStore.currentPlayerId)
-        if (player) {
-          // Re-save player info to ensure it's persisted (e.g., on page reload in lobby)
-          // For solo mode, only save the ID to avoid overwriting saved multiplayer name
-          if (rm.isSinglePlayer) {
-            roomStore.setCurrentPlayerId(player.id)
-          } else {
-            roomStore.setCurrentPlayer(player.id, player.name)
-          }
-        } else {
+        if (!player) {
           // Player not found in room - only show "removed" message if this is the same room
           // they were in before (not when visiting a different room)
           if (roomStore.lastRoomId === normalizedRoomId.value) {
@@ -64,6 +56,8 @@ export function useRoomConnection(options: RoomConnectionOptions) {
           }
           roomStore.clearRoom()
         }
+        // If player is found, keep the existing session token from localStorage
+        // (getRoom doesn't return session tokens since they're secret)
       }
 
       // Remember this room for easy return if user navigates away
@@ -125,8 +119,8 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       // where hasJoined becomes true but isPendingPlayer is still false
       room.value = response.room!
 
-      // Use the player ID from the response directly
-      roomStore.setCurrentPlayer(response.playerId, trimmedName)
+      // Use the player ID and session token from the response
+      roomStore.setCurrentPlayer(response.playerId, trimmedName, response.sessionToken)
 
       // Still call loadRoom to trigger game state callbacks (onRoomUpdated)
       await loadRoom(true)
@@ -224,10 +218,10 @@ export function useRoomConnection(options: RoomConnectionOptions) {
   }
 
   function connectWebSocket() {
-    if (hasJoined.value && roomStore.currentPlayerId) {
+    if (hasJoined.value && roomStore.currentSessionToken) {
       websocketService.connect(
         normalizedRoomId.value,
-        roomStore.currentPlayerId,
+        roomStore.currentSessionToken,
         handleWebSocketEvent,
         handleWebSocketDisconnect
       )

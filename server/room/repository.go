@@ -1,6 +1,8 @@
 package room
 
 import (
+	crypto_rand "crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"math/rand/v2"
 	"strings"
@@ -13,7 +15,8 @@ import (
 type RoomRepository interface {
 	// Create creates a new room with the given player.
 	// If isSinglePlayer is true, no other players can join.
-	Create(playerName string, isSinglePlayer bool) *Room
+	// Returns the room, player ID, and session token.
+	Create(playerName string, isSinglePlayer bool) (*Room, string, string)
 
 	// Get retrieves a room by ID. Returns nil if not found.
 	Get(roomID string) *Room
@@ -68,7 +71,17 @@ func generatePlayerID() string {
 	return fmt.Sprintf("%016x", rand.Uint64())
 }
 
-func (r *roomRepository) Create(playerName string, isSinglePlayer bool) *Room {
+// generateSessionToken creates a cryptographically secure session token.
+func generateSessionToken() string {
+	bytes := make([]byte, 32)
+	if _, err := crypto_rand.Read(bytes); err != nil {
+		// Fallback to less secure but still random token
+		return fmt.Sprintf("%016x%016x", rand.Uint64(), rand.Uint64())
+	}
+	return hex.EncodeToString(bytes)
+}
+
+func (r *roomRepository) Create(playerName string, isSinglePlayer bool) (*Room, string, string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -79,12 +92,13 @@ func (r *roomRepository) Create(playerName string, isSinglePlayer bool) *Room {
 	}
 
 	playerID := generatePlayerID()
+	sessionToken := generateSessionToken()
 	now := time.Now()
 
 	room := &Room{
 		ID: roomID,
 		Players: []Player{
-			{ID: playerID, Name: playerName, Status: PlayerStatusConnected},
+			{ID: playerID, SessionToken: sessionToken, Name: playerName, Status: PlayerStatusConnected},
 		},
 		CreatedAt:      now,
 		LastActivityAt: now,
@@ -94,7 +108,7 @@ func (r *roomRepository) Create(playerName string, isSinglePlayer bool) *Room {
 
 	r.rooms[roomID] = room
 	r.locks[roomID] = &sync.Mutex{}
-	return room
+	return room, playerID, sessionToken
 }
 
 func (r *roomRepository) Get(roomID string) *Room {

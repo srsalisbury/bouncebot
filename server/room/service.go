@@ -63,34 +63,35 @@ func (s *RoomService) SetOnGameStart(cb GameStartCallback) {
 
 // Create creates a new room with the given player.
 // If isSinglePlayer is true, no other players can join.
-func (s *RoomService) Create(playerName string, isSinglePlayer bool) *Room {
+// Returns the room, player ID, and session token.
+func (s *RoomService) Create(playerName string, isSinglePlayer bool) (*Room, string, string) {
 	return s.repo.Create(playerName, isSinglePlayer)
 }
 
 // Join adds a player to an existing room.
-// Returns the room, the new player's ID, and any error.
-func (s *RoomService) Join(roomID, playerName string) (*Room, string, error) {
+// Returns the room, the new player's ID, session token, and any error.
+func (s *RoomService) Join(roomID, playerName string) (*Room, string, string, error) {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
-		return nil, "", fmt.Errorf("room not found: %s", roomID)
+		return nil, "", "", fmt.Errorf("room not found: %s", roomID)
 	}
 
 	// Reject joins to single player rooms
 	if room.IsSinglePlayer {
 		unlock()
-		return nil, "", fmt.Errorf("cannot join single player room")
+		return nil, "", "", fmt.Errorf("cannot join single player room")
 	}
 
-	playerID, signals, err := s.playerMgr.AddPlayer(room, playerName)
+	playerID, sessionToken, signals, err := s.playerMgr.AddPlayer(room, playerName)
 	unlock()
 
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
 	s.processSignals(signals)
-	return room, playerID, nil
+	return room, playerID, sessionToken, nil
 }
 
 // Get retrieves a room by ID.
@@ -100,6 +101,19 @@ func (s *RoomService) Get(roomID string) (*Room, error) {
 		return nil, fmt.Errorf("room not found: %s", roomID)
 	}
 	return room, nil
+}
+
+// ValidateSessionToken validates a session token and returns the associated player ID.
+func (s *RoomService) ValidateSessionToken(roomID, sessionToken string) (string, error) {
+	room := s.repo.Get(roomID)
+	if room == nil {
+		return "", fmt.Errorf("room not found: %s", roomID)
+	}
+	player := room.FindPlayerBySessionToken(sessionToken)
+	if player == nil {
+		return "", fmt.Errorf("invalid session token")
+	}
+	return player.ID, nil
 }
 
 // StartGame starts a new game in the room.
@@ -130,7 +144,12 @@ func (s *RoomService) StartGame(roomID string) (*Room, error) {
 }
 
 // SubmitSolution records a player's solution.
-func (s *RoomService) SubmitSolution(roomID, playerID string, moves []model.BotPosition) (*PlayerSolution, error) {
+func (s *RoomService) SubmitSolution(roomID, sessionToken string, moves []model.BotPosition) (*PlayerSolution, error) {
+	playerID, err := s.ValidateSessionToken(roomID, sessionToken)
+	if err != nil {
+		return nil, err
+	}
+
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
@@ -149,14 +168,22 @@ func (s *RoomService) SubmitSolution(roomID, playerID string, moves []model.BotP
 }
 
 // MarkFinishedSolving marks a player as finished solving.
-func (s *RoomService) MarkFinishedSolving(roomID, playerID string) error {
+func (s *RoomService) MarkFinishedSolving(roomID, sessionToken string) error {
+	playerID, err := s.ValidateSessionToken(roomID, sessionToken)
+	if err != nil {
+		return err
+	}
 	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.gameMgr.MarkFinishedSolving(room, playerID)
 	})
 }
 
 // MarkReadyForNext marks a player as ready for the next game.
-func (s *RoomService) MarkReadyForNext(roomID, playerID string) error {
+func (s *RoomService) MarkReadyForNext(roomID, sessionToken string) error {
+	playerID, err := s.ValidateSessionToken(roomID, sessionToken)
+	if err != nil {
+		return err
+	}
 	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.gameMgr.MarkReadyForNext(room, playerID)
 	})
@@ -201,7 +228,12 @@ func (s *RoomService) RemovePlayer(roomID, playerID string) {
 }
 
 // UpdateRoomSettings updates the room settings. Only the host (first player) can change settings.
-func (s *RoomService) UpdateRoomSettings(roomID, playerID string, settings RoomSettings) error {
+func (s *RoomService) UpdateRoomSettings(roomID, sessionToken string, settings RoomSettings) error {
+	playerID, err := s.ValidateSessionToken(roomID, sessionToken)
+	if err != nil {
+		return err
+	}
+
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
@@ -227,7 +259,12 @@ func (s *RoomService) UpdateRoomSettings(roomID, playerID string, settings RoomS
 
 // BootPlayer removes a player from the room. Only the host (first player) can boot players.
 // The host can boot themselves, in which case the next player becomes host.
-func (s *RoomService) BootPlayer(roomID, hostPlayerID, targetPlayerID string) error {
+func (s *RoomService) BootPlayer(roomID, sessionToken, targetPlayerID string) error {
+	hostPlayerID, err := s.ValidateSessionToken(roomID, sessionToken)
+	if err != nil {
+		return err
+	}
+
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
