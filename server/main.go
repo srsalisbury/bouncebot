@@ -8,10 +8,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/rs/cors"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
 	"github.com/srsalisbury/bouncebot/server/config"
+	"github.com/srsalisbury/bouncebot/server/ratelimit"
 	"github.com/srsalisbury/bouncebot/server/room"
 	"github.com/srsalisbury/bouncebot/server/ws"
 	"github.com/srsalisbury/bouncebot/solver"
@@ -62,6 +64,10 @@ func main() {
 	rooms.CleanupStaleRooms(cfg.RoomMaxAge)
 	stopCleanup := rooms.StartCleanup(cfg.CleanupInterval, cfg.RoomMaxAge)
 
+	// Create GetRoom rate limiter (10 requests/minute per IP
+	getRoomLimiter := ratelimit.NewLimiter(10, time.Minute)
+	stopRateLimitCleanup := getRoomLimiter.StartCleanup(5 * time.Minute)
+
 	// Handle graceful shutdown
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
@@ -70,6 +76,7 @@ func main() {
 		log.Println("Shutting down, saving rooms...")
 		close(stopCleanup)
 		close(stopAutoSave) // This triggers final save
+		close(stopRateLimitCleanup)
 		os.Exit(0)
 	}()
 
@@ -126,8 +133,9 @@ func main() {
 	})
 
 	mux := http.NewServeMux()
-	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms))
-	mux.Handle(path, handler)
+	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms, getRoomLimiter))
+	// Wrap handler with client IP middleware for rate limiting
+	mux.Handle(path, ratelimit.InjectClientIPMiddleware(handler))
 
 	// WebSocket endpoint
 	mux.HandleFunc("/ws", wsHub.HandleWebSocket)

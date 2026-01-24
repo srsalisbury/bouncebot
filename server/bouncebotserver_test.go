@@ -3,16 +3,18 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/srsalisbury/bouncebot/model"
 	pb "github.com/srsalisbury/bouncebot/proto"
+	"github.com/srsalisbury/bouncebot/server/ratelimit"
 	"github.com/srsalisbury/bouncebot/server/room"
 )
 
 func TestBounceBotServer_CreateRoom(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.CreateRoomRequest{
 		PlayerName:     "Alice",
@@ -43,7 +45,7 @@ func TestBounceBotServer_CreateRoom(t *testing.T) {
 
 func TestBounceBotServer_CreateRoom_SinglePlayer(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.CreateRoomRequest{
 		PlayerName:     "Solo",
@@ -62,7 +64,7 @@ func TestBounceBotServer_CreateRoom_SinglePlayer(t *testing.T) {
 
 func TestBounceBotServer_JoinRoom(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	// Create a room first
 	r, _, _ := svc.Create("Alice", false)
@@ -90,7 +92,7 @@ func TestBounceBotServer_JoinRoom(t *testing.T) {
 
 func TestBounceBotServer_JoinRoom_NotFound(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.JoinRoomRequest{
 		RoomId:     "NONEXISTENT",
@@ -108,7 +110,7 @@ func TestBounceBotServer_JoinRoom_NotFound(t *testing.T) {
 
 func TestBounceBotServer_GetRoom(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, _ := svc.Create("Alice", false)
 
@@ -128,7 +130,7 @@ func TestBounceBotServer_GetRoom(t *testing.T) {
 
 func TestBounceBotServer_GetRoom_NotFound(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.GetRoomRequest{
 		RoomId: "NONEXISTENT",
@@ -143,9 +145,48 @@ func TestBounceBotServer_GetRoom_NotFound(t *testing.T) {
 	}
 }
 
+func TestBounceBotServer_GetRoom_RateLimited(t *testing.T) {
+	svc := room.NewRoomService()
+	limiter := ratelimit.NewLimiter(3, time.Minute) // Allow only 3 requests
+	server := NewBounceBotServer(svc, limiter)
+
+	r, _, _ := svc.Create("Alice", false)
+
+	req := connect.NewRequest(&pb.GetRoomRequest{
+		RoomId: r.ID,
+	})
+
+	// Create a context with client IP
+	ctx := ratelimit.ContextWithClientIP(context.Background(), "192.168.1.1")
+
+	// First 3 requests should succeed
+	for i := 0; i < 3; i++ {
+		_, err := server.GetRoom(ctx, req)
+		if err != nil {
+			t.Fatalf("request %d: unexpected error: %v", i+1, err)
+		}
+	}
+
+	// 4th request should be rate limited
+	_, err := server.GetRoom(ctx, req)
+	if err == nil {
+		t.Error("expected rate limit error")
+	}
+	if connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Errorf("expected ResourceExhausted code, got %v", connect.CodeOf(err))
+	}
+
+	// Different IP should still work
+	ctx2 := ratelimit.ContextWithClientIP(context.Background(), "192.168.1.2")
+	_, err = server.GetRoom(ctx2, req)
+	if err != nil {
+		t.Errorf("different IP should not be rate limited: %v", err)
+	}
+}
+
 func TestBounceBotServer_StartGame(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, _ := svc.Create("Alice", false)
 
@@ -168,7 +209,7 @@ func TestBounceBotServer_StartGame(t *testing.T) {
 
 func TestBounceBotServer_StartGame_NotFound(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.StartGameRequest{
 		RoomId: "NONEXISTENT",
@@ -185,7 +226,7 @@ func TestBounceBotServer_StartGame_NotFound(t *testing.T) {
 
 func TestBounceBotServer_SubmitSolution(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, sessionToken := svc.Create("Alice", false)
 	svc.StartGame(r.ID)
@@ -221,7 +262,7 @@ func TestBounceBotServer_SubmitSolution(t *testing.T) {
 
 func TestBounceBotServer_SubmitSolution_Invalid(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, sessionToken := svc.Create("Alice", false)
 	svc.StartGame(r.ID)
@@ -250,7 +291,7 @@ func TestBounceBotServer_SubmitSolution_Invalid(t *testing.T) {
 
 func TestBounceBotServer_MarkFinishedSolving(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, sessionToken := svc.Create("Alice", false)
 	svc.StartGame(r.ID)
@@ -272,7 +313,7 @@ func TestBounceBotServer_MarkFinishedSolving(t *testing.T) {
 
 func TestBounceBotServer_MarkFinishedSolving_NotFound(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.MarkFinishedSolvingRequest{
 		RoomId:       "NONEXISTENT",
@@ -290,7 +331,7 @@ func TestBounceBotServer_MarkFinishedSolving_NotFound(t *testing.T) {
 
 func TestBounceBotServer_MarkReadyForNext(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, sessionToken := svc.Create("Alice", false)
 
@@ -311,7 +352,7 @@ func TestBounceBotServer_MarkReadyForNext(t *testing.T) {
 
 func TestBounceBotServer_MarkReadyForNext_NotFound(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.MarkReadyForNextRequest{
 		RoomId:       "NONEXISTENT",
@@ -329,7 +370,7 @@ func TestBounceBotServer_MarkReadyForNext_NotFound(t *testing.T) {
 
 func TestBounceBotServer_UpdateRoomSettings(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, sessionToken := svc.Create("Alice", false)
 
@@ -363,7 +404,7 @@ func TestBounceBotServer_UpdateRoomSettings(t *testing.T) {
 
 func TestBounceBotServer_UpdateRoomSettings_NotHost(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	r, _, _ := svc.Create("Alice", false)
 	_, _, bobSessionToken, _ := svc.Join(r.ID, "Bob")
@@ -388,7 +429,7 @@ func TestBounceBotServer_UpdateRoomSettings_NotHost(t *testing.T) {
 
 func TestBounceBotServer_UpdateRoomSettings_NotFound(t *testing.T) {
 	svc := room.NewRoomService()
-	server := NewBounceBotServer(svc)
+	server := NewBounceBotServer(svc, nil)
 
 	req := connect.NewRequest(&pb.UpdateRoomSettingsRequest{
 		RoomId:       "NONEXISTENT",

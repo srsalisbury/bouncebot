@@ -6,15 +6,17 @@ import (
 	"connectrpc.com/connect"
 	"github.com/srsalisbury/bouncebot/model"
 	pb "github.com/srsalisbury/bouncebot/proto"
+	"github.com/srsalisbury/bouncebot/server/ratelimit"
 	"github.com/srsalisbury/bouncebot/server/room"
 )
 
 type bounceBotServer struct {
-	rooms *room.RoomService
+	rooms          *room.RoomService
+	getRoomLimiter *ratelimit.Limiter
 }
 
-func NewBounceBotServer(rooms *room.RoomService) *bounceBotServer {
-	return &bounceBotServer{rooms: rooms}
+func NewBounceBotServer(rooms *room.RoomService, getRoomLimiter *ratelimit.Limiter) *bounceBotServer {
+	return &bounceBotServer{rooms: rooms, getRoomLimiter: getRoomLimiter}
 }
 
 func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.CreateRoomResponse], error) {
@@ -38,7 +40,13 @@ func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.Jo
 	}), nil
 }
 
-func (s *bounceBotServer) GetRoom(_ context.Context, req *connect.Request[pb.GetRoomRequest]) (*connect.Response[pb.Room], error) {
+func (s *bounceBotServer) GetRoom(ctx context.Context, req *connect.Request[pb.GetRoomRequest]) (*connect.Response[pb.Room], error) {
+	// Apply rate limiting per IP (Option B from PLAYER_AUTHENTICATION_DESIGN.md)
+	clientIP := ratelimit.ClientIPFromContext(ctx)
+	if clientIP != "" && s.getRoomLimiter != nil && !s.getRoomLimiter.Allow(clientIP) {
+		return nil, connect.NewError(connect.CodeResourceExhausted, nil)
+	}
+
 	r, err := s.rooms.Get(req.Msg.RoomId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
