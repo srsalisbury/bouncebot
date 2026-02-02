@@ -9,6 +9,7 @@
 - [x] Slower solution replay
 - [x] Button to replay a solution (triangle/play button)
 - [ ] Update how to play screen to focus on controls for mobile or desktop as appropriate
+- [ ] When the solution drawer is closed, show brief indicators for each solution (e.g., length) rather than just the current one, with the active solution highlighted
 - [x] Close the drawer when playing back a solution
 - [x] Update location of roomid on mobile
 - [x] Update solution spacing on mobile to match desktop
@@ -18,6 +19,7 @@
 
 ## Bug Fixes
 
+- [ ] Solo mode disconnect timeout is too aggressive (30 seconds). Since no one is waiting, solo players should have a longer timeout (e.g., 30 minutes) to allow returning to a game after being distracted.
 - [x] Investigate rendering issues for iOS devices
 - [x] Don't allow multi player to join solo room
 - [x] Stop replaying solution when jumping to another solution
