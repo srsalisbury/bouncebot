@@ -29,7 +29,8 @@ type Config struct {
 	AutoSaveInterval      time.Duration
 	CleanupInterval       time.Duration
 	RoomMaxAge            time.Duration
-	DisconnectGracePeriod time.Duration
+	DisconnectGracePeriod     time.Duration
+	SoloDisconnectGracePeriod time.Duration
 
 	// Solver settings
 	SolverTimeout time.Duration
@@ -45,7 +46,8 @@ func DefaultConfig() *Config {
 		AutoSaveInterval:      30 * time.Second,
 		CleanupInterval:       1 * time.Hour,
 		RoomMaxAge:            24 * time.Hour,
-		DisconnectGracePeriod: 30 * time.Second,
+		DisconnectGracePeriod:     30 * time.Second,
+		SoloDisconnectGracePeriod: 30 * time.Minute,
 		SolverTimeout:         30 * time.Second,
 	}
 }
@@ -60,6 +62,7 @@ func DefaultConfig() *Config {
 //   - CLEANUP_INTERVAL: Cleanup interval in seconds (default: 3600)
 //   - ROOM_MAX_AGE: Room max age in seconds (default: 86400)
 //   - DISCONNECT_GRACE_PERIOD: Player disconnect grace period in seconds (default: 30)
+//   - SOLO_DISCONNECT_GRACE_PERIOD: Solo mode disconnect grace period in seconds (default: 1800)
 //   - SOLVER_TIMEOUT: Solver timeout in seconds (default: 30)
 func LoadFromEnv() *Config {
 	cfg := DefaultConfig()
@@ -110,6 +113,12 @@ func LoadFromEnv() *Config {
 	if v := os.Getenv("DISCONNECT_GRACE_PERIOD"); v != "" {
 		if secs, err := strconv.Atoi(v); err == nil {
 			cfg.DisconnectGracePeriod = time.Duration(secs) * time.Second
+		}
+	}
+
+	if v := os.Getenv("SOLO_DISCONNECT_GRACE_PERIOD"); v != "" {
+		if secs, err := strconv.Atoi(v); err == nil {
+			cfg.SoloDisconnectGracePeriod = time.Duration(secs) * time.Second
 		}
 	}
 

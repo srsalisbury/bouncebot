@@ -30,10 +30,14 @@ func (s *RoomService) processSignals(signals []Signal) {
 			}
 
 		case StartTimerSignal:
+			gracePeriod := s.disconnectGracePeriod
+			if room := s.repo.Get(signal.RoomID); room != nil && room.IsSinglePlayer {
+				gracePeriod = s.soloDisconnectGracePeriod
+			}
 			s.timerMgr.StartTimer(
 				signal.RoomID,
 				signal.PlayerID,
-				s.disconnectGracePeriod,
+				gracePeriod,
 				s.onTimerFired,
 			)
 

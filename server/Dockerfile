@@ -45,6 +45,7 @@ COPY --from=builder /bouncebot-server /bouncebot-server
 # CLEANUP_INTERVAL: Cleanup interval in seconds (default: 3600)
 # SESSION_MAX_AGE: Session max age in seconds (default: 86400)
 # DISCONNECT_GRACE_PERIOD: Player disconnect grace period in seconds (default: 30)
+# SOLO_DISCONNECT_GRACE_PERIOD: Solo mode disconnect grace period in seconds (default: 1800)
 
 # Expose the server port
 EXPOSE 8080

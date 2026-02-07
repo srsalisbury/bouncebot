@@ -26,8 +26,9 @@ type RoomService struct {
 	timerMgr    TimerManager
 
 	broadcaster           EventBroadcaster
-	disconnectGracePeriod time.Duration
-	onGameStart           GameStartCallback
+	disconnectGracePeriod     time.Duration
+	soloDisconnectGracePeriod time.Duration
+	onGameStart               GameStartCallback
 }
 
 // NewRoomService creates a new RoomService with all components.
@@ -40,7 +41,8 @@ func NewRoomService() *RoomService {
 		solutionMgr:           solutionMgr,
 		persistence:           NewPersistenceManager(),
 		timerMgr:              NewTimerManager(),
-		disconnectGracePeriod: 30 * time.Second,
+		disconnectGracePeriod:     30 * time.Second,
+		soloDisconnectGracePeriod: 30 * time.Minute,
 	}
 }
 
@@ -52,6 +54,11 @@ func (s *RoomService) SetBroadcaster(b EventBroadcaster) {
 // SetDisconnectGracePeriod sets the grace period for player disconnection.
 func (s *RoomService) SetDisconnectGracePeriod(d time.Duration) {
 	s.disconnectGracePeriod = d
+}
+
+// SetSoloDisconnectGracePeriod sets the grace period for solo mode player disconnection.
+func (s *RoomService) SetSoloDisconnectGracePeriod(d time.Duration) {
+	s.soloDisconnectGracePeriod = d
 }
 
 // SetOnGameStart sets the callback for when a new game starts.
