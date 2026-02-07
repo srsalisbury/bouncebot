@@ -51,6 +51,7 @@ func main() {
 
 	rooms := room.NewRoomService()
 	rooms.SetDisconnectGracePeriod(cfg.DisconnectGracePeriod)
+	rooms.SetSoloDisconnectGracePeriod(cfg.SoloDisconnectGracePeriod)
 
 	// Load existing rooms from disk (continue with empty list on failure)
 	if err := rooms.Load(cfg.DataFile); err != nil {
