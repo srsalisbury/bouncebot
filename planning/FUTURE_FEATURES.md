@@ -19,7 +19,7 @@
 
 ## Bug Fixes
 
-- [ ] Solo mode disconnect timeout is too aggressive (30 seconds). Since no one is waiting, solo players should have a longer timeout (e.g., 30 minutes) to allow returning to a game after being distracted.
+- [x] Solo mode disconnect timeout is too aggressive (30 seconds). Since no one is waiting, solo players should have a longer timeout (e.g., 30 minutes) to allow returning to a game after being distracted.
 - [x] Investigate rendering issues for iOS devices
 - [x] Don't allow multi player to join solo room
 - [x] Stop replaying solution when jumping to another solution
