@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 
 const STORAGE_KEY_NAME = 'bouncebot_player_name'
 const STORAGE_KEY_ID = 'bouncebot_player_id'
+const STORAGE_KEY_SESSION_TOKEN = 'bouncebot_session_token'
 const STORAGE_KEY_LAST_ROOM = 'bouncebot_last_room'
 const STORAGE_KEY_SINGLE_PLAYER = 'bouncebot_single_player'
 const STORAGE_KEY_PUZZLES_SOLVED = 'bouncebot_puzzles_solved'
@@ -14,6 +15,7 @@ export const useRoomStore = defineStore('room', () => {
   // Load from localStorage on init
   const storedName = localStorage.getItem(STORAGE_KEY_NAME)
   const storedId = localStorage.getItem(STORAGE_KEY_ID)
+  const storedSessionToken = localStorage.getItem(STORAGE_KEY_SESSION_TOKEN)
   const storedLastRoom = localStorage.getItem(STORAGE_KEY_LAST_ROOM)
   const storedSinglePlayer = localStorage.getItem(STORAGE_KEY_SINGLE_PLAYER)
   const storedPuzzlesSolved = localStorage.getItem(STORAGE_KEY_PUZZLES_SOLVED)
@@ -23,6 +25,7 @@ export const useRoomStore = defineStore('room', () => {
 
   const currentPlayerName = ref<string | null>(storedName)
   const currentPlayerId = ref<string | null>(storedId)
+  const currentSessionToken = ref<string | null>(storedSessionToken)
   const lastRoomId = ref<string | null>(storedLastRoom)
   const isSinglePlayer = ref(storedSinglePlayer === 'true')
   const puzzlesSolved = ref(storedPuzzlesSolved ? parseInt(storedPuzzlesSolved, 10) : 0)
@@ -44,6 +47,14 @@ export const useRoomStore = defineStore('room', () => {
       localStorage.setItem(STORAGE_KEY_ID, id)
     } else {
       localStorage.removeItem(STORAGE_KEY_ID)
+    }
+  })
+
+  watch(currentSessionToken, (token) => {
+    if (token) {
+      localStorage.setItem(STORAGE_KEY_SESSION_TOKEN, token)
+    } else {
+      localStorage.removeItem(STORAGE_KEY_SESSION_TOKEN)
     }
   })
 
@@ -79,13 +90,15 @@ export const useRoomStore = defineStore('room', () => {
     localStorage.setItem(STORAGE_KEY_SHOW_SOLVER_SOLUTIONS, value.toString())
   })
 
-  function setCurrentPlayer(id: string, name: string) {
+  function setCurrentPlayer(id: string, name: string, sessionToken: string) {
     currentPlayerId.value = id
     currentPlayerName.value = name
+    currentSessionToken.value = sessionToken
   }
 
-  function setCurrentPlayerId(id: string) {
+  function setCurrentPlayerId(id: string, sessionToken: string) {
     currentPlayerId.value = id
+    currentSessionToken.value = sessionToken
   }
 
   function setLastRoom(roomId: string) {
@@ -119,6 +132,7 @@ export const useRoomStore = defineStore('room', () => {
 
   function clearRoom() {
     currentPlayerId.value = null
+    currentSessionToken.value = null
     lastRoomId.value = null
     isSinglePlayer.value = false
     // Note: currentPlayerName is intentionally preserved for future sessions
@@ -127,6 +141,7 @@ export const useRoomStore = defineStore('room', () => {
   return {
     currentPlayerId,
     currentPlayerName,
+    currentSessionToken,
     lastRoomId,
     isSinglePlayer,
     puzzlesSolved,

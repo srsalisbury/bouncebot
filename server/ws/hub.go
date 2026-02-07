@@ -259,9 +259,9 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "roomId required", http.StatusBadRequest)
 		return
 	}
-	playerID := r.URL.Query().Get("playerId")
-	if playerID == "" {
-		http.Error(w, "playerId required", http.StatusBadRequest)
+	sessionToken := r.URL.Query().Get("sessionToken")
+	if sessionToken == "" {
+		http.Error(w, "sessionToken required", http.StatusBadRequest)
 		return
 	}
 
@@ -272,30 +272,14 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var player room.Player
-	found := false
-	// Check both Players and PendingPlayers
-	for _, p := range rm.Players {
-		if p.ID == playerID {
-			player = p
-			found = true
-			break
-		}
-	}
-	if !found {
-		for _, p := range rm.PendingPlayers {
-			if p.ID == playerID {
-				player = p
-				found = true
-				break
-			}
-		}
-	}
-
-	if !found {
-		http.Error(w, "player not found", http.StatusForbidden)
+	// Find player by session token
+	player := rm.FindPlayerBySessionToken(sessionToken)
+	if player == nil {
+		http.Error(w, "invalid session token", http.StatusForbidden)
 		return
 	}
+
+	playerID := player.ID
 
 	if player.Status == room.PlayerStatusDisconnected {
 		if err := h.store.ReconnectPlayer(roomID, playerID); err != nil {

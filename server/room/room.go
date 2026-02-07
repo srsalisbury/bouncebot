@@ -62,6 +62,22 @@ func (r *Room) FindPlayerIndex(playerID string) int {
 	return -1
 }
 
+// FindPlayerBySessionToken returns the player with the given session token, or nil if not found.
+// Searches both Players and PendingPlayers.
+func (r *Room) FindPlayerBySessionToken(token string) *Player {
+	for i := range r.Players {
+		if r.Players[i].SessionToken == token {
+			return &r.Players[i]
+		}
+	}
+	for i := range r.PendingPlayers {
+		if r.PendingPlayers[i].SessionToken == token {
+			return &r.PendingPlayers[i]
+		}
+	}
+	return nil
+}
+
 // containsString returns true if the string is in the slice.
 func containsString(slice []string, s string) bool {
 	for _, v := range slice {

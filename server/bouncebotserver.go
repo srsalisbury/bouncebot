@@ -17,19 +17,24 @@ func NewBounceBotServer(rooms *room.RoomService) *bounceBotServer {
 	return &bounceBotServer{rooms: rooms}
 }
 
-func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.Room], error) {
-	r := s.rooms.Create(req.Msg.PlayerName, req.Msg.IsSinglePlayer)
-	return connect.NewResponse(r.ToProto()), nil
+func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.CreateRoomResponse], error) {
+	r, playerID, sessionToken := s.rooms.Create(req.Msg.PlayerName, req.Msg.IsSinglePlayer)
+	return connect.NewResponse(&pb.CreateRoomResponse{
+		Room:         r.ToProto(),
+		PlayerId:     playerID,
+		SessionToken: sessionToken,
+	}), nil
 }
 
 func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.JoinRoomRequest]) (*connect.Response[pb.JoinRoomResponse], error) {
-	r, playerID, err := s.rooms.Join(req.Msg.RoomId, req.Msg.PlayerName)
+	r, playerID, sessionToken, err := s.rooms.Join(req.Msg.RoomId, req.Msg.PlayerName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	return connect.NewResponse(&pb.JoinRoomResponse{
-		Room:     r.ToProto(),
-		PlayerId: playerID,
+		Room:         r.ToProto(),
+		PlayerId:     playerID,
+		SessionToken: sessionToken,
 	}), nil
 }
 
@@ -51,7 +56,7 @@ func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.S
 
 func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request[pb.SubmitSolutionRequest]) (*connect.Response[pb.SubmitSolutionResponse], error) {
 	moves := model.NewBotPositionsFromProto(req.Msg.Moves)
-	solution, err := s.rooms.SubmitSolution(req.Msg.RoomId, req.Msg.PlayerId, moves)
+	solution, err := s.rooms.SubmitSolution(req.Msg.RoomId, req.Msg.SessionToken, moves)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
@@ -71,7 +76,7 @@ func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request
 }
 
 func (s *bounceBotServer) MarkFinishedSolving(_ context.Context, req *connect.Request[pb.MarkFinishedSolvingRequest]) (*connect.Response[pb.MarkFinishedSolvingResponse], error) {
-	err := s.rooms.MarkFinishedSolving(req.Msg.RoomId, req.Msg.PlayerId)
+	err := s.rooms.MarkFinishedSolving(req.Msg.RoomId, req.Msg.SessionToken)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
@@ -81,7 +86,7 @@ func (s *bounceBotServer) MarkFinishedSolving(_ context.Context, req *connect.Re
 }
 
 func (s *bounceBotServer) MarkReadyForNext(_ context.Context, req *connect.Request[pb.MarkReadyForNextRequest]) (*connect.Response[pb.MarkReadyForNextResponse], error) {
-	err := s.rooms.MarkReadyForNext(req.Msg.RoomId, req.Msg.PlayerId)
+	err := s.rooms.MarkReadyForNext(req.Msg.RoomId, req.Msg.SessionToken)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
@@ -95,7 +100,7 @@ func (s *bounceBotServer) UpdateRoomSettings(_ context.Context, req *connect.Req
 		ShowSolverMoveCount: req.Msg.Settings.ShowSolverMoveCount,
 		ShowSolverSolutions: req.Msg.Settings.ShowSolverSolutions,
 	}
-	err := s.rooms.UpdateRoomSettings(req.Msg.RoomId, req.Msg.PlayerId, settings)
+	err := s.rooms.UpdateRoomSettings(req.Msg.RoomId, req.Msg.SessionToken, settings)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, err)
 	}
@@ -105,7 +110,7 @@ func (s *bounceBotServer) UpdateRoomSettings(_ context.Context, req *connect.Req
 }
 
 func (s *bounceBotServer) BootPlayer(_ context.Context, req *connect.Request[pb.BootPlayerRequest]) (*connect.Response[pb.BootPlayerResponse], error) {
-	err := s.rooms.BootPlayer(req.Msg.RoomId, req.Msg.HostPlayerId, req.Msg.TargetPlayerId)
+	err := s.rooms.BootPlayer(req.Msg.RoomId, req.Msg.SessionToken, req.Msg.TargetPlayerId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, err)
 	}

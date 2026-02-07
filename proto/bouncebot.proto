@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 // Service for client to fetch a game board and return results.
 service BounceBot {
   // Room management
-  rpc CreateRoom (CreateRoomRequest) returns (Room) {}
+  rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse) {}
   rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse) {}
   rpc GetRoom (GetRoomRequest) returns (Room) {}
   rpc StartGame (StartGameRequest) returns (Room) {}
@@ -109,6 +109,13 @@ message JoinRoomRequest {
 message JoinRoomResponse {
   Room room = 1;
   string player_id = 2;
+  string session_token = 3;
+}
+
+message CreateRoomResponse {
+  Room room = 1;
+  string player_id = 2;
+  string session_token = 3;
 }
 
 message GetRoomRequest {
@@ -121,7 +128,7 @@ message StartGameRequest {
 
 message SubmitSolutionRequest {
   string room_id = 1;
-  string player_id = 2;
+  string session_token = 2;
   repeated BotPos moves = 3;
 }
 
@@ -131,7 +138,7 @@ message SubmitSolutionResponse {
 
 message MarkFinishedSolvingRequest {
   string room_id = 1;
-  string player_id = 2;
+  string session_token = 2;
 }
 
 message MarkFinishedSolvingResponse {
@@ -140,7 +147,7 @@ message MarkFinishedSolvingResponse {
 
 message MarkReadyForNextRequest {
   string room_id = 1;
-  string player_id = 2;
+  string session_token = 2;
 }
 
 message MarkReadyForNextResponse {
@@ -157,7 +164,7 @@ message SolverResult {
 
 message UpdateRoomSettingsRequest {
   string room_id = 1;
-  string player_id = 2;  // Must be host (first player)
+  string session_token = 2;  // Must be host (first player)
   RoomSettings settings = 3;
 }
 
@@ -168,7 +175,7 @@ message UpdateRoomSettingsResponse {
 
 message BootPlayerRequest {
   string room_id = 1;
-  string host_player_id = 2;  // Must be host (first player)
+  string session_token = 2;  // Must be host (first player)
   string target_player_id = 3;  // Player to remove
 }
 

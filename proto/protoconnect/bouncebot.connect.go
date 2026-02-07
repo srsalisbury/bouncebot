@@ -60,7 +60,7 @@ const (
 // BounceBotClient is a client for the bouncebot.BounceBot service.
 type BounceBotClient interface {
 	// Room management
-	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
+	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.CreateRoomResponse], error)
 	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.JoinRoomResponse], error)
 	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
@@ -82,7 +82,7 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 	baseURL = strings.TrimRight(baseURL, "/")
 	bounceBotMethods := proto.File_bouncebot_proto.Services().ByName("BounceBot").Methods()
 	return &bounceBotClient{
-		createRoom: connect.NewClient[proto.CreateRoomRequest, proto.Room](
+		createRoom: connect.NewClient[proto.CreateRoomRequest, proto.CreateRoomResponse](
 			httpClient,
 			baseURL+BounceBotCreateRoomProcedure,
 			connect.WithSchema(bounceBotMethods.ByName("CreateRoom")),
@@ -141,7 +141,7 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 
 // bounceBotClient implements BounceBotClient.
 type bounceBotClient struct {
-	createRoom          *connect.Client[proto.CreateRoomRequest, proto.Room]
+	createRoom          *connect.Client[proto.CreateRoomRequest, proto.CreateRoomResponse]
 	joinRoom            *connect.Client[proto.JoinRoomRequest, proto.JoinRoomResponse]
 	getRoom             *connect.Client[proto.GetRoomRequest, proto.Room]
 	startGame           *connect.Client[proto.StartGameRequest, proto.Room]
@@ -153,7 +153,7 @@ type bounceBotClient struct {
 }
 
 // CreateRoom calls bouncebot.BounceBot.CreateRoom.
-func (c *bounceBotClient) CreateRoom(ctx context.Context, req *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error) {
+func (c *bounceBotClient) CreateRoom(ctx context.Context, req *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.CreateRoomResponse], error) {
 	return c.createRoom.CallUnary(ctx, req)
 }
 
@@ -200,7 +200,7 @@ func (c *bounceBotClient) BootPlayer(ctx context.Context, req *connect.Request[p
 // BounceBotHandler is an implementation of the bouncebot.BounceBot service.
 type BounceBotHandler interface {
 	// Room management
-	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error)
+	CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.CreateRoomResponse], error)
 	JoinRoom(context.Context, *connect.Request[proto.JoinRoomRequest]) (*connect.Response[proto.JoinRoomResponse], error)
 	GetRoom(context.Context, *connect.Request[proto.GetRoomRequest]) (*connect.Response[proto.Room], error)
 	StartGame(context.Context, *connect.Request[proto.StartGameRequest]) (*connect.Response[proto.Room], error)
@@ -301,7 +301,7 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 // UnimplementedBounceBotHandler returns CodeUnimplemented from all methods.
 type UnimplementedBounceBotHandler struct{}
 
-func (UnimplementedBounceBotHandler) CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.Room], error) {
+func (UnimplementedBounceBotHandler) CreateRoom(context.Context, *connect.Request[proto.CreateRoomRequest]) (*connect.Response[proto.CreateRoomResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CreateRoom is not implemented"))
 }
 

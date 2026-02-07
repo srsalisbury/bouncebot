@@ -33,22 +33,19 @@ async function startSoloGame() {
 
   try {
     // Create room with default name
-    const room = await bounceBotClient.createRoom({
+    const response = await bounceBotClient.createRoom({
       playerName: 'Player',
       isSinglePlayer: true,
     })
-    const player = room.players[0]
-    if (player) {
-      // Only set the ID for solo mode - don't overwrite saved multiplayer name
-      roomStore.setCurrentPlayerId(player.id)
-    }
+    // Only set the ID for solo mode - don't overwrite saved multiplayer name
+    roomStore.setCurrentPlayerId(response.playerId, response.sessionToken)
     roomStore.setSinglePlayer(true)
 
     // Apply saved settings if any
     if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions) {
       await bounceBotClient.updateRoomSettings({
-        roomId: room.id,
-        playerId: player!.id,
+        roomId: response.room!.id,
+        sessionToken: response.sessionToken,
         settings: {
           showSolverMoveCount: roomStore.showSolverMoveCount,
           showSolverSolutions: roomStore.showSolverSolutions,
@@ -57,9 +54,9 @@ async function startSoloGame() {
     }
 
     // Start game immediately
-    await bounceBotClient.startGame({ roomId: room.id })
+    await bounceBotClient.startGame({ roomId: response.room!.id })
 
-    router.push(`/room/${room.id}`)
+    router.push(`/room/${response.room!.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to start game'
   } finally {
@@ -77,21 +74,18 @@ async function createRoom() {
   error.value = null
 
   try {
-    const room = await bounceBotClient.createRoom({
+    const response = await bounceBotClient.createRoom({
       playerName: playerName.value.trim(),
     })
     // Creator is the first (and only) player in the new room
-    const player = room.players[0]
-    if (player) {
-      roomStore.setCurrentPlayer(player.id, player.name)
-    }
+    roomStore.setCurrentPlayer(response.playerId, playerName.value.trim(), response.sessionToken)
     roomStore.setSinglePlayer(false)
 
     // Apply saved settings if any
     if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions) {
       await bounceBotClient.updateRoomSettings({
-        roomId: room.id,
-        playerId: player!.id,
+        roomId: response.room!.id,
+        sessionToken: response.sessionToken,
         settings: {
           showSolverMoveCount: roomStore.showSolverMoveCount,
           showSolverSolutions: roomStore.showSolverSolutions,
@@ -99,7 +93,7 @@ async function createRoom() {
       })
     }
 
-    router.push(`/room/${room.id}`)
+    router.push(`/room/${response.room!.id}`)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to create room'
   } finally {
@@ -125,7 +119,7 @@ async function joinRoom() {
       roomId: joinRoomId.value.trim(),
       playerName: playerName.value.trim(),
     })
-    roomStore.setCurrentPlayer(response.playerId, playerName.value.trim())
+    roomStore.setCurrentPlayer(response.playerId, playerName.value.trim(), response.sessionToken)
     roomStore.setSinglePlayer(false)
     router.push(`/room/${response.room?.id}`)
   } catch (e) {

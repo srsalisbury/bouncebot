@@ -24,14 +24,20 @@ func TestBounceBotServer_CreateRoom(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if resp.Msg.Id == "" {
+	if resp.Msg.Room.Id == "" {
 		t.Error("expected room ID to be set")
 	}
-	if len(resp.Msg.Players) != 1 {
-		t.Errorf("expected 1 player, got %d", len(resp.Msg.Players))
+	if resp.Msg.PlayerId == "" {
+		t.Error("expected player ID to be set")
 	}
-	if resp.Msg.Players[0].Name != "Alice" {
-		t.Errorf("expected player name 'Alice', got '%s'", resp.Msg.Players[0].Name)
+	if resp.Msg.SessionToken == "" {
+		t.Error("expected session token to be set")
+	}
+	if len(resp.Msg.Room.Players) != 1 {
+		t.Errorf("expected 1 player, got %d", len(resp.Msg.Room.Players))
+	}
+	if resp.Msg.Room.Players[0].Name != "Alice" {
+		t.Errorf("expected player name 'Alice', got '%s'", resp.Msg.Room.Players[0].Name)
 	}
 }
 
@@ -49,7 +55,7 @@ func TestBounceBotServer_CreateRoom_SinglePlayer(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if !resp.Msg.IsSinglePlayer {
+	if !resp.Msg.Room.IsSinglePlayer {
 		t.Error("expected single player room")
 	}
 }
@@ -59,7 +65,7 @@ func TestBounceBotServer_JoinRoom(t *testing.T) {
 	server := NewBounceBotServer(svc)
 
 	// Create a room first
-	r := svc.Create("Alice", false)
+	r, _, _ := svc.Create("Alice", false)
 
 	req := connect.NewRequest(&pb.JoinRoomRequest{
 		RoomId:     r.ID,
@@ -73,6 +79,9 @@ func TestBounceBotServer_JoinRoom(t *testing.T) {
 
 	if resp.Msg.PlayerId == "" {
 		t.Error("expected player ID to be set")
+	}
+	if resp.Msg.SessionToken == "" {
+		t.Error("expected session token to be set")
 	}
 	if len(resp.Msg.Room.Players) != 2 {
 		t.Errorf("expected 2 players, got %d", len(resp.Msg.Room.Players))
@@ -101,7 +110,7 @@ func TestBounceBotServer_GetRoom(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
+	r, _, _ := svc.Create("Alice", false)
 
 	req := connect.NewRequest(&pb.GetRoomRequest{
 		RoomId: r.ID,
@@ -138,7 +147,7 @@ func TestBounceBotServer_StartGame(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
+	r, _, _ := svc.Create("Alice", false)
 
 	req := connect.NewRequest(&pb.StartGameRequest{
 		RoomId: r.ID,
@@ -178,7 +187,7 @@ func TestBounceBotServer_SubmitSolution(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
+	r, _, sessionToken := svc.Create("Alice", false)
 	svc.StartGame(r.ID)
 
 	// Use Game1 for a known valid solution
@@ -192,9 +201,9 @@ func TestBounceBotServer_SubmitSolution(t *testing.T) {
 	}
 
 	req := connect.NewRequest(&pb.SubmitSolutionRequest{
-		RoomId:   r.ID,
-		PlayerId: r.Players[0].ID,
-		Moves:    protoMoves,
+		RoomId:       r.ID,
+		SessionToken: sessionToken,
+		Moves:        protoMoves,
 	})
 
 	resp, err := server.SubmitSolution(context.Background(), req)
@@ -214,7 +223,7 @@ func TestBounceBotServer_SubmitSolution_Invalid(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
+	r, _, sessionToken := svc.Create("Alice", false)
 	svc.StartGame(r.ID)
 	r, _ = svc.Get(r.ID)
 	r.CurrentGame = model.Game1()
@@ -225,9 +234,9 @@ func TestBounceBotServer_SubmitSolution_Invalid(t *testing.T) {
 	}
 
 	req := connect.NewRequest(&pb.SubmitSolutionRequest{
-		RoomId:   r.ID,
-		PlayerId: r.Players[0].ID,
-		Moves:    invalidMoves,
+		RoomId:       r.ID,
+		SessionToken: sessionToken,
+		Moves:        invalidMoves,
 	})
 
 	_, err := server.SubmitSolution(context.Background(), req)
@@ -243,13 +252,12 @@ func TestBounceBotServer_MarkFinishedSolving(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
+	r, _, sessionToken := svc.Create("Alice", false)
 	svc.StartGame(r.ID)
-	playerID := r.Players[0].ID
 
 	req := connect.NewRequest(&pb.MarkFinishedSolvingRequest{
-		RoomId:   r.ID,
-		PlayerId: playerID,
+		RoomId:       r.ID,
+		SessionToken: sessionToken,
 	})
 
 	resp, err := server.MarkFinishedSolving(context.Background(), req)
@@ -267,8 +275,8 @@ func TestBounceBotServer_MarkFinishedSolving_NotFound(t *testing.T) {
 	server := NewBounceBotServer(svc)
 
 	req := connect.NewRequest(&pb.MarkFinishedSolvingRequest{
-		RoomId:   "NONEXISTENT",
-		PlayerId: "player1",
+		RoomId:       "NONEXISTENT",
+		SessionToken: "invalid-token",
 	})
 
 	_, err := server.MarkFinishedSolving(context.Background(), req)
@@ -284,12 +292,11 @@ func TestBounceBotServer_MarkReadyForNext(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
-	playerID := r.Players[0].ID
+	r, _, sessionToken := svc.Create("Alice", false)
 
 	req := connect.NewRequest(&pb.MarkReadyForNextRequest{
-		RoomId:   r.ID,
-		PlayerId: playerID,
+		RoomId:       r.ID,
+		SessionToken: sessionToken,
 	})
 
 	resp, err := server.MarkReadyForNext(context.Background(), req)
@@ -307,8 +314,8 @@ func TestBounceBotServer_MarkReadyForNext_NotFound(t *testing.T) {
 	server := NewBounceBotServer(svc)
 
 	req := connect.NewRequest(&pb.MarkReadyForNextRequest{
-		RoomId:   "NONEXISTENT",
-		PlayerId: "player1",
+		RoomId:       "NONEXISTENT",
+		SessionToken: "invalid-token",
 	})
 
 	_, err := server.MarkReadyForNext(context.Background(), req)
@@ -324,12 +331,11 @@ func TestBounceBotServer_UpdateRoomSettings(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
-	hostID := r.Players[0].ID
+	r, _, sessionToken := svc.Create("Alice", false)
 
 	req := connect.NewRequest(&pb.UpdateRoomSettingsRequest{
-		RoomId:   r.ID,
-		PlayerId: hostID,
+		RoomId:       r.ID,
+		SessionToken: sessionToken,
 		Settings: &pb.RoomSettings{
 			ShowSolverMoveCount: true,
 			ShowSolverSolutions: true,
@@ -359,13 +365,13 @@ func TestBounceBotServer_UpdateRoomSettings_NotHost(t *testing.T) {
 	svc := room.NewRoomService()
 	server := NewBounceBotServer(svc)
 
-	r := svc.Create("Alice", false)
-	r, bobID, _ := svc.Join(r.ID, "Bob")
+	r, _, _ := svc.Create("Alice", false)
+	_, _, bobSessionToken, _ := svc.Join(r.ID, "Bob")
 
 	// Bob (not host) tries to change settings
 	req := connect.NewRequest(&pb.UpdateRoomSettingsRequest{
-		RoomId:   r.ID,
-		PlayerId: bobID,
+		RoomId:       r.ID,
+		SessionToken: bobSessionToken,
 		Settings: &pb.RoomSettings{
 			ShowSolverMoveCount: true,
 		},
@@ -385,9 +391,9 @@ func TestBounceBotServer_UpdateRoomSettings_NotFound(t *testing.T) {
 	server := NewBounceBotServer(svc)
 
 	req := connect.NewRequest(&pb.UpdateRoomSettingsRequest{
-		RoomId:   "NONEXISTENT",
-		PlayerId: "player1",
-		Settings: &pb.RoomSettings{},
+		RoomId:       "NONEXISTENT",
+		SessionToken: "invalid-token",
+		Settings:     &pb.RoomSettings{},
 	})
 
 	_, err := server.UpdateRoomSettings(context.Background(), req)
