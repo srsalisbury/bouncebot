@@ -211,7 +211,7 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .solved-indicator {
-  color: #43a047;
+  color: var(--color-accent);
   margin-left: 0.3rem;
 }
 
@@ -242,7 +242,7 @@ const solutionCount = computed(() => store.solutions.length)
   gap: 0.25rem;
   padding: 0.4rem;
   border-radius: 6px;
-  background: #2a2a2a;
+  background: var(--color-bg-panel);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -259,9 +259,9 @@ const solutionCount = computed(() => store.solutions.length)
   max-width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #e53935;
+  background: var(--color-danger);
   color: white;
-  border: 2px solid #1a1a1a;
+  border: 2px solid var(--color-bg-dark);
   font-size: 16px;
   font-weight: bold;
   line-height: 1;
@@ -275,7 +275,7 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .delete-btn:hover {
-  background: #c62828;
+  background: var(--color-danger-hover);
 }
 
 .replay-btn {
@@ -290,9 +290,9 @@ const solutionCount = computed(() => store.solutions.length)
   max-width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #43a047;
+  background: var(--color-accent);
   color: #333;
-  border: 2px solid #1a1a1a;
+  border: 2px solid var(--color-bg-dark);
   font-size: 10px;
   font-weight: bold;
   line-height: 1;
@@ -306,7 +306,7 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .replay-btn:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .play-icon {
@@ -322,9 +322,9 @@ const solutionCount = computed(() => store.solutions.length)
   max-width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #333;
-  color: #43a047;
-  border: 2px solid #43a047;
+  background: var(--color-bg-surface);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
@@ -338,16 +338,16 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .add-solution-btn:hover {
-  background: #3a3a3a;
+  background: var(--color-bg-surface-hover);
 }
 
 .solution-column:hover {
-  background: #333;
+  background: var(--color-bg-surface);
 }
 
 .solution-column.active {
-  background: #2a2a2a;
-  box-shadow: 0 0 0 2px #43a047;
+  background: var(--color-bg-panel);
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .solution-header {
@@ -369,7 +369,7 @@ const solutionCount = computed(() => store.solutions.length)
 .solved-check {
   position: absolute;
   right: 0;
-  color: #43a047;
+  color: var(--color-accent);
   opacity: 0;
 }
 
@@ -395,7 +395,7 @@ const solutionCount = computed(() => store.solutions.length)
 }
 
 .move-item.animating {
-  background: #43a047;
+  background: var(--color-accent);
 }
 
 .move-robot {

@@ -308,7 +308,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 
 .player-item.current {
   background: #2a3a2a;
-  border: 1px solid #43a047;
+  border: 1px solid var(--color-accent);
 }
 
 .player-dot {
@@ -327,12 +327,12 @@ function getSolveTime(solution: PlayerSolution): string | null {
 .host-crown {
   width: 14px;
   height: 14px;
-  color: #ffd700;
+  color: var(--color-winner);
   flex-shrink: 0;
 }
 
 .you-label {
-  color: #43a047;
+  color: var(--color-accent);
   font-size: 0.8rem;
 }
 
@@ -348,7 +348,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 .solution-badge {
   margin-left: auto;
   padding: 0.15rem 0.4rem;
-  background: #43a047;
+  background: var(--color-accent);
   color: #fff;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -366,7 +366,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
 }
 
 .done-check {
-  color: #43a047;
+  color: var(--color-accent);
   font-weight: bold;
   font-size: 1rem;
 }
@@ -377,11 +377,11 @@ function getSolveTime(solution: PlayerSolution): string | null {
 
 .player-item.leader {
   background: #2e2a1a;
-  border: 1px solid #ffd700;
+  border: 1px solid var(--color-winner);
 }
 
 .player-item.leader .solution-badge {
-  background: #ffd700;
+  background: var(--color-winner);
   color: #000;
 }
 
@@ -466,12 +466,12 @@ function getSolveTime(solution: PlayerSolution): string | null {
   }
 
   .compact .dropdown-summary:hover {
-    background: #2a2a2a;
+    background: var(--color-bg-panel);
   }
 
   .compact .dropdown-summary.has-leader {
     background: #2e2a1a;
-    border: 1px solid #ffd700;
+    border: 1px solid var(--color-winner);
   }
 
   .compact .dropdown-summary .player-dot {
@@ -487,7 +487,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
   }
 
   .compact .dropdown-summary .leader-badge {
-    background: #ffd700;
+    background: var(--color-winner);
     color: #000;
   }
 

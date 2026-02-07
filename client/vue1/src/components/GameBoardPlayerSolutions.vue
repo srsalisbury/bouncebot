@@ -237,18 +237,18 @@ const {
   padding: 0.4rem;
   border-radius: 6px;
   border: 2px solid transparent;
-  background: #dddddd;
+  background: var(--color-bg-panel-light);
   cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s;
 }
 
 .solution-column:hover {
-  background: #cccccc;
+  background: var(--color-bg-panel-light-hover);
 }
 
 .solution-column.active {
-  background: #dddddd;
-  box-shadow: 0 0 0 2px #43a047;
+  background: var(--color-bg-panel-light);
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .solution-column.player-solution {
@@ -256,12 +256,12 @@ const {
 }
 
 .solution-column.winner {
-  background: #fff8dc;
-  border: 2px solid #ffd700;
+  background: var(--color-winner-bg-light);
+  border: 2px solid var(--color-winner);
 }
 
 .solution-column.winner.active {
-  box-shadow: 0 0 0 2px #43a047;
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .player-solution-header {
@@ -348,7 +348,7 @@ const {
 }
 
 .move-item.animating {
-  background: #43a047;
+  background: var(--color-accent);
 }
 
 .move-robot {
@@ -375,20 +375,20 @@ const {
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   .solution-column {
-    background: #3a3a3a;
+    background: var(--color-bg-surface);
   }
 
   .solution-column:hover {
-    background: #454545;
+    background: var(--color-bg-surface-hover);
   }
 
   .solution-column.active {
-    background: #3a3a3a;
+    background: var(--color-bg-surface);
   }
 
   .solution-column.winner {
-    background: #3d3820;
-    border-color: #b8960b;
+    background: var(--color-winner-bg);
+    border-color: var(--color-winner-border);
   }
 
   .player-solution-header {
