@@ -4,6 +4,7 @@ import { DIRECTION_ARROWS, getRobotColor } from '../constants'
 import type { PlayerSolution } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import type { Direction } from '../constants'
+import { getFormattedTimes, calculateDurationSeconds } from '../services/timeUtils'
 
 interface MoveWithDirection {
   robotId: number
@@ -62,15 +63,30 @@ const showCurrentPlayerSolution = computed(() => {
   return !!props.currentPlayerSolution && !isCurrentPlayerInTopThree.value
 })
 
-function formatSolveTime(solvedAt?: Timestamp): string {
-  if (!solvedAt || !props.gameStartedAt) return ''
-  const solvedMs = Number(solvedAt.seconds) * 1000 + Math.floor(solvedAt.nanos / 1_000_000)
-  const startMs = Number(props.gameStartedAt.seconds) * 1000 + Math.floor(props.gameStartedAt.nanos / 1_000_000)
-  const diffSeconds = Math.floor((solvedMs - startMs) / 1000)
-  if (diffSeconds < 0) return ''
-  const minutes = Math.floor(diffSeconds / 60)
-  const seconds = diffSeconds % 60
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+const formattedTimesMap = computed(() => {
+  if (!props.gameStartedAt) return new Map<string, string>()
+
+  // Gather all solutions we know about to ensure consistent collision resolution
+  const allSols = [
+    ...(props.playerSolutions ?? []),
+    ...(props.topThreeSolutions ?? []),
+    props.currentPlayerSolution
+  ].filter((s): s is PlayerSolution => !!s && !!s.solvedAt)
+
+  // Deduplicate by ID
+  const uniqueSols = new Map<string, PlayerSolution>()
+  allSols.forEach(s => uniqueSols.set(s.playerId, s))
+
+  const timeData = Array.from(uniqueSols.values()).map(s => ({
+    id: s.playerId,
+    seconds: calculateDurationSeconds(props.gameStartedAt!, s.solvedAt!)
+  }))
+
+  return getFormattedTimes(timeData)
+})
+
+function getSolveTime(playerId: string): string {
+  return formattedTimesMap.value.get(playerId) ?? ''
 }
 </script>
 
@@ -127,7 +143,7 @@ function formatSolveTime(solvedAt?: Timestamp): string {
                 <span class="player-name">{{ getPlayerName(solution.playerId) }}</span>
               </div>
               <span class="solution-moves">{{ solution.moves.length }}</span>
-              <span class="solution-time">{{ formatSolveTime(solution.solvedAt) }}</span>
+              <span class="solution-time">{{ getSolveTime(solution.playerId) }}</span>
             </div>
             <div class="move-list">
               <div
@@ -194,7 +210,7 @@ function formatSolveTime(solvedAt?: Timestamp): string {
                 <span class="player-name">{{ getPlayerName(currentPlayerSolution!.playerId) }}</span>
               </div>
               <span class="solution-moves">{{ currentPlayerSolution!.moves.length }}</span>
-              <span class="solution-time">{{ formatSolveTime(currentPlayerSolution!.solvedAt) }}</span>
+              <span class="solution-time">{{ getSolveTime(currentPlayerSolution!.playerId) }}</span>
             </div>
             <div class="move-list">
               <div
