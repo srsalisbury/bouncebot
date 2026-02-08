@@ -14,7 +14,7 @@
 - [x] Update location of roomid on mobile
 - [x] Update solution spacing on mobile to match desktop
 - [x] When a player is dropped from a game and they came back online, there should be some reasonable indication in their UI and a way to reconnect.
-- [ ] A player should be able to leave and disconnect immediately
+- [x] A player should be able to leave and disconnect immediately
 - [x] Solution bin should only solutions from the top three players plus bot
 
 ## Bug Fixes
