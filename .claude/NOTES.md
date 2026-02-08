@@ -17,7 +17,7 @@ cd /Users/mike/dev/bouncebot/server && go build -o server . && ./server
 
 ### Vue Dev Server (port 5173)
 ```bash
-# Start (from client/vue1)
+# Start (from client/web)
 npm run dev
 
 # Kill
@@ -32,12 +32,12 @@ Docker is for CI/CD and deployment, not local development. Use native binaries l
 ## Workflow
 
 - Always submit new changes via PRs (not direct pushes to main)
-- Update `client/vue1/PROGRESS.md` when completing implementation steps
+- Update `client/web/PROGRESS.md` when completing implementation steps
 - When merging PRs, use `gh pr merge --merge --delete-branch` to clean up remote branches
 
 ## Documentation
 
 Update developer docs when changes should be reflected:
 - `server/DEVELOPER.md` - New files, packages, RPC endpoints, WebSocket events, architecture
-- `client/vue1/DEVELOPER.md` - New files, components, composables, stores, architecture
+- `client/web/DEVELOPER.md` - New files, components, composables, stores, architecture
 - `README.md` - User-facing changes (how to run, configuration, features)

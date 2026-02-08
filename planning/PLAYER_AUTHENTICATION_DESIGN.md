@@ -400,10 +400,10 @@ Bind session to client IP address.
 
 | File | Changes |
 |------|---------|
-| `client/vue1/src/stores/roomStore.ts` | Store/retrieve session token |
-| `client/vue1/src/composables/useGameActions.ts` | Send session token in requests |
-| `client/vue1/src/services/websocket.ts` | Connect with session token |
-| `client/vue1/src/gen/bouncebot_pb.ts` | Regenerated from proto |
+| `client/web/src/stores/roomStore.ts` | Store/retrieve session token |
+| `client/web/src/composables/useGameActions.ts` | Send session token in requests |
+| `client/web/src/services/websocket.ts` | Connect with session token |
+| `client/web/src/gen/bouncebot_pb.ts` | Regenerated from proto |
 
 ---
 

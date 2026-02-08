@@ -11,7 +11,7 @@ The BounceBot client is a Single Page Application (SPA) built with **Vue 3**, **
 ### Running Locally
 
 ```bash
-cd client/vue1
+cd client/web
 npm install
 npm run dev
 ```
@@ -23,7 +23,7 @@ The app will start at `http://localhost:5173`.
 The project follows a standard Vue 3 structure, organized by feature type rather than file type where possible.
 
 ```
-client/vue1/src/
+client/web/src/
 ├── main.ts               # App entry point, mounts the Vue app
 ├── App.vue               # Root component, handles layout & global overlays
 ├── router.ts             # Route definitions (/, /room/:roomId)
