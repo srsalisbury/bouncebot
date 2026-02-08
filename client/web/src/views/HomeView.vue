@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { bounceBotClient } from '../services/connectClient'
 import { translateJoinRoomError } from '../services/errorMessages'
+import { isRoomNotFoundError } from '../services/errorUtils'
 import { useRoomStore } from '../stores/roomStore'
+
+const ROOM_CHECK_INTERVAL_MS = 60_000
 
 const router = useRouter()
 const roomStore = useRoomStore()
@@ -20,6 +23,42 @@ const error = ref<string | null>(null)
 const lastRoom = computed(() => roomStore.lastRoomId)
 const isLoading = computed(() => isStartingSolo.value || isCreating.value || isJoining.value)
 const appVersion = __APP_VERSION__
+
+// Periodically check if the last room still exists on the server
+let roomCheckTimer: ReturnType<typeof setInterval> | null = null
+
+async function checkLastRoomExists() {
+  if (!lastRoom.value) return
+  try {
+    await bounceBotClient.getRoom({ roomId: lastRoom.value })
+  } catch (e) {
+    if (isRoomNotFoundError(e)) {
+      roomStore.clearRoom()
+    }
+  }
+}
+
+function startRoomCheck() {
+  stopRoomCheck()
+  if (lastRoom.value) {
+    checkLastRoomExists()
+    roomCheckTimer = setInterval(checkLastRoomExists, ROOM_CHECK_INTERVAL_MS)
+  }
+}
+
+function stopRoomCheck() {
+  if (roomCheckTimer) {
+    clearInterval(roomCheckTimer)
+    roomCheckTimer = null
+  }
+}
+
+onMounted(startRoomCheck)
+onUnmounted(stopRoomCheck)
+watch(lastRoom, (val) => {
+  if (val) startRoomCheck()
+  else stopRoomCheck()
+})
 
 function returnToGame() {
   if (lastRoom.value) {
