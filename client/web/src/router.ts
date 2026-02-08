@@ -2,9 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import RoomView from './views/RoomView.vue'
 import HelpView from './views/HelpView.vue'
+import { config } from './config'
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(config.basePath),
   routes: [
     {
       path: '/',

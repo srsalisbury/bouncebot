@@ -8,6 +8,7 @@ declare global {
   interface Window {
     APP_CONFIG?: {
       API_BASE_URL?: string
+      BASE_PATH?: string
     }
   }
 }
@@ -37,7 +38,10 @@ function buildConfig(baseUrl: string) {
   }
 }
 
-export const config = buildConfig(apiBaseUrl)
+export const config = {
+  ...buildConfig(apiBaseUrl),
+  basePath: window.APP_CONFIG?.BASE_PATH || '/',
+}
 
 // Log config on startup for debugging
 console.log('BounceBot config:', config)
