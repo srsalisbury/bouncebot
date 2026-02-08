@@ -9,7 +9,7 @@
 - [x] Slower solution replay
 - [x] Button to replay a solution (triangle/play button)
 - [ ] Update how to play screen to focus on controls for mobile or desktop as appropriate
-- [ ] When the solution drawer is closed, show brief indicators for each solution (e.g., length) rather than just the current one, with the active solution highlighted
+- [x] When the solution drawer is closed, show brief indicators for each solution (e.g., length) rather than just the current one, with the active solution highlighted
 - [x] Close the drawer when playing back a solution
 - [x] Update location of roomid on mobile
 - [x] Update solution spacing on mobile to match desktop
