@@ -6,7 +6,7 @@ Improve the display of solution times in the game UI. Currently, times are shown
 ## Implementation Steps
 
 ### Step 1: Create Shared Time Utility
-Create `client/vue1/src/services/timeUtils.ts` with the following functions:
+Create `client/web/src/services/timeUtils.ts` with the following functions:
 
 1.  **`formatDuration(seconds: number, precision: number = 0): string`**
     *   Formats a duration in seconds to a string.
@@ -29,9 +29,9 @@ Create `client/vue1/src/services/timeUtils.ts` with the following functions:
 ### Step 2: Refactor Components
 Update the following components to use the new service:
 
-*   **`client/vue1/src/components/PlayersPanel.vue`**
-*   **`client/vue1/src/components/GameBoardPlayerSolutions.vue`**
-*   **`client/vue1/src/components/PlayerSolutionsDrawer.vue`**
+*   **`client/web/src/components/PlayersPanel.vue`**
+*   **`client/web/src/components/GameBoardPlayerSolutions.vue`**
+*   **`client/web/src/components/PlayerSolutionsDrawer.vue`**
 
 **Refactoring Logic for Each Component:**
 1.  Import `getFormattedTimes` and `calculateDurationSeconds` from `timeUtils.ts`.

@@ -52,7 +52,7 @@ go run ./server
 The client provides the interactive game board and lobby.
 
 ```bash
-cd client/vue1
+cd client/web
 npm install
 npm run dev
 ```
@@ -88,7 +88,7 @@ docker compose up
 ## Documentation
 
 *   **[server/README.md](./server/README.md)** - Backend code layout, RPC endpoints, WebSocket events.
-*   **[client/vue1/README.md](./client/vue1/README.md)** - Frontend architecture, Pinia stores, and composables.
+*   **[client/web/README.md](./client/web/README.md)** - Frontend architecture, Pinia stores, and composables.
 *   **`model/`**: Pure game logic (physics, board generation) shared between the server and the solvers.
 *   **`solver/`**: Implementation of the A* and BFS algorithms used to solve puzzles automatically.
 

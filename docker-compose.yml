@@ -18,7 +18,7 @@ services:
 
   client:
     build:
-      context: client/vue1
+      context: client/web
       dockerfile: Dockerfile
     ports:
       - "80:80"

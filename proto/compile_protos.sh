@@ -10,7 +10,7 @@ protoc --go_out=. --go_opt=paths=source_relative \
 
 # Generate TypeScript protos
 echo "Generating TypeScript protos..."
-cd ../client/vue1
+cd ../client/web
 npx buf generate
 
 echo "Done!"

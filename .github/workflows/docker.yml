@@ -25,8 +25,8 @@ jobs:
             context: .
             dockerfile: ./server/Dockerfile
           - name: client
-            context: ./client/vue1
-            dockerfile: ./client/vue1/Dockerfile
+            context: ./client/web
+            dockerfile: ./client/web/Dockerfile
 
     steps:
       - name: Checkout repository
