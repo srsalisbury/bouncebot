@@ -20,8 +20,6 @@ services:
     build:
       context: client/web
       dockerfile: Dockerfile
-      args:
-        - BASE_PATH=${BASE_PATH:-/}
     ports:
       - "80:80"
     environment:
