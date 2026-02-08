@@ -20,8 +20,12 @@ services:
     build:
       context: client/web
       dockerfile: Dockerfile
+      args:
+        - BASE_PATH=${BASE_PATH:-/}
     ports:
       - "80:80"
+    environment:
+      - BASE_PATH=${BASE_PATH:-/}
     depends_on:
       - server
     restart: unless-stopped
