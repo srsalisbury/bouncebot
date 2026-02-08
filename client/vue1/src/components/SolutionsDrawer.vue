@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { DIRECTION_ARROWS, getRobotColor, MOBILE_ASPECT_RATIO, MOBILE_WIDTH_BREAKPOINT } from '../constants'
 import { useSwipe } from '../composables/useSwipe'
@@ -24,6 +24,15 @@ function handleSolutionClick(index: number) {
   store.switchSolution(index)
   if (isMobile()) {
     isExpanded.value = false
+  }
+}
+
+// Handle pill indicator clicks
+function handleIndicatorClick(index: number) {
+  if (index === store.activeSolutionIndex) {
+    toggleExpanded()
+  } else {
+    store.switchSolution(index)
   }
 }
 
@@ -74,10 +83,6 @@ function handleDeleteSolution(index: number) {
   props.onSolutionDeleted?.(index)
 }
 
-const activeSolution = computed(() => store.solutions[store.activeSolutionIndex])
-const moveCount = computed(() => activeSolution.value?.moves.length ?? 0)
-const isSolved = computed(() => activeSolution.value?.isSolved ?? false)
-const solutionCount = computed(() => store.solutions.length)
 </script>
 
 <template>
@@ -89,12 +94,22 @@ const solutionCount = computed(() => store.solutions.length)
     <!-- Collapsed header bar -->
     <div class="drawer-header" @click="toggleExpanded">
       <div class="drawer-handle" />
-      <div class="header-content">
-        <span class="solution-count">
-          {{ moveCount }} {{ moveCount === 1 ? 'move' : 'moves' }}
-          <span v-if="isSolved" class="solved-indicator">✓</span>
-        </span>
-        <span class="solution-label">Solution {{ store.activeSolutionIndex + 1 }}/{{ solutionCount }}</span>
+      <div v-if="!isExpanded" class="header-content">
+        <div class="solution-indicators">
+          <button
+            v-for="(solution, index) in store.solutions"
+            :key="index"
+            class="solution-pill"
+            :class="{
+              active: index === store.activeSolutionIndex,
+              solved: solution.isSolved,
+            }"
+            @click.stop="handleIndicatorClick(index)"
+          >
+            {{ solution.moves.length > 0 ? solution.moves.length : '-' }}
+            <span v-if="solution.isSolved" class="pill-check">✓</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -186,6 +201,11 @@ const solutionCount = computed(() => store.solutions.length)
   min-height: 44px;
 }
 
+.solutions-drawer.expanded .drawer-header {
+  padding: 0.4rem 1rem;
+  min-height: 0;
+}
+
 .drawer-handle {
   position: absolute;
   top: 8px;
@@ -200,24 +220,51 @@ const solutionCount = computed(() => store.solutions.length)
 .header-content {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  justify-content: center;
 }
 
-.solution-count {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #fff;
+.solution-indicators {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
-.solved-indicator {
-  color: var(--color-accent);
-  margin-left: 0.3rem;
-}
-
-.solution-label {
-  font-size: 0.8rem;
+.solution-pill {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 54px;
+  height: 32px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  background: var(--color-bg-surface);
   color: #888;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.solution-pill.active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.solution-pill.solved:not(.active) {
+  background: transparent;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.pill-check {
+  font-size: 0.8rem;
+  margin-left: 1px;
 }
 
 .drawer-content {

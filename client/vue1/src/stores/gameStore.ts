@@ -647,6 +647,14 @@ export const useGameStore = defineStore('game', () => {
     committedMoves.value = []
   }
 
+  // Reset all solutions to a single empty solution
+  function resetSolutions() {
+    solutions.value = [{ moves: [], isSolved: false }]
+    activeSolutionIndex.value = 0
+    committedMoves.value = []
+    animatingMoveIndex.value = null
+  }
+
   // Reset current solution back to starting point
   function resetCurrentSolution() {
     const solution = solutions.value[activeSolutionIndex.value]
@@ -696,5 +704,6 @@ export const useGameStore = defineStore('game', () => {
     applyReplayMove,
     clearCommittedMoves,
     resetCurrentSolution,
+    resetSolutions,
   }
 })

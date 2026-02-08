@@ -242,6 +242,7 @@ async function nextPuzzle() {
   }
   isStarting.value = true
   gameActions.resetForNewGame()
+  gameStore.resetSolutions()
   gameEnded.value = false
   // Increment before game starts so number is correct when rendered
   roomStore.recordPuzzleAttempted()
