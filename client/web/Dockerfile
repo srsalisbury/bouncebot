@@ -14,9 +14,11 @@ COPY . .
 
 # Version is passed as build arg (defaults to dev)
 ARG VERSION=dev
+# Base path for serving under a subpath (e.g., /app/)
+ARG BASE_PATH=/
 
-# Build the application with version embedded
-RUN VITE_APP_VERSION=${VERSION} npm run build
+# Build the application with version and base path embedded
+RUN VITE_APP_VERSION=${VERSION} VITE_BASE_PATH=${BASE_PATH} npm run build
 
 # Runtime stage
 FROM nginx:alpine
