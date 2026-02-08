@@ -343,6 +343,57 @@ function toggleLeaderboard() {
   showLeaderboard.value = !showLeaderboard.value
 }
 
+// Long-press gear to toggle showSolverMoveCount
+let gearLongPressTimer: ReturnType<typeof setTimeout> | null = null
+let gearLongPressFired = false
+
+function onGearPointerDown() {
+  gearLongPressFired = false
+  gearLongPressTimer = setTimeout(() => {
+    gearLongPressFired = true
+    const current = room.value?.settings?.showSolverMoveCount ?? true
+    updateSettings({
+      showSolverMoveCount: !current,
+      showSolverSolutions: room.value?.settings?.showSolverSolutions ?? true,
+    })
+  }, 500)
+}
+
+function onGearPointerUp() {
+  if (gearLongPressTimer) {
+    clearTimeout(gearLongPressTimer)
+    gearLongPressTimer = null
+  }
+}
+
+function onGearClick(e: Event) {
+  if (gearLongPressFired) {
+    e.preventDefault()
+    return
+  }
+  showSettings.value = true
+}
+
+// Long-press solver move count to hide it
+let solverLongPressTimer: ReturnType<typeof setTimeout> | null = null
+
+function onSolverPointerDown() {
+  solverLongPressTimer = setTimeout(() => {
+    solverLongPressTimer = null
+    updateSettings({
+      showSolverMoveCount: false,
+      showSolverSolutions: room.value?.settings?.showSolverSolutions ?? true,
+    })
+  }, 500)
+}
+
+function onSolverPointerUp() {
+  if (solverLongPressTimer) {
+    clearTimeout(solverLongPressTimer)
+    solverLongPressTimer = null
+  }
+}
+
 // Leave game
 function promptLeaveGame() {
   showLeaveConfirm.value = true
@@ -547,12 +598,12 @@ onUnmounted(() => {
                   </div>
                 </div>
               </div>
-              <div v-if="minSolverMoves !== null" class="solver-status">
+              <div v-if="minSolverMoves !== null" class="solver-status" @pointerdown="onSolverPointerDown" @pointerup="onSolverPointerUp" @pointerleave="onSolverPointerUp" @contextmenu.prevent>
                 <img src="/favicon_dark.svg" alt="" class="solver-icon" />
                 <span class="solver-moves">{{ minSolverMoves }}</span>
               </div>
               <span v-if="gameStore.isSolved" class="solved-indicator">✓</span>
-              <button class="btn-icon settings-btn-header" @click="showSettings = true" title="Settings">
+              <button class="btn-icon settings-btn-header" @click="onGearClick" @pointerdown="onGearPointerDown" @pointerup="onGearPointerUp" @pointerleave="onGearPointerUp" @contextmenu.prevent title="Settings">
                 <img src="/gear.svg" alt="Settings" class="gear-icon" />
               </button>
               <button
@@ -566,11 +617,11 @@ onUnmounted(() => {
             <!-- Multiplayer mode: full header -->
             <template v-else-if="!gameEnded">
               <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
-              <div v-if="minSolverMoves !== null" class="solver-status">
+              <div v-if="minSolverMoves !== null" class="solver-status" @pointerdown="onSolverPointerDown" @pointerup="onSolverPointerUp" @pointerleave="onSolverPointerUp" @contextmenu.prevent>
                 <img src="/favicon_dark.svg" alt="" class="solver-icon" />
                 <span class="solver-moves">{{ minSolverMoves }}</span>
               </div>
-              <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="showSettings = true" title="Room Settings">
+              <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="onGearClick" @pointerdown="onGearPointerDown" @pointerup="onGearPointerUp" @pointerleave="onGearPointerUp" @contextmenu.prevent title="Room Settings">
                 <img src="/gear.svg" alt="Settings" class="gear-icon" />
               </button>
               <button
@@ -596,7 +647,7 @@ onUnmounted(() => {
                 :games-played="room.gamesPlayed"
                 @close="toggleLeaderboard"
               />
-              <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="showSettings = true" title="Room Settings">
+              <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="onGearClick" @pointerdown="onGearPointerDown" @pointerup="onGearPointerUp" @pointerleave="onGearPointerUp" @contextmenu.prevent title="Room Settings">
                 <img src="/gear.svg" alt="Settings" class="gear-icon" />
               </button>
               <button
