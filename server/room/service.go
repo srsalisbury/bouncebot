@@ -264,6 +264,35 @@ func (s *RoomService) UpdateRoomSettings(roomID, sessionToken string, settings R
 	return nil
 }
 
+// LeaveRoom allows a player to immediately remove themselves from a room.
+func (s *RoomService) LeaveRoom(roomID, sessionToken string) error {
+	playerID, err := s.ValidateSessionToken(roomID, sessionToken)
+	if err != nil {
+		return err
+	}
+
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return fmt.Errorf("room not found: %s", roomID)
+	}
+
+	signals := s.playerMgr.ForceRemovePlayer(room, playerID)
+
+	// Check if room is now empty and should be garbage collected
+	roomEmpty := len(room.Players) == 0 && len(room.PendingPlayers) == 0
+	unlock()
+
+	s.processSignals(signals)
+
+	if roomEmpty {
+		s.repo.Delete(roomID)
+		log.Printf("Room %s garbage collected (no players remaining)", roomID)
+	}
+
+	return nil
+}
+
 // BootPlayer removes a player from the room. Only the host (first player) can boot players.
 // The host can boot themselves, in which case the next player becomes host.
 func (s *RoomService) BootPlayer(roomID, sessionToken, targetPlayerID string) error {

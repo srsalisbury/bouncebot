@@ -1532,6 +1532,102 @@ func (x *BootPlayerResponse) GetError() string {
 	return ""
 }
 
+type LeaveRoomRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RoomId        string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	SessionToken  string                 `protobuf:"bytes,2,opt,name=session_token,json=sessionToken,proto3" json:"session_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaveRoomRequest) Reset() {
+	*x = LeaveRoomRequest{}
+	mi := &file_bouncebot_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaveRoomRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveRoomRequest) ProtoMessage() {}
+
+func (x *LeaveRoomRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveRoomRequest.ProtoReflect.Descriptor instead.
+func (*LeaveRoomRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *LeaveRoomRequest) GetRoomId() string {
+	if x != nil {
+		return x.RoomId
+	}
+	return ""
+}
+
+func (x *LeaveRoomRequest) GetSessionToken() string {
+	if x != nil {
+		return x.SessionToken
+	}
+	return ""
+}
+
+type LeaveRoomResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaveRoomResponse) Reset() {
+	*x = LeaveRoomResponse{}
+	mi := &file_bouncebot_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaveRoomResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveRoomResponse) ProtoMessage() {}
+
+func (x *LeaveRoomResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveRoomResponse.ProtoReflect.Descriptor instead.
+func (*LeaveRoomResponse) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *LeaveRoomResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_bouncebot_proto protoreflect.FileDescriptor
 
 const file_bouncebot_proto_rawDesc = "" +
@@ -1638,7 +1734,12 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x10target_player_id\x18\x03 \x01(\tR\x0etargetPlayerId\"D\n" +
 	"\x12BootPlayerResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error2\xe7\x05\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"P\n" +
+	"\x10LeaveRoomRequest\x12\x17\n" +
+	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12#\n" +
+	"\rsession_token\x18\x02 \x01(\tR\fsessionToken\"-\n" +
+	"\x11LeaveRoomResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xb1\x06\n" +
 	"\tBounceBot\x12K\n" +
 	"\n" +
 	"CreateRoom\x12\x1c.bouncebot.CreateRoomRequest\x1a\x1d.bouncebot.CreateRoomResponse\"\x00\x12E\n" +
@@ -1650,7 +1751,8 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x10MarkReadyForNext\x12\".bouncebot.MarkReadyForNextRequest\x1a#.bouncebot.MarkReadyForNextResponse\"\x00\x12c\n" +
 	"\x12UpdateRoomSettings\x12$.bouncebot.UpdateRoomSettingsRequest\x1a%.bouncebot.UpdateRoomSettingsResponse\"\x00\x12K\n" +
 	"\n" +
-	"BootPlayer\x12\x1c.bouncebot.BootPlayerRequest\x1a\x1d.bouncebot.BootPlayerResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
+	"BootPlayer\x12\x1c.bouncebot.BootPlayerRequest\x1a\x1d.bouncebot.BootPlayerResponse\"\x00\x12H\n" +
+	"\tLeaveRoom\x12\x1b.bouncebot.LeaveRoomRequest\x1a\x1c.bouncebot.LeaveRoomResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
 
 var (
 	file_bouncebot_proto_rawDescOnce sync.Once
@@ -1664,7 +1766,7 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_bouncebot_proto_goTypes = []any{
 	(*Position)(nil),                    // 0: bouncebot.Position
 	(*Board)(nil),                       // 1: bouncebot.Board
@@ -1692,7 +1794,9 @@ var file_bouncebot_proto_goTypes = []any{
 	(*UpdateRoomSettingsResponse)(nil),  // 23: bouncebot.UpdateRoomSettingsResponse
 	(*BootPlayerRequest)(nil),           // 24: bouncebot.BootPlayerRequest
 	(*BootPlayerResponse)(nil),          // 25: bouncebot.BootPlayerResponse
-	(*timestamppb.Timestamp)(nil),       // 26: google.protobuf.Timestamp
+	(*LeaveRoomRequest)(nil),            // 26: bouncebot.LeaveRoomRequest
+	(*LeaveRoomResponse)(nil),           // 27: bouncebot.LeaveRoomResponse
+	(*timestamppb.Timestamp)(nil),       // 28: google.protobuf.Timestamp
 }
 var file_bouncebot_proto_depIdxs = []int32{
 	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
@@ -1701,12 +1805,12 @@ var file_bouncebot_proto_depIdxs = []int32{
 	1,  // 3: bouncebot.Game.board:type_name -> bouncebot.Board
 	2,  // 4: bouncebot.Game.bots:type_name -> bouncebot.BotPos
 	2,  // 5: bouncebot.Game.target:type_name -> bouncebot.BotPos
-	26, // 6: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
+	28, // 6: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
 	2,  // 7: bouncebot.PlayerSolution.moves:type_name -> bouncebot.BotPos
 	4,  // 8: bouncebot.Room.players:type_name -> bouncebot.Player
-	26, // 9: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
+	28, // 9: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
 	3,  // 10: bouncebot.Room.current_game:type_name -> bouncebot.Game
-	26, // 11: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
+	28, // 11: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
 	5,  // 12: bouncebot.Room.solutions:type_name -> bouncebot.PlayerSolution
 	6,  // 13: bouncebot.Room.scores:type_name -> bouncebot.PlayerScore
 	4,  // 14: bouncebot.Room.pending_players:type_name -> bouncebot.Player
@@ -1727,17 +1831,19 @@ var file_bouncebot_proto_depIdxs = []int32{
 	19, // 29: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
 	22, // 30: bouncebot.BounceBot.UpdateRoomSettings:input_type -> bouncebot.UpdateRoomSettingsRequest
 	24, // 31: bouncebot.BounceBot.BootPlayer:input_type -> bouncebot.BootPlayerRequest
-	12, // 32: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.CreateRoomResponse
-	11, // 33: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
-	8,  // 34: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
-	8,  // 35: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
-	16, // 36: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
-	18, // 37: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
-	20, // 38: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
-	23, // 39: bouncebot.BounceBot.UpdateRoomSettings:output_type -> bouncebot.UpdateRoomSettingsResponse
-	25, // 40: bouncebot.BounceBot.BootPlayer:output_type -> bouncebot.BootPlayerResponse
-	32, // [32:41] is the sub-list for method output_type
-	23, // [23:32] is the sub-list for method input_type
+	26, // 32: bouncebot.BounceBot.LeaveRoom:input_type -> bouncebot.LeaveRoomRequest
+	12, // 33: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.CreateRoomResponse
+	11, // 34: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
+	8,  // 35: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
+	8,  // 36: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
+	16, // 37: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
+	18, // 38: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
+	20, // 39: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
+	23, // 40: bouncebot.BounceBot.UpdateRoomSettings:output_type -> bouncebot.UpdateRoomSettingsResponse
+	25, // 41: bouncebot.BounceBot.BootPlayer:output_type -> bouncebot.BootPlayerResponse
+	27, // 42: bouncebot.BounceBot.LeaveRoom:output_type -> bouncebot.LeaveRoomResponse
+	33, // [33:43] is the sub-list for method output_type
+	23, // [23:33] is the sub-list for method input_type
 	23, // [23:23] is the sub-list for extension type_name
 	23, // [23:23] is the sub-list for extension extendee
 	0,  // [0:23] is the sub-list for field type_name
@@ -1754,7 +1860,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

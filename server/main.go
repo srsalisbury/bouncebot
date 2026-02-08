@@ -65,8 +65,8 @@ func main() {
 	rooms.CleanupStaleRooms(cfg.RoomMaxAge)
 	stopCleanup := rooms.StartCleanup(cfg.CleanupInterval, cfg.RoomMaxAge)
 
-	// Create GetRoom rate limiter (10 requests/minute per IP
-	getRoomLimiter := ratelimit.NewLimiter(10, time.Minute)
+	// Create GetRoom rate limiter (100 requests/minute per IP)
+	getRoomLimiter := ratelimit.NewLimiter(100, time.Minute)
 	stopRateLimitCleanup := getRoomLimiter.StartCleanup(5 * time.Minute)
 
 	// Handle graceful shutdown

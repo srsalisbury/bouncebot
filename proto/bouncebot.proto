@@ -18,6 +18,7 @@ service BounceBot {
   rpc MarkReadyForNext (MarkReadyForNextRequest) returns (MarkReadyForNextResponse) {}
   rpc UpdateRoomSettings (UpdateRoomSettingsRequest) returns (UpdateRoomSettingsResponse) {}
   rpc BootPlayer (BootPlayerRequest) returns (BootPlayerResponse) {}
+  rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse) {}
 }
 
 // Board grid position.
@@ -182,4 +183,13 @@ message BootPlayerRequest {
 message BootPlayerResponse {
   bool success = 1;
   string error = 2;
+}
+
+message LeaveRoomRequest {
+  string room_id = 1;
+  string session_token = 2;
+}
+
+message LeaveRoomResponse {
+  bool success = 1;
 }
