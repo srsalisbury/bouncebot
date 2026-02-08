@@ -117,6 +117,16 @@ func (s *bounceBotServer) UpdateRoomSettings(_ context.Context, req *connect.Req
 	}), nil
 }
 
+func (s *bounceBotServer) LeaveRoom(_ context.Context, req *connect.Request[pb.LeaveRoomRequest]) (*connect.Response[pb.LeaveRoomResponse], error) {
+	err := s.rooms.LeaveRoom(req.Msg.RoomId, req.Msg.SessionToken)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&pb.LeaveRoomResponse{
+		Success: true,
+	}), nil
+}
+
 func (s *bounceBotServer) BootPlayer(_ context.Context, req *connect.Request[pb.BootPlayerRequest]) (*connect.Response[pb.BootPlayerResponse], error) {
 	err := s.rooms.BootPlayer(req.Msg.RoomId, req.Msg.SessionToken, req.Msg.TargetPlayerId)
 	if err != nil {

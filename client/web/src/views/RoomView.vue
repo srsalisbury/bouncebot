@@ -348,8 +348,18 @@ function promptLeaveGame() {
   showLeaveConfirm.value = true
 }
 
-function confirmLeave() {
+async function confirmLeave() {
   showLeaveConfirm.value = false
+  if (roomStore.currentSessionToken) {
+    try {
+      await bounceBotClient.leaveRoom({
+        roomId: normalizedRoomId.value,
+        sessionToken: roomStore.currentSessionToken,
+      })
+    } catch (e) {
+      // Best-effort: server will clean up via disconnect timeout if this fails
+    }
+  }
   roomStore.clearRoom()
   router.push('/')
 }

@@ -55,6 +55,8 @@ const (
 	BounceBotUpdateRoomSettingsProcedure = "/bouncebot.BounceBot/UpdateRoomSettings"
 	// BounceBotBootPlayerProcedure is the fully-qualified name of the BounceBot's BootPlayer RPC.
 	BounceBotBootPlayerProcedure = "/bouncebot.BounceBot/BootPlayer"
+	// BounceBotLeaveRoomProcedure is the fully-qualified name of the BounceBot's LeaveRoom RPC.
+	BounceBotLeaveRoomProcedure = "/bouncebot.BounceBot/LeaveRoom"
 )
 
 // BounceBotClient is a client for the bouncebot.BounceBot service.
@@ -69,6 +71,7 @@ type BounceBotClient interface {
 	MarkReadyForNext(context.Context, *connect.Request[proto.MarkReadyForNextRequest]) (*connect.Response[proto.MarkReadyForNextResponse], error)
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
 	BootPlayer(context.Context, *connect.Request[proto.BootPlayerRequest]) (*connect.Response[proto.BootPlayerResponse], error)
+	LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error)
 }
 
 // NewBounceBotClient constructs a client for the bouncebot.BounceBot service. By default, it uses
@@ -136,6 +139,12 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("BootPlayer")),
 			connect.WithClientOptions(opts...),
 		),
+		leaveRoom: connect.NewClient[proto.LeaveRoomRequest, proto.LeaveRoomResponse](
+			httpClient,
+			baseURL+BounceBotLeaveRoomProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("LeaveRoom")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -150,6 +159,7 @@ type bounceBotClient struct {
 	markReadyForNext    *connect.Client[proto.MarkReadyForNextRequest, proto.MarkReadyForNextResponse]
 	updateRoomSettings  *connect.Client[proto.UpdateRoomSettingsRequest, proto.UpdateRoomSettingsResponse]
 	bootPlayer          *connect.Client[proto.BootPlayerRequest, proto.BootPlayerResponse]
+	leaveRoom           *connect.Client[proto.LeaveRoomRequest, proto.LeaveRoomResponse]
 }
 
 // CreateRoom calls bouncebot.BounceBot.CreateRoom.
@@ -197,6 +207,11 @@ func (c *bounceBotClient) BootPlayer(ctx context.Context, req *connect.Request[p
 	return c.bootPlayer.CallUnary(ctx, req)
 }
 
+// LeaveRoom calls bouncebot.BounceBot.LeaveRoom.
+func (c *bounceBotClient) LeaveRoom(ctx context.Context, req *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error) {
+	return c.leaveRoom.CallUnary(ctx, req)
+}
+
 // BounceBotHandler is an implementation of the bouncebot.BounceBot service.
 type BounceBotHandler interface {
 	// Room management
@@ -209,6 +224,7 @@ type BounceBotHandler interface {
 	MarkReadyForNext(context.Context, *connect.Request[proto.MarkReadyForNextRequest]) (*connect.Response[proto.MarkReadyForNextResponse], error)
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
 	BootPlayer(context.Context, *connect.Request[proto.BootPlayerRequest]) (*connect.Response[proto.BootPlayerResponse], error)
+	LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error)
 }
 
 // NewBounceBotHandler builds an HTTP handler from the service implementation. It returns the path
@@ -272,6 +288,12 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("BootPlayer")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bounceBotLeaveRoomHandler := connect.NewUnaryHandler(
+		BounceBotLeaveRoomProcedure,
+		svc.LeaveRoom,
+		connect.WithSchema(bounceBotMethods.ByName("LeaveRoom")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/bouncebot.BounceBot/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case BounceBotCreateRoomProcedure:
@@ -292,6 +314,8 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 			bounceBotUpdateRoomSettingsHandler.ServeHTTP(w, r)
 		case BounceBotBootPlayerProcedure:
 			bounceBotBootPlayerHandler.ServeHTTP(w, r)
+		case BounceBotLeaveRoomProcedure:
+			bounceBotLeaveRoomHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -335,4 +359,8 @@ func (UnimplementedBounceBotHandler) UpdateRoomSettings(context.Context, *connec
 
 func (UnimplementedBounceBotHandler) BootPlayer(context.Context, *connect.Request[proto.BootPlayerRequest]) (*connect.Response[proto.BootPlayerResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.BootPlayer is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.LeaveRoom is not implemented"))
 }

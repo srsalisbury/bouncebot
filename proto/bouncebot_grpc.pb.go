@@ -28,6 +28,7 @@ const (
 	BounceBot_MarkReadyForNext_FullMethodName    = "/bouncebot.BounceBot/MarkReadyForNext"
 	BounceBot_UpdateRoomSettings_FullMethodName  = "/bouncebot.BounceBot/UpdateRoomSettings"
 	BounceBot_BootPlayer_FullMethodName          = "/bouncebot.BounceBot/BootPlayer"
+	BounceBot_LeaveRoom_FullMethodName           = "/bouncebot.BounceBot/LeaveRoom"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -46,6 +47,7 @@ type BounceBotClient interface {
 	MarkReadyForNext(ctx context.Context, in *MarkReadyForNextRequest, opts ...grpc.CallOption) (*MarkReadyForNextResponse, error)
 	UpdateRoomSettings(ctx context.Context, in *UpdateRoomSettingsRequest, opts ...grpc.CallOption) (*UpdateRoomSettingsResponse, error)
 	BootPlayer(ctx context.Context, in *BootPlayerRequest, opts ...grpc.CallOption) (*BootPlayerResponse, error)
+	LeaveRoom(ctx context.Context, in *LeaveRoomRequest, opts ...grpc.CallOption) (*LeaveRoomResponse, error)
 }
 
 type bounceBotClient struct {
@@ -146,6 +148,16 @@ func (c *bounceBotClient) BootPlayer(ctx context.Context, in *BootPlayerRequest,
 	return out, nil
 }
 
+func (c *bounceBotClient) LeaveRoom(ctx context.Context, in *LeaveRoomRequest, opts ...grpc.CallOption) (*LeaveRoomResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LeaveRoomResponse)
+	err := c.cc.Invoke(ctx, BounceBot_LeaveRoom_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BounceBotServer is the server API for BounceBot service.
 // All implementations must embed UnimplementedBounceBotServer
 // for forward compatibility.
@@ -162,6 +174,7 @@ type BounceBotServer interface {
 	MarkReadyForNext(context.Context, *MarkReadyForNextRequest) (*MarkReadyForNextResponse, error)
 	UpdateRoomSettings(context.Context, *UpdateRoomSettingsRequest) (*UpdateRoomSettingsResponse, error)
 	BootPlayer(context.Context, *BootPlayerRequest) (*BootPlayerResponse, error)
+	LeaveRoom(context.Context, *LeaveRoomRequest) (*LeaveRoomResponse, error)
 	mustEmbedUnimplementedBounceBotServer()
 }
 
@@ -198,6 +211,9 @@ func (UnimplementedBounceBotServer) UpdateRoomSettings(context.Context, *UpdateR
 }
 func (UnimplementedBounceBotServer) BootPlayer(context.Context, *BootPlayerRequest) (*BootPlayerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BootPlayer not implemented")
+}
+func (UnimplementedBounceBotServer) LeaveRoom(context.Context, *LeaveRoomRequest) (*LeaveRoomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LeaveRoom not implemented")
 }
 func (UnimplementedBounceBotServer) mustEmbedUnimplementedBounceBotServer() {}
 func (UnimplementedBounceBotServer) testEmbeddedByValue()                   {}
@@ -382,6 +398,24 @@ func _BounceBot_BootPlayer_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BounceBot_LeaveRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LeaveRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).LeaveRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_LeaveRoom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).LeaveRoom(ctx, req.(*LeaveRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BounceBot_ServiceDesc is the grpc.ServiceDesc for BounceBot service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -424,6 +458,10 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BootPlayer",
 			Handler:    _BounceBot_BootPlayer_Handler,
+		},
+		{
+			MethodName: "LeaveRoom",
+			Handler:    _BounceBot_LeaveRoom_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
