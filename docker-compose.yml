@@ -9,10 +9,10 @@ services:
       # Comma-separated list of allowed origins for CORS/WebSocket
       # Add your domain here, e.g., localhost,myserver.com
       - ALLOWED_ORIGINS=localhost
-      # Path to session data file (persisted via volume)
-      - DATA_FILE=/data/sessions.json
+      # Base directory for all data files (persisted via volume)
+      - DATA_DIR=/data
     volumes:
-      # Persist session data across container restarts
+      # Persist data across container restarts
       - bouncebot-data:/data
     restart: unless-stopped
 

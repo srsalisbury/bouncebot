@@ -5,6 +5,7 @@ server/bouncebot-server
 # Room data
 rooms.json
 rooms.json.tmp
+data/
 
 # Test coverage
 coverage.out

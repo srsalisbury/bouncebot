@@ -5,11 +5,13 @@ import { bounceBotClient } from '../services/connectClient'
 import { translateJoinRoomError } from '../services/errorMessages'
 import { isRoomNotFoundError } from '../services/errorUtils'
 import { useRoomStore } from '../stores/roomStore'
+import { useFeatureStore } from '../stores/featureStore'
 
 const ROOM_CHECK_INTERVAL_MS = 60_000
 
 const router = useRouter()
 const roomStore = useRoomStore()
+const featureStore = useFeatureStore()
 
 const storedName = roomStore.currentPlayerName
 const playerName = ref(storedName && storedName !== 'Player' ? storedName : '')
@@ -185,6 +187,13 @@ async function joinRoom() {
         >
           {{ isStartingSolo ? 'Starting...' : 'Play Solo' }}
         </button>
+      </div>
+
+      <!-- Daily Challenge -->
+      <div v-if="featureStore.dailyChallengeEnabled" class="daily-section">
+        <router-link to="/daily" class="btn daily-btn">
+          Daily Challenge
+        </router-link>
       </div>
 
       <!-- Play with Friends - Secondary action -->
@@ -409,6 +418,25 @@ async function joinRoom() {
 .multiplayer-toggle {
   font-size: 1.1rem;
   padding: 1rem;
+}
+
+.daily-section {
+  margin-top: 1rem;
+}
+
+.daily-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background: #7b1fa2;
+  color: #fff;
+  font-size: 1.1rem;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.daily-btn:hover {
+  background: #6a1b9a;
 }
 
 .multiplayer-section {

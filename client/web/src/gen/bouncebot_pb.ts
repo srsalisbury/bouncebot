@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file bouncebot.proto.
  */
 export const file_bouncebot: GenFile = /*@__PURE__*/
-  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiNwoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEwoLY29sb3JfaW5kZXgYAyABKAUidAoOUGxheWVyU29sdXRpb24SEQoJcGxheWVyX2lkGAEgASgJEi0KCXNvbHZlZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIi4KC1BsYXllclNjb3JlEhEKCXBsYXllcl9pZBgBIAEoCRIMCgR3aW5zGAIgASgFIk0KDFJvb21TZXR0aW5ncxIeChZzaG93X3NvbHZlcl9tb3ZlX2NvdW50GAEgASgIEh0KFXNob3dfc29sdmVyX3NvbHV0aW9ucxgCIAEoCCKCBAoEUm9vbRIKCgJpZBgBIAEoCRIiCgdwbGF5ZXJzGAIgAygLMhEuYm91bmNlYm90LlBsYXllchIuCgpjcmVhdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIlCgxjdXJyZW50X2dhbWUYBCABKAsyDy5ib3VuY2Vib3QuR2FtZRIzCg9nYW1lX3N0YXJ0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCXNvbHV0aW9ucxgGIAMoCzIZLmJvdW5jZWJvdC5QbGF5ZXJTb2x1dGlvbhImCgZzY29yZXMYByADKAsyFi5ib3VuY2Vib3QuUGxheWVyU2NvcmUSFAoMZ2FtZXNfcGxheWVkGAggASgFEhgKEGZpbmlzaGVkX3NvbHZpbmcYCSADKAkSFgoOcmVhZHlfZm9yX25leHQYCiADKAkSGAoQaXNfc2luZ2xlX3BsYXllchgLIAEoCBIqCg9wZW5kaW5nX3BsYXllcnMYDCADKAsyES5ib3VuY2Vib3QuUGxheWVyEi8KDnNvbHZlcl9yZXN1bHRzGA0gAygLMhcuYm91bmNlYm90LlNvbHZlclJlc3VsdBIpCghzZXR0aW5ncxgOIAEoCzIXLmJvdW5jZWJvdC5Sb29tU2V0dGluZ3MiQgoRQ3JlYXRlUm9vbVJlcXVlc3QSEwoLcGxheWVyX25hbWUYASABKAkSGAoQaXNfc2luZ2xlX3BsYXllchgCIAEoCCI3Cg9Kb2luUm9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRITCgtwbGF5ZXJfbmFtZRgCIAEoCSJbChBKb2luUm9vbVJlc3BvbnNlEh0KBHJvb20YASABKAsyDy5ib3VuY2Vib3QuUm9vbRIRCglwbGF5ZXJfaWQYAiABKAkSFQoNc2Vzc2lvbl90b2tlbhgDIAEoCSJdChJDcmVhdGVSb29tUmVzcG9uc2USHQoEcm9vbRgBIAEoCzIPLmJvdW5jZWJvdC5Sb29tEhEKCXBsYXllcl9pZBgCIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAMgASgJIiEKDkdldFJvb21SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkiIwoQU3RhcnRHYW1lUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJImEKFVN1Ym1pdFNvbHV0aW9uUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkSIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIkUKFlN1Ym1pdFNvbHV0aW9uUmVzcG9uc2USKwoIc29sdXRpb24YASABKAsyGS5ib3VuY2Vib3QuUGxheWVyU29sdXRpb24iRAoaTWFya0ZpbmlzaGVkU29sdmluZ1JlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAIgASgJIi4KG01hcmtGaW5pc2hlZFNvbHZpbmdSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIkEKF01hcmtSZWFkeUZvck5leHRSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCSIrChhNYXJrUmVhZHlGb3JOZXh0UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCJnCgxTb2x2ZXJSZXN1bHQSEwoLc29sdmVyX25hbWUYASABKAkSIAoFbW92ZXMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEg0KBWVycm9yGAMgASgJEhEKCWNvbXBsZXRlZBgEIAEoCCJuChlVcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCRIpCghzZXR0aW5ncxgDIAEoCzIXLmJvdW5jZWJvdC5Sb29tU2V0dGluZ3MiPAoaVXBkYXRlUm9vbVNldHRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBINCgVlcnJvchgCIAEoCSJVChFCb290UGxheWVyUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkSGAoQdGFyZ2V0X3BsYXllcl9pZBgDIAEoCSI0ChJCb290UGxheWVyUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBINCgVlcnJvchgCIAEoCSI6ChBMZWF2ZVJvb21SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCSIkChFMZWF2ZVJvb21SZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIMrEGCglCb3VuY2VCb3QSSwoKQ3JlYXRlUm9vbRIcLmJvdW5jZWJvdC5DcmVhdGVSb29tUmVxdWVzdBodLmJvdW5jZWJvdC5DcmVhdGVSb29tUmVzcG9uc2UiABJFCghKb2luUm9vbRIaLmJvdW5jZWJvdC5Kb2luUm9vbVJlcXVlc3QaGy5ib3VuY2Vib3QuSm9pblJvb21SZXNwb25zZSIAEjcKB0dldFJvb20SGS5ib3VuY2Vib3QuR2V0Um9vbVJlcXVlc3QaDy5ib3VuY2Vib3QuUm9vbSIAEjsKCVN0YXJ0R2FtZRIbLmJvdW5jZWJvdC5TdGFydEdhbWVSZXF1ZXN0Gg8uYm91bmNlYm90LlJvb20iABJXCg5TdWJtaXRTb2x1dGlvbhIgLmJvdW5jZWJvdC5TdWJtaXRTb2x1dGlvblJlcXVlc3QaIS5ib3VuY2Vib3QuU3VibWl0U29sdXRpb25SZXNwb25zZSIAEmYKE01hcmtGaW5pc2hlZFNvbHZpbmcSJS5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1JlcXVlc3QaJi5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1Jlc3BvbnNlIgASXQoQTWFya1JlYWR5Rm9yTmV4dBIiLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVxdWVzdBojLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVzcG9uc2UiABJjChJVcGRhdGVSb29tU2V0dGluZ3MSJC5ib3VuY2Vib3QuVXBkYXRlUm9vbVNldHRpbmdzUmVxdWVzdBolLmJvdW5jZWJvdC5VcGRhdGVSb29tU2V0dGluZ3NSZXNwb25zZSIAEksKCkJvb3RQbGF5ZXISHC5ib3VuY2Vib3QuQm9vdFBsYXllclJlcXVlc3QaHS5ib3VuY2Vib3QuQm9vdFBsYXllclJlc3BvbnNlIgASSAoJTGVhdmVSb29tEhsuYm91bmNlYm90LkxlYXZlUm9vbVJlcXVlc3QaHC5ib3VuY2Vib3QuTGVhdmVSb29tUmVzcG9uc2UiAEIoWiZnaXRodWIuY29tL3Nyc2FsaXNidXJ5L2JvdW5jZWJvdC9wcm90b2IGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUiYQoFQm9hcmQSDAoEc2l6ZRgBIAEoBRIkCgd2X3dhbGxzGAIgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEiQKB2hfd2FsbHMYAyADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiNwoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEwoLY29sb3JfaW5kZXgYAyABKAUidAoOUGxheWVyU29sdXRpb24SEQoJcGxheWVyX2lkGAEgASgJEi0KCXNvbHZlZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIi4KC1BsYXllclNjb3JlEhEKCXBsYXllcl9pZBgBIAEoCRIMCgR3aW5zGAIgASgFIk0KDFJvb21TZXR0aW5ncxIeChZzaG93X3NvbHZlcl9tb3ZlX2NvdW50GAEgASgIEh0KFXNob3dfc29sdmVyX3NvbHV0aW9ucxgCIAEoCCKCBAoEUm9vbRIKCgJpZBgBIAEoCRIiCgdwbGF5ZXJzGAIgAygLMhEuYm91bmNlYm90LlBsYXllchIuCgpjcmVhdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIlCgxjdXJyZW50X2dhbWUYBCABKAsyDy5ib3VuY2Vib3QuR2FtZRIzCg9nYW1lX3N0YXJ0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCXNvbHV0aW9ucxgGIAMoCzIZLmJvdW5jZWJvdC5QbGF5ZXJTb2x1dGlvbhImCgZzY29yZXMYByADKAsyFi5ib3VuY2Vib3QuUGxheWVyU2NvcmUSFAoMZ2FtZXNfcGxheWVkGAggASgFEhgKEGZpbmlzaGVkX3NvbHZpbmcYCSADKAkSFgoOcmVhZHlfZm9yX25leHQYCiADKAkSGAoQaXNfc2luZ2xlX3BsYXllchgLIAEoCBIqCg9wZW5kaW5nX3BsYXllcnMYDCADKAsyES5ib3VuY2Vib3QuUGxheWVyEi8KDnNvbHZlcl9yZXN1bHRzGA0gAygLMhcuYm91bmNlYm90LlNvbHZlclJlc3VsdBIpCghzZXR0aW5ncxgOIAEoCzIXLmJvdW5jZWJvdC5Sb29tU2V0dGluZ3MiQgoRQ3JlYXRlUm9vbVJlcXVlc3QSEwoLcGxheWVyX25hbWUYASABKAkSGAoQaXNfc2luZ2xlX3BsYXllchgCIAEoCCI3Cg9Kb2luUm9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRITCgtwbGF5ZXJfbmFtZRgCIAEoCSJbChBKb2luUm9vbVJlc3BvbnNlEh0KBHJvb20YASABKAsyDy5ib3VuY2Vib3QuUm9vbRIRCglwbGF5ZXJfaWQYAiABKAkSFQoNc2Vzc2lvbl90b2tlbhgDIAEoCSJdChJDcmVhdGVSb29tUmVzcG9uc2USHQoEcm9vbRgBIAEoCzIPLmJvdW5jZWJvdC5Sb29tEhEKCXBsYXllcl9pZBgCIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAMgASgJIiEKDkdldFJvb21SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkiIwoQU3RhcnRHYW1lUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJImEKFVN1Ym1pdFNvbHV0aW9uUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkSIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIkUKFlN1Ym1pdFNvbHV0aW9uUmVzcG9uc2USKwoIc29sdXRpb24YASABKAsyGS5ib3VuY2Vib3QuUGxheWVyU29sdXRpb24iRAoaTWFya0ZpbmlzaGVkU29sdmluZ1JlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAIgASgJIi4KG01hcmtGaW5pc2hlZFNvbHZpbmdSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIkEKF01hcmtSZWFkeUZvck5leHRSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCSIrChhNYXJrUmVhZHlGb3JOZXh0UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCJnCgxTb2x2ZXJSZXN1bHQSEwoLc29sdmVyX25hbWUYASABKAkSIAoFbW92ZXMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEg0KBWVycm9yGAMgASgJEhEKCWNvbXBsZXRlZBgEIAEoCCJuChlVcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCRIpCghzZXR0aW5ncxgDIAEoCzIXLmJvdW5jZWJvdC5Sb29tU2V0dGluZ3MiPAoaVXBkYXRlUm9vbVNldHRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBINCgVlcnJvchgCIAEoCSJVChFCb290UGxheWVyUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkSGAoQdGFyZ2V0X3BsYXllcl9pZBgDIAEoCSI0ChJCb290UGxheWVyUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBINCgVlcnJvchgCIAEoCSI6ChBMZWF2ZVJvb21SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCSIkChFMZWF2ZVJvb21SZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIImsKD0RhaWx5UHV6emxlSW5mbxISCgpkaWZmaWN1bHR5GAEgASgJEh0KBGdhbWUYAiABKAsyDy5ib3VuY2Vib3QuR2FtZRIOCgZzb2x2ZWQYAyABKAgSFQoNb3B0aW1hbF9tb3ZlcxgEIAEoBSJOChhHZXREYWlseUNoYWxsZW5nZVJlcXVlc3QSEQoJcGxheWVyX2lkGAEgASgJEh8KF3RpbWV6b25lX29mZnNldF9taW51dGVzGAIgASgFInMKGUdldERhaWx5Q2hhbGxlbmdlUmVzcG9uc2USDAoEZGF0ZRgBIAEoCRIrCgdwdXp6bGVzGAIgAygLMhouYm91bmNlYm90LkRhaWx5UHV6emxlSW5mbxIbChNzZWNvbmRzX3VudGlsX3Jlc2V0GAMgASgFInMKGlN1Ym1pdERhaWx5U29sdXRpb25SZXF1ZXN0EhEKCXBsYXllcl9pZBgBIAEoCRIMCgRkYXRlGAIgASgJEhIKCmRpZmZpY3VsdHkYAyABKAkSIAoFbW92ZXMYBCADKAsyES5ib3VuY2Vib3QuQm90UG9zIkYKG1N1Ym1pdERhaWx5U29sdXRpb25SZXNwb25zZRIPCgdjb3JyZWN0GAEgASgIEhYKDm5ld19jb21wbGV0aW9uGAIgASgIIhYKFEdldFNlcnZlckluZm9SZXF1ZXN0IjgKFUdldFNlcnZlckluZm9SZXNwb25zZRIfChdkYWlseV9jaGFsbGVuZ2VfZW5hYmxlZBgBIAEoCDLRCAoJQm91bmNlQm90EksKCkNyZWF0ZVJvb20SHC5ib3VuY2Vib3QuQ3JlYXRlUm9vbVJlcXVlc3QaHS5ib3VuY2Vib3QuQ3JlYXRlUm9vbVJlc3BvbnNlIgASRQoISm9pblJvb20SGi5ib3VuY2Vib3QuSm9pblJvb21SZXF1ZXN0GhsuYm91bmNlYm90LkpvaW5Sb29tUmVzcG9uc2UiABI3CgdHZXRSb29tEhkuYm91bmNlYm90LkdldFJvb21SZXF1ZXN0Gg8uYm91bmNlYm90LlJvb20iABI7CglTdGFydEdhbWUSGy5ib3VuY2Vib3QuU3RhcnRHYW1lUmVxdWVzdBoPLmJvdW5jZWJvdC5Sb29tIgASVwoOU3VibWl0U29sdXRpb24SIC5ib3VuY2Vib3QuU3VibWl0U29sdXRpb25SZXF1ZXN0GiEuYm91bmNlYm90LlN1Ym1pdFNvbHV0aW9uUmVzcG9uc2UiABJmChNNYXJrRmluaXNoZWRTb2x2aW5nEiUuYm91bmNlYm90Lk1hcmtGaW5pc2hlZFNvbHZpbmdSZXF1ZXN0GiYuYm91bmNlYm90Lk1hcmtGaW5pc2hlZFNvbHZpbmdSZXNwb25zZSIAEl0KEE1hcmtSZWFkeUZvck5leHQSIi5ib3VuY2Vib3QuTWFya1JlYWR5Rm9yTmV4dFJlcXVlc3QaIy5ib3VuY2Vib3QuTWFya1JlYWR5Rm9yTmV4dFJlc3BvbnNlIgASYwoSVXBkYXRlUm9vbVNldHRpbmdzEiQuYm91bmNlYm90LlVwZGF0ZVJvb21TZXR0aW5nc1JlcXVlc3QaJS5ib3VuY2Vib3QuVXBkYXRlUm9vbVNldHRpbmdzUmVzcG9uc2UiABJLCgpCb290UGxheWVyEhwuYm91bmNlYm90LkJvb3RQbGF5ZXJSZXF1ZXN0Gh0uYm91bmNlYm90LkJvb3RQbGF5ZXJSZXNwb25zZSIAEkgKCUxlYXZlUm9vbRIbLmJvdW5jZWJvdC5MZWF2ZVJvb21SZXF1ZXN0GhwuYm91bmNlYm90LkxlYXZlUm9vbVJlc3BvbnNlIgASYAoRR2V0RGFpbHlDaGFsbGVuZ2USIy5ib3VuY2Vib3QuR2V0RGFpbHlDaGFsbGVuZ2VSZXF1ZXN0GiQuYm91bmNlYm90LkdldERhaWx5Q2hhbGxlbmdlUmVzcG9uc2UiABJmChNTdWJtaXREYWlseVNvbHV0aW9uEiUuYm91bmNlYm90LlN1Ym1pdERhaWx5U29sdXRpb25SZXF1ZXN0GiYuYm91bmNlYm90LlN1Ym1pdERhaWx5U29sdXRpb25SZXNwb25zZSIAElQKDUdldFNlcnZlckluZm8SHy5ib3VuY2Vib3QuR2V0U2VydmVySW5mb1JlcXVlc3QaIC5ib3VuY2Vib3QuR2V0U2VydmVySW5mb1Jlc3BvbnNlIgBCKFomZ2l0aHViLmNvbS9zcnNhbGlzYnVyeS9ib3VuY2Vib3QvcHJvdG9iBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * Board grid position.
@@ -784,6 +784,175 @@ export const LeaveRoomResponseSchema: GenMessage<LeaveRoomResponse> = /*@__PURE_
   messageDesc(file_bouncebot, 27);
 
 /**
+ * Daily challenge messages
+ *
+ * @generated from message bouncebot.DailyPuzzleInfo
+ */
+export type DailyPuzzleInfo = Message<"bouncebot.DailyPuzzleInfo"> & {
+  /**
+   * @generated from field: string difficulty = 1;
+   */
+  difficulty: string;
+
+  /**
+   * @generated from field: bouncebot.Game game = 2;
+   */
+  game?: Game;
+
+  /**
+   * @generated from field: bool solved = 3;
+   */
+  solved: boolean;
+
+  /**
+   * Only populated if solved
+   *
+   * @generated from field: int32 optimal_moves = 4;
+   */
+  optimalMoves: number;
+};
+
+/**
+ * Describes the message bouncebot.DailyPuzzleInfo.
+ * Use `create(DailyPuzzleInfoSchema)` to create a new message.
+ */
+export const DailyPuzzleInfoSchema: GenMessage<DailyPuzzleInfo> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 28);
+
+/**
+ * @generated from message bouncebot.GetDailyChallengeRequest
+ */
+export type GetDailyChallengeRequest = Message<"bouncebot.GetDailyChallengeRequest"> & {
+  /**
+   * @generated from field: string player_id = 1;
+   */
+  playerId: string;
+
+  /**
+   * @generated from field: int32 timezone_offset_minutes = 2;
+   */
+  timezoneOffsetMinutes: number;
+};
+
+/**
+ * Describes the message bouncebot.GetDailyChallengeRequest.
+ * Use `create(GetDailyChallengeRequestSchema)` to create a new message.
+ */
+export const GetDailyChallengeRequestSchema: GenMessage<GetDailyChallengeRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 29);
+
+/**
+ * @generated from message bouncebot.GetDailyChallengeResponse
+ */
+export type GetDailyChallengeResponse = Message<"bouncebot.GetDailyChallengeResponse"> & {
+  /**
+   * @generated from field: string date = 1;
+   */
+  date: string;
+
+  /**
+   * @generated from field: repeated bouncebot.DailyPuzzleInfo puzzles = 2;
+   */
+  puzzles: DailyPuzzleInfo[];
+
+  /**
+   * @generated from field: int32 seconds_until_reset = 3;
+   */
+  secondsUntilReset: number;
+};
+
+/**
+ * Describes the message bouncebot.GetDailyChallengeResponse.
+ * Use `create(GetDailyChallengeResponseSchema)` to create a new message.
+ */
+export const GetDailyChallengeResponseSchema: GenMessage<GetDailyChallengeResponse> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 30);
+
+/**
+ * @generated from message bouncebot.SubmitDailySolutionRequest
+ */
+export type SubmitDailySolutionRequest = Message<"bouncebot.SubmitDailySolutionRequest"> & {
+  /**
+   * @generated from field: string player_id = 1;
+   */
+  playerId: string;
+
+  /**
+   * @generated from field: string date = 2;
+   */
+  date: string;
+
+  /**
+   * @generated from field: string difficulty = 3;
+   */
+  difficulty: string;
+
+  /**
+   * @generated from field: repeated bouncebot.BotPos moves = 4;
+   */
+  moves: BotPos[];
+};
+
+/**
+ * Describes the message bouncebot.SubmitDailySolutionRequest.
+ * Use `create(SubmitDailySolutionRequestSchema)` to create a new message.
+ */
+export const SubmitDailySolutionRequestSchema: GenMessage<SubmitDailySolutionRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 31);
+
+/**
+ * @generated from message bouncebot.SubmitDailySolutionResponse
+ */
+export type SubmitDailySolutionResponse = Message<"bouncebot.SubmitDailySolutionResponse"> & {
+  /**
+   * @generated from field: bool correct = 1;
+   */
+  correct: boolean;
+
+  /**
+   * @generated from field: bool new_completion = 2;
+   */
+  newCompletion: boolean;
+};
+
+/**
+ * Describes the message bouncebot.SubmitDailySolutionResponse.
+ * Use `create(SubmitDailySolutionResponseSchema)` to create a new message.
+ */
+export const SubmitDailySolutionResponseSchema: GenMessage<SubmitDailySolutionResponse> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 32);
+
+/**
+ * @generated from message bouncebot.GetServerInfoRequest
+ */
+export type GetServerInfoRequest = Message<"bouncebot.GetServerInfoRequest"> & {
+};
+
+/**
+ * Describes the message bouncebot.GetServerInfoRequest.
+ * Use `create(GetServerInfoRequestSchema)` to create a new message.
+ */
+export const GetServerInfoRequestSchema: GenMessage<GetServerInfoRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 33);
+
+/**
+ * @generated from message bouncebot.GetServerInfoResponse
+ */
+export type GetServerInfoResponse = Message<"bouncebot.GetServerInfoResponse"> & {
+  /**
+   * @generated from field: bool daily_challenge_enabled = 1;
+   */
+  dailyChallengeEnabled: boolean;
+};
+
+/**
+ * Describes the message bouncebot.GetServerInfoResponse.
+ * Use `create(GetServerInfoResponseSchema)` to create a new message.
+ */
+export const GetServerInfoResponseSchema: GenMessage<GetServerInfoResponse> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 34);
+
+/**
  * Service for client to fetch a game board and return results.
  *
  * @generated from service bouncebot.BounceBot
@@ -870,6 +1039,34 @@ export const BounceBot: GenService<{
     methodKind: "unary";
     input: typeof LeaveRoomRequestSchema;
     output: typeof LeaveRoomResponseSchema;
+  },
+  /**
+   * Daily challenge
+   *
+   * @generated from rpc bouncebot.BounceBot.GetDailyChallenge
+   */
+  getDailyChallenge: {
+    methodKind: "unary";
+    input: typeof GetDailyChallengeRequestSchema;
+    output: typeof GetDailyChallengeResponseSchema;
+  },
+  /**
+   * @generated from rpc bouncebot.BounceBot.SubmitDailySolution
+   */
+  submitDailySolution: {
+    methodKind: "unary";
+    input: typeof SubmitDailySolutionRequestSchema;
+    output: typeof SubmitDailySolutionResponseSchema;
+  },
+  /**
+   * Server info
+   *
+   * @generated from rpc bouncebot.BounceBot.GetServerInfo
+   */
+  getServerInfo: {
+    methodKind: "unary";
+    input: typeof GetServerInfoRequestSchema;
+    output: typeof GetServerInfoResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_bouncebot, 0);

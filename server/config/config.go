@@ -4,6 +4,7 @@ package config
 import (
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -12,8 +13,8 @@ import (
 // Config holds all server configuration.
 type Config struct {
 	// Server settings
-	Port     int
-	DataFile string
+	Port    int
+	DataDir string // Base directory for all data files (rooms, daily puzzles, user progress)
 
 	// CORS/WebSocket allowed origins (comma-separated hostnames)
 	// e.g., "localhost,myserver.com"
@@ -34,13 +35,16 @@ type Config struct {
 
 	// Solver settings
 	SolverTimeout time.Duration
+
+	// Feature flags
+	EnableDailyChallenge bool
 }
 
 // DefaultConfig returns configuration with sensible defaults.
 func DefaultConfig() *Config {
 	return &Config{
-		Port:                  8080,
-		DataFile:              "rooms.json",
+		Port:    8080,
+		DataDir: "data",
 		AllowedOrigins:        []string{"localhost"},
 		AllowSameHost:         true,
 		AutoSaveInterval:      30 * time.Second,
@@ -52,10 +56,15 @@ func DefaultConfig() *Config {
 	}
 }
 
+// RoomsFile returns the path to rooms.json within the data directory.
+func (c *Config) RoomsFile() string {
+	return filepath.Join(c.DataDir, "rooms.json")
+}
+
 // LoadFromEnv loads configuration from environment variables.
 // Environment variables override defaults. Supported variables:
 //   - PORT: Server port (default: 8080)
-//   - DATA_FILE: Path to room data file (default: rooms.json)
+//   - DATA_DIR: Base directory for all data files (default: data)
 //   - ALLOWED_ORIGINS: Comma-separated allowed origins (default: localhost)
 //   - ALLOW_SAME_HOST: Allow same-host requests (default: true)
 //   - AUTO_SAVE_INTERVAL: Auto-save interval in seconds (default: 30)
@@ -64,6 +73,7 @@ func DefaultConfig() *Config {
 //   - DISCONNECT_GRACE_PERIOD: Player disconnect grace period in seconds (default: 30)
 //   - SOLO_DISCONNECT_GRACE_PERIOD: Solo mode disconnect grace period in seconds (default: 1800)
 //   - SOLVER_TIMEOUT: Solver timeout in seconds (default: 30)
+//   - ENABLE_DAILY_CHALLENGE: Enable daily challenge feature (default: false)
 func LoadFromEnv() *Config {
 	cfg := DefaultConfig()
 
@@ -73,8 +83,8 @@ func LoadFromEnv() *Config {
 		}
 	}
 
-	if v := os.Getenv("DATA_FILE"); v != "" {
-		cfg.DataFile = v
+	if v := os.Getenv("DATA_DIR"); v != "" {
+		cfg.DataDir = v
 	}
 
 	if v := os.Getenv("ALLOWED_ORIGINS"); v != "" {
@@ -126,6 +136,10 @@ func LoadFromEnv() *Config {
 		if secs, err := strconv.Atoi(v); err == nil {
 			cfg.SolverTimeout = time.Duration(secs) * time.Second
 		}
+	}
+
+	if v := os.Getenv("ENABLE_DAILY_CHALLENGE"); v != "" {
+		cfg.EnableDailyChallenge = v == "true" || v == "1"
 	}
 
 	return cfg

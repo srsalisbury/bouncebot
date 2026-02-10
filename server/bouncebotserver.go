@@ -2,21 +2,32 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/srsalisbury/bouncebot/model"
 	pb "github.com/srsalisbury/bouncebot/proto"
+	"github.com/srsalisbury/bouncebot/server/daily"
 	"github.com/srsalisbury/bouncebot/server/ratelimit"
 	"github.com/srsalisbury/bouncebot/server/room"
 )
 
 type bounceBotServer struct {
-	rooms          *room.RoomService
-	getRoomLimiter *ratelimit.Limiter
+	rooms           *room.RoomService
+	getRoomLimiter  *ratelimit.Limiter
+	dailyMgr        *daily.Manager
+	dailyProgressMgr *daily.ProgressManager
 }
 
-func NewBounceBotServer(rooms *room.RoomService, getRoomLimiter *ratelimit.Limiter) *bounceBotServer {
-	return &bounceBotServer{rooms: rooms, getRoomLimiter: getRoomLimiter}
+func NewBounceBotServer(rooms *room.RoomService, getRoomLimiter *ratelimit.Limiter, dailyMgr *daily.Manager, dailyProgressMgr *daily.ProgressManager) *bounceBotServer {
+	return &bounceBotServer{
+		rooms:           rooms,
+		getRoomLimiter:  getRoomLimiter,
+		dailyMgr:        dailyMgr,
+		dailyProgressMgr: dailyProgressMgr,
+	}
 }
 
 func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.CreateRoomResponse], error) {
@@ -135,4 +146,172 @@ func (s *bounceBotServer) BootPlayer(_ context.Context, req *connect.Request[pb.
 	return connect.NewResponse(&pb.BootPlayerResponse{
 		Success: true,
 	}), nil
+}
+
+func (s *bounceBotServer) GetServerInfo(_ context.Context, _ *connect.Request[pb.GetServerInfoRequest]) (*connect.Response[pb.GetServerInfoResponse], error) {
+	return connect.NewResponse(&pb.GetServerInfoResponse{
+		DailyChallengeEnabled: s.dailyMgr != nil,
+	}), nil
+}
+
+func (s *bounceBotServer) GetDailyChallenge(_ context.Context, req *connect.Request[pb.GetDailyChallengeRequest]) (*connect.Response[pb.GetDailyChallengeResponse], error) {
+	if s.dailyMgr == nil {
+		return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("daily challenges are not enabled"))
+	}
+
+	// Calculate user's local date based on timezone offset
+	now := time.Now().UTC()
+	offset := time.Duration(req.Msg.TimezoneOffsetMinutes) * time.Minute
+	localTime := now.Add(-offset) // Subtract offset since JS gives minutes behind UTC
+	date := localTime.Format("2006-01-02")
+
+	// Get puzzles for the date
+	puzzles, err := s.dailyMgr.GetPuzzlesForDate(date)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if puzzles == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no puzzles for date %s", date))
+	}
+
+	// Get user progress
+	progress, err := s.dailyProgressMgr.GetUserProgress(req.Msg.PlayerId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	dayProgress := progress[date]
+
+	// Build response puzzles
+	puzzleInfos := make([]*pb.DailyPuzzleInfo, 0, 3)
+
+	// Helper to build puzzle info
+	buildPuzzleInfo := func(difficulty string, puzzle *daily.DailyPuzzle, solved bool) *pb.DailyPuzzleInfo {
+		if puzzle == nil {
+			return nil
+		}
+		gameStr := strings.Join(puzzle.Game, "\n")
+		game, err := model.ParseGameString(gameStr)
+		if err != nil {
+			return nil
+		}
+		info := &pb.DailyPuzzleInfo{
+			Difficulty: difficulty,
+			Game:       game.ToProto(),
+			Solved:     solved,
+		}
+		if solved {
+			info.OptimalMoves = int32(puzzle.OptimalMoves)
+		}
+		return info
+	}
+
+	if info := buildPuzzleInfo(daily.DifficultyEasy, puzzles.Easy, dayProgress.Easy); info != nil {
+		puzzleInfos = append(puzzleInfos, info)
+	}
+	if info := buildPuzzleInfo(daily.DifficultyMedium, puzzles.Medium, dayProgress.Medium); info != nil {
+		puzzleInfos = append(puzzleInfos, info)
+	}
+	if info := buildPuzzleInfo(daily.DifficultyHard, puzzles.Hard, dayProgress.Hard); info != nil {
+		puzzleInfos = append(puzzleInfos, info)
+	}
+
+	// Calculate seconds until next local midnight
+	localMidnight := time.Date(localTime.Year(), localTime.Month(), localTime.Day()+1, 0, 0, 0, 0, time.UTC)
+	secondsUntilReset := int32(localMidnight.Sub(localTime).Seconds())
+
+	return connect.NewResponse(&pb.GetDailyChallengeResponse{
+		Date:              date,
+		Puzzles:           puzzleInfos,
+		SecondsUntilReset: secondsUntilReset,
+	}), nil
+}
+
+func (s *bounceBotServer) SubmitDailySolution(_ context.Context, req *connect.Request[pb.SubmitDailySolutionRequest]) (*connect.Response[pb.SubmitDailySolutionResponse], error) {
+	if s.dailyMgr == nil {
+		return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("daily challenges are not enabled"))
+	}
+
+	// Get puzzles for the date
+	puzzles, err := s.dailyMgr.GetPuzzlesForDate(req.Msg.Date)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if puzzles == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no puzzles for date %s", req.Msg.Date))
+	}
+
+	// Get the puzzle for the requested difficulty
+	var puzzle *daily.DailyPuzzle
+	switch req.Msg.Difficulty {
+	case daily.DifficultyEasy:
+		puzzle = puzzles.Easy
+	case daily.DifficultyMedium:
+		puzzle = puzzles.Medium
+	case daily.DifficultyHard:
+		puzzle = puzzles.Hard
+	default:
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid difficulty: %s", req.Msg.Difficulty))
+	}
+	if puzzle == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("puzzle not found for difficulty %s", req.Msg.Difficulty))
+	}
+
+	// Parse the game
+	gameStr := strings.Join(puzzle.Game, "\n")
+	game, err := model.ParseGameString(gameStr)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	// Validate the solution by simulating the moves
+	moves := model.NewBotPositionsFromProto(req.Msg.Moves)
+	if !validateSolution(game, moves) {
+		return connect.NewResponse(&pb.SubmitDailySolutionResponse{
+			Correct:       false,
+			NewCompletion: false,
+		}), nil
+	}
+
+	// Check if already solved
+	alreadySolved, err := s.dailyProgressMgr.IsSolved(req.Msg.PlayerId, req.Msg.Date, req.Msg.Difficulty)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	// Mark as solved
+	if !alreadySolved {
+		if err := s.dailyProgressMgr.MarkSolved(req.Msg.PlayerId, req.Msg.Date, req.Msg.Difficulty); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+	}
+
+	return connect.NewResponse(&pb.SubmitDailySolutionResponse{
+		Correct:       true,
+		NewCompletion: !alreadySolved,
+	}), nil
+}
+
+// validateSolution checks if the given moves solve the puzzle.
+func validateSolution(game *model.Game, moves []model.BotPosition) bool {
+	// Create a copy of bot positions to simulate
+	bots := make(map[model.BotId]model.Position)
+	for id, pos := range game.Bots {
+		bots[id] = pos
+	}
+
+	// Simulate each move
+	for _, move := range moves {
+		// Update bot position (the move already contains the final position)
+		if _, exists := bots[move.Id]; !exists {
+			return false
+		}
+		bots[move.Id] = move.Pos
+	}
+
+	// Check if target bot is at target position
+	targetPos, ok := bots[game.Target.Id]
+	if !ok {
+		return false
+	}
+	return targetPos == game.Target.Pos
 }

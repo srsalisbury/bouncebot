@@ -18,7 +18,8 @@ go run server/main.go --port 8080
 
 **Configuration Flags:**
 - `--port`: Port to listen on (default: `8080` or `PORT` env var).
-- `--data`: Path to the JSON persistence file (default: `bouncebot_rooms.json` or `DATA_FILE` env var).
+
+All data files (rooms, daily puzzles, user progress) are stored under `DATA_DIR` (default: `data`).
 
 ## Project Structure
 

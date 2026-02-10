@@ -39,13 +39,14 @@ COPY --from=builder /bouncebot-server /bouncebot-server
 
 # Environment variables for configuration
 # PORT: Server port (default: 8080)
-# DATA_FILE: Path to session data file (default: sessions.json)
+# DATA_DIR: Base directory for all data files (default: data)
 # ALLOWED_ORIGINS: Comma-separated allowed origins (default: localhost)
 # AUTO_SAVE_INTERVAL: Auto-save interval in seconds (default: 30)
 # CLEANUP_INTERVAL: Cleanup interval in seconds (default: 3600)
-# SESSION_MAX_AGE: Session max age in seconds (default: 86400)
+# ROOM_MAX_AGE: Room max age in seconds (default: 86400)
 # DISCONNECT_GRACE_PERIOD: Player disconnect grace period in seconds (default: 30)
 # SOLO_DISCONNECT_GRACE_PERIOD: Solo mode disconnect grace period in seconds (default: 1800)
+# ENABLE_DAILY_CHALLENGE: Enable daily challenge feature (default: false)
 
 # Expose the server port
 EXPOSE 8080

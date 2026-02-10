@@ -1628,6 +1628,387 @@ func (x *LeaveRoomResponse) GetSuccess() bool {
 	return false
 }
 
+// Daily challenge messages
+type DailyPuzzleInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Difficulty    string                 `protobuf:"bytes,1,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
+	Game          *Game                  `protobuf:"bytes,2,opt,name=game,proto3" json:"game,omitempty"`
+	Solved        bool                   `protobuf:"varint,3,opt,name=solved,proto3" json:"solved,omitempty"`
+	OptimalMoves  int32                  `protobuf:"varint,4,opt,name=optimal_moves,json=optimalMoves,proto3" json:"optimal_moves,omitempty"` // Only populated if solved
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DailyPuzzleInfo) Reset() {
+	*x = DailyPuzzleInfo{}
+	mi := &file_bouncebot_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DailyPuzzleInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DailyPuzzleInfo) ProtoMessage() {}
+
+func (x *DailyPuzzleInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DailyPuzzleInfo.ProtoReflect.Descriptor instead.
+func (*DailyPuzzleInfo) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *DailyPuzzleInfo) GetDifficulty() string {
+	if x != nil {
+		return x.Difficulty
+	}
+	return ""
+}
+
+func (x *DailyPuzzleInfo) GetGame() *Game {
+	if x != nil {
+		return x.Game
+	}
+	return nil
+}
+
+func (x *DailyPuzzleInfo) GetSolved() bool {
+	if x != nil {
+		return x.Solved
+	}
+	return false
+}
+
+func (x *DailyPuzzleInfo) GetOptimalMoves() int32 {
+	if x != nil {
+		return x.OptimalMoves
+	}
+	return 0
+}
+
+type GetDailyChallengeRequest struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId              string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	TimezoneOffsetMinutes int32                  `protobuf:"varint,2,opt,name=timezone_offset_minutes,json=timezoneOffsetMinutes,proto3" json:"timezone_offset_minutes,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *GetDailyChallengeRequest) Reset() {
+	*x = GetDailyChallengeRequest{}
+	mi := &file_bouncebot_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDailyChallengeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDailyChallengeRequest) ProtoMessage() {}
+
+func (x *GetDailyChallengeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDailyChallengeRequest.ProtoReflect.Descriptor instead.
+func (*GetDailyChallengeRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *GetDailyChallengeRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+func (x *GetDailyChallengeRequest) GetTimezoneOffsetMinutes() int32 {
+	if x != nil {
+		return x.TimezoneOffsetMinutes
+	}
+	return 0
+}
+
+type GetDailyChallengeResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Date              string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	Puzzles           []*DailyPuzzleInfo     `protobuf:"bytes,2,rep,name=puzzles,proto3" json:"puzzles,omitempty"`
+	SecondsUntilReset int32                  `protobuf:"varint,3,opt,name=seconds_until_reset,json=secondsUntilReset,proto3" json:"seconds_until_reset,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *GetDailyChallengeResponse) Reset() {
+	*x = GetDailyChallengeResponse{}
+	mi := &file_bouncebot_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDailyChallengeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDailyChallengeResponse) ProtoMessage() {}
+
+func (x *GetDailyChallengeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDailyChallengeResponse.ProtoReflect.Descriptor instead.
+func (*GetDailyChallengeResponse) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *GetDailyChallengeResponse) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *GetDailyChallengeResponse) GetPuzzles() []*DailyPuzzleInfo {
+	if x != nil {
+		return x.Puzzles
+	}
+	return nil
+}
+
+func (x *GetDailyChallengeResponse) GetSecondsUntilReset() int32 {
+	if x != nil {
+		return x.SecondsUntilReset
+	}
+	return 0
+}
+
+type SubmitDailySolutionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`
+	Difficulty    string                 `protobuf:"bytes,3,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
+	Moves         []*BotPos              `protobuf:"bytes,4,rep,name=moves,proto3" json:"moves,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitDailySolutionRequest) Reset() {
+	*x = SubmitDailySolutionRequest{}
+	mi := &file_bouncebot_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitDailySolutionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitDailySolutionRequest) ProtoMessage() {}
+
+func (x *SubmitDailySolutionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitDailySolutionRequest.ProtoReflect.Descriptor instead.
+func (*SubmitDailySolutionRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *SubmitDailySolutionRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+func (x *SubmitDailySolutionRequest) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *SubmitDailySolutionRequest) GetDifficulty() string {
+	if x != nil {
+		return x.Difficulty
+	}
+	return ""
+}
+
+func (x *SubmitDailySolutionRequest) GetMoves() []*BotPos {
+	if x != nil {
+		return x.Moves
+	}
+	return nil
+}
+
+type SubmitDailySolutionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Correct       bool                   `protobuf:"varint,1,opt,name=correct,proto3" json:"correct,omitempty"`
+	NewCompletion bool                   `protobuf:"varint,2,opt,name=new_completion,json=newCompletion,proto3" json:"new_completion,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitDailySolutionResponse) Reset() {
+	*x = SubmitDailySolutionResponse{}
+	mi := &file_bouncebot_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitDailySolutionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitDailySolutionResponse) ProtoMessage() {}
+
+func (x *SubmitDailySolutionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitDailySolutionResponse.ProtoReflect.Descriptor instead.
+func (*SubmitDailySolutionResponse) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *SubmitDailySolutionResponse) GetCorrect() bool {
+	if x != nil {
+		return x.Correct
+	}
+	return false
+}
+
+func (x *SubmitDailySolutionResponse) GetNewCompletion() bool {
+	if x != nil {
+		return x.NewCompletion
+	}
+	return false
+}
+
+type GetServerInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetServerInfoRequest) Reset() {
+	*x = GetServerInfoRequest{}
+	mi := &file_bouncebot_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetServerInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetServerInfoRequest) ProtoMessage() {}
+
+func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetServerInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetServerInfoRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{33}
+}
+
+type GetServerInfoResponse struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	DailyChallengeEnabled bool                   `protobuf:"varint,1,opt,name=daily_challenge_enabled,json=dailyChallengeEnabled,proto3" json:"daily_challenge_enabled,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *GetServerInfoResponse) Reset() {
+	*x = GetServerInfoResponse{}
+	mi := &file_bouncebot_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetServerInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetServerInfoResponse) ProtoMessage() {}
+
+func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetServerInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetServerInfoResponse) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *GetServerInfoResponse) GetDailyChallengeEnabled() bool {
+	if x != nil {
+		return x.DailyChallengeEnabled
+	}
+	return false
+}
+
 var File_bouncebot_proto protoreflect.FileDescriptor
 
 const file_bouncebot_proto_rawDesc = "" +
@@ -1739,7 +2120,34 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12#\n" +
 	"\rsession_token\x18\x02 \x01(\tR\fsessionToken\"-\n" +
 	"\x11LeaveRoomResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xb1\x06\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x93\x01\n" +
+	"\x0fDailyPuzzleInfo\x12\x1e\n" +
+	"\n" +
+	"difficulty\x18\x01 \x01(\tR\n" +
+	"difficulty\x12#\n" +
+	"\x04game\x18\x02 \x01(\v2\x0f.bouncebot.GameR\x04game\x12\x16\n" +
+	"\x06solved\x18\x03 \x01(\bR\x06solved\x12#\n" +
+	"\roptimal_moves\x18\x04 \x01(\x05R\foptimalMoves\"o\n" +
+	"\x18GetDailyChallengeRequest\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x126\n" +
+	"\x17timezone_offset_minutes\x18\x02 \x01(\x05R\x15timezoneOffsetMinutes\"\x95\x01\n" +
+	"\x19GetDailyChallengeResponse\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\x124\n" +
+	"\apuzzles\x18\x02 \x03(\v2\x1a.bouncebot.DailyPuzzleInfoR\apuzzles\x12.\n" +
+	"\x13seconds_until_reset\x18\x03 \x01(\x05R\x11secondsUntilReset\"\x96\x01\n" +
+	"\x1aSubmitDailySolutionRequest\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x12\n" +
+	"\x04date\x18\x02 \x01(\tR\x04date\x12\x1e\n" +
+	"\n" +
+	"difficulty\x18\x03 \x01(\tR\n" +
+	"difficulty\x12'\n" +
+	"\x05moves\x18\x04 \x03(\v2\x11.bouncebot.BotPosR\x05moves\"^\n" +
+	"\x1bSubmitDailySolutionResponse\x12\x18\n" +
+	"\acorrect\x18\x01 \x01(\bR\acorrect\x12%\n" +
+	"\x0enew_completion\x18\x02 \x01(\bR\rnewCompletion\"\x16\n" +
+	"\x14GetServerInfoRequest\"O\n" +
+	"\x15GetServerInfoResponse\x126\n" +
+	"\x17daily_challenge_enabled\x18\x01 \x01(\bR\x15dailyChallengeEnabled2\xd1\b\n" +
 	"\tBounceBot\x12K\n" +
 	"\n" +
 	"CreateRoom\x12\x1c.bouncebot.CreateRoomRequest\x1a\x1d.bouncebot.CreateRoomResponse\"\x00\x12E\n" +
@@ -1752,7 +2160,10 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x12UpdateRoomSettings\x12$.bouncebot.UpdateRoomSettingsRequest\x1a%.bouncebot.UpdateRoomSettingsResponse\"\x00\x12K\n" +
 	"\n" +
 	"BootPlayer\x12\x1c.bouncebot.BootPlayerRequest\x1a\x1d.bouncebot.BootPlayerResponse\"\x00\x12H\n" +
-	"\tLeaveRoom\x12\x1b.bouncebot.LeaveRoomRequest\x1a\x1c.bouncebot.LeaveRoomResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
+	"\tLeaveRoom\x12\x1b.bouncebot.LeaveRoomRequest\x1a\x1c.bouncebot.LeaveRoomResponse\"\x00\x12`\n" +
+	"\x11GetDailyChallenge\x12#.bouncebot.GetDailyChallengeRequest\x1a$.bouncebot.GetDailyChallengeResponse\"\x00\x12f\n" +
+	"\x13SubmitDailySolution\x12%.bouncebot.SubmitDailySolutionRequest\x1a&.bouncebot.SubmitDailySolutionResponse\"\x00\x12T\n" +
+	"\rGetServerInfo\x12\x1f.bouncebot.GetServerInfoRequest\x1a .bouncebot.GetServerInfoResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
 
 var (
 	file_bouncebot_proto_rawDescOnce sync.Once
@@ -1766,7 +2177,7 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
 var file_bouncebot_proto_goTypes = []any{
 	(*Position)(nil),                    // 0: bouncebot.Position
 	(*Board)(nil),                       // 1: bouncebot.Board
@@ -1796,7 +2207,14 @@ var file_bouncebot_proto_goTypes = []any{
 	(*BootPlayerResponse)(nil),          // 25: bouncebot.BootPlayerResponse
 	(*LeaveRoomRequest)(nil),            // 26: bouncebot.LeaveRoomRequest
 	(*LeaveRoomResponse)(nil),           // 27: bouncebot.LeaveRoomResponse
-	(*timestamppb.Timestamp)(nil),       // 28: google.protobuf.Timestamp
+	(*DailyPuzzleInfo)(nil),             // 28: bouncebot.DailyPuzzleInfo
+	(*GetDailyChallengeRequest)(nil),    // 29: bouncebot.GetDailyChallengeRequest
+	(*GetDailyChallengeResponse)(nil),   // 30: bouncebot.GetDailyChallengeResponse
+	(*SubmitDailySolutionRequest)(nil),  // 31: bouncebot.SubmitDailySolutionRequest
+	(*SubmitDailySolutionResponse)(nil), // 32: bouncebot.SubmitDailySolutionResponse
+	(*GetServerInfoRequest)(nil),        // 33: bouncebot.GetServerInfoRequest
+	(*GetServerInfoResponse)(nil),       // 34: bouncebot.GetServerInfoResponse
+	(*timestamppb.Timestamp)(nil),       // 35: google.protobuf.Timestamp
 }
 var file_bouncebot_proto_depIdxs = []int32{
 	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
@@ -1805,12 +2223,12 @@ var file_bouncebot_proto_depIdxs = []int32{
 	1,  // 3: bouncebot.Game.board:type_name -> bouncebot.Board
 	2,  // 4: bouncebot.Game.bots:type_name -> bouncebot.BotPos
 	2,  // 5: bouncebot.Game.target:type_name -> bouncebot.BotPos
-	28, // 6: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
+	35, // 6: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
 	2,  // 7: bouncebot.PlayerSolution.moves:type_name -> bouncebot.BotPos
 	4,  // 8: bouncebot.Room.players:type_name -> bouncebot.Player
-	28, // 9: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
+	35, // 9: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
 	3,  // 10: bouncebot.Room.current_game:type_name -> bouncebot.Game
-	28, // 11: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
+	35, // 11: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
 	5,  // 12: bouncebot.Room.solutions:type_name -> bouncebot.PlayerSolution
 	6,  // 13: bouncebot.Room.scores:type_name -> bouncebot.PlayerScore
 	4,  // 14: bouncebot.Room.pending_players:type_name -> bouncebot.Player
@@ -1822,31 +2240,40 @@ var file_bouncebot_proto_depIdxs = []int32{
 	5,  // 20: bouncebot.SubmitSolutionResponse.solution:type_name -> bouncebot.PlayerSolution
 	2,  // 21: bouncebot.SolverResult.moves:type_name -> bouncebot.BotPos
 	7,  // 22: bouncebot.UpdateRoomSettingsRequest.settings:type_name -> bouncebot.RoomSettings
-	9,  // 23: bouncebot.BounceBot.CreateRoom:input_type -> bouncebot.CreateRoomRequest
-	10, // 24: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
-	13, // 25: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
-	14, // 26: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
-	15, // 27: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
-	17, // 28: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
-	19, // 29: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
-	22, // 30: bouncebot.BounceBot.UpdateRoomSettings:input_type -> bouncebot.UpdateRoomSettingsRequest
-	24, // 31: bouncebot.BounceBot.BootPlayer:input_type -> bouncebot.BootPlayerRequest
-	26, // 32: bouncebot.BounceBot.LeaveRoom:input_type -> bouncebot.LeaveRoomRequest
-	12, // 33: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.CreateRoomResponse
-	11, // 34: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
-	8,  // 35: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
-	8,  // 36: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
-	16, // 37: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
-	18, // 38: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
-	20, // 39: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
-	23, // 40: bouncebot.BounceBot.UpdateRoomSettings:output_type -> bouncebot.UpdateRoomSettingsResponse
-	25, // 41: bouncebot.BounceBot.BootPlayer:output_type -> bouncebot.BootPlayerResponse
-	27, // 42: bouncebot.BounceBot.LeaveRoom:output_type -> bouncebot.LeaveRoomResponse
-	33, // [33:43] is the sub-list for method output_type
-	23, // [23:33] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	3,  // 23: bouncebot.DailyPuzzleInfo.game:type_name -> bouncebot.Game
+	28, // 24: bouncebot.GetDailyChallengeResponse.puzzles:type_name -> bouncebot.DailyPuzzleInfo
+	2,  // 25: bouncebot.SubmitDailySolutionRequest.moves:type_name -> bouncebot.BotPos
+	9,  // 26: bouncebot.BounceBot.CreateRoom:input_type -> bouncebot.CreateRoomRequest
+	10, // 27: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
+	13, // 28: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
+	14, // 29: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
+	15, // 30: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
+	17, // 31: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
+	19, // 32: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
+	22, // 33: bouncebot.BounceBot.UpdateRoomSettings:input_type -> bouncebot.UpdateRoomSettingsRequest
+	24, // 34: bouncebot.BounceBot.BootPlayer:input_type -> bouncebot.BootPlayerRequest
+	26, // 35: bouncebot.BounceBot.LeaveRoom:input_type -> bouncebot.LeaveRoomRequest
+	29, // 36: bouncebot.BounceBot.GetDailyChallenge:input_type -> bouncebot.GetDailyChallengeRequest
+	31, // 37: bouncebot.BounceBot.SubmitDailySolution:input_type -> bouncebot.SubmitDailySolutionRequest
+	33, // 38: bouncebot.BounceBot.GetServerInfo:input_type -> bouncebot.GetServerInfoRequest
+	12, // 39: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.CreateRoomResponse
+	11, // 40: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
+	8,  // 41: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
+	8,  // 42: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
+	16, // 43: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
+	18, // 44: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
+	20, // 45: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
+	23, // 46: bouncebot.BounceBot.UpdateRoomSettings:output_type -> bouncebot.UpdateRoomSettingsResponse
+	25, // 47: bouncebot.BounceBot.BootPlayer:output_type -> bouncebot.BootPlayerResponse
+	27, // 48: bouncebot.BounceBot.LeaveRoom:output_type -> bouncebot.LeaveRoomResponse
+	30, // 49: bouncebot.BounceBot.GetDailyChallenge:output_type -> bouncebot.GetDailyChallengeResponse
+	32, // 50: bouncebot.BounceBot.SubmitDailySolution:output_type -> bouncebot.SubmitDailySolutionResponse
+	34, // 51: bouncebot.BounceBot.GetServerInfo:output_type -> bouncebot.GetServerInfoResponse
+	39, // [39:52] is the sub-list for method output_type
+	26, // [26:39] is the sub-list for method input_type
+	26, // [26:26] is the sub-list for extension type_name
+	26, // [26:26] is the sub-list for extension extendee
+	0,  // [0:26] is the sub-list for field type_name
 }
 
 func init() { file_bouncebot_proto_init() }
@@ -1860,7 +2287,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   28,
+			NumMessages:   35,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

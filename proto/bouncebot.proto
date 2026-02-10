@@ -19,6 +19,13 @@ service BounceBot {
   rpc UpdateRoomSettings (UpdateRoomSettingsRequest) returns (UpdateRoomSettingsResponse) {}
   rpc BootPlayer (BootPlayerRequest) returns (BootPlayerResponse) {}
   rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse) {}
+
+  // Daily challenge
+  rpc GetDailyChallenge (GetDailyChallengeRequest) returns (GetDailyChallengeResponse) {}
+  rpc SubmitDailySolution (SubmitDailySolutionRequest) returns (SubmitDailySolutionResponse) {}
+
+  // Server info
+  rpc GetServerInfo (GetServerInfoRequest) returns (GetServerInfoResponse) {}
 }
 
 // Board grid position.
@@ -192,4 +199,41 @@ message LeaveRoomRequest {
 
 message LeaveRoomResponse {
   bool success = 1;
+}
+
+// Daily challenge messages
+message DailyPuzzleInfo {
+  string difficulty = 1;
+  Game game = 2;
+  bool solved = 3;
+  int32 optimal_moves = 4;  // Only populated if solved
+}
+
+message GetDailyChallengeRequest {
+  string player_id = 1;
+  int32 timezone_offset_minutes = 2;
+}
+
+message GetDailyChallengeResponse {
+  string date = 1;
+  repeated DailyPuzzleInfo puzzles = 2;
+  int32 seconds_until_reset = 3;
+}
+
+message SubmitDailySolutionRequest {
+  string player_id = 1;
+  string date = 2;
+  string difficulty = 3;
+  repeated BotPos moves = 4;
+}
+
+message SubmitDailySolutionResponse {
+  bool correct = 1;
+  bool new_completion = 2;
+}
+
+message GetServerInfoRequest {}
+
+message GetServerInfoResponse {
+  bool daily_challenge_enabled = 1;
 }

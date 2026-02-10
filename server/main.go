@@ -1,18 +1,21 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/rs/cors"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
 	"github.com/srsalisbury/bouncebot/server/config"
+	"github.com/srsalisbury/bouncebot/server/daily"
 	"github.com/srsalisbury/bouncebot/server/ratelimit"
 	"github.com/srsalisbury/bouncebot/server/room"
 	"github.com/srsalisbury/bouncebot/server/ws"
@@ -28,8 +31,7 @@ import (
 var Version = "dev"
 
 var (
-	port     = flag.Int("port", 0, "The server port (overrides PORT env var)")
-	dataFile = flag.String("data", "", "Path to room data file (overrides DATA_FILE env var)")
+	port = flag.Int("port", 0, "The server port (overrides PORT env var)")
 )
 
 func main() {
@@ -42,24 +44,27 @@ func main() {
 	if *port != 0 {
 		cfg.Port = *port
 	}
-	if *dataFile != "" {
-		cfg.DataFile = *dataFile
-	}
 
 	log.Printf("BounceBot server version %s", Version)
-	log.Printf("Configuration: port=%d, data=%s, origins=%v", cfg.Port, cfg.DataFile, cfg.AllowedOrigins)
+	absDataDir, _ := filepath.Abs(cfg.DataDir)
+	log.Printf("Configuration: port=%d, dataDir=%s, origins=%v", cfg.Port, absDataDir, cfg.AllowedOrigins)
+
+	// Ensure data directory exists
+	if err := os.MkdirAll(cfg.DataDir, 0755); err != nil {
+		log.Fatalf("Failed to create data directory %s: %v", cfg.DataDir, err)
+	}
 
 	rooms := room.NewRoomService()
 	rooms.SetDisconnectGracePeriod(cfg.DisconnectGracePeriod)
 	rooms.SetSoloDisconnectGracePeriod(cfg.SoloDisconnectGracePeriod)
 
 	// Load existing rooms from disk (continue with empty list on failure)
-	if err := rooms.Load(cfg.DataFile); err != nil {
-		log.Printf("Warning: Failed to load rooms from %s: %v (starting with empty room list)", cfg.DataFile, err)
+	if err := rooms.Load(cfg.RoomsFile()); err != nil {
+		log.Printf("Warning: Failed to load rooms from %s: %v (starting with empty room list)", cfg.RoomsFile(), err)
 	}
 
 	// Start auto-save goroutine
-	stopAutoSave := rooms.StartAutoSave(cfg.DataFile, cfg.AutoSaveInterval)
+	stopAutoSave := rooms.StartAutoSave(cfg.RoomsFile(), cfg.AutoSaveInterval)
 
 	// Clean up stale rooms immediately, then start periodic cleanup
 	rooms.CleanupStaleRooms(cfg.RoomMaxAge)
@@ -133,8 +138,29 @@ func main() {
 		})
 	})
 
+	// Initialize daily challenge system (behind feature flag)
+	var dailyMgr *daily.Manager
+	var dailyProgressMgr *daily.ProgressManager
+	if cfg.EnableDailyChallenge {
+		log.Println("Daily challenges enabled")
+		dailyMgr = daily.NewManager(cfg.DataDir, solverMgr)
+		dailyProgressMgr = daily.NewProgressManager(cfg.DataDir)
+
+		// Start daily puzzle generation worker (2-day buffer)
+		dailyCtx, dailyCancel := context.WithCancel(context.Background())
+		dailyMgr.StartGenerationWorker(dailyCtx, 2)
+
+		// Add daily cancel to shutdown handler
+		go func() {
+			<-shutdownChan
+			dailyCancel()
+		}()
+	} else {
+		log.Println("Daily challenges disabled (set ENABLE_DAILY_CHALLENGE=true to enable)")
+	}
+
 	mux := http.NewServeMux()
-	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms, getRoomLimiter))
+	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms, getRoomLimiter, dailyMgr, dailyProgressMgr))
 	// Wrap handler with client IP middleware for rate limiting
 	mux.Handle(path, ratelimit.InjectClientIPMiddleware(handler))
 

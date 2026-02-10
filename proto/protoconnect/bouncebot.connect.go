@@ -57,6 +57,14 @@ const (
 	BounceBotBootPlayerProcedure = "/bouncebot.BounceBot/BootPlayer"
 	// BounceBotLeaveRoomProcedure is the fully-qualified name of the BounceBot's LeaveRoom RPC.
 	BounceBotLeaveRoomProcedure = "/bouncebot.BounceBot/LeaveRoom"
+	// BounceBotGetDailyChallengeProcedure is the fully-qualified name of the BounceBot's
+	// GetDailyChallenge RPC.
+	BounceBotGetDailyChallengeProcedure = "/bouncebot.BounceBot/GetDailyChallenge"
+	// BounceBotSubmitDailySolutionProcedure is the fully-qualified name of the BounceBot's
+	// SubmitDailySolution RPC.
+	BounceBotSubmitDailySolutionProcedure = "/bouncebot.BounceBot/SubmitDailySolution"
+	// BounceBotGetServerInfoProcedure is the fully-qualified name of the BounceBot's GetServerInfo RPC.
+	BounceBotGetServerInfoProcedure = "/bouncebot.BounceBot/GetServerInfo"
 )
 
 // BounceBotClient is a client for the bouncebot.BounceBot service.
@@ -72,6 +80,11 @@ type BounceBotClient interface {
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
 	BootPlayer(context.Context, *connect.Request[proto.BootPlayerRequest]) (*connect.Response[proto.BootPlayerResponse], error)
 	LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error)
+	// Daily challenge
+	GetDailyChallenge(context.Context, *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error)
+	SubmitDailySolution(context.Context, *connect.Request[proto.SubmitDailySolutionRequest]) (*connect.Response[proto.SubmitDailySolutionResponse], error)
+	// Server info
+	GetServerInfo(context.Context, *connect.Request[proto.GetServerInfoRequest]) (*connect.Response[proto.GetServerInfoResponse], error)
 }
 
 // NewBounceBotClient constructs a client for the bouncebot.BounceBot service. By default, it uses
@@ -145,6 +158,24 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("LeaveRoom")),
 			connect.WithClientOptions(opts...),
 		),
+		getDailyChallenge: connect.NewClient[proto.GetDailyChallengeRequest, proto.GetDailyChallengeResponse](
+			httpClient,
+			baseURL+BounceBotGetDailyChallengeProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("GetDailyChallenge")),
+			connect.WithClientOptions(opts...),
+		),
+		submitDailySolution: connect.NewClient[proto.SubmitDailySolutionRequest, proto.SubmitDailySolutionResponse](
+			httpClient,
+			baseURL+BounceBotSubmitDailySolutionProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("SubmitDailySolution")),
+			connect.WithClientOptions(opts...),
+		),
+		getServerInfo: connect.NewClient[proto.GetServerInfoRequest, proto.GetServerInfoResponse](
+			httpClient,
+			baseURL+BounceBotGetServerInfoProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("GetServerInfo")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -160,6 +191,9 @@ type bounceBotClient struct {
 	updateRoomSettings  *connect.Client[proto.UpdateRoomSettingsRequest, proto.UpdateRoomSettingsResponse]
 	bootPlayer          *connect.Client[proto.BootPlayerRequest, proto.BootPlayerResponse]
 	leaveRoom           *connect.Client[proto.LeaveRoomRequest, proto.LeaveRoomResponse]
+	getDailyChallenge   *connect.Client[proto.GetDailyChallengeRequest, proto.GetDailyChallengeResponse]
+	submitDailySolution *connect.Client[proto.SubmitDailySolutionRequest, proto.SubmitDailySolutionResponse]
+	getServerInfo       *connect.Client[proto.GetServerInfoRequest, proto.GetServerInfoResponse]
 }
 
 // CreateRoom calls bouncebot.BounceBot.CreateRoom.
@@ -212,6 +246,21 @@ func (c *bounceBotClient) LeaveRoom(ctx context.Context, req *connect.Request[pr
 	return c.leaveRoom.CallUnary(ctx, req)
 }
 
+// GetDailyChallenge calls bouncebot.BounceBot.GetDailyChallenge.
+func (c *bounceBotClient) GetDailyChallenge(ctx context.Context, req *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error) {
+	return c.getDailyChallenge.CallUnary(ctx, req)
+}
+
+// SubmitDailySolution calls bouncebot.BounceBot.SubmitDailySolution.
+func (c *bounceBotClient) SubmitDailySolution(ctx context.Context, req *connect.Request[proto.SubmitDailySolutionRequest]) (*connect.Response[proto.SubmitDailySolutionResponse], error) {
+	return c.submitDailySolution.CallUnary(ctx, req)
+}
+
+// GetServerInfo calls bouncebot.BounceBot.GetServerInfo.
+func (c *bounceBotClient) GetServerInfo(ctx context.Context, req *connect.Request[proto.GetServerInfoRequest]) (*connect.Response[proto.GetServerInfoResponse], error) {
+	return c.getServerInfo.CallUnary(ctx, req)
+}
+
 // BounceBotHandler is an implementation of the bouncebot.BounceBot service.
 type BounceBotHandler interface {
 	// Room management
@@ -225,6 +274,11 @@ type BounceBotHandler interface {
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
 	BootPlayer(context.Context, *connect.Request[proto.BootPlayerRequest]) (*connect.Response[proto.BootPlayerResponse], error)
 	LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error)
+	// Daily challenge
+	GetDailyChallenge(context.Context, *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error)
+	SubmitDailySolution(context.Context, *connect.Request[proto.SubmitDailySolutionRequest]) (*connect.Response[proto.SubmitDailySolutionResponse], error)
+	// Server info
+	GetServerInfo(context.Context, *connect.Request[proto.GetServerInfoRequest]) (*connect.Response[proto.GetServerInfoResponse], error)
 }
 
 // NewBounceBotHandler builds an HTTP handler from the service implementation. It returns the path
@@ -294,6 +348,24 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("LeaveRoom")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bounceBotGetDailyChallengeHandler := connect.NewUnaryHandler(
+		BounceBotGetDailyChallengeProcedure,
+		svc.GetDailyChallenge,
+		connect.WithSchema(bounceBotMethods.ByName("GetDailyChallenge")),
+		connect.WithHandlerOptions(opts...),
+	)
+	bounceBotSubmitDailySolutionHandler := connect.NewUnaryHandler(
+		BounceBotSubmitDailySolutionProcedure,
+		svc.SubmitDailySolution,
+		connect.WithSchema(bounceBotMethods.ByName("SubmitDailySolution")),
+		connect.WithHandlerOptions(opts...),
+	)
+	bounceBotGetServerInfoHandler := connect.NewUnaryHandler(
+		BounceBotGetServerInfoProcedure,
+		svc.GetServerInfo,
+		connect.WithSchema(bounceBotMethods.ByName("GetServerInfo")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/bouncebot.BounceBot/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case BounceBotCreateRoomProcedure:
@@ -316,6 +388,12 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 			bounceBotBootPlayerHandler.ServeHTTP(w, r)
 		case BounceBotLeaveRoomProcedure:
 			bounceBotLeaveRoomHandler.ServeHTTP(w, r)
+		case BounceBotGetDailyChallengeProcedure:
+			bounceBotGetDailyChallengeHandler.ServeHTTP(w, r)
+		case BounceBotSubmitDailySolutionProcedure:
+			bounceBotSubmitDailySolutionHandler.ServeHTTP(w, r)
+		case BounceBotGetServerInfoProcedure:
+			bounceBotGetServerInfoHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -363,4 +441,16 @@ func (UnimplementedBounceBotHandler) BootPlayer(context.Context, *connect.Reques
 
 func (UnimplementedBounceBotHandler) LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.LeaveRoom is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) GetDailyChallenge(context.Context, *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.GetDailyChallenge is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) SubmitDailySolution(context.Context, *connect.Request[proto.SubmitDailySolutionRequest]) (*connect.Response[proto.SubmitDailySolutionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.SubmitDailySolution is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) GetServerInfo(context.Context, *connect.Request[proto.GetServerInfoRequest]) (*connect.Response[proto.GetServerInfoResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.GetServerInfo is not implemented"))
 }

@@ -29,6 +29,9 @@ const (
 	BounceBot_UpdateRoomSettings_FullMethodName  = "/bouncebot.BounceBot/UpdateRoomSettings"
 	BounceBot_BootPlayer_FullMethodName          = "/bouncebot.BounceBot/BootPlayer"
 	BounceBot_LeaveRoom_FullMethodName           = "/bouncebot.BounceBot/LeaveRoom"
+	BounceBot_GetDailyChallenge_FullMethodName   = "/bouncebot.BounceBot/GetDailyChallenge"
+	BounceBot_SubmitDailySolution_FullMethodName = "/bouncebot.BounceBot/SubmitDailySolution"
+	BounceBot_GetServerInfo_FullMethodName       = "/bouncebot.BounceBot/GetServerInfo"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -48,6 +51,11 @@ type BounceBotClient interface {
 	UpdateRoomSettings(ctx context.Context, in *UpdateRoomSettingsRequest, opts ...grpc.CallOption) (*UpdateRoomSettingsResponse, error)
 	BootPlayer(ctx context.Context, in *BootPlayerRequest, opts ...grpc.CallOption) (*BootPlayerResponse, error)
 	LeaveRoom(ctx context.Context, in *LeaveRoomRequest, opts ...grpc.CallOption) (*LeaveRoomResponse, error)
+	// Daily challenge
+	GetDailyChallenge(ctx context.Context, in *GetDailyChallengeRequest, opts ...grpc.CallOption) (*GetDailyChallengeResponse, error)
+	SubmitDailySolution(ctx context.Context, in *SubmitDailySolutionRequest, opts ...grpc.CallOption) (*SubmitDailySolutionResponse, error)
+	// Server info
+	GetServerInfo(ctx context.Context, in *GetServerInfoRequest, opts ...grpc.CallOption) (*GetServerInfoResponse, error)
 }
 
 type bounceBotClient struct {
@@ -158,6 +166,36 @@ func (c *bounceBotClient) LeaveRoom(ctx context.Context, in *LeaveRoomRequest, o
 	return out, nil
 }
 
+func (c *bounceBotClient) GetDailyChallenge(ctx context.Context, in *GetDailyChallengeRequest, opts ...grpc.CallOption) (*GetDailyChallengeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDailyChallengeResponse)
+	err := c.cc.Invoke(ctx, BounceBot_GetDailyChallenge_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) SubmitDailySolution(ctx context.Context, in *SubmitDailySolutionRequest, opts ...grpc.CallOption) (*SubmitDailySolutionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubmitDailySolutionResponse)
+	err := c.cc.Invoke(ctx, BounceBot_SubmitDailySolution_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bounceBotClient) GetServerInfo(ctx context.Context, in *GetServerInfoRequest, opts ...grpc.CallOption) (*GetServerInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetServerInfoResponse)
+	err := c.cc.Invoke(ctx, BounceBot_GetServerInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BounceBotServer is the server API for BounceBot service.
 // All implementations must embed UnimplementedBounceBotServer
 // for forward compatibility.
@@ -175,6 +213,11 @@ type BounceBotServer interface {
 	UpdateRoomSettings(context.Context, *UpdateRoomSettingsRequest) (*UpdateRoomSettingsResponse, error)
 	BootPlayer(context.Context, *BootPlayerRequest) (*BootPlayerResponse, error)
 	LeaveRoom(context.Context, *LeaveRoomRequest) (*LeaveRoomResponse, error)
+	// Daily challenge
+	GetDailyChallenge(context.Context, *GetDailyChallengeRequest) (*GetDailyChallengeResponse, error)
+	SubmitDailySolution(context.Context, *SubmitDailySolutionRequest) (*SubmitDailySolutionResponse, error)
+	// Server info
+	GetServerInfo(context.Context, *GetServerInfoRequest) (*GetServerInfoResponse, error)
 	mustEmbedUnimplementedBounceBotServer()
 }
 
@@ -214,6 +257,15 @@ func (UnimplementedBounceBotServer) BootPlayer(context.Context, *BootPlayerReque
 }
 func (UnimplementedBounceBotServer) LeaveRoom(context.Context, *LeaveRoomRequest) (*LeaveRoomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveRoom not implemented")
+}
+func (UnimplementedBounceBotServer) GetDailyChallenge(context.Context, *GetDailyChallengeRequest) (*GetDailyChallengeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDailyChallenge not implemented")
+}
+func (UnimplementedBounceBotServer) SubmitDailySolution(context.Context, *SubmitDailySolutionRequest) (*SubmitDailySolutionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitDailySolution not implemented")
+}
+func (UnimplementedBounceBotServer) GetServerInfo(context.Context, *GetServerInfoRequest) (*GetServerInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetServerInfo not implemented")
 }
 func (UnimplementedBounceBotServer) mustEmbedUnimplementedBounceBotServer() {}
 func (UnimplementedBounceBotServer) testEmbeddedByValue()                   {}
@@ -416,6 +468,60 @@ func _BounceBot_LeaveRoom_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BounceBot_GetDailyChallenge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDailyChallengeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).GetDailyChallenge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_GetDailyChallenge_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).GetDailyChallenge(ctx, req.(*GetDailyChallengeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_SubmitDailySolution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitDailySolutionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).SubmitDailySolution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_SubmitDailySolution_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).SubmitDailySolution(ctx, req.(*SubmitDailySolutionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BounceBot_GetServerInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetServerInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).GetServerInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_GetServerInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).GetServerInfo(ctx, req.(*GetServerInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BounceBot_ServiceDesc is the grpc.ServiceDesc for BounceBot service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -462,6 +568,18 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LeaveRoom",
 			Handler:    _BounceBot_LeaveRoom_Handler,
+		},
+		{
+			MethodName: "GetDailyChallenge",
+			Handler:    _BounceBot_GetDailyChallenge_Handler,
+		},
+		{
+			MethodName: "SubmitDailySolution",
+			Handler:    _BounceBot_SubmitDailySolution_Handler,
+		},
+		{
+			MethodName: "GetServerInfo",
+			Handler:    _BounceBot_GetServerInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
