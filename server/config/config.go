@@ -79,9 +79,11 @@ func (c *Config) RoomsFile() string {
 //   - SOLVER_TIMEOUT: Solver timeout in seconds (default: 30)
 //   - ENABLE_DAILY_CHALLENGE: Enable daily challenge feature (default: false)
 func LoadFromEnv() *Config {
-	// Load .env.local first (personal overrides, gitignored), then .env (checked-in defaults).
-	// godotenv.Load silently ignores missing files and never overwrites existing env vars.
-	_ = godotenv.Load(".env.local", ".env")
+	// Load .env.local (personal overrides, gitignored) then .env (checked-in defaults).
+	// Each call is separate so a missing .env.local doesn't prevent loading .env.
+	// godotenv never overwrites existing env vars, so .env.local values take priority.
+	_ = godotenv.Load(".env.local")
+	_ = godotenv.Load(".env")
 
 	cfg := DefaultConfig()
 
