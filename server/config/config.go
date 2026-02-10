@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 // Config holds all server configuration.
@@ -62,7 +64,9 @@ func (c *Config) RoomsFile() string {
 }
 
 // LoadFromEnv loads configuration from environment variables.
-// Environment variables override defaults. Supported variables:
+// It first loads .env.local then .env (if they exist) to populate env vars.
+// Real env vars always take priority since godotenv won't overwrite them.
+// Supported variables:
 //   - PORT: Server port (default: 8080)
 //   - DATA_DIR: Base directory for all data files (default: data)
 //   - ALLOWED_ORIGINS: Comma-separated allowed origins (default: localhost)
@@ -75,6 +79,10 @@ func (c *Config) RoomsFile() string {
 //   - SOLVER_TIMEOUT: Solver timeout in seconds (default: 30)
 //   - ENABLE_DAILY_CHALLENGE: Enable daily challenge feature (default: false)
 func LoadFromEnv() *Config {
+	// Load .env.local first (personal overrides, gitignored), then .env (checked-in defaults).
+	// godotenv.Load silently ignores missing files and never overwrites existing env vars.
+	_ = godotenv.Load(".env.local", ".env")
+
 	cfg := DefaultConfig()
 
 	if v := os.Getenv("PORT"); v != "" {

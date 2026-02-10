@@ -2,6 +2,9 @@
 server/server
 server/bouncebot-server
 
+# Local env overrides
+.env.local
+
 # Room data
 rooms.json
 rooms.json.tmp
