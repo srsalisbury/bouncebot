@@ -15,7 +15,7 @@ import (
 
 	"github.com/srsalisbury/bouncebot/model"
 	"github.com/srsalisbury/bouncebot/solver"
-	"github.com/srsalisbury/bouncebot/solver/bfs"
+	"github.com/srsalisbury/bouncebot/solver/astar"
 )
 
 // Manager handles daily puzzle generation, storage, and retrieval.
@@ -202,7 +202,7 @@ func (m *Manager) generateAndSavePuzzles(date string) error {
 
 // generatePuzzle generates a single puzzle matching the target difficulty.
 func (m *Manager) generatePuzzle(difficulty string, baseSeed int64) (*DailyPuzzle, error) {
-	bfsSolver := &bfs.BFSSolver{}
+	astarSolver := &astar.AStarSolver{}
 	timeout := 30 * time.Second
 	maxAttempts := 10000
 
@@ -212,7 +212,7 @@ func (m *Manager) generatePuzzle(difficulty string, baseSeed int64) (*DailyPuzzl
 
 		// Solve to find optimal length
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		result := bfsSolver.Solve(ctx, game)
+		result := astarSolver.Solve(ctx, game)
 		cancel()
 
 		if !result.Completed || result.Solution == nil {
