@@ -3,13 +3,22 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/srsalisbury/bouncebot/server/config"
 	"github.com/srsalisbury/bouncebot/server/room"
+)
+
+const (
+	pongWait       = 60 * time.Second
+	pingPeriod     = 54 * time.Second
+	maxMessageSize = 4096
+	writeWait      = 10 * time.Second
 )
 
 // OriginChecker is an interface for checking if origins are allowed.
@@ -77,28 +86,32 @@ type SettingsChangedPayload struct {
 
 // Client represents a WebSocket client connection.
 type Client struct {
-	hub      *Hub
-	conn     *websocket.Conn
-	roomID   string
-	playerID string
-	send     chan []byte
+	hub       *Hub
+	conn      *websocket.Conn
+	roomID    string
+	playerID  string
+	send      chan []byte
+	done      chan struct{}
+	closeOnce sync.Once
 }
 
 // Hub manages WebSocket connections for all rooms.
 type Hub struct {
-	mu       sync.RWMutex
-	rooms    map[string]map[*Client]bool // roomID -> clients
-	store    *room.RoomService
-	config   *config.Config
-	upgrader websocket.Upgrader
+	mu            sync.RWMutex
+	rooms         map[string]map[*Client]bool // roomID -> clients
+	activeClients map[string]*Client          // "roomID:playerID" -> current client
+	store         *room.RoomService
+	config        *config.Config
+	upgrader      websocket.Upgrader
 }
 
 // NewHub creates a new WebSocket hub.
 func NewHub(store *room.RoomService, cfg *config.Config) *Hub {
 	h := &Hub{
-		rooms:  make(map[string]map[*Client]bool),
-		store:  store,
-		config: cfg,
+		rooms:         make(map[string]map[*Client]bool),
+		activeClients: make(map[string]*Client),
+		store:         store,
+		config:        cfg,
 	}
 	h.upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -118,28 +131,45 @@ func (h *Hub) register(client *Client) {
 		h.rooms[client.roomID] = make(map[*Client]bool)
 	}
 	h.rooms[client.roomID][client] = true
+
+	if client.playerID != "" {
+		key := fmt.Sprintf("%s:%s", client.roomID, client.playerID)
+		h.activeClients[key] = client
+	}
+
 	log.Printf("WebSocket: client connected to room %s (total: %d)", client.roomID, len(h.rooms[client.roomID]))
 }
 
 // unregister removes a client from a room.
 func (h *Hub) unregister(client *Client) {
-	if client.playerID != "" {
-		h.store.DisconnectPlayer(client.roomID, client.playerID)
-	}
+	shouldDisconnect := false
 
 	h.mu.Lock()
-	defer h.mu.Unlock()
-
 	if clients, ok := h.rooms[client.roomID]; ok {
 		if _, ok := clients[client]; ok {
 			delete(clients, client)
-			close(client.send)
 			log.Printf("WebSocket: client disconnected from room %s (remaining: %d)", client.roomID, len(clients))
 			if len(clients) == 0 {
 				delete(h.rooms, client.roomID)
 			}
 		}
 	}
+	if client.playerID != "" {
+		key := fmt.Sprintf("%s:%s", client.roomID, client.playerID)
+		if h.activeClients[key] == client {
+			delete(h.activeClients, key)
+			shouldDisconnect = true
+		}
+	}
+	h.mu.Unlock()
+
+	if shouldDisconnect {
+		h.store.DisconnectPlayer(client.roomID, client.playerID)
+	}
+
+	client.closeOnce.Do(func() {
+		close(client.done)
+	})
 }
 
 // BroadcastPlayerJoined broadcasts a player_joined event to all clients in a room.
@@ -239,16 +269,26 @@ func (h *Hub) Broadcast(roomID string, event Event) {
 	}
 
 	h.mu.RLock()
-	clients := h.rooms[roomID]
+	clients := make([]*Client, 0, len(h.rooms[roomID]))
+	for client := range h.rooms[roomID] {
+		clients = append(clients, client)
+	}
 	h.mu.RUnlock()
 
-	for client := range clients {
+	var failed []*Client
+	for _, client := range clients {
 		select {
 		case client.send <- data:
+		case <-client.done:
+			// Client is shutting down, skip
 		default:
-			// Client's send buffer is full, close connection
-			h.unregister(client)
+			// Client's send buffer is full
+			failed = append(failed, client)
 		}
+	}
+
+	for _, client := range failed {
+		h.unregister(client)
 	}
 }
 
@@ -302,6 +342,7 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		roomID:   roomID,
 		playerID: playerID,
 		send:     make(chan []byte, 256),
+		done:     make(chan struct{}),
 	}
 
 	h.register(client)
@@ -318,6 +359,13 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 
+	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
 	for {
 		_, _, err := c.conn.ReadMessage()
 		if err != nil {
@@ -332,12 +380,29 @@ func (c *Client) readPump() {
 
 // writePump writes messages to the WebSocket connection.
 func (c *Client) writePump() {
-	defer c.conn.Close()
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.conn.Close()
+	}()
 
-	for message := range c.send {
-		err := c.conn.WriteMessage(websocket.TextMessage, message)
-		if err != nil {
-			log.Printf("WebSocket: write error: %v", err)
+	for {
+		select {
+		case message, ok := <-c.send:
+			if !ok {
+				return
+			}
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				log.Printf("WebSocket: write error: %v", err)
+				return
+			}
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		case <-c.done:
 			return
 		}
 	}

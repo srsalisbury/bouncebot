@@ -2,6 +2,8 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +19,7 @@ func mockClient(hub *Hub, roomID, playerID string) *Client {
 		roomID:   roomID,
 		playerID: playerID,
 		send:     make(chan []byte, 256),
+		done:     make(chan struct{}),
 	}
 }
 
@@ -299,4 +302,133 @@ func TestMultipleClientsInRoom(t *testing.T) {
 	hub.unregister(client1)
 	hub.unregister(client2)
 	hub.unregister(client3)
+}
+
+func TestStaleClientUnregisterSkipsDisconnect(t *testing.T) {
+	store := room.NewRoomService()
+	cfg := &config.Config{}
+	hub := NewHub(store, cfg)
+
+	oldClient := mockClient(hub, "ROOM1", "player1")
+	newClient := mockClient(hub, "ROOM1", "player1")
+
+	// Register old client, then new client (simulates reconnection)
+	hub.register(oldClient)
+	hub.register(newClient)
+
+	// Verify new client is the active one
+	hub.mu.RLock()
+	activeKey := "ROOM1:player1"
+	if hub.activeClients[activeKey] != newClient {
+		t.Error("expected newClient to be the active client after re-register")
+	}
+	hub.mu.RUnlock()
+
+	// Unregister the OLD (stale) client
+	hub.unregister(oldClient)
+
+	// New client should still be active
+	hub.mu.RLock()
+	if hub.activeClients[activeKey] != newClient {
+		t.Error("expected newClient to remain active after stale unregister")
+	}
+	hub.mu.RUnlock()
+
+	// New client's done channel should still be open
+	select {
+	case <-newClient.done:
+		t.Error("newClient's done channel should not be closed")
+	default:
+		// Expected: channel is still open
+	}
+
+	// Old client's done channel should be closed
+	select {
+	case <-oldClient.done:
+		// Expected: channel is closed
+	default:
+		t.Error("oldClient's done channel should be closed")
+	}
+
+	hub.unregister(newClient)
+}
+
+func TestActiveClientUnregisterCleansUp(t *testing.T) {
+	store := room.NewRoomService()
+	cfg := &config.Config{}
+	hub := NewHub(store, cfg)
+
+	client := mockClient(hub, "ROOM1", "player1")
+	hub.register(client)
+
+	activeKey := "ROOM1:player1"
+	hub.mu.RLock()
+	if hub.activeClients[activeKey] != client {
+		t.Error("expected client in activeClients after register")
+	}
+	hub.mu.RUnlock()
+
+	hub.unregister(client)
+
+	hub.mu.RLock()
+	if _, exists := hub.activeClients[activeKey]; exists {
+		t.Error("expected activeClients entry to be removed after unregister")
+	}
+	hub.mu.RUnlock()
+
+	// done channel should be closed
+	select {
+	case <-client.done:
+		// Expected
+	default:
+		t.Error("client's done channel should be closed after unregister")
+	}
+}
+
+func TestBroadcastConcurrentUnregister(t *testing.T) {
+	store := room.NewRoomService()
+	cfg := &config.Config{}
+	hub := NewHub(store, cfg)
+
+	const numClients = 10
+	clients := make([]*Client, numClients)
+	for i := 0; i < numClients; i++ {
+		clients[i] = mockClient(hub, "ROOM1", fmt.Sprintf("player%d", i))
+		hub.register(clients[i])
+	}
+
+	var wg sync.WaitGroup
+
+	// Concurrently broadcast 100 times
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 100; i++ {
+			hub.Broadcast("ROOM1", Event{Type: "test", Payload: nil})
+		}
+	}()
+
+	// Concurrently unregister the first 5 clients
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			hub.unregister(clients[idx])
+		}(i)
+	}
+
+	wg.Wait()
+
+	hub.mu.RLock()
+	remaining := len(hub.rooms["ROOM1"])
+	hub.mu.RUnlock()
+
+	if remaining != 5 {
+		t.Errorf("expected 5 remaining clients, got %d", remaining)
+	}
+
+	// Clean up remaining clients
+	for i := 5; i < numClients; i++ {
+		hub.unregister(clients[i])
+	}
 }
