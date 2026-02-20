@@ -76,12 +76,12 @@ func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.Jo
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	r, playerID, sessionToken, err := s.rooms.Join(req.Msg.RoomId, playerName)
+	roomProto, playerID, sessionToken, err := s.rooms.Join(req.Msg.RoomId, playerName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	return connect.NewResponse(&pb.JoinRoomResponse{
-		Room:         r.ToProto(),
+		Room:         roomProto,
 		PlayerId:     playerID,
 		SessionToken: sessionToken,
 	}), nil
@@ -94,19 +94,19 @@ func (s *bounceBotServer) GetRoom(ctx context.Context, req *connect.Request[pb.G
 		return nil, connect.NewError(connect.CodeResourceExhausted, nil)
 	}
 
-	r, err := s.rooms.Get(req.Msg.RoomId)
+	roomProto, err := s.rooms.GetProto(req.Msg.RoomId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(r.ToProto()), nil
+	return connect.NewResponse(roomProto), nil
 }
 
 func (s *bounceBotServer) StartGame(_ context.Context, req *connect.Request[pb.StartGameRequest]) (*connect.Response[pb.Room], error) {
-	r, err := s.rooms.StartGame(req.Msg.RoomId)
+	roomProto, err := s.rooms.StartGame(req.Msg.RoomId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	return connect.NewResponse(r.ToProto()), nil
+	return connect.NewResponse(roomProto), nil
 }
 
 func (s *bounceBotServer) SubmitSolution(_ context.Context, req *connect.Request[pb.SubmitSolutionRequest]) (*connect.Response[pb.SubmitSolutionResponse], error) {

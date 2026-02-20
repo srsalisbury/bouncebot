@@ -3,6 +3,7 @@ package ws
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -305,29 +306,15 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if player can reconnect
-	rm, err := h.store.Get(roomID)
+	// Validate session and reconnect if needed (all under a single room lock)
+	playerID, err := h.store.ValidateAndReconnect(roomID, sessionToken)
 	if err != nil {
-		http.Error(w, "room not found", http.StatusNotFound)
-		return
-	}
-
-	// Find player by session token
-	player := rm.FindPlayerBySessionToken(sessionToken)
-	if player == nil {
-		http.Error(w, "invalid session token", http.StatusForbidden)
-		return
-	}
-
-	playerID := player.ID
-
-	if player.Status == room.PlayerStatusDisconnected {
-		if err := h.store.ReconnectPlayer(roomID, playerID); err != nil {
-			log.Printf("WebSocket: failed to reconnect player %s in room %s: %v", playerID, roomID, err)
-			http.Error(w, "failed to reconnect", http.StatusInternalServerError)
-			return
+		if errors.Is(err, room.ErrRoomNotFound) {
+			http.Error(w, "room not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusForbidden)
 		}
-		log.Printf("WebSocket: player %s reconnected to room %s", playerID, roomID)
+		return
 	}
 
 	conn, err := h.upgrader.Upgrade(w, r, nil)
