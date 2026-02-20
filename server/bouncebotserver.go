@@ -14,6 +14,32 @@ import (
 	"github.com/srsalisbury/bouncebot/server/room"
 )
 
+func validateDailyDate(date string) error {
+	parsed, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return fmt.Errorf("invalid date format")
+	}
+	today := time.Now().UTC()
+	maxDate := today.AddDate(0, 0, 1)
+	if parsed.After(maxDate) {
+		return fmt.Errorf("cannot submit solutions for future dates")
+	}
+	return nil
+}
+
+const maxPlayerNameLength = 30
+
+func validatePlayerName(name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", fmt.Errorf("player name cannot be empty")
+	}
+	if len(name) > maxPlayerNameLength {
+		return "", fmt.Errorf("player name too long (max %d characters)", maxPlayerNameLength)
+	}
+	return name, nil
+}
+
 type bounceBotServer struct {
 	rooms           *room.RoomService
 	getRoomLimiter  *ratelimit.Limiter
@@ -31,7 +57,12 @@ func NewBounceBotServer(rooms *room.RoomService, getRoomLimiter *ratelimit.Limit
 }
 
 func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.CreateRoomResponse], error) {
-	r, playerID, sessionToken := s.rooms.Create(req.Msg.PlayerName, req.Msg.IsSinglePlayer)
+	playerName, err := validatePlayerName(req.Msg.PlayerName)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	r, playerID, sessionToken := s.rooms.Create(playerName, req.Msg.IsSinglePlayer)
 	return connect.NewResponse(&pb.CreateRoomResponse{
 		Room:         r.ToProto(),
 		PlayerId:     playerID,
@@ -40,7 +71,12 @@ func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.
 }
 
 func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.JoinRoomRequest]) (*connect.Response[pb.JoinRoomResponse], error) {
-	r, playerID, sessionToken, err := s.rooms.Join(req.Msg.RoomId, req.Msg.PlayerName)
+	playerName, err := validatePlayerName(req.Msg.PlayerName)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	r, playerID, sessionToken, err := s.rooms.Join(req.Msg.RoomId, playerName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
@@ -231,6 +267,11 @@ func (s *bounceBotServer) SubmitDailySolution(_ context.Context, req *connect.Re
 		return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("daily challenges are not enabled"))
 	}
 
+	// Validate the submitted date
+	if err := validateDailyDate(req.Msg.Date); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
 	// Get puzzles for the date
 	puzzles, err := s.dailyMgr.GetPuzzlesForDate(req.Msg.Date)
 	if err != nil {
@@ -265,7 +306,7 @@ func (s *bounceBotServer) SubmitDailySolution(_ context.Context, req *connect.Re
 
 	// Validate the solution by simulating the moves
 	moves := model.NewBotPositionsFromProto(req.Msg.Moves)
-	if !validateSolution(game, moves) {
+	if valid, _ := game.CheckSolution(moves); !valid {
 		return connect.NewResponse(&pb.SubmitDailySolutionResponse{
 			Correct:       false,
 			NewCompletion: false,
@@ -291,27 +332,3 @@ func (s *bounceBotServer) SubmitDailySolution(_ context.Context, req *connect.Re
 	}), nil
 }
 
-// validateSolution checks if the given moves solve the puzzle.
-func validateSolution(game *model.Game, moves []model.BotPosition) bool {
-	// Create a copy of bot positions to simulate
-	bots := make(map[model.BotId]model.Position)
-	for id, pos := range game.Bots {
-		bots[id] = pos
-	}
-
-	// Simulate each move
-	for _, move := range moves {
-		// Update bot position (the move already contains the final position)
-		if _, exists := bots[move.Id]; !exists {
-			return false
-		}
-		bots[move.Id] = move.Pos
-	}
-
-	// Check if target bot is at target position
-	targetPos, ok := bots[game.Target.Id]
-	if !ok {
-		return false
-	}
-	return targetPos == game.Target.Pos
-}
