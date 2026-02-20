@@ -2,6 +2,7 @@ package solver
 
 import (
 	"testing"
+	"time"
 
 	"github.com/srsalisbury/bouncebot/model"
 )
@@ -199,4 +200,80 @@ func TestReorderSolution_ContainsSameMoves(t *testing.T) {
 			t.Errorf("Move %v appears %d times in input but %d times in result", m, count, resultCounts[m])
 		}
 	}
+}
+
+func TestReorderSolution_EmptyInput(t *testing.T) {
+	game := model.Game1()
+
+	result := ReorderSolution(game, nil)
+	if result != nil {
+		t.Errorf("Expected nil for nil input, got %v", result)
+	}
+
+	result = ReorderSolution(game, []model.BotPosition{})
+	if len(result) != 0 {
+		t.Errorf("Expected empty for empty input, got %v", result)
+	}
+}
+
+func TestReorderSolution_SingleBot(t *testing.T) {
+	game := model.Game1()
+
+	// Solution with only bot 0 moves (first 7 moves of Game1OptimalSolution)
+	solution := model.Game1OptimalSolution()[:7]
+	result := ReorderSolution(game, solution)
+
+	// Single bot means no reordering needed, result should equal input
+	if len(result) != len(solution) {
+		t.Fatalf("Expected %d moves, got %d", len(solution), len(result))
+	}
+	for i := range result {
+		if result[i] != solution[i] {
+			t.Errorf("Move %d differs: expected %v, got %v", i, solution[i], result[i])
+		}
+	}
+}
+
+func TestReorderSolution_LargeInput_CompletesQuickly(t *testing.T) {
+	// Build a large synthetic solution with 5 bots and many interleaved moves.
+	// The old exhaustive approach would take factorial time on this input;
+	// the greedy approach should complete in well under a second.
+	game := model.Game1()
+
+	// Create a heavily interleaved sequence: 5 bots, 4 moves each = 20 moves
+	// (The multinomial coefficient for 5 groups of 4 is 20!/(4!^5) = 11,732,745,024)
+	bots := []model.BotId{0, 1, 2, 3}
+	movesPerBot := 5
+	var solution []model.BotPosition
+	for i := 0; i < movesPerBot; i++ {
+		for _, botId := range bots {
+			solution = append(solution, model.BotPosition{
+				Id:  botId,
+				Pos: model.Position{X: model.BoardDim(i + 1), Y: model.BoardDim(int(botId) + 1)},
+			})
+		}
+	}
+
+	start := time.Now()
+	result := ReorderSolution(game, solution)
+	elapsed := time.Since(start)
+
+	// The greedy approach should complete nearly instantly
+	if elapsed > 1*time.Second {
+		t.Errorf("ReorderSolution took %v, expected < 1s for greedy approach", elapsed)
+	}
+
+	// Result should have the same total moves
+	if len(result) != len(solution) {
+		t.Errorf("Expected %d moves, got %d", len(solution), len(result))
+	}
+
+	// Result should have fewer or equal groups compared to the interleaved input
+	inputGroups := countGroups(solution)
+	resultGroups := countGroups(result)
+	if resultGroups > inputGroups {
+		t.Errorf("Result has more groups (%d) than input (%d)", resultGroups, inputGroups)
+	}
+
+	t.Logf("Input: %d groups, Result: %d groups, Time: %v", inputGroups, resultGroups, elapsed)
 }

@@ -17,7 +17,7 @@ func (ht *HeuristicTable) Get(pos model.Position) int {
 
 // NewHeuristicTable computes the base heuristic distances from each cell to the target
 // using reverse BFS with rook movement.
-func NewHeuristicTable(game *model.Game) *HeuristicTable {
+func NewHeuristicTable(game *model.Game, walls *wallLookup) *HeuristicTable {
 	directions := []model.Direction{model.Up, model.Down, model.Left, model.Right}
 	size := int(game.Board.Size())
 	var dist [256]int
@@ -40,7 +40,7 @@ func NewHeuristicTable(game *model.Game) *HeuristicTable {
 
 		for _, dir := range directions {
 			// Use computeDestination with a single fake bot to find where a slide would end
-			endPos, err := computeDestination(map[model.BotId]model.Position{game.Target.Id: currentPos}, game, game.Target.Id, dir)
+			endPos, err := computeDestination(map[model.BotId]model.Position{game.Target.Id: currentPos}, walls, game.Target.Id, dir)
 			if err != nil || endPos == currentPos {
 				continue
 			}

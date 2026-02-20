@@ -5,80 +5,100 @@ import (
 )
 
 // ReorderSolution reorders the moves in the solution to prioritize grouping moves by bot.
+// Uses a greedy approach: tries starting with each bot, then continues with the current bot
+// until exhausted before switching. Validates the result and picks the ordering with the
+// fewest bot switches.
 func ReorderSolution(game *model.Game, solution []model.BotPosition) []model.BotPosition {
 	if len(solution) <= 1 {
 		return solution
 	}
 
-	type MoveList = []model.BotPosition
-
-	// Initialize map to hold moves by bot
-	movesByBot := make(map[model.BotId]MoveList)
-	currentIndices := make(map[model.BotId]int)
-
-	// Group moves by bot
+	// Group moves by bot, preserving per-bot order
+	movesByBot := make(map[model.BotId][]model.BotPosition)
 	for _, move := range solution {
 		movesByBot[move.Id] = append(movesByBot[move.Id], move)
 	}
 
-	// Generate reordered moves
-	var interleavings []MoveList
-	var current = make(MoveList, 0)
+	if len(movesByBot) <= 1 {
+		return solution // Only one bot, already optimal
+	}
 
-	var interleave func()
-	interleave = func() {
-		// Check if all moves are exhausted
-		if len(current) == len(solution) {
-			interleavings = append(interleavings, append(MoveList{}, current...))
-			return
-		}
-		for botId := range movesByBot {
-			var idx = currentIndices[botId]
-			if idx < len(movesByBot[botId]) {
-				// Choose move
-				current = append(current, movesByBot[botId][idx])
-				currentIndices[botId] = idx + 1
+	bestResult := solution
+	bestGroups := countGroups(solution)
+	minPossible := len(movesByBot)
 
-				// Recurse
-				interleave()
-
-				// Backtrack
-				current = current[:len(current)-1]
-				currentIndices[botId] = idx
+	// Try starting with each bot and greedily build the solution
+	for startBot := range movesByBot {
+		candidate := buildGreedy(movesByBot, startBot)
+		groups := countGroups(candidate)
+		if groups < bestGroups {
+			if isValid, _ := game.CheckSolution(candidate); isValid {
+				bestGroups = groups
+				bestResult = candidate
+				if bestGroups <= minPossible {
+					return bestResult
+				}
 			}
 		}
 	}
 
-	interleave()
-	// Select the interleaving with the least number of bot switches
-	countGroups := func(moves MoveList) int {
-		if len(moves) <= 1 {
-			return 1
-		}
-		groups := 1
-		for i := 1; i < len(moves); i++ {
-			if moves[i].Id != moves[i-1].Id {
-				groups++
-			}
-		}
-		return groups
+	return bestResult
+}
+
+// buildGreedy constructs a move ordering starting with startBot, then continuing
+// with the current bot until its moves are exhausted before switching to the bot
+// with the most remaining moves.
+func buildGreedy(movesByBot map[model.BotId][]model.BotPosition, startBot model.BotId) []model.BotPosition {
+	indices := make(map[model.BotId]int)
+	total := 0
+	for _, moves := range movesByBot {
+		total += len(moves)
 	}
 
-	minPossibleGroups := len(movesByBot)
-	bestInterleaving := solution
-	bestGroupCount := countGroups(bestInterleaving)
-	for _, il := range interleavings {
-		if bestGroupCount == minPossibleGroups {
+	result := make([]model.BotPosition, 0, total)
+	currentBot := startBot
+
+	for len(result) < total {
+		// Try to continue with current bot
+		if idx := indices[currentBot]; idx < len(movesByBot[currentBot]) {
+			result = append(result, movesByBot[currentBot][idx])
+			indices[currentBot]++
+			continue
+		}
+
+		// Current bot exhausted, switch to bot with most remaining moves
+		bestBot := model.BotId(-1)
+		bestRemaining := 0
+		for botId, moves := range movesByBot {
+			remaining := len(moves) - indices[botId]
+			if remaining > 0 && remaining > bestRemaining {
+				bestRemaining = remaining
+				bestBot = botId
+			}
+		}
+
+		if bestBot < 0 {
 			break
 		}
-		gc := countGroups(il)
-		if gc < bestGroupCount {
-			isValid, _ := game.CheckSolution(il)
-			if isValid {
-				bestGroupCount = gc
-				bestInterleaving = il
-			}
+
+		currentBot = bestBot
+		result = append(result, movesByBot[currentBot][indices[currentBot]])
+		indices[currentBot]++
+	}
+
+	return result
+}
+
+// countGroups counts the number of contiguous bot groups in a move sequence.
+func countGroups(moves []model.BotPosition) int {
+	if len(moves) <= 1 {
+		return 1
+	}
+	groups := 1
+	for i := 1; i < len(moves); i++ {
+		if moves[i].Id != moves[i-1].Id {
+			groups++
 		}
 	}
-	return bestInterleaving
+	return groups
 }
