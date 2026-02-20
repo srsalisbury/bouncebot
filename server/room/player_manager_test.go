@@ -632,3 +632,177 @@ func TestPlayerManager_ForceRemovePlayer_NotFoundAnywhere(t *testing.T) {
 		t.Errorf("expected 1 pending player, got %d", len(room.PendingPlayers))
 	}
 }
+
+func TestPlayerManager_ForceRemovePlayer_ConnectedPlayer(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID: "TEST",
+		Players: []Player{
+			{ID: "alice", Name: "Alice", Status: PlayerStatusConnected},
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+		},
+		CurrentGame: model.Game1(),
+	}
+
+	signals := pm.ForceRemovePlayer(room, "bob")
+
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 player, got %d", len(room.Players))
+	}
+	if room.Players[0].ID != "alice" {
+		t.Errorf("expected alice remaining, got %s", room.Players[0].ID)
+	}
+
+	// Should have CancelTimerSignal and PlayerLeftEvent broadcast
+	hasCancelTimer := false
+	hasPlayerLeft := false
+	for _, sig := range signals {
+		if ct, ok := sig.(CancelTimerSignal); ok && ct.PlayerID == "bob" {
+			hasCancelTimer = true
+		}
+		if bs, ok := sig.(BroadcastSignal); ok {
+			if event, ok := bs.Event.(PlayerLeftEvent); ok && event.PlayerID == "bob" {
+				hasPlayerLeft = true
+			}
+		}
+	}
+	if !hasCancelTimer {
+		t.Error("expected CancelTimerSignal for removed player")
+	}
+	if !hasPlayerLeft {
+		t.Error("expected PlayerLeftEvent broadcast")
+	}
+}
+
+func TestPlayerManager_ForceRemovePlayer_DisconnectedPlayer(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID: "TEST",
+		Players: []Player{
+			{ID: "alice", Name: "Alice", Status: PlayerStatusConnected},
+			{ID: "bob", Name: "Bob", Status: PlayerStatusDisconnected},
+		},
+	}
+
+	signals := pm.ForceRemovePlayer(room, "bob")
+
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 player, got %d", len(room.Players))
+	}
+	if room.Players[0].ID != "alice" {
+		t.Errorf("expected alice remaining, got %s", room.Players[0].ID)
+	}
+
+	// Should still emit signals even for disconnected players
+	if len(signals) < 2 {
+		t.Errorf("expected at least 2 signals, got %d", len(signals))
+	}
+}
+
+func TestPlayerManager_ForceRemovePlayer_CleansUpGameState(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID: "TEST",
+		Players: []Player{
+			{ID: "alice", Name: "Alice", Status: PlayerStatusConnected},
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+			{ID: "charlie", Name: "Charlie", Status: PlayerStatusConnected},
+		},
+		CurrentGame:     model.Game1(),
+		FinishedSolving: []string{"bob", "charlie"},
+		ReadyForNext:    []string{"bob"},
+		Solutions: []PlayerSolution{
+			{PlayerID: "bob", SolvedAt: time.Now(), Moves: model.Game1OptimalSolution()},
+		},
+	}
+
+	pm.ForceRemovePlayer(room, "bob")
+
+	// bob should be removed from FinishedSolving
+	for _, id := range room.FinishedSolving {
+		if id == "bob" {
+			t.Error("bob should be removed from FinishedSolving")
+		}
+	}
+	if len(room.FinishedSolving) != 1 || room.FinishedSolving[0] != "charlie" {
+		t.Errorf("expected FinishedSolving = [charlie], got %v", room.FinishedSolving)
+	}
+
+	// bob should be removed from ReadyForNext
+	for _, id := range room.ReadyForNext {
+		if id == "bob" {
+			t.Error("bob should be removed from ReadyForNext")
+		}
+	}
+	if len(room.ReadyForNext) != 0 {
+		t.Errorf("expected empty ReadyForNext, got %v", room.ReadyForNext)
+	}
+
+	// bob's solution should be removed
+	for _, sol := range room.Solutions {
+		if sol.PlayerID == "bob" {
+			t.Error("bob's solution should be removed")
+		}
+	}
+	if len(room.Solutions) != 0 {
+		t.Errorf("expected 0 solutions, got %d", len(room.Solutions))
+	}
+}
+
+func TestPlayerManager_ForceRemovePlayer_TriggersEndGame(t *testing.T) {
+	pm := NewPlayerManager()
+
+	// alice and bob in game, alice finished solving, bob not yet
+	room := &Room{
+		ID: "TEST",
+		Players: []Player{
+			{ID: "alice", Name: "Alice", Status: PlayerStatusConnected},
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+		},
+		CurrentGame:     model.Game1(),
+		FinishedSolving: []string{"alice"},
+	}
+
+	// Remove bob. Now all remaining players (alice) are finished solving.
+	signals := pm.ForceRemovePlayer(room, "bob")
+
+	hasEndGame := false
+	for _, sig := range signals {
+		if _, ok := sig.(EndGameSignal); ok {
+			hasEndGame = true
+		}
+	}
+	if !hasEndGame {
+		t.Error("expected EndGameSignal when all remaining players are finished")
+	}
+}
+
+func TestPlayerManager_ForceRemovePlayer_TriggersStartNextGame(t *testing.T) {
+	pm := NewPlayerManager()
+
+	// alice and bob between games, alice ready for next, bob not
+	room := &Room{
+		ID: "TEST",
+		Players: []Player{
+			{ID: "alice", Name: "Alice", Status: PlayerStatusConnected},
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+		},
+		ReadyForNext: []string{"alice"},
+	}
+
+	// Remove bob. Now all remaining players (alice) are ready for next.
+	signals := pm.ForceRemovePlayer(room, "bob")
+
+	hasStartNext := false
+	for _, sig := range signals {
+		if _, ok := sig.(StartNextGameSignal); ok {
+			hasStartNext = true
+		}
+	}
+	if !hasStartNext {
+		t.Error("expected StartNextGameSignal when all remaining players are ready")
+	}
+}

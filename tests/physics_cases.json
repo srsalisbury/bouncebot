@@ -159,6 +159,136 @@
       ],
       "move": {"robotId": 0, "direction": "right"},
       "expected": {"x": 9, "y": 3}
+    },
+    {
+      "name": "corner (0,0) moving up stays in place",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 0, "y": 0}],
+      "move": {"robotId": 0, "direction": "up"},
+      "expected": {"x": 0, "y": 0}
+    },
+    {
+      "name": "corner (15,15) moving down stays in place",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 15, "y": 15}],
+      "move": {"robotId": 0, "direction": "down"},
+      "expected": {"x": 15, "y": 15}
+    },
+    {
+      "name": "corner (0,0) slides right to far edge",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 0, "y": 0}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 15, "y": 0}
+    },
+    {
+      "name": "corner (15,15) slides left to far edge",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 15, "y": 15}],
+      "move": {"robotId": 0, "direction": "left"},
+      "expected": {"x": 0, "y": 15}
+    },
+    {
+      "name": "multiple vertical walls in path - first one blocks",
+      "boardSize": 16,
+      "vWalls": [{"x": 4, "y": 3}, {"x": 8, "y": 3}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 2, "y": 3}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 4, "y": 3}
+    },
+    {
+      "name": "parallel walls on adjacent rows - robot passes through gap",
+      "boardSize": 16,
+      "vWalls": [{"x": 5, "y": 3}, {"x": 5, "y": 5}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 2, "y": 4}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 15, "y": 4}
+    },
+    {
+      "name": "wall adjacent to right board edge",
+      "boardSize": 16,
+      "vWalls": [{"x": 14, "y": 5}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 10, "y": 5}],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 14, "y": 5}
+    },
+    {
+      "name": "wall adjacent to left board edge blocks left",
+      "boardSize": 16,
+      "vWalls": [{"x": 0, "y": 5}],
+      "hWalls": [],
+      "robots": [{"id": 0, "x": 5, "y": 5}],
+      "move": {"robotId": 0, "direction": "left"},
+      "expected": {"x": 1, "y": 5}
+    },
+    {
+      "name": "three robots in a line - blocked by nearest",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 1, "y": 3},
+        {"id": 1, "x": 5, "y": 3},
+        {"id": 2, "x": 10, "y": 3}
+      ],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 4, "y": 3}
+    },
+    {
+      "name": "robot closer than wall blocks first",
+      "boardSize": 16,
+      "vWalls": [{"x": 10, "y": 3}],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 2, "y": 3},
+        {"id": 1, "x": 7, "y": 3}
+      ],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 6, "y": 3}
+    },
+    {
+      "name": "wall closer than robot blocks first",
+      "boardSize": 16,
+      "vWalls": [{"x": 5, "y": 3}],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 2, "y": 3},
+        {"id": 1, "x": 10, "y": 3}
+      ],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 5, "y": 3}
+    },
+    {
+      "name": "L-shaped walls - perpendicular wall at destination is irrelevant",
+      "boardSize": 16,
+      "vWalls": [{"x": 8, "y": 6}],
+      "hWalls": [{"x": 8, "y": 6}],
+      "robots": [{"id": 0, "x": 8, "y": 2}],
+      "move": {"robotId": 0, "direction": "down"},
+      "expected": {"x": 8, "y": 6}
+    },
+    {
+      "name": "robot immediately adjacent - cannot move",
+      "boardSize": 16,
+      "vWalls": [],
+      "hWalls": [],
+      "robots": [
+        {"id": 0, "x": 5, "y": 3},
+        {"id": 1, "x": 6, "y": 3}
+      ],
+      "move": {"robotId": 0, "direction": "right"},
+      "expected": {"x": 5, "y": 3}
     }
   ]
 }
