@@ -5,8 +5,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 )
+
+var validPlayerID = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
+
+func validatePlayerID(playerID string) error {
+	if !validPlayerID.MatchString(playerID) {
+		return fmt.Errorf("invalid player ID")
+	}
+	return nil
+}
 
 // DayProgress tracks which puzzles a user has solved for a given day.
 type DayProgress struct {
@@ -35,6 +45,10 @@ func NewProgressManager(dataDir string) *ProgressManager {
 
 // GetUserProgress loads progress for a player.
 func (pm *ProgressManager) GetUserProgress(playerID string) (UserProgress, error) {
+	if err := validatePlayerID(playerID); err != nil {
+		return nil, err
+	}
+
 	// Check cache first
 	pm.mu.RLock()
 	if progress, ok := pm.cache[playerID]; ok {
@@ -68,6 +82,10 @@ func (pm *ProgressManager) GetUserProgress(playerID string) (UserProgress, error
 
 // SaveUserProgress saves progress for a player.
 func (pm *ProgressManager) SaveUserProgress(playerID string, progress UserProgress) error {
+	if err := validatePlayerID(playerID); err != nil {
+		return err
+	}
+
 	path := pm.progressPath(playerID)
 
 	// Ensure directory exists
@@ -100,6 +118,10 @@ func (pm *ProgressManager) SaveUserProgress(playerID string, progress UserProgre
 
 // MarkSolved marks a puzzle as solved for a player.
 func (pm *ProgressManager) MarkSolved(playerID, date, difficulty string) error {
+	if err := validatePlayerID(playerID); err != nil {
+		return err
+	}
+
 	progress, err := pm.GetUserProgress(playerID)
 	if err != nil {
 		return err
@@ -123,6 +145,10 @@ func (pm *ProgressManager) MarkSolved(playerID, date, difficulty string) error {
 
 // IsSolved checks if a puzzle has been solved.
 func (pm *ProgressManager) IsSolved(playerID, date, difficulty string) (bool, error) {
+	if err := validatePlayerID(playerID); err != nil {
+		return false, err
+	}
+
 	progress, err := pm.GetUserProgress(playerID)
 	if err != nil {
 		return false, err
