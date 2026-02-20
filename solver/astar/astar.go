@@ -31,28 +31,103 @@ func (n *stateNode) priority() int {
 	return len(n.moves) + n.heuristic
 }
 
-// encodeState creates a hashable key from bot positions.
-func encodeState(bots map[model.BotId]model.Position) string {
-	// Sort bot IDs for consistent ordering
+// stateEncoder encodes bot positions into a uint64 for use as a map key,
+// avoiding the overhead of fmt.Sprintf string construction.
+type stateEncoder struct {
+	sortedBotIds []model.BotId
+	bitsPerCoord int
+}
+
+// newStateEncoder creates a state encoder based on the bot IDs and board size.
+// Supports boards up to 16x16 with 8 bots using 8 bits per bot (4 bits per coordinate).
+func newStateEncoder(bots map[model.BotId]model.Position, boardSize model.BoardDim) *stateEncoder {
 	ids := make([]model.BotId, 0, len(bots))
 	for id := range bots {
 		ids = append(ids, id)
 	}
 	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
 
-	// Encode as string
-	result := ""
-	for _, id := range ids {
-		pos := bots[id]
-		result += fmt.Sprintf("%d:%d,%d;", id, pos.X, pos.Y)
+	bitsPerCoord := 4 // supports coordinates 0-15
+	if boardSize > 16 {
+		bitsPerCoord = 7 // supports coordinates 0-127
 	}
-	return result
+
+	return &stateEncoder{sortedBotIds: ids, bitsPerCoord: bitsPerCoord}
 }
 
-// Solve finds the optimal solution using breadth-first search.
+// encode packs all bot positions into a uint64.
+func (e *stateEncoder) encode(bots map[model.BotId]model.Position) uint64 {
+	var key uint64
+	bitsPerBot := e.bitsPerCoord * 2
+	for i, id := range e.sortedBotIds {
+		pos := bots[id]
+		shift := i * bitsPerBot
+		key |= uint64(pos.X) << shift
+		key |= uint64(pos.Y) << (shift + e.bitsPerCoord)
+	}
+	return key
+}
+
+// wallLookup provides O(1) wall-blocking checks by precomputing lookup sets
+// from the game board, avoiding repeated linear scans and defensive copies
+// of the wall slices.
+type wallLookup struct {
+	boardSize model.BoardDim
+	hWalls    map[model.Position]bool
+	vWalls    map[model.Position]bool
+}
+
+// newWallLookup precomputes wall lookup sets from the game board.
+func newWallLookup(game *model.Game) *wallLookup {
+	hWallSlice := game.Board.HWalls()
+	vWallSlice := game.Board.VWalls()
+	wl := &wallLookup{
+		boardSize: game.Board.Size(),
+		hWalls:    make(map[model.Position]bool, len(hWallSlice)),
+		vWalls:    make(map[model.Position]bool, len(vWallSlice)),
+	}
+	for _, w := range hWallSlice {
+		wl.hWalls[w] = true
+	}
+	for _, w := range vWallSlice {
+		wl.vWalls[w] = true
+	}
+	return wl
+}
+
+// hasWallBlocking checks if there's a wall or board edge blocking movement from pos in dir.
+func (wl *wallLookup) hasWallBlocking(pos model.Position, dir model.Direction) bool {
+	switch dir {
+	case model.Up:
+		if pos.Y == 0 {
+			return true
+		}
+		return wl.hWalls[model.Position{X: pos.X, Y: pos.Y - 1}]
+	case model.Down:
+		if pos.Y == wl.boardSize-1 {
+			return true
+		}
+		return wl.hWalls[model.Position{X: pos.X, Y: pos.Y}]
+	case model.Left:
+		if pos.X == 0 {
+			return true
+		}
+		return wl.vWalls[model.Position{X: pos.X - 1, Y: pos.Y}]
+	case model.Right:
+		if pos.X == wl.boardSize-1 {
+			return true
+		}
+		return wl.vWalls[model.Position{X: pos.X, Y: pos.Y}]
+	}
+	return false
+}
+
+// Solve finds the optimal solution using A* search.
 func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result {
 	directions := []model.Direction{model.Up, model.Down, model.Left, model.Right}
-	baseHeuristic := NewHeuristicTable(game)
+	walls := newWallLookup(game)
+	encoder := newStateEncoder(game.Bots, game.Board.Size())
+	baseHeuristic := NewHeuristicTable(game, walls)
 
 	// Initial state
 	initialNode := &stateNode{
@@ -73,7 +148,7 @@ func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result
 	// AStar queue and closed set (states fully expanded)
 	pqueue := NewPriorityQueue()
 	pqueue.Enqueue(initialNode)
-	closed := make(map[string]bool)
+	closed := make(map[uint64]bool)
 
 	checkCount := 0
 	const checkInterval = 1000 // Check context every N iterations
@@ -98,7 +173,7 @@ func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result
 		current := pqueue.Dequeue()
 
 		// Mark as closed (fully expanded) - only now, not when first seen
-		currentKey := encodeState(current.bots)
+		currentKey := encoder.encode(current.bots)
 		if closed[currentKey] {
 			continue // Already expanded via a better path
 		}
@@ -108,7 +183,7 @@ func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result
 		for botId := range current.bots {
 			for _, dir := range directions {
 				// Compute destination
-				dest, err := computeDestination(current.bots, game, botId, dir)
+				dest, err := computeDestination(current.bots, walls, botId, dir)
 				if err != nil {
 					continue
 				}
@@ -123,7 +198,7 @@ func (s *AStarSolver) Solve(ctx context.Context, game *model.Game) solver.Result
 				newBots[botId] = dest
 
 				// Skip if already fully expanded
-				stateKey := encodeState(newBots)
+				stateKey := encoder.encode(newBots)
 				if closed[stateKey] {
 					continue
 				}
@@ -178,7 +253,7 @@ func isWin(bots map[model.BotId]model.Position, target model.BotPosition) bool {
 }
 
 // computeDestination calculates where a bot ends up when sliding.
-func computeDestination(bots map[model.BotId]model.Position, game *model.Game, botId model.BotId, dir model.Direction) (model.Position, error) {
+func computeDestination(bots map[model.BotId]model.Position, walls *wallLookup, botId model.BotId, dir model.Direction) (model.Position, error) {
 	pos, ok := bots[botId]
 	if !ok {
 		return model.Position{}, fmt.Errorf("bot not found")
@@ -199,7 +274,7 @@ func computeDestination(bots map[model.BotId]model.Position, game *model.Game, b
 	// Slide until hitting an obstacle
 	for {
 		// Check for wall blocking movement
-		if hasWallBlocking(game, pos, dir) {
+		if walls.hasWallBlocking(pos, dir) {
 			break
 		}
 
@@ -221,49 +296,6 @@ func computeDestination(bots map[model.BotId]model.Position, game *model.Game, b
 	}
 
 	return pos, nil
-}
-
-// hasWallBlocking checks if there's a wall or board edge blocking movement.
-func hasWallBlocking(game *model.Game, pos model.Position, dir model.Direction) bool {
-	switch dir {
-	case model.Up:
-		if pos.Y == 0 {
-			return true
-		}
-		for _, w := range game.Board.HWalls() {
-			if w.X == pos.X && w.Y == pos.Y-1 {
-				return true
-			}
-		}
-	case model.Down:
-		if pos.Y == game.Board.Size()-1 {
-			return true
-		}
-		for _, w := range game.Board.HWalls() {
-			if w.X == pos.X && w.Y == pos.Y {
-				return true
-			}
-		}
-	case model.Left:
-		if pos.X == 0 {
-			return true
-		}
-		for _, w := range game.Board.VWalls() {
-			if w.X == pos.X-1 && w.Y == pos.Y {
-				return true
-			}
-		}
-	case model.Right:
-		if pos.X == game.Board.Size()-1 {
-			return true
-		}
-		for _, w := range game.Board.VWalls() {
-			if w.X == pos.X && w.Y == pos.Y {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func init() {

@@ -10,7 +10,8 @@ import (
 
 func TestCalculateBaseHeuristic_Visual(t *testing.T) {
 	game := model.Game1()
-	ht := NewHeuristicTable(game)
+	walls := newWallLookup(game)
+	ht := NewHeuristicTable(game, walls)
 
 	size := int(game.Board.Size())
 	targetX := int(game.Target.Pos.X)
