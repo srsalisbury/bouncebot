@@ -73,8 +73,9 @@ go test ./...
 
 Tests cover:
 - Room service operations and signal emissions
-- Individual manager behavior (player, game lifecycle, solution, persistence)
+- Individual manager behavior (player, game lifecycle, solution, persistence, ForceRemovePlayer)
 - Game physics (movement, wall collision, solution validation)
+- Daily challenge system (puzzle classification, seed determinism, cache eviction, concurrent progress writes)
 - Solver correctness against known puzzles
 - Board construction and panel rotation
 
@@ -92,7 +93,7 @@ Uses Vitest with jsdom environment. Tests cover:
 
 ### Cross-Language Physics Tests
 
-Some physics test cases are shared between Go and TypeScript via JSON files to ensure the client's optimistic movement calculations match the server's authoritative logic. Both test suites read the same test data and verify identical results.
+29 physics test cases are shared between Go and TypeScript via `tests/physics_cases.json` to ensure the client's optimistic movement calculations match the server's authoritative logic. Both test suites read the same test data and verify identical results. Cases cover basic sliding, wall collisions, robot blocking, corner positions, multi-wall paths, parallel wall gaps, robot chains, wall-vs-robot priority, and L-shaped wall patterns.
 
 ## Docker Deployment
 

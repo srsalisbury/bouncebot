@@ -27,7 +27,7 @@ The server uses `golang.org/x/net/http2/h2c` for HTTP/2 cleartext, which Connect
 
 | RPC | Auth | Delegates To | Notes |
 |-----|------|-------------|-------|
-| `CreateRoom` | None | `RoomService.Create()` | Returns room + player ID + session token |
+| `CreateRoom` | None | `RoomService.Create()` | Rate-limited: 5/min per IP. Returns room + player ID + session token |
 | `JoinRoom` | None | `RoomService.Join()` | Returns room + player ID + session token |
 | `GetRoom` | None | `RoomService.Get()` | Rate-limited: 100/min per IP |
 | `StartGame` | None | `RoomService.StartGame()` | Triggers solver via callback |
@@ -37,8 +37,8 @@ The server uses `golang.org/x/net/http2/h2c` for HTTP/2 cleartext, which Connect
 | `UpdateRoomSettings` | Session token (host) | `RoomService.UpdateRoomSettings()` | Host-only |
 | `BootPlayer` | Session token (host) | `RoomService.BootPlayer()` | Host-only |
 | `LeaveRoom` | Session token | `RoomService.LeaveRoom()` | |
-| `GetDailyChallenge` | Player ID | `DailyManager.GetPuzzlesForDate()` | Timezone-aware date calculation |
-| `SubmitDailySolution` | Player ID | `ProgressManager.MarkSolved()` | Validates solution by simulation |
+| `GetDailyChallenge` | Player ID (UUID) | `DailyManager.GetPuzzlesForDate()` | Timezone-aware date calculation |
+| `SubmitDailySolution` | Player ID (UUID) | `ProgressManager.MarkSolved()` | Rate-limited: 30/min per IP. Validates solution by simulation |
 | `GetServerInfo` | None | Config check | Returns feature flags |
 
 Session token validation: the handler calls `RoomService.ValidateSessionToken()` which looks up the token in the repository and returns the associated player ID, or an error.
@@ -179,7 +179,15 @@ All configuration is via environment variables. `.env` provides checked-in defau
 
 ## Rate Limiting
 
-`GetRoom` is rate-limited to 100 requests per minute per IP address, applied as middleware in `server/main.go`. This prevents abuse from polling clients. Other RPCs are not rate-limited since they require session tokens.
+Three endpoints have per-IP rate limiting, configured in `server/main.go`:
+
+| Endpoint | Limit | Rationale |
+|----------|-------|-----------|
+| `GetRoom` | 100/min | Prevents abuse from polling clients |
+| `CreateRoom` | 5/min | Prevents room creation spam |
+| `SubmitDailySolution` | 30/min | Prevents brute-force solution attempts |
+
+Each limiter uses a sliding window and runs a background cleanup goroutine to evict stale entries. Rate-limited requests receive `ResourceExhausted` status.
 
 ## Daily Challenge
 
@@ -187,7 +195,7 @@ All configuration is via environment variables. `.env` provides checked-in defau
 
 Generates and serves daily puzzles:
 
-- **Cache**: In-memory map of date to puzzles, with disk fallback.
+- **Cache**: In-memory map of date to puzzles, with disk fallback. Entries older than 7 days are evicted on cache writes.
 - **Storage**: `data/daily_puzzles/YYYY/MM/DD.json`. Atomic writes.
 - **Generation**: For each difficulty, tries up to 10,000 random games, solves with A\*, keeps the first matching the difficulty range. Date-seeded for reproducibility.
 - **Background worker**: Runs immediately on startup, then daily at midnight UTC. Generates puzzles for the next 2 days to ensure all timezones have coverage.
@@ -205,14 +213,17 @@ Difficulty classification by optimal move count:
 Tracks per-user completion:
 
 - **Storage**: `data/users/XX/PLAYERID.json` (sharded by first 2 characters of player ID for filesystem scalability).
-- **Cache**: In-memory map of player ID to progress.
+- **Cache**: In-memory map of player ID to progress. Capped at 1,000 entries with hour-based LRU eviction.
+- **Concurrency**: Per-player locks (via `sync.Map`) prevent concurrent `MarkSolved` calls from overwriting each other's changes.
 - **Data model**: Map of date string to `DayProgress` (easy/medium/hard booleans).
+- **Validation**: Player IDs must be valid UUIDs (enforced at the RPC handler level).
 
 ## Testing Patterns
 
 Server tests use Go's standard `testing` package:
 
 - **Room service tests**: Create a `RoomService` with in-memory repository, exercise operations, assert state changes and signal emissions.
-- **Manager tests**: Test each manager in isolation with constructed `Room` objects.
-- **Physics tests**: `model/` package tests cover movement, wall collision, and solution validation. Some test cases are shared with the client via JSON files for cross-language verification.
+- **Manager tests**: Test each manager in isolation with constructed `Room` objects. Includes `ForceRemovePlayer` tests covering connected/disconnected removal, game state cleanup, and signal emissions.
+- **Physics tests**: `model/` package tests cover movement, wall collision, and solution validation. 29 test cases are shared with the client via `tests/physics_cases.json` for cross-language verification, covering corners, multi-wall paths, robot chains, wall-vs-robot priority, and L-shaped walls.
+- **Daily challenge tests**: `server/daily/` tests cover puzzle classification, seed determinism, cache hit/eviction, concurrent `MarkSolved` safety (race-detector verified), and player ID validation.
 - **Solver tests**: Test known puzzles against expected optimal solutions.

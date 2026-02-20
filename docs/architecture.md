@@ -126,17 +126,17 @@ The pattern: acquire room lock, execute operation, release lock, then process si
 - **Repository-level RWMutex**: Protects the room map (adding/removing rooms)
 - **Per-room Mutex**: Each room has its own lock for state mutations. Operations on different rooms run in parallel.
 - **Lock ordering**: Room lock is always released before processing signals. This prevents deadlocks when signal processing needs to acquire locks.
-- **Background goroutines**: Auto-save (periodic), cleanup (periodic), solver jobs (per-game), daily puzzle generation (daily at midnight UTC)
+- **Background goroutines**: Auto-save (periodic), cleanup (periodic), solver jobs (per-game, with periodic cleanup of completed jobs), rate limiter cleanup, daily puzzle generation (on startup + daily at midnight UTC)
 
 ## Solver System
 
 Solvers live in `solver/` and follow a plugin pattern:
 
 - **Registry** (`solver/registry.go`): Thread-safe map of solver name to `Solver` interface. Solvers auto-register via `init()` functions. The server imports solver packages via blank imports to trigger registration.
-- **Manager** (`solver/manager.go`): Launches solver jobs in background goroutines. Each job runs with a context timeout (default 30s). On completion, calls a callback that stores the result on the room and broadcasts to clients. All registered solvers run for each game.
+- **Manager** (`solver/manager.go`): Launches solver jobs in background goroutines. Each job runs with a context timeout (default 30s). On completion, calls a callback that stores the result on the room and broadcasts to clients. All registered solvers run for each game. A periodic cleanup goroutine removes completed jobs older than 1 hour to prevent unbounded memory growth.
 - **A\* solver** (`solver/astar/`): The primary solver. Uses a priority queue with an admissible heuristic based on reverse BFS from the target with rook movement. The heuristic accounts for actual board physics (walls, sliding) rather than simple Manhattan distance. Guaranteed to find optimal solutions.
 - **BFS solver** (`solver/bfs/`): Simpler exhaustive search. Has an `init()` function but is not imported by the server (only used in benchmarks). A\* is preferred for production.
-- **Solution reordering** (`solver/reorder.go`): After finding a solution, reorders moves to minimize "robot switches" (e.g., move robot A twice, then robot B, rather than alternating). This makes solutions easier for humans to follow.
+- **Solution reordering** (`solver/reorder.go`): After finding a solution, uses a greedy algorithm to reorder moves and minimize "robot switches" (e.g., move robot A twice, then robot B, rather than alternating). Tries starting with each bot, then continues with the current bot until its moves are exhausted before switching. This makes solutions easier for humans to follow.
 
 Solver integration flow: game starts, `RoomService` calls `onGameStart` callback, `SolverManager.StartJob()` launches a goroutine, solver runs, result stored on room, `solver_complete` event broadcast.
 
@@ -150,7 +150,7 @@ When enabled (`ENABLE_DAILY_CHALLENGE=true`), the server generates three puzzles
 | Medium | 7-11 |
 | Hard | 12+ |
 
-**Generation**: A background worker runs at midnight UTC. For each difficulty, it tries up to 10,000 random puzzles, solves each with A\*, and keeps the first one that falls in the target range. Puzzles are seeded by date for reproducibility.
+**Generation**: A background worker runs immediately on startup and then daily at midnight UTC. For each difficulty, it tries up to 10,000 random puzzles, solves each with A\*, and keeps the first one that falls in the target range. Puzzles are seeded by date for reproducibility.
 
 **Storage**: Puzzles are stored as JSON at `data/daily_puzzles/YYYY/MM/DD.json`. User progress is stored at `data/users/XX/PLAYERID.json` (sharded by first two characters of the player ID).
 
@@ -160,7 +160,8 @@ When enabled (`ENABLE_DAILY_CHALLENGE=true`), the server generates three puzzles
 
 - **Session tokens**: Generated on CreateRoom/JoinRoom (32 bytes from crypto/rand, hex-encoded to 64 characters). Required for all state-mutating RPCs and WebSocket connections. Validated per-request.
 - **Host permissions**: The first player in a room is the host. Only the host can change settings and boot players. Starting a game does not require host privileges.
-- **Rate limiting**: `GetRoom` is limited to 100 requests per minute per IP address.
+- **Rate limiting**: Per-IP sliding window limits on `GetRoom` (100/min), `CreateRoom` (5/min), and `SubmitDailySolution` (30/min).
+- **Player ID validation**: Daily challenge endpoints require player IDs to be valid UUIDs, preventing enumeration of other players' progress.
 - **CORS**: Configured via `ALLOWED_ORIGINS` env var. The `ALLOW_SAME_HOST` option (default true) automatically allows requests from the same hostname, which simplifies deployments where the client and server share a host.
 - **WebSocket authentication**: Session token is validated on WebSocket upgrade. Invalid tokens are rejected before the connection is established.
 
