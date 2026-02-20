@@ -128,6 +128,43 @@ func (m *Manager) CleanupRoom(roomID string) {
 	}
 }
 
+// StartCleanup starts a background goroutine that periodically removes completed
+// jobs older than 1 hour. Returns a function to stop the cleanup goroutine.
+func (m *Manager) StartCleanup(interval time.Duration) func() {
+	stop := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				m.cleanup()
+			case <-stop:
+				return
+			}
+		}
+	}()
+	return func() { close(stop) }
+}
+
+func (m *Manager) cleanup() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	cutoff := time.Now().Add(-1 * time.Hour)
+	for id, job := range m.jobs {
+		if job.Done && job.StartedAt.Before(cutoff) {
+			delete(m.jobs, id)
+		}
+	}
+	// Clean stale roomJobs entries pointing to deleted jobs
+	for roomID, jobID := range m.roomJobs {
+		if _, ok := m.jobs[jobID]; !ok {
+			delete(m.roomJobs, roomID)
+		}
+	}
+}
+
 // generateJobID creates a unique job ID.
 func generateJobID() string {
 	return time.Now().Format("20060102150405.000000000")

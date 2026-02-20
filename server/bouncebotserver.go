@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +14,15 @@ import (
 	"github.com/srsalisbury/bouncebot/server/ratelimit"
 	"github.com/srsalisbury/bouncebot/server/room"
 )
+
+var validUUID = regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+
+func validateDailyPlayerID(playerID string) error {
+	if !validUUID.MatchString(playerID) {
+		return fmt.Errorf("invalid player ID format")
+	}
+	return nil
+}
 
 func validateDailyDate(date string) error {
 	parsed, err := time.Parse("2006-01-02", date)
@@ -41,22 +51,31 @@ func validatePlayerName(name string) (string, error) {
 }
 
 type bounceBotServer struct {
-	rooms           *room.RoomService
-	getRoomLimiter  *ratelimit.Limiter
-	dailyMgr        *daily.Manager
-	dailyProgressMgr *daily.ProgressManager
+	rooms              *room.RoomService
+	getRoomLimiter     *ratelimit.Limiter
+	createRoomLimiter  *ratelimit.Limiter
+	submitDailyLimiter *ratelimit.Limiter
+	dailyMgr           *daily.Manager
+	dailyProgressMgr   *daily.ProgressManager
 }
 
-func NewBounceBotServer(rooms *room.RoomService, getRoomLimiter *ratelimit.Limiter, dailyMgr *daily.Manager, dailyProgressMgr *daily.ProgressManager) *bounceBotServer {
+func NewBounceBotServer(rooms *room.RoomService, getRoomLimiter, createRoomLimiter, submitDailyLimiter *ratelimit.Limiter, dailyMgr *daily.Manager, dailyProgressMgr *daily.ProgressManager) *bounceBotServer {
 	return &bounceBotServer{
-		rooms:           rooms,
-		getRoomLimiter:  getRoomLimiter,
-		dailyMgr:        dailyMgr,
-		dailyProgressMgr: dailyProgressMgr,
+		rooms:              rooms,
+		getRoomLimiter:     getRoomLimiter,
+		createRoomLimiter:  createRoomLimiter,
+		submitDailyLimiter: submitDailyLimiter,
+		dailyMgr:           dailyMgr,
+		dailyProgressMgr:   dailyProgressMgr,
 	}
 }
 
-func (s *bounceBotServer) CreateRoom(_ context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.CreateRoomResponse], error) {
+func (s *bounceBotServer) CreateRoom(ctx context.Context, req *connect.Request[pb.CreateRoomRequest]) (*connect.Response[pb.CreateRoomResponse], error) {
+	clientIP := ratelimit.ClientIPFromContext(ctx)
+	if clientIP != "" && s.createRoomLimiter != nil && !s.createRoomLimiter.Allow(clientIP) {
+		return nil, connect.NewError(connect.CodeResourceExhausted, nil)
+	}
+
 	playerName, err := validatePlayerName(req.Msg.PlayerName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
@@ -195,6 +214,10 @@ func (s *bounceBotServer) GetDailyChallenge(_ context.Context, req *connect.Requ
 		return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("daily challenges are not enabled"))
 	}
 
+	if err := validateDailyPlayerID(req.Msg.PlayerId); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
 	// Calculate user's local date based on timezone offset
 	now := time.Now().UTC()
 	offset := time.Duration(req.Msg.TimezoneOffsetMinutes) * time.Minute
@@ -262,9 +285,18 @@ func (s *bounceBotServer) GetDailyChallenge(_ context.Context, req *connect.Requ
 	}), nil
 }
 
-func (s *bounceBotServer) SubmitDailySolution(_ context.Context, req *connect.Request[pb.SubmitDailySolutionRequest]) (*connect.Response[pb.SubmitDailySolutionResponse], error) {
+func (s *bounceBotServer) SubmitDailySolution(ctx context.Context, req *connect.Request[pb.SubmitDailySolutionRequest]) (*connect.Response[pb.SubmitDailySolutionResponse], error) {
 	if s.dailyMgr == nil {
 		return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("daily challenges are not enabled"))
+	}
+
+	clientIP := ratelimit.ClientIPFromContext(ctx)
+	if clientIP != "" && s.submitDailyLimiter != nil && !s.submitDailyLimiter.Allow(clientIP) {
+		return nil, connect.NewError(connect.CodeResourceExhausted, nil)
+	}
+
+	if err := validateDailyPlayerID(req.Msg.PlayerId); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
 	// Validate the submitted date

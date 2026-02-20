@@ -70,9 +70,20 @@ func main() {
 	rooms.CleanupStaleRooms(cfg.RoomMaxAge)
 	stopCleanup := rooms.StartCleanup(cfg.CleanupInterval, cfg.RoomMaxAge)
 
-	// Create GetRoom rate limiter (100 requests/minute per IP)
-	getRoomLimiter := ratelimit.NewLimiter(100, time.Minute)
+	// Create rate limiters
+	getRoomLimiter := ratelimit.NewLimiter(100, time.Minute)      // 100 req/min per IP
+	createRoomLimiter := ratelimit.NewLimiter(5, time.Minute)     // 5 req/min per IP
+	submitDailyLimiter := ratelimit.NewLimiter(30, time.Minute)   // 30 req/min per IP
 	stopRateLimitCleanup := getRoomLimiter.StartCleanup(5 * time.Minute)
+	stopCreateRoomLimitCleanup := createRoomLimiter.StartCleanup(5 * time.Minute)
+	stopSubmitDailyLimitCleanup := submitDailyLimiter.StartCleanup(5 * time.Minute)
+
+	wsHub := ws.NewHub(rooms, cfg)
+	rooms.SetBroadcaster(wsHub)
+
+	// Create solver manager with completion callback and periodic cleanup
+	solverMgr := solver.NewManager(solver.DefaultRegistry)
+	stopSolverCleanup := solverMgr.StartCleanup(5 * time.Minute)
 
 	// Handle graceful shutdown
 	shutdownChan := make(chan os.Signal, 1)
@@ -83,14 +94,11 @@ func main() {
 		close(stopCleanup)
 		close(stopAutoSave) // This triggers final save
 		close(stopRateLimitCleanup)
+		close(stopCreateRoomLimitCleanup)
+		close(stopSubmitDailyLimitCleanup)
+		stopSolverCleanup()
 		os.Exit(0)
 	}()
-
-	wsHub := ws.NewHub(rooms, cfg)
-	rooms.SetBroadcaster(wsHub)
-
-	// Create solver manager with completion callback
-	solverMgr := solver.NewManager(solver.DefaultRegistry)
 
 	// Trigger all registered solvers when a game starts
 	rooms.SetOnGameStart(func(r *room.Room) {
@@ -160,7 +168,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms, getRoomLimiter, dailyMgr, dailyProgressMgr))
+	path, handler := protoconnect.NewBounceBotHandler(NewBounceBotServer(rooms, getRoomLimiter, createRoomLimiter, submitDailyLimiter, dailyMgr, dailyProgressMgr))
 	// Wrap handler with client IP middleware for rate limiting
 	mux.Handle(path, ratelimit.InjectClientIPMiddleware(handler))
 

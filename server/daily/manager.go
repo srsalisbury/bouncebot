@@ -20,18 +20,25 @@ import (
 
 // Manager handles daily puzzle generation, storage, and retrieval.
 type Manager struct {
-	dataDir  string
-	solver   *solver.Manager
-	mu       sync.RWMutex
-	cache    map[string]*DailyPuzzles // date -> puzzles
+	dataDir string
+	solver  *solver.Manager
+	mu      sync.RWMutex
+	cache   map[string]puzzleCacheEntry // date -> cached puzzles
 }
+
+type puzzleCacheEntry struct {
+	puzzles  *DailyPuzzles
+	cachedAt time.Time
+}
+
+const maxCacheDays = 7
 
 // NewManager creates a new daily puzzle manager.
 func NewManager(dataDir string, solverMgr *solver.Manager) *Manager {
 	return &Manager{
 		dataDir: dataDir,
 		solver:  solverMgr,
-		cache:   make(map[string]*DailyPuzzles),
+		cache:   make(map[string]puzzleCacheEntry),
 	}
 }
 
@@ -40,9 +47,9 @@ func NewManager(dataDir string, solverMgr *solver.Manager) *Manager {
 func (m *Manager) GetPuzzlesForDate(date string) (*DailyPuzzles, error) {
 	// Check cache first
 	m.mu.RLock()
-	if puzzles, ok := m.cache[date]; ok {
+	if entry, ok := m.cache[date]; ok {
 		m.mu.RUnlock()
-		return puzzles, nil
+		return entry.puzzles, nil
 	}
 	m.mu.RUnlock()
 
@@ -63,7 +70,11 @@ func (m *Manager) GetPuzzlesForDate(date string) (*DailyPuzzles, error) {
 
 	// Cache it
 	m.mu.Lock()
-	m.cache[date] = &puzzles
+	m.cache[date] = puzzleCacheEntry{
+		puzzles:  &puzzles,
+		cachedAt: time.Now(),
+	}
+	m.evictCacheLocked()
 	m.mu.Unlock()
 
 	return &puzzles, nil
@@ -150,6 +161,22 @@ func (m *Manager) puzzlePath(date string) string {
 	)
 }
 
+// evictCacheLocked removes puzzle cache entries older than maxCacheDays.
+// Must be called with m.mu held for writing.
+func (m *Manager) evictCacheLocked() {
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	cutoff := today.AddDate(0, 0, -maxCacheDays)
+	for dateKey := range m.cache {
+		t, err := time.Parse("2006-01-02", dateKey)
+		if err != nil {
+			continue
+		}
+		if t.Before(cutoff) {
+			delete(m.cache, dateKey)
+		}
+	}
+}
+
 // generateAndSavePuzzles generates puzzles for a date and saves them.
 func (m *Manager) generateAndSavePuzzles(date string) error {
 	puzzles := &DailyPuzzles{Date: date}
@@ -191,7 +218,11 @@ func (m *Manager) generateAndSavePuzzles(date string) error {
 
 	// Cache it
 	m.mu.Lock()
-	m.cache[date] = puzzles
+	m.cache[date] = puzzleCacheEntry{
+		puzzles:  puzzles,
+		cachedAt: time.Now(),
+	}
+	m.evictCacheLocked()
 	m.mu.Unlock()
 
 	log.Printf("Daily: saved puzzles for %s (easy=%d, medium=%d, hard=%d moves)",
