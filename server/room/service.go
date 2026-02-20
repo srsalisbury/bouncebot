@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/srsalisbury/bouncebot/model"
+	pb "github.com/srsalisbury/bouncebot/proto"
 )
 
 // ErrRoomNotFound is returned when a room doesn't exist.
@@ -76,8 +77,8 @@ func (s *RoomService) Create(playerName string, isSinglePlayer bool) (*Room, str
 }
 
 // Join adds a player to an existing room.
-// Returns the room, the new player's ID, session token, and any error.
-func (s *RoomService) Join(roomID, playerName string) (*Room, string, string, error) {
+// Returns the room proto, the new player's ID, session token, and any error.
+func (s *RoomService) Join(roomID, playerName string) (*pb.Room, string, string, error) {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
@@ -91,14 +92,15 @@ func (s *RoomService) Join(roomID, playerName string) (*Room, string, string, er
 	}
 
 	playerID, sessionToken, signals, err := s.playerMgr.AddPlayer(room, playerName)
-	unlock()
-
 	if err != nil {
+		unlock()
 		return nil, "", "", err
 	}
+	proto := room.ToProto()
+	unlock()
 
 	s.processSignals(signals)
-	return room, playerID, sessionToken, nil
+	return proto, playerID, sessionToken, nil
 }
 
 // Get retrieves a room by ID.
@@ -112,19 +114,36 @@ func (s *RoomService) Get(roomID string) (*Room, error) {
 
 // ValidateSessionToken validates a session token and returns the associated player ID.
 func (s *RoomService) ValidateSessionToken(roomID, sessionToken string) (string, error) {
-	room := s.repo.Get(roomID)
+	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
+		unlock()
 		return "", fmt.Errorf("room not found: %s", roomID)
 	}
 	player := room.FindPlayerBySessionToken(sessionToken)
 	if player == nil {
+		unlock()
 		return "", fmt.Errorf("invalid session token")
 	}
-	return player.ID, nil
+	playerID := player.ID
+	unlock()
+	return playerID, nil
+}
+
+// GetProto retrieves a room by ID and returns its protobuf representation.
+// The conversion happens while holding the room lock to prevent data races.
+func (s *RoomService) GetProto(roomID string) (*pb.Room, error) {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return nil, fmt.Errorf("room not found: %s", roomID)
+	}
+	proto := room.ToProto()
+	unlock()
+	return proto, nil
 }
 
 // StartGame starts a new game in the room.
-func (s *RoomService) StartGame(roomID string) (*Room, error) {
+func (s *RoomService) StartGame(roomID string) (*pb.Room, error) {
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
@@ -132,13 +151,14 @@ func (s *RoomService) StartGame(roomID string) (*Room, error) {
 	}
 
 	signals, err := s.gameMgr.StartGame(room)
+	if err != nil {
+		unlock()
+		return nil, err
+	}
+	proto := room.ToProto()
 	// Make a copy for callback (room might be modified after unlock)
 	roomCopy := *room
 	unlock()
-
-	if err != nil {
-		return nil, err
-	}
 
 	s.processSignals(signals)
 
@@ -147,7 +167,7 @@ func (s *RoomService) StartGame(roomID string) (*Room, error) {
 		s.onGameStart(&roomCopy)
 	}
 
-	return room, nil
+	return proto, nil
 }
 
 // SubmitSolution records a player's solution.
@@ -208,6 +228,40 @@ func (s *RoomService) ReconnectPlayer(roomID, playerID string) error {
 	return s.withRoomLock(roomID, func(room *Room) ([]Signal, error) {
 		return s.playerMgr.ReconnectPlayer(room, playerID)
 	})
+}
+
+// ValidateAndReconnect validates a session token and reconnects the player if disconnected.
+// Performs all reads and state changes under a single room lock.
+// Returns the player ID or an error.
+func (s *RoomService) ValidateAndReconnect(roomID, sessionToken string) (string, error) {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return "", ErrRoomNotFound
+	}
+
+	player := room.FindPlayerBySessionToken(sessionToken)
+	if player == nil {
+		unlock()
+		return "", fmt.Errorf("invalid session token")
+	}
+
+	playerID := player.ID
+
+	var signals []Signal
+	if player.Status == PlayerStatusDisconnected {
+		var err error
+		signals, err = s.playerMgr.ReconnectPlayer(room, playerID)
+		if err != nil {
+			unlock()
+			return "", fmt.Errorf("failed to reconnect: %w", err)
+		}
+		log.Printf("WebSocket: player %s reconnected to room %s", playerID, roomID)
+	}
+	unlock()
+
+	s.processSignals(signals)
+	return playerID, nil
 }
 
 // RemovePlayer removes a player from a room.

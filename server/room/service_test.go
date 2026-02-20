@@ -47,16 +47,16 @@ func TestService_Join(t *testing.T) {
 	svc := NewRoomService()
 
 	room, _, _ := svc.Create("Alice", false)
-	room, _, _, err := svc.Join(room.ID, "Bob")
+	proto, _, _, err := svc.Join(room.ID, "Bob")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(room.Players) != 2 {
-		t.Errorf("expected 2 players, got %d", len(room.Players))
+	if len(proto.Players) != 2 {
+		t.Errorf("expected 2 players, got %d", len(proto.Players))
 	}
-	if room.Players[1].Name != "Bob" {
-		t.Errorf("expected second player name 'Bob', got '%s'", room.Players[1].Name)
+	if proto.Players[1].Name != "Bob" {
+		t.Errorf("expected second player name 'Bob', got '%s'", proto.Players[1].Name)
 	}
 }
 
@@ -73,15 +73,15 @@ func TestService_StartGame(t *testing.T) {
 	svc := NewRoomService()
 
 	room, _, _ := svc.Create("Alice", false)
-	room, err := svc.StartGame(room.ID)
+	proto, err := svc.StartGame(room.ID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if room.CurrentGame == nil {
+	if proto.CurrentGame == nil {
 		t.Error("expected game to be set after StartGame")
 	}
-	if room.GameStartedAt == nil {
+	if proto.GameStartedAt == nil {
 		t.Error("expected GameStartedAt to be set")
 	}
 }
