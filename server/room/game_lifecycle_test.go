@@ -515,3 +515,77 @@ func TestGameLifecycle_StartNextGame_NoPendingPlayers(t *testing.T) {
 		t.Errorf("expected Alice, got %s", room.Players[0].Name)
 	}
 }
+
+func TestGameLifecycle_EndGameThenStartGame_NoDuplicateWins(t *testing.T) {
+	sm := NewSolutionManager()
+	gl := NewGameLifecycle(sm)
+
+	room := &Room{
+		ID:          "TEST",
+		Players:     []Player{{ID: "alice", Name: "Alice"}, {ID: "bob", Name: "Bob"}},
+		CurrentGame: model.Game1(),
+		Wins:        map[string]int{},
+		Solutions: []PlayerSolution{
+			{PlayerID: "alice", SolvedAt: time.Now(), Moves: make([]model.BotPosition, 8)},
+			{PlayerID: "bob", SolvedAt: time.Now(), Moves: make([]model.BotPosition, 5)},
+		},
+		GamesPlayed: 0,
+	}
+
+	// EndGame credits bob with 1 win and increments GamesPlayed
+	gl.EndGame(room)
+
+	if room.Wins["bob"] != 1 {
+		t.Fatalf("expected bob to have 1 win after EndGame, got %d", room.Wins["bob"])
+	}
+	if room.GamesPlayed != 1 {
+		t.Fatalf("expected 1 game played after EndGame, got %d", room.GamesPlayed)
+	}
+
+	// StartGame should NOT credit wins again
+	_, err := gl.StartGame(room)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if room.Wins["bob"] != 1 {
+		t.Errorf("expected bob to still have 1 win after StartGame, got %d (double-counted!)", room.Wins["bob"])
+	}
+	if room.GamesPlayed != 1 {
+		t.Errorf("expected 1 game played after StartGame, got %d (double-counted!)", room.GamesPlayed)
+	}
+}
+
+func TestGameLifecycle_EndGameThenStartNextGame_NoDuplicateWins(t *testing.T) {
+	sm := NewSolutionManager()
+	gl := NewGameLifecycle(sm)
+
+	room := &Room{
+		ID:          "TEST",
+		Players:     []Player{{ID: "alice", Name: "Alice"}, {ID: "bob", Name: "Bob"}},
+		CurrentGame: model.Game1(),
+		Wins:        map[string]int{},
+		Solutions: []PlayerSolution{
+			{PlayerID: "alice", SolvedAt: time.Now(), Moves: make([]model.BotPosition, 8)},
+			{PlayerID: "bob", SolvedAt: time.Now(), Moves: make([]model.BotPosition, 5)},
+		},
+		GamesPlayed: 0,
+	}
+
+	// EndGame credits bob with 1 win
+	gl.EndGame(room)
+
+	if room.Wins["bob"] != 1 {
+		t.Fatalf("expected bob to have 1 win after EndGame, got %d", room.Wins["bob"])
+	}
+
+	// StartNextGame should NOT credit wins again
+	gl.StartNextGame(room)
+
+	if room.Wins["bob"] != 1 {
+		t.Errorf("expected bob to still have 1 win after StartNextGame, got %d (double-counted!)", room.Wins["bob"])
+	}
+	if room.GamesPlayed != 1 {
+		t.Errorf("expected 1 game played, got %d (double-counted!)", room.GamesPlayed)
+	}
+}
