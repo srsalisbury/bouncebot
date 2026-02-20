@@ -62,6 +62,16 @@ func (r *Room) FindPlayerIndex(playerID string) int {
 	return -1
 }
 
+// FindPendingPlayerIndex returns the index of the pending player with the given ID, or -1 if not found.
+func (r *Room) FindPendingPlayerIndex(playerID string) int {
+	for i, p := range r.PendingPlayers {
+		if p.ID == playerID {
+			return i
+		}
+	}
+	return -1
+}
+
 // FindPlayerBySessionToken returns the player with the given session token, or nil if not found.
 // Searches both Players and PendingPlayers.
 func (r *Room) FindPlayerBySessionToken(token string) *Player {

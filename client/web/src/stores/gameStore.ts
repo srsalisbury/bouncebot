@@ -334,9 +334,16 @@ export const useGameStore = defineStore('game', () => {
     const solutionMoves = activeSolution.value.moves
     if (solutionMoves.length === 0) return
 
-    const lastMove = solutionMoves.pop()!
+    const lastMove = toRaw(solutionMoves.pop()!)
 
-    // Also remove from committedMoves if present
+    // Cancel pending timeout for this move so it doesn't re-add to committedMoves
+    const pendingTimeout = pendingMoveTimeouts.get(lastMove)
+    if (pendingTimeout !== undefined) {
+      clearTimeout(pendingTimeout)
+      pendingMoveTimeouts.delete(lastMove)
+    }
+
+    // Also remove from committedMoves if already committed
     const committedIndex = committedMoves.value.indexOf(lastMove)
     if (committedIndex !== -1) {
       committedMoves.value.splice(committedIndex, 1)

@@ -97,8 +97,17 @@ func (pm *playerManager) AddPlayer(room *Room, playerName string) (string, strin
 func (pm *playerManager) DisconnectPlayer(room *Room, playerID string) ([]Signal, error) {
 	idx := room.FindPlayerIndex(playerID)
 	if idx == -1 {
-		// Player might have been removed already, which is fine
-		return nil, nil
+		// Check pending players: remove immediately (they haven't participated in a game)
+		pendingIdx := room.FindPendingPlayerIndex(playerID)
+		if pendingIdx == -1 {
+			// Player might have been removed already, which is fine
+			return nil, nil
+		}
+		room.PendingPlayers = append(room.PendingPlayers[:pendingIdx], room.PendingPlayers[pendingIdx+1:]...)
+		signals := []Signal{
+			BroadcastSignal{Event: PlayerLeftEvent{RoomID: room.ID, PlayerID: playerID}},
+		}
+		return signals, nil
 	}
 
 	player := &room.Players[idx]
@@ -197,7 +206,15 @@ func (pm *playerManager) RemovePlayer(room *Room, playerID string) []Signal {
 func (pm *playerManager) ForceRemovePlayer(room *Room, playerID string) []Signal {
 	idx := room.FindPlayerIndex(playerID)
 	if idx == -1 {
-		return nil
+		// Check pending players
+		pendingIdx := room.FindPendingPlayerIndex(playerID)
+		if pendingIdx == -1 {
+			return nil
+		}
+		room.PendingPlayers = append(room.PendingPlayers[:pendingIdx], room.PendingPlayers[pendingIdx+1:]...)
+		return []Signal{
+			BroadcastSignal{Event: PlayerLeftEvent{RoomID: room.ID, PlayerID: playerID}},
+		}
 	}
 
 	// Track game state BEFORE removal

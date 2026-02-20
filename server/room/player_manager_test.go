@@ -517,3 +517,118 @@ func TestPlayerManager_AddPlayer_ActiveWhenNoGame(t *testing.T) {
 		t.Errorf("expected player ID '%s' to match returned ID '%s'", room.Players[1].ID, playerID)
 	}
 }
+
+func TestPlayerManager_DisconnectPlayer_PendingPlayerRemoved(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID:      "TEST",
+		Players: []Player{{ID: "alice", Name: "Alice", Status: PlayerStatusConnected}},
+		PendingPlayers: []Player{
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+		},
+		CurrentGame: model.Game1(),
+	}
+
+	signals, err := pm.DisconnectPlayer(room, "bob")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Pending player should be removed immediately (not marked as disconnected)
+	if len(room.PendingPlayers) != 0 {
+		t.Errorf("expected 0 pending players, got %d", len(room.PendingPlayers))
+	}
+
+	// Active players unchanged
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 active player, got %d", len(room.Players))
+	}
+
+	// Should have a PlayerLeftEvent broadcast (no timer for pending players)
+	hasBroadcast := false
+	for _, sig := range signals {
+		if broadcast, ok := sig.(BroadcastSignal); ok {
+			if event, ok := broadcast.Event.(PlayerLeftEvent); ok && event.PlayerID == "bob" {
+				hasBroadcast = true
+			}
+		}
+	}
+	if !hasBroadcast {
+		t.Error("expected PlayerLeftEvent broadcast for pending player")
+	}
+
+	// Should NOT have a StartTimerSignal (pending players are removed immediately)
+	for _, sig := range signals {
+		if _, ok := sig.(StartTimerSignal); ok {
+			t.Error("should not start disconnect timer for pending player")
+		}
+	}
+}
+
+func TestPlayerManager_ForceRemovePlayer_PendingPlayer(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID:      "TEST",
+		Players: []Player{{ID: "alice", Name: "Alice", Status: PlayerStatusConnected}},
+		PendingPlayers: []Player{
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+			{ID: "charlie", Name: "Charlie", Status: PlayerStatusConnected},
+		},
+		CurrentGame: model.Game1(),
+	}
+
+	signals := pm.ForceRemovePlayer(room, "bob")
+
+	// Pending player should be removed
+	if len(room.PendingPlayers) != 1 {
+		t.Errorf("expected 1 pending player, got %d", len(room.PendingPlayers))
+	}
+	if room.PendingPlayers[0].ID != "charlie" {
+		t.Errorf("expected charlie remaining, got %s", room.PendingPlayers[0].ID)
+	}
+
+	// Active players unchanged
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 active player, got %d", len(room.Players))
+	}
+
+	// Should have a PlayerLeftEvent broadcast
+	hasBroadcast := false
+	for _, sig := range signals {
+		if broadcast, ok := sig.(BroadcastSignal); ok {
+			if event, ok := broadcast.Event.(PlayerLeftEvent); ok && event.PlayerID == "bob" {
+				hasBroadcast = true
+			}
+		}
+	}
+	if !hasBroadcast {
+		t.Error("expected PlayerLeftEvent broadcast for pending player")
+	}
+}
+
+func TestPlayerManager_ForceRemovePlayer_NotFoundAnywhere(t *testing.T) {
+	pm := NewPlayerManager()
+
+	room := &Room{
+		ID:      "TEST",
+		Players: []Player{{ID: "alice", Name: "Alice", Status: PlayerStatusConnected}},
+		PendingPlayers: []Player{
+			{ID: "bob", Name: "Bob", Status: PlayerStatusConnected},
+		},
+	}
+
+	signals := pm.ForceRemovePlayer(room, "nonexistent")
+	if len(signals) != 0 {
+		t.Errorf("expected no signals for nonexistent player, got %d", len(signals))
+	}
+
+	// Nothing should have changed
+	if len(room.Players) != 1 {
+		t.Errorf("expected 1 active player, got %d", len(room.Players))
+	}
+	if len(room.PendingPlayers) != 1 {
+		t.Errorf("expected 1 pending player, got %d", len(room.PendingPlayers))
+	}
+}

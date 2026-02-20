@@ -44,17 +44,16 @@ func NewGameLifecycle(solutionMgr SolutionManager) GameLifecycle {
 func (gl *gameLifecycle) StartGame(room *Room) ([]Signal, error) {
 	// If there was a previous game with solutions, determine and record the winner
 	// and get the final game state from the winning solution
+	// Determine winning game state for continuation (wins are credited in EndGame only)
 	var winningGameState *model.Game
 	if room.CurrentGame != nil && len(room.Solutions) > 0 {
 		winningSolution := gl.solutionMgr.GetWinningSolution(room.Solutions)
 		if winningSolution != nil {
-			room.Wins[winningSolution.PlayerID]++
 			// Apply winning moves to get final robot positions
 			if len(winningSolution.Moves) > 0 {
 				_, winningGameState = room.CurrentGame.CheckSolution(winningSolution.Moves)
 			}
 		}
-		room.GamesPlayed++
 	}
 
 	// Generate game
