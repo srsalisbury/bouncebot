@@ -234,6 +234,93 @@ func TestReorderSolution_SingleBot(t *testing.T) {
 	}
 }
 
+func TestReorderSolution_FindsBetterThanGreedy(t *testing.T) {
+	// Construct a scenario with circular dependencies where greedy fails but DFS
+	// finds a better ordering.
+	//
+	// 8x8 board, no internal walls. 3 bots forming a blocking cycle:
+	//   Bot 0 (A) at (0,0), Bot 1 (B) at (0,4), Bot 2 (C) at (4,4)
+	//
+	// Solution moves (6 moves, each bot has 2):
+	//   A1: A moves down, blocked by B -> (0,3)
+	//   B1: B moves right, blocked by C -> (3,4)
+	//   C1: C moves up -> (4,0)
+	//   A2: A moves down (B gone) -> (0,7)
+	//   B2: B moves right (C gone) -> (7,4)
+	//   C2: C moves left (A gone) -> (0,0)
+	//
+	// Dependencies form a cycle:
+	//   A1 must precede B1 (A1 needs B at (0,4) to block)
+	//   B1 must precede C1 (B1 needs C at (4,4) to block)
+	//   A2 needs B1 done, B2 needs C1 done, C2 needs A1 done
+	//
+	// Greedy: all starting-bot candidates try to exhaust one bot first, which
+	// violates the circular deps. All candidates fail validation, so greedy
+	// returns the original 6-group interleaving.
+	//
+	// DFS finds: [A1, B1, C1, C2, A2, B2] = 5 groups (groups C1+C2 together).
+
+	board := model.NewBoard(8, nil, nil)
+	bots := map[model.BotId]model.Position{
+		0: {X: 0, Y: 0},
+		1: {X: 0, Y: 4},
+		2: {X: 4, Y: 4},
+	}
+	target := model.BotPosition{Id: 0, Pos: model.Position{X: 0, Y: 7}}
+	game, err := model.NewGame(board, bots, target)
+	if err != nil {
+		t.Fatalf("Failed to create game: %v", err)
+	}
+
+	// Original solution: maximally interleaved (A, B, C, A, B, C) = 6 groups
+	solution := []model.BotPosition{
+		{Id: 0, Pos: model.Position{X: 0, Y: 3}}, // A1: down, blocked by B
+		{Id: 1, Pos: model.Position{X: 3, Y: 4}}, // B1: right, blocked by C
+		{Id: 2, Pos: model.Position{X: 4, Y: 0}}, // C1: up to edge
+		{Id: 0, Pos: model.Position{X: 0, Y: 7}}, // A2: down, B moved
+		{Id: 1, Pos: model.Position{X: 7, Y: 4}}, // B2: right, C moved
+		{Id: 2, Pos: model.Position{X: 0, Y: 0}}, // C2: left, A moved
+	}
+
+	// Verify the original solution is valid
+	isValid, _ := game.CheckSolution(solution)
+	if !isValid {
+		t.Fatalf("Original solution should be valid")
+	}
+
+	inputGroups := countGroups(solution)
+	if inputGroups != 6 {
+		t.Fatalf("Expected 6 groups in input, got %d", inputGroups)
+	}
+
+	result := ReorderSolution(game, solution)
+
+	// DFS should find a reordering with fewer groups than the original
+	resultGroups := countGroups(result)
+	if resultGroups >= inputGroups {
+		t.Errorf("DFS should find fewer groups than input (%d), got %d. Result: %v",
+			inputGroups, resultGroups, result)
+	}
+
+	// Verify the result is a valid solution
+	isValid, _ = game.CheckSolution(result)
+	if !isValid {
+		t.Errorf("Reordered solution is invalid: %v", result)
+	}
+
+	// Verify per-bot ordering is preserved
+	origSeq := extractBotSequences(solution)
+	resultSeq := extractBotSequences(result)
+	for botId, origMoves := range origSeq {
+		if !positionsEqual(origMoves, resultSeq[botId]) {
+			t.Errorf("Bot %d ordering not preserved. Original: %v, Result: %v",
+				botId, origMoves, resultSeq[botId])
+		}
+	}
+
+	t.Logf("Input: %d groups, Result: %d groups, Ordering: %v", inputGroups, resultGroups, result)
+}
+
 func TestReorderSolution_LargeInput_CompletesQuickly(t *testing.T) {
 	// Build a large synthetic solution with 5 bots and many interleaved moves.
 	// The old exhaustive approach would take factorial time on this input;
