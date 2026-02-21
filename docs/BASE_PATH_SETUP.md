@@ -97,14 +97,17 @@ The beta overlay uses the base as a resource and applies patches to run alongsid
 
 Traefik acts as the reverse proxy. The middleware strips the subpath prefix before forwarding:
 
-```
-Browser requests /beta/favicon.svg
-  -> Traefik matches path /beta, strips /beta prefix
-  -> Forwards /favicon.svg to bouncebot-client-service-beta:80
+```mermaid
+flowchart LR
+    B[Browser]
+    T[Traefik]
+    C["Client Service\n:80"]
+    S["Server Service\n:8080"]
 
-Browser requests /beta/api/bouncebot.BounceBot/GetRoom
-  -> Traefik matches path /beta/api, strips /beta/api prefix
-  -> Forwards /bouncebot.BounceBot/GetRoom to bouncebot-server-service-beta:8080
+    B -->|"/beta/*"| T
+    B -->|"/beta/api/*"| T
+    T -->|"strip /beta"| C
+    T -->|"strip /beta/api"| S
 ```
 
 The client and server containers see root-relative paths, unaware of the `/beta` prefix.

@@ -91,9 +91,14 @@ Signal processing is **recursive**: processing an `EndGameSignal` may produce `B
 
 `server/room/game_lifecycle_manager.go` manages the game state machine:
 
-```
-No Game ──StartGame──> Playing ──EndGame──> Finished ──StartNextGame──> Playing
-                                                    └── (no ready) ──> Waiting
+```mermaid
+stateDiagram-v2
+    NoGame : No Game
+    NoGame --> Playing : StartGame
+    Playing --> Finished : EndGame
+    Finished --> Playing : StartNextGame
+    Finished --> Waiting : no ready
+    Waiting --> Playing : StartNextGame
 ```
 
 Key behaviors:

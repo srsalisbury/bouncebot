@@ -4,17 +4,15 @@ BounceBot is a web-based implementation of [Ricochet Robots](https://en.wikipedi
 
 ## High-Level Architecture
 
-```
-┌──────────────────┐          ┌──────────────────────────────────┐
-│   Vue 3 Client   │◄── WS ──►│          Go Server               │
-│  (Vite + Pinia)  │◄─ RPC ──►│  (Connect RPC + WebSocket Hub)   │
-└──────────────────┘          │                                  │
-                              │  ┌─────────┐  ┌──────────────┐  │
-                              │  │  model/  │  │   solver/    │  │
-                              │  │ (shared  │  │ (A*, BFS,    │  │
-                              │  │  physics)│  │  registry)   │  │
-                              │  └─────────┘  └──────────────┘  │
-                              └──────────────────────────────────┘
+```mermaid
+graph LR
+    Client["Vue 3 Client<br>(Vite + Pinia)"] <-->|WS| Server
+    Client <-->|RPC| Server
+
+    subgraph Server["Go Server (Connect RPC + WebSocket Hub)"]
+        Model["model/<br>(shared physics)"]
+        Solver["solver/<br>(A*, BFS, registry)"]
+    end
 ```
 
 Key packages:
