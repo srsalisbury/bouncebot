@@ -26,6 +26,26 @@ const lastRoom = computed(() => roomStore.lastRoomId)
 const isLoading = computed(() => isStartingSolo.value || isCreating.value || isJoining.value)
 const appVersion = __APP_VERSION__
 
+// Secret 5-tap logo reset for onboarding state
+const SECRET_TAP_COUNT = 5
+const SECRET_TAP_WINDOW_MS = 2000
+let logoTapCount = 0
+let logoTapTimer: ReturnType<typeof setTimeout> | null = null
+const onboardingReset = ref(false)
+
+function onLogoTap() {
+  logoTapCount++
+  if (logoTapTimer) clearTimeout(logoTapTimer)
+  if (logoTapCount >= SECRET_TAP_COUNT) {
+    logoTapCount = 0
+    localStorage.removeItem('bouncebot_onboarding_seen')
+    onboardingReset.value = true
+    setTimeout(() => { onboardingReset.value = false }, 2000)
+  } else {
+    logoTapTimer = setTimeout(() => { logoTapCount = 0 }, SECRET_TAP_WINDOW_MS)
+  }
+}
+
 // Periodically check if the last room still exists on the server
 let roomCheckTimer: ReturnType<typeof setInterval> | null = null
 
@@ -173,7 +193,7 @@ async function joinRoom() {
 
 <template>
   <div class="home">
-    <img src="/logo_color.svg" alt="BounceBot" class="logo" />
+    <img src="/logo_color.svg" alt="BounceBot" class="logo" @click="onLogoTap" />
     <img src="/name_light.svg" alt="BounceBot" class="name name-light" />
     <img src="/name_dark.svg" alt="BounceBot" class="name name-dark" />
 
@@ -264,6 +284,10 @@ async function joinRoom() {
     </div>
 
     <div class="version">{{ appVersion }}</div>
+
+    <Transition name="fade">
+      <div v-if="onboardingReset" class="reset-toast">Onboarding reset</div>
+    </Transition>
   </div>
 </template>
 
@@ -562,6 +586,29 @@ async function joinRoom() {
 
 .btn.return-btn:hover:not(:disabled) {
   background: #1976d2;
+}
+
+.reset-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #43a047;
+  color: #fff;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  z-index: 10;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .version {
