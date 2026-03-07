@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { BOARD_SIZE, WALL_COLOR, DIRECTION_ARROWS, getRobotColor, UNDO_HOLD_DURATION_MS, DOUBLE_TAP_THRESHOLD_MS } from '../constants'
 import HowToPlayModal from './HowToPlayModal.vue'
+import FirstGameOverlay from './FirstGameOverlay.vue'
 import SolutionsDrawer from './SolutionsDrawer.vue'
 import PlayerSolutionsDrawer from './PlayerSolutionsDrawer.vue'
 import GameBoardPlayerSolutions from './GameBoardPlayerSolutions.vue'
@@ -34,6 +35,24 @@ const props = defineProps<{
 const store = useGameStore()
 const showHowToPlay = ref(false)
 const boardRef = ref<HTMLElement | null>(null)
+
+// First-game onboarding
+const onboardingSeen = ref(!!localStorage.getItem('bouncebot_onboarding_seen'))
+const isFirstGame = computed(() => !onboardingSeen.value)
+const showTargetPulse = ref(!onboardingSeen.value)
+
+function dismissOnboarding() {
+  localStorage.setItem('bouncebot_onboarding_seen', '1')
+  onboardingSeen.value = true
+}
+
+// Stop target pulse once a robot is selected
+const stopPulseWatcher = watch(() => store.selectedRobotId, (id) => {
+  if (id !== null && showTargetPulse.value) {
+    showTargetPulse.value = false
+    stopPulseWatcher()
+  }
+})
 
 // Percentage-based sizing for responsive board
 const CELL_PERCENT = 100 / BOARD_SIZE  // 6.25%
@@ -400,7 +419,7 @@ function handleSwitchPlayerSolution(index: number) {
               v-for="robot in store.robots"
               :key="`robot-${robot.id}`"
               class="robot"
-              :class="{ selected: store.selectedRobotId === robot.id, replaying: isReplaying }"
+              :class="{ selected: store.selectedRobotId === robot.id, replaying: isReplaying, 'target-pulse': showTargetPulse && robot.id === store.target.robotId && store.selectedRobotId === null }"
               :style="getRobotStyle(robot)"
               @click="store.selectRobot(robot.id)"
             >
@@ -432,12 +451,22 @@ function handleSwitchPlayerSolution(index: number) {
 
         <!-- Keyboard hints under board -->
         <div class="keyboard-hints">
-          <template v-if="props.gameEnded">
-            <kbd>Shift+←→</kbd> switch solutions
-          </template>
-          <template v-else>
-            <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>?</kbd> help
-          </template>
+          <div class="desktop-hints">
+            <template v-if="props.gameEnded">
+              <kbd>Shift+←→</kbd> switch solutions
+            </template>
+            <template v-else>
+              <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>?</kbd> help
+            </template>
+          </div>
+          <div class="mobile-hints">
+            <template v-if="props.gameEnded">
+              swipe through solutions
+            </template>
+            <template v-else>
+              tap to select · swipe to move
+            </template>
+          </div>
         </div>
 
         <!-- Player solutions panel (when game ended) -->
@@ -561,6 +590,9 @@ function handleSwitchPlayerSolution(index: number) {
 
     <!-- How to Play modal -->
     <HowToPlayModal :show="showHowToPlay" @close="showHowToPlay = false" />
+
+    <!-- First game onboarding overlay -->
+    <FirstGameOverlay :show="isFirstGame" @dismiss="dismissOnboarding" />
   </div>
 </template>
 
@@ -772,6 +804,10 @@ function handleSwitchPlayerSolution(index: number) {
   display: none;
 }
 
+.mobile-hints {
+  display: none;
+}
+
 /* Vertical layout when:
    - Screen aspect ratio ≤ 6/5 (1.2) - screen is too square/tall for side-by-side layout, OR
    - Screen is narrow (≤1050px) regardless of aspect ratio
@@ -818,8 +854,12 @@ function handleSwitchPlayerSolution(index: number) {
     justify-content: center;
   }
 
-  .keyboard-hints {
+  .desktop-hints {
     display: none;
+  }
+
+  .mobile-hints {
+    display: block;
   }
 
   .desktop-actions {
@@ -1029,6 +1069,15 @@ function handleSwitchPlayerSolution(index: number) {
 
 .robot:hover {
   transform: translate(-50%, -50%) scale(1.05);
+}
+
+@keyframes target-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  50% { box-shadow: 0 0 1.5cqw 1cqw rgba(255, 255, 255, 0.6); }
+}
+
+.robot.target-pulse {
+  animation: target-pulse 1.5s ease-in-out infinite;
 }
 
 .robot.selected {
