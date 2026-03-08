@@ -113,20 +113,20 @@ const pills = computed<PillInfo[]>(() => {
   const result: PillInfo[] = []
 
   if (props.singlePlayer) {
-    for (let i = 0; i < props.playerSolutions.length; i++) {
+    for (const [i, sol] of props.playerSolutions.entries()) {
       result.push({
         index: i,
-        moves: props.playerSolutions[i].moves.length,
-        color: props.getPlayerColor(props.playerSolutions[i].playerId),
+        moves: sol.moves.length,
+        color: props.getPlayerColor(sol.playerId),
         isSolver: false,
         isWinner: false,
         group: 'player',
       })
     }
-    for (let i = 0; i < props.solverSolutions.length; i++) {
+    for (const [i, sol] of props.solverSolutions.entries()) {
       result.push({
         index: solverStartIndex.value + i,
-        moves: props.solverSolutions[i].moves.length,
+        moves: sol.moves.length,
         color: '',
         isSolver: true,
         isWinner: false,
@@ -134,20 +134,20 @@ const pills = computed<PillInfo[]>(() => {
       })
     }
   } else {
-    for (let i = 0; i < props.topThreeSolutions.length; i++) {
+    for (const [i, sol] of props.topThreeSolutions.entries()) {
       result.push({
         index: i,
-        moves: props.topThreeSolutions[i].moves.length,
-        color: props.getPlayerColor(props.topThreeSolutions[i].playerId),
+        moves: sol.moves.length,
+        color: props.getPlayerColor(sol.playerId),
         isSolver: false,
         isWinner: i === 0 && props.topThreeSolutions.length > 1,
         group: 'player',
       })
     }
-    for (let i = 0; i < props.solverSolutions.length; i++) {
+    for (const [i, sol] of props.solverSolutions.entries()) {
       result.push({
         index: solverStartIndex.value + i,
-        moves: props.solverSolutions[i].moves.length,
+        moves: sol.moves.length,
         color: '',
         isSolver: true,
         isWinner: false,
@@ -193,7 +193,7 @@ function handlePillClick(index: number) {
         <div class="solution-indicators">
           <template v-for="(pill, i) in pills" :key="pill.index">
             <span
-              v-if="i > 0 && pill.group !== pills[i - 1].group"
+              v-if="i > 0 && pill.group !== pills[i - 1]?.group"
               class="pill-divider"
             />
             <button
