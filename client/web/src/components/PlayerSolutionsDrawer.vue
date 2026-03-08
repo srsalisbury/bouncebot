@@ -202,7 +202,7 @@ function handlePillClick(index: number) {
                 active: pill.index === activeIndex,
                 winner: pill.isWinner,
               }"
-              :style="pill.index !== activeIndex ? (pill.isSolver ? { backgroundColor: '#555' } : { backgroundColor: pill.color }) : {}"
+              :style="{ backgroundColor: pill.isSolver ? '#555' : pill.color }"
               @click.stop="handlePillClick(pill.index)"
             >
               <template v-if="pill.isSolver">
@@ -524,15 +524,13 @@ function handlePillClick(index: number) {
   box-sizing: border-box;
 }
 
-.solution-pill.active {
-  background: var(--color-accent);
-  color: #fff;
-  border-color: transparent;
-}
-
-.solution-pill:not(.active) {
+.solution-pill {
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.solution-pill.active {
+  box-shadow: 0 0 0 2.5px #fff;
 }
 
 .solution-pill.winner:not(.active) {
