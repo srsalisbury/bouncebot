@@ -366,7 +366,7 @@ function handleSwitchPlayerSolution(index: number) {
     <!-- Game content wrapper -->
     <div class="game-content">
       <!-- Header slot for room controls -->
-      <slot name="header"></slot>
+      <slot name="header" :toggle-help="() => { showHowToPlay = !showHowToPlay }"></slot>
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
         <h1 v-if="props.gameNumber != null" class="title">
@@ -496,6 +496,22 @@ function handleSwitchPlayerSolution(index: number) {
               :class="{ active: index === store.activeSolutionIndex }"
               @click="store.switchSolution(index)"
             >
+              <!-- Replay button on active solution -->
+              <button
+                v-if="index === store.activeSolutionIndex && solution.moves.length > 0"
+                class="col-replay-btn"
+                @click.stop="store.replaySolution()"
+              >
+                <span class="col-play-icon">&#x25b6;</span>
+              </button>
+              <!-- Delete button on active solution -->
+              <button
+                v-if="index === store.activeSolutionIndex && store.solutions.length > 1"
+                class="col-delete-btn"
+                @click.stop="doDelete()"
+              >
+                &#x00d7;
+              </button>
               <div class="solution-header">
                 <span class="solution-moves">{{ solution.moves.length }}</span>
                 <span class="solved-check" :class="{ visible: solution.isSolved }">✓</span>
@@ -741,6 +757,8 @@ function handleSwitchPlayerSolution(index: number) {
   flex-direction: row;
   gap: 0.5rem;
   align-items: flex-start;
+  padding: 10px;
+  padding-bottom: 0;
 }
 
 /* Action buttons */
@@ -888,6 +906,7 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .solution-column {
+  position: relative;
   width: 5rem;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -909,6 +928,55 @@ function handleSwitchPlayerSolution(index: number) {
 .solution-column.active {
   background: #dddddd;
   box-shadow: 0 0 0 2px #43a047;
+}
+
+.col-replay-btn,
+.col-delete-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  width: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #dddddd;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.col-replay-btn {
+  top: -8px;
+  left: -8px;
+  background: #43a047;
+  color: #333;
+}
+
+.col-replay-btn:hover {
+  background: #388e3c;
+}
+
+.col-play-icon {
+  font-size: 10px;
+}
+
+.col-delete-btn {
+  top: -8px;
+  right: -8px;
+  background: #e53935;
+  color: white;
+}
+
+.col-delete-btn:hover {
+  background: #c62828;
 }
 
 .solution-header {
@@ -1201,6 +1269,11 @@ function handleSwitchPlayerSolution(index: number) {
 
   .solution-column.active {
     background: #3a3a3a;
+  }
+
+  .col-replay-btn,
+  .col-delete-btn {
+    border-color: #3a3a3a;
   }
 
   .solution-header {

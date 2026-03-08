@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import '../diagram-styles.css'
+
 defineProps<{
   show: boolean
 }>()
@@ -227,29 +229,6 @@ p {
   line-height: 1.5;
 }
 
-/* Diagram styling */
-.diagram {
-  width: 100%;
-  max-width: 220px;
-  height: auto;
-  display: block;
-  margin: 0.5rem auto;
-  border-radius: 4px;
-  overflow: hidden;
-  font-family: system-ui, sans-serif;
-}
-
-/* Diagram theme colors (dark default) */
-.d-bg { fill: #2a2a2a; }
-.d-bg-fill { fill: #2a2a2a; }
-.d-grid { stroke: #444; stroke-width: 0.5; }
-.d-wall { stroke: #ccc; }
-.d-arrow { stroke: rgba(255, 255, 255, 0.8); }
-.d-arrow-fill { fill: rgba(255, 255, 255, 0.8); }
-.d-tnum { fill: white; }
-.d-badge { fill: rgba(255, 255, 255, 0.12); stroke: rgba(255, 255, 255, 0.4); stroke-width: 0.75; }
-.d-badge-text { fill: rgba(255, 255, 255, 0.9); }
-
 .got-it-btn {
   display: block;
   width: 100%;
@@ -281,15 +260,5 @@ p {
   p {
     color: #555;
   }
-
-  .d-bg { fill: #dddddd; }
-  .d-bg-fill { fill: #dddddd; }
-  .d-grid { stroke: #aaaaaa; }
-  .d-wall { stroke: #2a2a2a; }
-  .d-arrow { stroke: rgba(0, 0, 0, 0.5); }
-  .d-arrow-fill { fill: rgba(0, 0, 0, 0.5); }
-  .d-tnum { fill: #333; }
-  .d-badge { fill: rgba(0, 0, 0, 0.06); stroke: rgba(0, 0, 0, 0.25); }
-  .d-badge-text { fill: rgba(0, 0, 0, 0.7); }
 }
 </style>

@@ -99,45 +99,83 @@ function toggleExpanded() {
   isExpanded.value = !isExpanded.value
 }
 
-// Current active solution for collapsed header
-// New order: [top 3, solver, current player (if not in top 3)]
-function getActiveSolution(): PlayerSolution | undefined {
-  if (props.singlePlayer) {
-    const solverOffset = props.activeIndex - props.playerSolutions.length
-    if (solverOffset >= 0 && solverOffset < props.solverSolutions.length) {
-      return props.solverSolutions[solverOffset]
-    }
-    return props.playerSolutions[props.activeIndex]
-  }
-
-  // Multiplayer mode - new order: [top 3, solver, current player]
-
-  // Top solutions
-  if (props.activeIndex < props.topThreeSolutions.length) {
-    return props.topThreeSolutions[props.activeIndex]
-  }
-
-  // Solver solutions
-  const solverOffset = props.activeIndex - solverStartIndex.value
-  if (solverOffset >= 0 && solverOffset < props.solverSolutions.length) {
-    return props.solverSolutions[solverOffset]
-  }
-
-  // Current player's solution (at the end, if not in top 3)
-  if (showCurrentPlayerSolution.value && props.activeIndex === currentPlayerStartIndex.value) {
-    return props.currentPlayerSolution!
-  }
-
-  return undefined
+// Pill descriptors for collapsed header
+interface PillInfo {
+  index: number
+  moves: number
+  color: string
+  isSolver: boolean
+  isWinner: boolean
+  group: 'player' | 'solver' | 'current'
 }
 
-// Check if current active solution is a solver
-function isActiveSolver() {
+const pills = computed<PillInfo[]>(() => {
+  const result: PillInfo[] = []
+
   if (props.singlePlayer) {
-    return props.activeIndex >= props.playerSolutions.length && props.solverSolutions.length > 0
+    for (let i = 0; i < props.playerSolutions.length; i++) {
+      result.push({
+        index: i,
+        moves: props.playerSolutions[i].moves.length,
+        color: props.getPlayerColor(props.playerSolutions[i].playerId),
+        isSolver: false,
+        isWinner: false,
+        group: 'player',
+      })
+    }
+    for (let i = 0; i < props.solverSolutions.length; i++) {
+      result.push({
+        index: solverStartIndex.value + i,
+        moves: props.solverSolutions[i].moves.length,
+        color: '',
+        isSolver: true,
+        isWinner: false,
+        group: 'solver',
+      })
+    }
+  } else {
+    for (let i = 0; i < props.topThreeSolutions.length; i++) {
+      result.push({
+        index: i,
+        moves: props.topThreeSolutions[i].moves.length,
+        color: props.getPlayerColor(props.topThreeSolutions[i].playerId),
+        isSolver: false,
+        isWinner: i === 0 && props.topThreeSolutions.length > 1,
+        group: 'player',
+      })
+    }
+    for (let i = 0; i < props.solverSolutions.length; i++) {
+      result.push({
+        index: solverStartIndex.value + i,
+        moves: props.solverSolutions[i].moves.length,
+        color: '',
+        isSolver: true,
+        isWinner: false,
+        group: 'solver',
+      })
+    }
+    if (showCurrentPlayerSolution.value) {
+      result.push({
+        index: currentPlayerStartIndex.value,
+        moves: props.currentPlayerSolution!.moves.length,
+        color: props.getPlayerColor(props.currentPlayerSolution!.playerId),
+        isSolver: false,
+        isWinner: false,
+        group: 'current',
+      })
+    }
   }
-  const solverOffset = props.activeIndex - solverStartIndex.value
-  return solverOffset >= 0 && solverOffset < props.solverSolutions.length
+
+  return result
+})
+
+// Handle pill click: tap active pill to expand, tap another to switch
+function handlePillClick(index: number) {
+  if (index === props.activeIndex) {
+    toggleExpanded()
+  } else {
+    emit('switchSolution', index)
+  }
 }
 
 </script>
@@ -151,24 +189,29 @@ function isActiveSolver() {
     <!-- Collapsed header bar -->
     <div class="drawer-header" @click="toggleExpanded">
       <div class="drawer-handle" />
-      <div class="header-content">
-        <div class="winner-info">
-          <template v-if="isActiveSolver()">
-            <img src="/favicon_light.svg" alt="" class="solver-icon solver-icon-light" />
-            <img src="/favicon_dark.svg" alt="" class="solver-icon solver-icon-dark" />
-          </template>
-          <template v-else>
+      <div v-if="!isExpanded" class="header-content">
+        <div class="solution-indicators">
+          <template v-for="(pill, i) in pills" :key="pill.index">
             <span
-              class="player-dot"
-              :style="{ backgroundColor: getPlayerColor(getActiveSolution()?.playerId ?? '') }"
+              v-if="i > 0 && pill.group !== pills[i - 1].group"
+              class="pill-divider"
             />
+            <button
+              class="solution-pill"
+              :class="{
+                active: pill.index === activeIndex,
+                winner: pill.isWinner,
+              }"
+              :style="pill.index !== activeIndex ? (pill.isSolver ? { backgroundColor: '#555' } : { backgroundColor: pill.color }) : {}"
+              @click.stop="handlePillClick(pill.index)"
+            >
+              <template v-if="pill.isSolver">
+                <img src="/favicon_light.svg" alt="" class="pill-solver-icon pill-solver-icon-light" />
+                <img src="/favicon_dark.svg" alt="" class="pill-solver-icon pill-solver-icon-dark" />
+              </template>
+              {{ pill.moves }}
+            </button>
           </template>
-          <span class="player-name">{{ getPlayerName(getActiveSolution()?.playerId ?? '') }}</span>
-          <span class="move-count">
-            {{ getActiveSolution()?.moves.length ?? 0 }}
-            {{ getActiveSolution()?.moves.length === 1 ? 'move' : 'moves' }}
-          </span>
-          <span v-if="!singlePlayer && topThreeSolutions.length > 1 && activeIndex === 0" class="winner-badge">Winner</span>
         </div>
       </div>
     </div>
@@ -411,8 +454,9 @@ function isActiveSolver() {
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   z-index: 100;
   transition: max-height 0.3s ease;
-  max-height: 60px;
+  max-height: calc(60px + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .player-solutions-drawer.expanded {
@@ -428,6 +472,11 @@ function isActiveSolver() {
   cursor: pointer;
   user-select: none;
   min-height: 44px;
+}
+
+.player-solutions-drawer.expanded .drawer-header {
+  padding: 0.4rem 1rem;
+  min-height: 0;
 }
 
 .drawer-handle {
@@ -447,65 +496,93 @@ function isActiveSolver() {
   justify-content: center;
 }
 
-.winner-info {
+.solution-indicators {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.solution-pill {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 54px;
+  height: 32px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  background: var(--color-bg-surface);
+  color: #888;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
-.winner-info .player-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+.solution-pill.active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.solution-pill:not(.active) {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.solution-pill.winner:not(.active) {
+  border-color: var(--color-winner);
+}
+
+.pill-divider {
+  width: 1px;
+  height: 20px;
+  background: #555;
   flex-shrink: 0;
 }
 
-.winner-info .solver-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
+.pill-solver-icon {
+  width: 14px;
+  height: 14px;
 }
 
-.winner-info .solver-icon-light {
-  display: block;
-}
-
-.winner-info .solver-icon-dark {
+.pill-solver-icon-light {
   display: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  .winner-info .solver-icon-light {
+.pill-solver-icon-dark {
+  display: block;
+}
+
+.solution-pill.active .pill-solver-icon-light {
+  display: block;
+}
+
+.solution-pill.active .pill-solver-icon-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: light) {
+  .pill-solver-icon-light {
+    display: block;
+  }
+
+  .pill-solver-icon-dark {
     display: none;
   }
 
-  .winner-info .solver-icon-dark {
+  .solution-pill.active .pill-solver-icon-light {
     display: block;
   }
-}
 
-.winner-info .player-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #fff;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.winner-info .move-count {
-  font-size: 0.9rem;
-  color: #888;
-}
-
-.winner-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #000;
-  background: var(--color-winner);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
+  .solution-pill.active .pill-solver-icon-dark {
+    display: none;
+  }
 }
 
 .drawer-content {
@@ -532,7 +609,7 @@ function isActiveSolver() {
 
 .solution-column {
   position: relative;
-  min-width: 70px;
+  min-width: 78px;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;

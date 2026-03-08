@@ -283,7 +283,7 @@ function handleDeleteSolution(index: number) {
 
 .solution-column {
   position: relative;
-  min-width: 54px;
+  min-width: 62px;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
