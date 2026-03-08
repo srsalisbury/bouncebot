@@ -199,14 +199,21 @@ function getPlayerName(playerId: string): string {
   return player?.name ?? 'Unknown'
 }
 
-const currentPlayerColor = computed(() => {
+const currentPlayerColor = computed(() => getCurrentPlayerActualColor())
+
+function getCurrentPlayerActualColor(): string {
   if (!roomStore.currentPlayerId) return '#43a047'
-  return getPlayerColorById(roomStore.currentPlayerId)
-})
+  const player = room.value?.players.find(p => p.id === roomStore.currentPlayerId)
+    ?? room.value?.pendingPlayers.find(p => p.id === roomStore.currentPlayerId)
+  return player ? getPlayerColor(player.colorIndex) : '#43a047'
+}
 
 function getPlayerColorById(playerId: string): string {
   if (playerId.startsWith(SOLVER_PLAYER_ID)) {
     return '#888888' // Gray for solver
+  }
+  if (playerId === SOLO_PLAYER_ID) {
+    return getCurrentPlayerActualColor()
   }
   // Find player in either players or pendingPlayers
   const player = room.value?.players.find(p => p.id === playerId)
