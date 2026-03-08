@@ -30,6 +30,7 @@ const props = defineProps<{
   singlePlayer?: boolean
   getBestSubmittedIndex?: () => number | null
   onSolutionDeleted?: (index: number) => void
+  playerColor?: string
 }>()
 
 const store = useGameStore()
@@ -487,7 +488,7 @@ function handleSwitchPlayerSolution(index: number) {
         />
 
         <!-- Normal solutions panel (during game) -->
-        <div v-else-if="!props.gameEnded" class="solutions-panel">
+        <div v-else-if="!props.gameEnded" class="solutions-panel" :style="props.playerColor ? { '--player-color': props.playerColor } as any : undefined">
           <div class="solutions-columns">
             <div
               v-for="(solution, index) in store.solutions"
@@ -580,6 +581,7 @@ function handleSwitchPlayerSolution(index: number) {
     <SolutionsDrawer
       v-if="!props.gameEnded"
       class="mobile-drawer"
+      :player-color="props.playerColor"
       :get-best-submitted-index="props.getBestSubmittedIndex"
       :on-solution-deleted="props.onSolutionDeleted"
     />
@@ -927,7 +929,7 @@ function handleSwitchPlayerSolution(index: number) {
 
 .solution-column.active {
   background: #dddddd;
-  box-shadow: 0 0 0 2px #43a047;
+  box-shadow: 0 0 0 2px var(--player-color, #43a047);
 }
 
 .col-replay-btn,
@@ -956,12 +958,12 @@ function handleSwitchPlayerSolution(index: number) {
 .col-replay-btn {
   top: -8px;
   left: -8px;
-  background: #43a047;
+  background: var(--player-color, #43a047);
   color: #333;
 }
 
 .col-replay-btn:hover {
-  background: #388e3c;
+  filter: brightness(0.85);
 }
 
 .col-play-icon {
@@ -998,7 +1000,7 @@ function handleSwitchPlayerSolution(index: number) {
 .solved-check {
   position: absolute;
   right: 0;
-  color: #43a047;
+  color: var(--player-color, #43a047);
   opacity: 0;
 }
 
@@ -1025,7 +1027,7 @@ function handleSwitchPlayerSolution(index: number) {
 }
 
 .move-item.animating {
-  background: #43a047;
+  background: var(--player-color, #43a047);
 }
 
 .move-robot {
