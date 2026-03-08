@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import HelpContent from './HelpContent.vue'
+
 defineProps<{
   show: boolean
 }>()
@@ -18,49 +20,9 @@ function handleBackdropClick(event: MouseEvent) {
   <Teleport to="body">
     <div v-if="show" class="modal-backdrop" @click="handleBackdropClick">
       <div class="modal">
-        <button class="close-btn" @click="emit('close')">×</button>
+        <button class="close-btn" @click="emit('close')">&#x00d7;</button>
         <h2>How to Play</h2>
-
-        <div class="section">
-          <h3>Goal</h3>
-          <p>The colored circles represent robots that can move around on the board. Your goal is to move the target robot to the target cell. The target cell is shown as a colored square with a number matching the target robot you need to move there.</p>
-        </div>
-
-        <div class="section">
-          <h3>Robot Movement</h3>
-          <p>Robots slide in a straight line until they hit a wall, the edge of the board, or another robot. They cannot stop in the middle of the board.</p>
-        </div>
-
-        <div class="section">
-          <h3>Controls</h3>
-          <ul>
-            <li><kbd>1</kbd>-<kbd>4</kbd> — Select robot by number</li>
-            <li><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — Move selected robot</li>
-            <li><kbd>z</kbd> / <kbd>u</kbd> / <kbd>Esc</kbd> — Undo last move</li>
-            <li><kbd>n</kbd> / <kbd>+</kbd> — Start a new solution attempt</li>
-            <li><kbd>Shift+←</kbd> / <kbd>Shift+→</kbd> — Switch between solutions</li>
-            <li><kbd>Shift+D</kbd> — Delete current solution</li>
-            <li><kbd>p</kbd> — Replay current solution</li>
-            <li><kbd>?</kbd> — Toggle this help</li>
-          </ul>
-          <p>You can also click on a robot to select it.</p>
-        </div>
-
-        <div class="section">
-          <h3>After Game Ends</h3>
-          <ul>
-            <li><kbd>Shift+←</kbd> / <kbd>Shift+→</kbd> — Switch between player solutions</li>
-            <li><kbd>p</kbd> — Replay current solution</li>
-          </ul>
-        </div>
-
-        <div class="section">
-          <h3>Tips</h3>
-          <ul>
-            <li>Use other robots as blockers to stop the target robot where you need it.</li>
-            <li>The colored dots show where robots started and where they've been.</li>
-          </ul>
-        </div>
+        <HelpContent />
       </div>
     </div>
   </Teleport>
@@ -75,7 +37,7 @@ function handleBackdropClick(event: MouseEvent) {
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 100;
 }
@@ -84,8 +46,11 @@ function handleBackdropClick(event: MouseEvent) {
   background: #1a1a1a;
   border-radius: 12px;
   padding: 1.5rem 2rem;
-  max-width: 450px;
-  max-height: 80vh;
+  max-width: 500px;
+  width: 90%;
+  margin-top: 5vh;
+  max-height: calc(100vh - 5vh - 5vh);
+  box-sizing: border-box;
   overflow-y: auto;
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
@@ -120,44 +85,6 @@ h2 {
   font-size: 1.5rem;
 }
 
-.section {
-  margin-bottom: 1.25rem;
-}
-
-.section:last-child {
-  margin-bottom: 0;
-}
-
-h3 {
-  margin: 0 0 0.5rem 0;
-  color: #eee;
-  font-size: 1rem;
-}
-
-p {
-  margin: 0;
-  color: #bbb;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  color: #bbb;
-  font-size: 0.9rem;
-  line-height: 1.7;
-}
-
-kbd {
-  background: #333;
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: inherit;
-  font-size: 0.8rem;
-}
-
 @media (prefers-color-scheme: light) {
   .modal {
     background: #fff;
@@ -171,19 +98,6 @@ kbd {
   .close-btn:hover {
     color: #333;
     background: rgba(0, 0, 0, 0.1);
-  }
-
-  h3 {
-    color: #333;
-  }
-
-  p, ul {
-    color: #555;
-  }
-
-  kbd {
-    background: #e0e0e0;
-    color: #333;
   }
 }
 </style>

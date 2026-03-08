@@ -114,9 +114,9 @@ function updateSetting(key: 'showSolverMoveCount' | 'showSolverSolutions', value
               :checked="showSolverMoveCount"
               @change="updateSetting('showSolverMoveCount', ($event.target as HTMLInputElement).checked)"
             />
-            <span class="toggle-text">Show solver move count during game</span>
+            <span class="toggle-text">Show BBot's move count during game</span>
           </label>
-          <p class="setting-description">Display the bot's solution move count in the header while playing.</p>
+          <p class="setting-description">Display BBot's optimal move count in the header while playing.</p>
         </div>
 
         <div class="setting-item">
@@ -126,9 +126,9 @@ function updateSetting(key: 'showSolverMoveCount' | 'showSolverSolutions', value
               :checked="showSolverSolutions"
               @change="updateSetting('showSolverSolutions', ($event.target as HTMLInputElement).checked)"
             />
-            <span class="toggle-text">Show solver solutions after game</span>
+            <span class="toggle-text">Show BBot's solution after game</span>
           </label>
-          <p class="setting-description">Include the bot's solution in the end-game solution viewer.</p>
+          <p class="setting-description">Include BBot's solution in the post-game review.</p>
         </div>
 
         <!-- Boot Player button -->

@@ -575,7 +575,7 @@ onUnmounted(() => {
         :get-best-submitted-index="gameActions.getBestSubmittedIndex"
         :on-solution-deleted="gameActions.notifySolutionDeleted"
       >
-        <template #header>
+        <template #header="{ toggleHelp }">
           <div class="game-header">
             <!-- Single-player mode: simplified header -->
             <template v-if="isSinglePlayer">
@@ -606,6 +606,7 @@ onUnmounted(() => {
               <button class="btn-icon settings-btn-header" @click="onGearClick" @pointerdown="onGearPointerDown" @pointerup="onGearPointerUp" @pointerleave="onGearPointerUp" @contextmenu.prevent title="Settings">
                 <img src="/gear.svg" alt="Settings" class="gear-icon" />
               </button>
+              <button class="help-btn-header" @click="toggleHelp" title="How to Play">?</button>
               <button
                 class="btn primary next-puzzle-btn"
                 :disabled="isStarting"
@@ -621,6 +622,7 @@ onUnmounted(() => {
                 <img src="/favicon_dark.svg" alt="" class="solver-icon" />
                 <span class="solver-moves">{{ minSolverMoves }}</span>
               </div>
+              <button class="btn-icon help-btn-header" @click="toggleHelp" title="How to Play">?</button>
               <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="onGearClick" @pointerdown="onGearPointerDown" @pointerup="onGearPointerUp" @pointerleave="onGearPointerUp" @contextmenu.prevent title="Room Settings">
                 <img src="/gear.svg" alt="Settings" class="gear-icon" />
               </button>
@@ -647,6 +649,7 @@ onUnmounted(() => {
                 :games-played="room.gamesPlayed"
                 @close="toggleLeaderboard"
               />
+              <button class="btn-icon help-btn-header" @click="toggleHelp" title="How to Play">?</button>
               <button v-if="isRoomCreator" class="btn-icon settings-btn-header" @click="onGearClick" @pointerdown="onGearPointerDown" @pointerup="onGearPointerUp" @pointerleave="onGearPointerUp" @contextmenu.prevent title="Room Settings">
                 <img src="/gear.svg" alt="Settings" class="gear-icon" />
               </button>
@@ -1226,6 +1229,29 @@ onUnmounted(() => {
 
 .btn-icon:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.help-btn-header {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #888;
+  background: transparent;
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 0.25rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.help-btn-header:hover {
+  color: #fff;
+  border-color: #fff;
 }
 
 .settings-btn-header .gear-icon {

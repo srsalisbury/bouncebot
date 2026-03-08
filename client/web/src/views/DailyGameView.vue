@@ -114,7 +114,7 @@ onMounted(async () => {
         :get-best-submitted-index="() => null"
         :on-solution-deleted="() => {}"
       >
-        <template #header>
+        <template #header="{ toggleHelp }">
           <div class="game-header">
             <button class="back-btn" @click="goBack">&larr;</button>
             <span class="difficulty-badge" :style="{ backgroundColor: difficultyColor }">
@@ -125,6 +125,7 @@ onMounted(async () => {
             <span v-if="isSolved && puzzle.optimalMoves" class="optimal-label">
               Optimal: {{ puzzle.optimalMoves }}
             </span>
+            <button class="help-btn-header" @click="toggleHelp" title="How to Play">?</button>
             <button
               v-if="gameStore.isSolved && !hasSubmitted"
               class="btn primary submit-btn"
@@ -233,6 +234,44 @@ onMounted(async () => {
 
 .back-btn:hover {
   background: #444;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.help-btn-header {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #888;
+  background: transparent;
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 0.25rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.help-btn-header:hover {
+  color: #fff;
+  border-color: #fff;
 }
 
 .difficulty-badge {
