@@ -199,6 +199,11 @@ function getPlayerName(playerId: string): string {
   return player?.name ?? 'Unknown'
 }
 
+const currentPlayerColor = computed(() => {
+  if (!roomStore.currentPlayerId) return '#43a047'
+  return getPlayerColorById(roomStore.currentPlayerId)
+})
+
 function getPlayerColorById(playerId: string): string {
   if (playerId.startsWith(SOLVER_PLAYER_ID)) {
     return '#888888' // Gray for solver
@@ -574,6 +579,7 @@ onUnmounted(() => {
         :single-player="isSinglePlayer"
         :get-best-submitted-index="gameActions.getBestSubmittedIndex"
         :on-solution-deleted="gameActions.notifySolutionDeleted"
+        :player-color="currentPlayerColor"
       >
         <template #header="{ toggleHelp }">
           <div class="game-header">

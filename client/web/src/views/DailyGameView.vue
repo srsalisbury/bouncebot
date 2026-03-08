@@ -113,6 +113,7 @@ onMounted(async () => {
         :single-player="true"
         :get-best-submitted-index="() => null"
         :on-solution-deleted="() => {}"
+        :player-color="'#43a047'"
       >
         <template #header="{ toggleHelp }">
           <div class="game-header">

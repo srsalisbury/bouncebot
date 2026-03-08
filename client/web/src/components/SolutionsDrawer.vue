@@ -5,6 +5,7 @@ import { DIRECTION_ARROWS, getRobotColor, MOBILE_ASPECT_RATIO, MOBILE_WIDTH_BREA
 import { useSwipe } from '../composables/useSwipe'
 
 const props = defineProps<{
+  playerColor?: string
   getBestSubmittedIndex?: () => number | null
   onSolutionDeleted?: (index: number) => void
 }>()
@@ -90,6 +91,7 @@ function handleDeleteSolution(index: number) {
     ref="drawerRef"
     class="solutions-drawer"
     :class="{ expanded: isExpanded }"
+    :style="props.playerColor ? { '--player-color': props.playerColor } as any : undefined"
   >
     <!-- Collapsed header bar -->
     <div class="drawer-header" @click="toggleExpanded">
@@ -251,15 +253,16 @@ function handleDeleteSolution(index: number) {
 }
 
 .solution-pill.active {
-  background: var(--color-accent);
+  background: var(--player-color, var(--color-accent));
   color: #fff;
   border-color: transparent;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 .solution-pill.solved:not(.active) {
   background: transparent;
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--player-color, var(--color-accent));
+  color: var(--player-color, var(--color-accent));
 }
 
 .pill-check {
@@ -337,7 +340,7 @@ function handleDeleteSolution(index: number) {
   max-width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--player-color, var(--color-accent));
   color: #333;
   border: 2px solid var(--color-bg-dark);
   font-size: 10px;
@@ -353,7 +356,7 @@ function handleDeleteSolution(index: number) {
 }
 
 .replay-btn:hover {
-  background: var(--color-accent-hover);
+  filter: brightness(0.85);
 }
 
 .play-icon {
@@ -394,7 +397,7 @@ function handleDeleteSolution(index: number) {
 
 .solution-column.active {
   background: var(--color-bg-panel);
-  box-shadow: 0 0 0 2px var(--color-accent);
+  box-shadow: 0 0 0 2px var(--player-color, var(--color-accent));
 }
 
 .solution-header {
@@ -416,7 +419,7 @@ function handleDeleteSolution(index: number) {
 .solved-check {
   position: absolute;
   right: 0;
-  color: var(--color-accent);
+  color: var(--player-color, var(--color-accent));
   opacity: 0;
 }
 
@@ -442,7 +445,7 @@ function handleDeleteSolution(index: number) {
 }
 
 .move-item.animating {
-  background: var(--color-accent);
+  background: var(--player-color, var(--color-accent));
 }
 
 .move-robot {
