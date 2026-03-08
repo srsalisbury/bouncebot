@@ -24,9 +24,9 @@ if [ "${BASE_PATH:-/}" != "/" ]; then
   # index.html: href="/..." and src="/..."
   sed -i "s|href=\"/|href=\"${BASE_PATH}|g; s|src=\"/|src=\"${BASE_PATH}|g" $HTML_DIR/index.html
 
-  # JS bundle: "/filename.svg" references
+  # JS bundle: "/filename.svg" and "/help/" references
   for f in $HTML_DIR/assets/*.js; do
-    sed -i "s|\"/favicon_|\"${BASE_PATH}favicon_|g; s|\"/gear\.|\"${BASE_PATH}gear.|g; s|\"/timer\.|\"${BASE_PATH}timer.|g; s|\"/logo_|\"${BASE_PATH}logo_|g; s|\"/name_|\"${BASE_PATH}name_|g" "$f"
+    sed -i "s|\"/favicon_|\"${BASE_PATH}favicon_|g; s|\"/gear\.|\"${BASE_PATH}gear.|g; s|\"/timer\.|\"${BASE_PATH}timer.|g; s|\"/logo_|\"${BASE_PATH}logo_|g; s|\"/name_|\"${BASE_PATH}name_|g; s|\"/help/|\"${BASE_PATH}help/|g" "$f"
   done
 
   # CSS bundle: url(/fonts/...) and url(/pattern_...)
