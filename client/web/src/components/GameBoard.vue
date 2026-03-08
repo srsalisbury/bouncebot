@@ -1073,11 +1073,11 @@ function handleSwitchPlayerSolution(index: number) {
 
 @keyframes target-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-  50% { box-shadow: 0 0 1.5cqw 1cqw rgba(255, 255, 255, 0.6); }
+  50% { box-shadow: 0 0 12px 8px rgba(255, 255, 255, 0.8); }
 }
 
 .robot.target-pulse {
-  animation: target-pulse 1.5s ease-in-out infinite;
+  animation: target-pulse 1.2s ease-in-out infinite;
 }
 
 .robot.selected {
