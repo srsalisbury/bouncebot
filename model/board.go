@@ -59,7 +59,11 @@ func NewBoardFromProto(bp *pb.Board) Board {
 	for i, hp := range bp.HWalls {
 		hWalls[i] = NewPositionFromProto(hp)
 	}
-	return NewBoard(BoardDim(bp.Size), vWalls, hWalls)
+	possibleTargets := make([]Position, len(bp.PossibleTargets))
+	for i, tp := range bp.PossibleTargets {
+		possibleTargets[i] = NewPositionFromProto(tp)
+	}
+	return NewBoardWithTargets(BoardDim(bp.Size), vWalls, hWalls, possibleTargets)
 }
 
 func NewBoard(size BoardDim, vWalls, hWalls []Position) Board {
@@ -100,10 +104,15 @@ func (b *board) ToProto() *pb.Board {
 	for i, hp := range b.HWalls() {
 		hWalls[i] = hp.ToProto()
 	}
+	possibleTargets := make([]*pb.Position, len(b.possibleTargetPos))
+	for i, tp := range b.possibleTargetPos {
+		possibleTargets[i] = tp.ToProto()
+	}
 	return &pb.Board{
-		Size:   int32(b.Size()),
-		VWalls: vWalls,
-		HWalls: hWalls,
+		Size:            int32(b.Size()),
+		VWalls:          vWalls,
+		HWalls:          hWalls,
+		PossibleTargets: possibleTargets,
 	}
 }
 

@@ -96,7 +96,10 @@ func NewContinuationGame(prev *Game) *Game {
 	// Avoid placing target where a robot already is
 	possibleTargets := prev.Board.PossibleTargets()
 	if len(possibleTargets) == 0 {
-		panic("board has no possible targets")
+		// Boards missing this metadata (e.g. persisted before possible targets
+		// were saved) can't pick a new target for continuation. Fall back to a
+		// fresh random game rather than crashing.
+		return NewRandomGame()
 	}
 
 	// Filter out positions occupied by robots

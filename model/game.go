@@ -153,6 +153,9 @@ func (g *Game) Equals(o *Game) bool {
 	if !positionsEqualUnordered(g.Board.HWalls(), o.Board.HWalls()) {
 		return false
 	}
+	if !positionsEqualUnordered(g.Board.PossibleTargets(), o.Board.PossibleTargets()) {
+		return false
+	}
 	if !maps.Equal(g.Bots, o.Bots) {
 		return false
 	}

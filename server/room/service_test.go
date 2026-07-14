@@ -2,6 +2,7 @@ package room
 
 import (
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -84,6 +85,80 @@ func TestService_StartGame(t *testing.T) {
 	if proto.GameStartedAt == nil {
 		t.Error("expected GameStartedAt to be set")
 	}
+}
+
+func TestService_StartGame_ThreadsMinSolutionLengthToSolveFunc(t *testing.T) {
+	svc := NewRoomService()
+
+	var solveCalls int
+	var mu sync.Mutex
+	svc.SetBoardSolveFunc(func(*model.Game) ([]model.BotPosition, bool) {
+		mu.Lock()
+		solveCalls++
+		mu.Unlock()
+		return make([]model.BotPosition, 8), true
+	})
+
+	room, _, aliceToken := svc.Create("Alice", false)
+	if err := svc.UpdateRoomSettings(room.ID, aliceToken, RoomSettings{MinSolutionLength: 8}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	proto, err := svc.StartGame(room.ID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if proto.CurrentGame == nil {
+		t.Error("expected game to be set after StartGame")
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	if solveCalls == 0 {
+		t.Error("expected the configured BoardSolveFunc to be invoked when MinSolutionLength > 1")
+	}
+}
+
+func TestService_StartGame_DoesNotHoldLockDuringSearch(t *testing.T) {
+	svc := NewRoomService()
+
+	unblock := make(chan struct{})
+	svc.SetBoardSolveFunc(func(*model.Game) ([]model.BotPosition, bool) {
+		<-unblock // block until the test says to proceed
+		return make([]model.BotPosition, 1), true
+	})
+
+	room, _, aliceToken := svc.Create("Alice", false)
+	if err := svc.UpdateRoomSettings(room.ID, aliceToken, RoomSettings{MinSolutionLength: 8}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		svc.StartGame(room.ID)
+		close(done)
+	}()
+
+	// Give StartGame a moment to enter the (blocked) search.
+	time.Sleep(20 * time.Millisecond)
+
+	// If the room lock were still held during the search, this would block
+	// until StartGame finishes. It must return promptly instead.
+	readDone := make(chan struct{})
+	go func() {
+		svc.GetProto(room.ID)
+		close(readDone)
+	}()
+
+	select {
+	case <-readDone:
+		// good: read completed without waiting on the search
+	case <-time.After(2 * time.Second):
+		t.Fatal("GetProto blocked, implying the room lock is held during board search")
+	}
+
+	close(unblock)
+	<-done
 }
 
 func TestService_SubmitSolution_ValidSolution(t *testing.T) {

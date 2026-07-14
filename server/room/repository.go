@@ -104,6 +104,7 @@ func (r *roomRepository) Create(playerName string, isSinglePlayer bool) (*Room, 
 		LastActivityAt: now,
 		Wins:           make(map[string]int),
 		IsSinglePlayer: isSinglePlayer,
+		Settings:       RoomSettings{MinSolutionLength: MinMinSolutionLength},
 	}
 
 	r.rooms[roomID] = room

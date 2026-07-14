@@ -10,6 +10,10 @@ const STORAGE_KEY_PUZZLES_SOLVED = 'bouncebot_puzzles_solved'
 const STORAGE_KEY_PUZZLES_ATTEMPTED = 'bouncebot_puzzles_attempted'
 const STORAGE_KEY_SHOW_SOLVER_MOVE_COUNT = 'bouncebot_show_solver_move_count'
 const STORAGE_KEY_SHOW_SOLVER_SOLUTIONS = 'bouncebot_show_solver_solutions'
+const STORAGE_KEY_MIN_SOLUTION_LENGTH = 'bouncebot_min_solution_length'
+
+// Must match server/room.MinMinSolutionLength (the no-op default).
+const DEFAULT_MIN_SOLUTION_LENGTH = 1
 
 export const useRoomStore = defineStore('room', () => {
   // Load from localStorage on init
@@ -22,6 +26,7 @@ export const useRoomStore = defineStore('room', () => {
   const storedPuzzlesAttempted = localStorage.getItem(STORAGE_KEY_PUZZLES_ATTEMPTED)
   const storedShowSolverMoveCount = localStorage.getItem(STORAGE_KEY_SHOW_SOLVER_MOVE_COUNT)
   const storedShowSolverSolutions = localStorage.getItem(STORAGE_KEY_SHOW_SOLVER_SOLUTIONS)
+  const storedMinSolutionLength = localStorage.getItem(STORAGE_KEY_MIN_SOLUTION_LENGTH)
 
   const currentPlayerName = ref<string | null>(storedName)
   const currentPlayerId = ref<string | null>(storedId)
@@ -32,6 +37,9 @@ export const useRoomStore = defineStore('room', () => {
   const puzzlesAttempted = ref(storedPuzzlesAttempted ? parseInt(storedPuzzlesAttempted, 10) : 0)
   const showSolverMoveCount = ref(storedShowSolverMoveCount === 'true')
   const showSolverSolutions = ref(storedShowSolverSolutions === 'true')
+  const minSolutionLength = ref(
+    storedMinSolutionLength ? parseInt(storedMinSolutionLength, 10) : DEFAULT_MIN_SOLUTION_LENGTH
+  )
 
   // Persist to localStorage when changed
   watch(currentPlayerName, (name) => {
@@ -90,6 +98,10 @@ export const useRoomStore = defineStore('room', () => {
     localStorage.setItem(STORAGE_KEY_SHOW_SOLVER_SOLUTIONS, value.toString())
   })
 
+  watch(minSolutionLength, (value) => {
+    localStorage.setItem(STORAGE_KEY_MIN_SOLUTION_LENGTH, value.toString())
+  })
+
   function setCurrentPlayer(id: string, name: string, sessionToken: string) {
     currentPlayerId.value = id
     currentPlayerName.value = name
@@ -121,9 +133,14 @@ export const useRoomStore = defineStore('room', () => {
     puzzlesAttempted.value++
   }
 
-  function setSettings(settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean }) {
+  function setSettings(settings: {
+    showSolverMoveCount: boolean
+    showSolverSolutions: boolean
+    minSolutionLength: number
+  }) {
     showSolverMoveCount.value = settings.showSolverMoveCount
     showSolverSolutions.value = settings.showSolverSolutions
+    minSolutionLength.value = settings.minSolutionLength
   }
 
   function clearLastRoom() {
@@ -148,6 +165,7 @@ export const useRoomStore = defineStore('room', () => {
     puzzlesAttempted,
     showSolverMoveCount,
     showSolverSolutions,
+    minSolutionLength,
     setCurrentPlayer,
     setCurrentPlayerId,
     setLastRoom,

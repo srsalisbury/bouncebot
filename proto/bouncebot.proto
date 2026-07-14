@@ -47,6 +47,11 @@ message Board {
 
   // Locations of the horizontal walls (edges of board contain implicit walls).
   repeated Position h_walls = 3;
+
+  // Cells where a target can be placed. Persisted so that continuation games
+  // (started after a server restart reloads this board from disk) can still
+  // pick a new target; absent on older persisted data.
+  repeated Position possible_targets = 4;
 }
 
 message BotPos {
@@ -84,6 +89,11 @@ message PlayerScore {
 message RoomSettings {
   bool show_solver_move_count = 1;  // Show solver move count in header during game
   bool show_solver_solutions = 2;   // Show solver solutions in end game screen
+  // Minimum accepted optimal-solution length, in moves (inclusive). New boards
+  // whose best solution is shorter than this are rejected and regenerated.
+  // Range 1-10, default 1 (1 is a no-op floor since every board is solvable
+  // in at least 1 move by construction). Server clamps out-of-range values.
+  int32 min_solution_length = 3;
 }
 
 // Game room for multiplayer

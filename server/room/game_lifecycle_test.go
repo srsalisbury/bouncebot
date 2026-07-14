@@ -19,10 +19,7 @@ func TestGameLifecycle_StartGame(t *testing.T) {
 		Wins:           map[string]int{},
 	}
 
-	signals, err := gl.StartGame(room)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	signals := startGame(gl, room)
 
 	if room.CurrentGame == nil {
 		t.Error("expected game to be set after StartGame")
@@ -59,7 +56,7 @@ func TestGameLifecycle_StartGame_ClearsGameState(t *testing.T) {
 		ReadyForNext:    []string{"alice"},
 	}
 
-	gl.StartGame(room)
+	startGame(gl, room)
 
 	if len(room.Solutions) != 0 {
 		t.Error("expected Solutions to be cleared")
@@ -85,13 +82,13 @@ func TestGameLifecycle_StartGame_Multiple(t *testing.T) {
 	}
 
 	// First game
-	gl.StartGame(room)
+	startGame(gl, room)
 	firstGameStartedAt := room.GameStartedAt
 
 	time.Sleep(10 * time.Millisecond)
 
 	// Second game
-	gl.StartGame(room)
+	startGame(gl, room)
 
 	if room.GameStartedAt == firstGameStartedAt {
 		t.Error("expected GameStartedAt to be updated for new game")
@@ -413,7 +410,7 @@ func TestGameLifecycle_StartNextGame(t *testing.T) {
 		ReadyForNext:    []string{"alice"},
 	}
 
-	signals := gl.StartNextGame(room)
+	signals := startNextGame(gl, room)
 
 	// Check new game started
 	if room.CurrentGame == nil {
@@ -448,6 +445,128 @@ func TestGameLifecycle_StartNextGame(t *testing.T) {
 	}
 }
 
+func TestGameLifecycle_StartNextGame_NoWinner_ContinuesFromSolverSolution(t *testing.T) {
+	sm := NewSolutionManager()
+	gl := NewGameLifecycle(sm)
+
+	room := &Room{
+		ID:          "TEST",
+		Players:     []Player{{ID: "alice", Name: "Alice"}},
+		CurrentGame: model.Game1(),
+		Solutions:   nil, // nobody solved
+		SolverResults: map[string]*SolverResult{
+			"A-Star": {
+				SolverName: "A-Star",
+				Completed:  true,
+				Moves:      movePayloadsFromBotPositions(model.Game1OptimalSolution()),
+			},
+		},
+	}
+
+	startNextGame(gl, room)
+
+	// Bot 0 (the target bot) and bot 1 (moved as a blocker) should start the
+	// next round where the solver's solution left them, not at Game1's
+	// original starting positions.
+	if got, want := room.CurrentGame.Bots[0], (model.Position{X: 4, Y: 13}); got != want {
+		t.Errorf("bot 0 position = %v, want %v (solver's final position)", got, want)
+	}
+	if got, want := room.CurrentGame.Bots[1], (model.Position{X: 0, Y: 12}); got != want {
+		t.Errorf("bot 1 position = %v, want %v (solver's final position)", got, want)
+	}
+	// Bots the solution never touched should be unchanged.
+	if got, want := room.CurrentGame.Bots[2], (model.Position{X: 3, Y: 9}); got != want {
+		t.Errorf("bot 2 position = %v, want %v (untouched by solution)", got, want)
+	}
+	if got, want := room.CurrentGame.Bots[3], (model.Position{X: 12, Y: 4}); got != want {
+		t.Errorf("bot 3 position = %v, want %v (untouched by solution)", got, want)
+	}
+}
+
+func TestGameLifecycle_StartNextGame_NoWinner_NoSolverResult_KeepsStartingPositions(t *testing.T) {
+	sm := NewSolutionManager()
+	gl := NewGameLifecycle(sm)
+
+	room := &Room{
+		ID:            "TEST",
+		Players:       []Player{{ID: "alice", Name: "Alice"}},
+		CurrentGame:   model.Game1(),
+		Solutions:     nil, // nobody solved
+		SolverResults: nil, // and the solver hasn't finished (or isn't registered)
+	}
+
+	startNextGame(gl, room)
+
+	// Falls back to today's behavior: robots stay exactly where Game1 started them.
+	original := model.Game1()
+	for id, pos := range original.Bots {
+		if got := room.CurrentGame.Bots[id]; got != pos {
+			t.Errorf("bot %d position = %v, want %v (unchanged, no solver result available)", id, got, pos)
+		}
+	}
+}
+
+func TestGameLifecycle_StartNextGame_PlayerWinTakesPriorityOverSolver(t *testing.T) {
+	sm := NewSolutionManager()
+	gl := NewGameLifecycle(sm)
+
+	room := &Room{
+		ID:          "TEST",
+		Players:     []Player{{ID: "alice", Name: "Alice"}},
+		CurrentGame: model.Game1(),
+		Solutions:   []PlayerSolution{{PlayerID: "alice", Moves: model.Game1OptimalSolution()}},
+		// Deliberately bogus - not a valid move for this board. If the code
+		// incorrectly consulted the solver path after a player already won,
+		// CheckSolution would fail on this and wipe out the correct
+		// (player-derived) winningGameState, changing the assertions below.
+		SolverResults: map[string]*SolverResult{
+			"A-Star": {
+				SolverName: "A-Star",
+				Completed:  true,
+				Moves:      []MovePayload{{RobotId: 2, X: 15, Y: 15}},
+			},
+		},
+	}
+
+	startNextGame(gl, room)
+
+	// Should reflect the player's winning end state - bot 0 at target, bot 1
+	// at its blocker spot - not be wiped out by the bogus solver data.
+	if got, want := room.CurrentGame.Bots[0], (model.Position{X: 4, Y: 13}); got != want {
+		t.Errorf("bot 0 position = %v, want %v", got, want)
+	}
+	if got, want := room.CurrentGame.Bots[1], (model.Position{X: 0, Y: 12}); got != want {
+		t.Errorf("bot 1 position = %v, want %v", got, want)
+	}
+}
+
+func TestBestSolverResult(t *testing.T) {
+	results := map[string]*SolverResult{
+		"BFS":      {SolverName: "BFS", Completed: true, Moves: make([]MovePayload, 12)},
+		"A-Star":   {SolverName: "A-Star", Completed: true, Moves: make([]MovePayload, 8)},
+		"Timedout": {SolverName: "Timedout", Completed: false, Moves: make([]MovePayload, 3)},
+		"Empty":    {SolverName: "Empty", Completed: true, Moves: nil},
+	}
+
+	best := bestSolverResult(results)
+	if best == nil {
+		t.Fatal("expected a best result")
+	}
+	if best.SolverName != "A-Star" {
+		t.Errorf("expected shortest completed result (A-Star, 8 moves), got %s (%d moves)", best.SolverName, len(best.Moves))
+	}
+}
+
+func TestBestSolverResult_NoneCompleted(t *testing.T) {
+	results := map[string]*SolverResult{
+		"A-Star": {SolverName: "A-Star", Completed: false, Moves: make([]MovePayload, 8)},
+	}
+
+	if best := bestSolverResult(results); best != nil {
+		t.Errorf("expected nil when nothing completed, got %v", best)
+	}
+}
+
 func TestGameLifecycle_StartNextGame_MovesPendingPlayers(t *testing.T) {
 	sm := NewSolutionManager()
 	gl := NewGameLifecycle(sm)
@@ -465,7 +584,7 @@ func TestGameLifecycle_StartNextGame_MovesPendingPlayers(t *testing.T) {
 		Wins:        make(map[string]int),
 	}
 
-	gl.StartNextGame(room)
+	startNextGame(gl, room)
 
 	// Check pending players were moved to active
 	if len(room.Players) != 3 {
@@ -505,7 +624,7 @@ func TestGameLifecycle_StartNextGame_NoPendingPlayers(t *testing.T) {
 		Wins:           make(map[string]int),
 	}
 
-	gl.StartNextGame(room)
+	startNextGame(gl, room)
 
 	// Check players unchanged
 	if len(room.Players) != 1 {
@@ -543,10 +662,7 @@ func TestGameLifecycle_EndGameThenStartGame_NoDuplicateWins(t *testing.T) {
 	}
 
 	// StartGame should NOT credit wins again
-	_, err := gl.StartGame(room)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	startGame(gl, room)
 
 	if room.Wins["bob"] != 1 {
 		t.Errorf("expected bob to still have 1 win after StartGame, got %d (double-counted!)", room.Wins["bob"])
@@ -580,7 +696,7 @@ func TestGameLifecycle_EndGameThenStartNextGame_NoDuplicateWins(t *testing.T) {
 	}
 
 	// StartNextGame should NOT credit wins again
-	gl.StartNextGame(room)
+	startNextGame(gl, room)
 
 	if room.Wins["bob"] != 1 {
 		t.Errorf("expected bob to still have 1 win after StartNextGame, got %d (double-counted!)", room.Wins["bob"])

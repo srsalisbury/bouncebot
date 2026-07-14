@@ -107,13 +107,14 @@ async function startSoloGame() {
     roomStore.setSinglePlayer(true)
 
     // Apply saved settings if any
-    if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions) {
+    if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions || roomStore.minSolutionLength > 1) {
       await bounceBotClient.updateRoomSettings({
         roomId: response.room!.id,
         sessionToken: response.sessionToken,
         settings: {
           showSolverMoveCount: roomStore.showSolverMoveCount,
           showSolverSolutions: roomStore.showSolverSolutions,
+          minSolutionLength: roomStore.minSolutionLength,
         },
       })
     }
@@ -147,13 +148,14 @@ async function createRoom() {
     roomStore.setSinglePlayer(false)
 
     // Apply saved settings if any
-    if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions) {
+    if (roomStore.showSolverMoveCount || roomStore.showSolverSolutions || roomStore.minSolutionLength > 1) {
       await bounceBotClient.updateRoomSettings({
         roomId: response.room!.id,
         sessionToken: response.sessionToken,
         settings: {
           showSolverMoveCount: roomStore.showSolverMoveCount,
           showSolverSolutions: roomStore.showSolverSolutions,
+          minSolutionLength: roomStore.minSolutionLength,
         },
       })
     }

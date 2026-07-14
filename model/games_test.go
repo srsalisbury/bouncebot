@@ -114,6 +114,51 @@ func TestNewContinuationGame_NilPrev(t *testing.T) {
 	}
 }
 
+func TestNewContinuationGame_NoPossibleTargets(t *testing.T) {
+	// Simulates a board that lost its possible-targets metadata (e.g. data
+	// persisted before that field existed). Continuation must fall back to a
+	// fresh random game instead of panicking.
+	board := NewBoardWithTargets(16, nil, nil, nil)
+	bots := map[BotId]Position{0: {X: 0, Y: 0}, 1: {X: 1, Y: 0}, 2: {X: 2, Y: 0}, 3: {X: 3, Y: 0}}
+	prev := &Game{Board: board, Bots: bots, Target: BotPosition{Id: 0, Pos: Position{X: 5, Y: 5}}}
+
+	game := NewContinuationGame(prev)
+
+	if game == nil {
+		t.Fatal("expected non-nil game")
+	}
+	if len(game.Board.PossibleTargets()) == 0 {
+		t.Error("expected fallback random game to have possible targets")
+	}
+}
+
+func TestNewContinuationGame_AfterJSONRoundTrip(t *testing.T) {
+	// Regression test: a game that has been persisted to JSON and reloaded
+	// (as happens on every server restart) must still work as the basis for a
+	// continuation round, not panic.
+	original := NewRandomGame()
+
+	data, err := original.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+	var restored Game
+	if err := restored.UnmarshalJSON(data); err != nil {
+		t.Fatalf("UnmarshalJSON failed: %v", err)
+	}
+
+	continuation := NewContinuationGame(&restored)
+
+	if continuation == nil {
+		t.Fatal("expected non-nil continuation game")
+	}
+	for botId := BotId(0); botId < 4; botId++ {
+		if continuation.Bots[botId] != original.Bots[botId] {
+			t.Errorf("bot %d position changed across restart: %v -> %v", botId, original.Bots[botId], continuation.Bots[botId])
+		}
+	}
+}
+
 func TestBuildBoardFromPanels(t *testing.T) {
 	tests := []struct {
 		name     string
