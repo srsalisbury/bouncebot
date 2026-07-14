@@ -40,20 +40,11 @@ const boardRef = ref<HTMLElement | null>(null)
 // First-game onboarding
 const onboardingSeen = ref(!!localStorage.getItem('bouncebot_onboarding_seen'))
 const isFirstGame = computed(() => !onboardingSeen.value)
-const showTargetPulse = ref(!onboardingSeen.value)
 
 function dismissOnboarding() {
   localStorage.setItem('bouncebot_onboarding_seen', '1')
   onboardingSeen.value = true
 }
-
-// Stop target pulse once a robot is selected
-const stopPulseWatcher = watch(() => store.selectedRobotId, (id) => {
-  if (id !== null && showTargetPulse.value) {
-    showTargetPulse.value = false
-    stopPulseWatcher()
-  }
-})
 
 // Percentage-based sizing for responsive board
 const CELL_PERCENT = 100 / BOARD_SIZE  // 6.25%
@@ -420,7 +411,7 @@ function handleSwitchPlayerSolution(index: number) {
               v-for="robot in store.robots"
               :key="`robot-${robot.id}`"
               class="robot"
-              :class="{ selected: store.selectedRobotId === robot.id, replaying: isReplaying, 'target-pulse': showTargetPulse && robot.id === store.target.robotId && store.selectedRobotId === null }"
+              :class="{ selected: store.selectedRobotId === robot.id, replaying: isReplaying }"
               :style="getRobotStyle(robot)"
               @click="store.selectRobot(robot.id)"
             >
@@ -1139,15 +1130,6 @@ function handleSwitchPlayerSolution(index: number) {
 
 .robot:hover {
   transform: translate(-50%, -50%) scale(1.05);
-}
-
-@keyframes target-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-  50% { box-shadow: 0 0 12px 8px rgba(255, 255, 255, 0.8); }
-}
-
-.robot.target-pulse {
-  animation: target-pulse 1.2s ease-in-out infinite;
 }
 
 .robot.selected {

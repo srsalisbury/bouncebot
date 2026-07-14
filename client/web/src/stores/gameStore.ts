@@ -612,7 +612,7 @@ export const useGameStore = defineStore('game', () => {
       committedMoves.value = []
     }
 
-    selectedRobotId.value = null
+    selectedRobotId.value = target.value.robotId
   }
 
   // Reset board to initial robot positions (for replay)
