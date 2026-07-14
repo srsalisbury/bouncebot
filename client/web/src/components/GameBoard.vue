@@ -1119,7 +1119,7 @@ function handleSwitchPlayerSolution(index: number) {
   user-select: none;
   cursor: pointer;
   transition: left 0.15s ease-out, top 0.15s ease-out, transform 0.1s, box-shadow 0.1s;
-  z-index: 2;
+  z-index: 11;
   border: 1px solid black;
   text-shadow: -0.5px -0.5px 0 black, 0.5px -0.5px 0 black, -0.5px 0.5px 0 black, 0.5px 0.5px 0 black;
 }
