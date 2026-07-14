@@ -9,10 +9,21 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// MinMinSolutionLength and MaxMinSolutionLength bound RoomSettings.MinSolutionLength.
+const (
+	MinMinSolutionLength = 1
+	MaxMinSolutionLength = 10
+)
+
 // RoomSettings contains configurable settings for a room.
 type RoomSettings struct {
 	ShowSolverMoveCount bool // Show solver move count in header during game
 	ShowSolverSolutions bool // Show solver solutions in end game screen
+	// MinSolutionLength is the minimum accepted optimal-solution length, in moves
+	// (inclusive). Range [MinMinSolutionLength, MaxMinSolutionLength]; values
+	// outside that range (including the proto zero-value) are treated as
+	// MinMinSolutionLength.
+	MinSolutionLength int
 }
 
 // SolverResult represents the result from the automated solver.
@@ -168,6 +179,7 @@ func (r *Room) ToProto() *pb.Room {
 		Settings: &pb.RoomSettings{
 			ShowSolverMoveCount: r.Settings.ShowSolverMoveCount,
 			ShowSolverSolutions: r.Settings.ShowSolverSolutions,
+			MinSolutionLength:   int32(r.Settings.MinSolutionLength),
 		},
 	}
 

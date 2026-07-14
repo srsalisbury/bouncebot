@@ -9,9 +9,26 @@ import (
 
 // GameLifecycle manages game state transitions.
 type GameLifecycle interface {
-	// StartGame starts a new game in the room.
-	// Returns signals or error.
-	StartGame(room *Room) ([]Signal, error)
+	// NewGameSource inspects room.CurrentGame/Solutions/Settings (the winning
+	// solution/continuation logic shared by starting the first game and every
+	// continuation round) and returns a function that produces a new candidate
+	// *model.Game on each call, plus the room's configured minimum solution
+	// length. Read-only — does not mutate room. Must be called with the room
+	// lock held, but the returned candidateFn is safe to call repeatedly
+	// WITHOUT the lock: model.NewContinuationGame/NewRandomGame never mutate
+	// their inputs.
+	NewGameSource(room *Room) (candidateFn func() *model.Game, minLength int)
+
+	// CommitNewGame finalizes game as the room's new current game: sets
+	// CurrentGame, GameStartedAt, LastActivityAt, and clears round-scoped state
+	// via ClearGameState. Returns broadcast signals. Must be called with the
+	// room lock held.
+	CommitNewGame(room *Room, game *model.Game) []Signal
+
+	// PromotePendingPlayers moves room.PendingPlayers into room.Players. Called
+	// as part of starting the next game in a room. Must be called with the room
+	// lock held.
+	PromotePendingPlayers(room *Room)
 
 	// MarkFinishedSolving marks a player as finished solving.
 	// Returns signals or error.
@@ -24,10 +41,6 @@ type GameLifecycle interface {
 	// EndGame ends the current game and determines the winner.
 	// Returns signals.
 	EndGame(room *Room) []Signal
-
-	// StartNextGame starts the next game (continuation from current).
-	// Returns signals.
-	StartNextGame(room *Room) []Signal
 }
 
 // gameLifecycle is the concrete implementation of GameLifecycle.
@@ -41,9 +54,9 @@ func NewGameLifecycle(solutionMgr SolutionManager) GameLifecycle {
 	return &gameLifecycle{solutionMgr: solutionMgr}
 }
 
-func (gl *gameLifecycle) StartGame(room *Room) ([]Signal, error) {
-	// If there was a previous game with solutions, determine and record the winner
-	// and get the final game state from the winning solution
+func (gl *gameLifecycle) NewGameSource(room *Room) (func() *model.Game, int) {
+	// If there was a previous game with solutions, the winning solution's final
+	// robot positions are what the next board should continue from.
 	// Determine winning game state for continuation (wins are credited in EndGame only)
 	var winningGameState *model.Game
 	if room.CurrentGame != nil && len(room.Solutions) > 0 {
@@ -56,18 +69,64 @@ func (gl *gameLifecycle) StartGame(room *Room) ([]Signal, error) {
 		}
 	}
 
-	// Generate game
-	var game *model.Game
-	if winningGameState != nil {
-		// Continue from winning game state: same board, robots at final positions
-		game = model.NewContinuationGame(winningGameState)
-	} else if room.CurrentGame != nil {
-		// No winning solution with moves, continue from existing game
-		game = model.NewContinuationGame(room.CurrentGame)
-	} else {
-		// First game: fully random
-		game = model.NewRandomGame()
+	// No player won: fall back to the solver's (BBot's) solution end state, if
+	// one has finished in time. Otherwise (rare - the solver hasn't completed
+	// yet), leave the robots where they started, same as before this fallback
+	// existed.
+	if winningGameState == nil && room.CurrentGame != nil {
+		if solverResult := bestSolverResult(room.SolverResults); solverResult != nil {
+			moves := movePayloadsToBotPositions(solverResult.Moves)
+			_, winningGameState = room.CurrentGame.CheckSolution(moves)
+		}
 	}
+
+	var candidateFn func() *model.Game
+	switch {
+	case winningGameState != nil:
+		// Continue from winning game state: same board, robots at final positions
+		candidateFn = func() *model.Game { return model.NewContinuationGame(winningGameState) }
+	case room.CurrentGame != nil:
+		// No winning solution with moves, continue from existing game
+		candidateFn = func() *model.Game { return model.NewContinuationGame(room.CurrentGame) }
+	default:
+		// First game: fully random
+		candidateFn = model.NewRandomGame
+	}
+
+	return candidateFn, room.Settings.MinSolutionLength
+}
+
+// bestSolverResult returns the shortest completed solver solution in results,
+// or nil if none has finished successfully yet. Ties break on solver name for
+// determinism.
+func bestSolverResult(results map[string]*SolverResult) *SolverResult {
+	var best *SolverResult
+	for _, r := range results {
+		if !r.Completed || len(r.Moves) == 0 {
+			continue
+		}
+		if best == nil || len(r.Moves) < len(best.Moves) ||
+			(len(r.Moves) == len(best.Moves) && r.SolverName < best.SolverName) {
+			best = r
+		}
+	}
+	return best
+}
+
+// movePayloadsToBotPositions converts WebSocket-broadcast move payloads back
+// into the model.BotPosition form Game.CheckSolution expects.
+func movePayloadsToBotPositions(moves []MovePayload) []model.BotPosition {
+	result := make([]model.BotPosition, len(moves))
+	for i, m := range moves {
+		result[i] = model.BotPosition{
+			Id:  model.BotId(m.RobotId),
+			Pos: model.Position{X: model.BoardDim(m.X), Y: model.BoardDim(m.Y)},
+		}
+	}
+	return result
+}
+
+func (gl *gameLifecycle) CommitNewGame(room *Room, game *model.Game) []Signal {
 	now := time.Now()
 
 	room.CurrentGame = game
@@ -75,11 +134,16 @@ func (gl *gameLifecycle) StartGame(room *Room) ([]Signal, error) {
 	room.LastActivityAt = now
 	room.ClearGameState()
 
-	signals := []Signal{
+	return []Signal{
 		BroadcastSignal{Event: GameStartedEvent{RoomID: room.ID}},
 	}
+}
 
-	return signals, nil
+func (gl *gameLifecycle) PromotePendingPlayers(room *Room) {
+	if len(room.PendingPlayers) > 0 {
+		room.Players = append(room.Players, room.PendingPlayers...)
+		room.PendingPlayers = nil
+	}
 }
 
 func (gl *gameLifecycle) MarkFinishedSolving(room *Room, playerID string) ([]Signal, error) {
@@ -178,47 +242,6 @@ func (gl *gameLifecycle) EndGame(room *Room) []Signal {
 			WinnerName: winnerName,
 			Moves:      moves,
 		}},
-	}
-
-	return signals
-}
-
-func (gl *gameLifecycle) StartNextGame(room *Room) []Signal {
-	// Move pending players to active players before starting new game
-	if len(room.PendingPlayers) > 0 {
-		room.Players = append(room.Players, room.PendingPlayers...)
-		room.PendingPlayers = nil
-	}
-
-	// Get winning game state for continuation (wins already credited in EndGame)
-	var winningGameState *model.Game
-	if room.CurrentGame != nil && len(room.Solutions) > 0 {
-		winningSolution := gl.solutionMgr.GetWinningSolution(room.Solutions)
-		if winningSolution != nil {
-			// Apply winning moves to get final robot positions
-			if len(winningSolution.Moves) > 0 {
-				_, winningGameState = room.CurrentGame.CheckSolution(winningSolution.Moves)
-			}
-		}
-	}
-
-	// Generate next game
-	var game *model.Game
-	if winningGameState != nil {
-		game = model.NewContinuationGame(winningGameState)
-	} else if room.CurrentGame != nil {
-		game = model.NewContinuationGame(room.CurrentGame)
-	} else {
-		game = model.NewRandomGame()
-	}
-	now := time.Now()
-
-	room.CurrentGame = game
-	room.GameStartedAt = &now
-	room.ClearGameState()
-
-	signals := []Signal{
-		BroadcastSignal{Event: GameStartedEvent{RoomID: room.ID}},
 	}
 
 	return signals

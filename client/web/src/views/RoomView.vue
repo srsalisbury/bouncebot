@@ -282,7 +282,11 @@ async function copyShareUrl() {
   }
 }
 
-async function updateSettings(settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean }) {
+async function updateSettings(settings: {
+  showSolverMoveCount: boolean
+  showSolverSolutions: boolean
+  minSolutionLength: number
+}) {
   if (!roomStore.currentPlayerId) return
 
   // Persist settings locally for future sessions
@@ -367,6 +371,7 @@ function onGearPointerDown() {
     updateSettings({
       showSolverMoveCount: !current,
       showSolverSolutions: room.value?.settings?.showSolverSolutions ?? true,
+      minSolutionLength: room.value?.settings?.minSolutionLength ?? 1,
     })
   }, 500)
 }
@@ -395,6 +400,7 @@ function onSolverPointerDown() {
     updateSettings({
       showSolverMoveCount: false,
       showSolverSolutions: room.value?.settings?.showSolverSolutions ?? true,
+      minSolutionLength: room.value?.settings?.minSolutionLength ?? 1,
     })
   }, 500)
 }

@@ -3,6 +3,9 @@ import { ref, watch, computed } from 'vue'
 import type { RoomSettings, Player } from '../gen/bouncebot_pb'
 import { getPlayerColor } from '../constants'
 
+const MIN_SOLUTION_LENGTH_FLOOR = 1
+const MIN_SOLUTION_LENGTH_CEILING = 10
+
 const props = defineProps<{
   show: boolean
   settings: RoomSettings | undefined
@@ -12,13 +15,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  update: [settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean }]
+  update: [settings: { showSolverMoveCount: boolean; showSolverSolutions: boolean; minSolutionLength: number }]
   bootPlayer: [playerId: string]
 }>()
 
 // Local state for the toggles
 const showSolverMoveCount = ref(false)
 const showSolverSolutions = ref(false)
+const minSolutionLength = ref(MIN_SOLUTION_LENGTH_FLOOR)
 
 // Boot player state
 const showPlayerList = ref(false)
@@ -78,6 +82,7 @@ watch(() => props.settings, (newSettings) => {
   if (newSettings) {
     showSolverMoveCount.value = newSettings.showSolverMoveCount
     showSolverSolutions.value = newSettings.showSolverSolutions
+    minSolutionLength.value = newSettings.minSolutionLength || MIN_SOLUTION_LENGTH_FLOOR
   }
 }, { immediate: true })
 
@@ -93,9 +98,26 @@ function updateSetting(key: 'showSolverMoveCount' | 'showSolverSolutions', value
   } else {
     showSolverSolutions.value = value
   }
+  emitUpdate()
+}
+
+function decrementMinSolutionLength() {
+  if (minSolutionLength.value <= MIN_SOLUTION_LENGTH_FLOOR) return
+  minSolutionLength.value--
+  emitUpdate()
+}
+
+function incrementMinSolutionLength() {
+  if (minSolutionLength.value >= MIN_SOLUTION_LENGTH_CEILING) return
+  minSolutionLength.value++
+  emitUpdate()
+}
+
+function emitUpdate() {
   emit('update', {
     showSolverMoveCount: showSolverMoveCount.value,
     showSolverSolutions: showSolverSolutions.value,
+    minSolutionLength: minSolutionLength.value,
   })
 }
 </script>
@@ -129,6 +151,34 @@ function updateSetting(key: 'showSolverMoveCount' | 'showSolverSolutions', value
             <span class="toggle-text">Show BBot's solution after game</span>
           </label>
           <p class="setting-description">Include BBot's solution in the post-game review.</p>
+        </div>
+
+        <div class="setting-item">
+          <div class="stepper-row">
+            <div class="stepper">
+              <button
+                type="button"
+                class="stepper-btn"
+                :disabled="minSolutionLength <= MIN_SOLUTION_LENGTH_FLOOR"
+                aria-label="Decrease minimum solution length"
+                @click="decrementMinSolutionLength"
+              >
+                −
+              </button>
+              <span class="stepper-value">{{ minSolutionLength }}</span>
+              <button
+                type="button"
+                class="stepper-btn"
+                :disabled="minSolutionLength >= MIN_SOLUTION_LENGTH_CEILING"
+                aria-label="Increase minimum solution length"
+                @click="incrementMinSolutionLength"
+              >
+                +
+              </button>
+            </div>
+            <span class="toggle-text">Minimum solution length</span>
+          </div>
+          <p class="setting-description">New boards will need at least this many moves to solve.</p>
         </div>
 
         <!-- Boot Player button -->
@@ -262,6 +312,52 @@ h2 {
   color: #888;
   font-size: 0.8rem;
   line-height: 1.4;
+}
+
+.stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.stepper-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #444;
+  background: #333;
+  color: #eee;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: #444;
+  border-color: #555;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.stepper-value {
+  min-width: 1.5rem;
+  text-align: center;
+  color: #eee;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 /* Boot player section */
@@ -400,6 +496,21 @@ h2 {
 
   .setting-description {
     color: #666;
+  }
+
+  .stepper-btn {
+    background: #eee;
+    border-color: #ccc;
+    color: #333;
+  }
+
+  .stepper-btn:hover:not(:disabled) {
+    background: #ddd;
+    border-color: #bbb;
+  }
+
+  .stepper-value {
+    color: #333;
   }
 }
 </style>

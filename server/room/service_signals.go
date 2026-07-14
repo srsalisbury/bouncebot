@@ -14,19 +14,25 @@ func (s *RoomService) processSignals(signals []Signal) {
 			})
 
 		case StartNextGameSignal:
+			game, _, ok := s.selectNewGame(signal.RoomID)
+			if !ok {
+				continue
+			}
+
 			room, unlock := s.repo.GetWithLock(signal.RoomID)
-			if room != nil {
-				newSignals := s.gameMgr.StartNextGame(room)
-				// Make a copy for callback (room might be modified after unlock)
-				roomCopy := *room
+			if room == nil {
 				unlock()
-				s.processSignals(newSignals)
-				// Notify about game start (for solver etc)
-				if s.onGameStart != nil && roomCopy.CurrentGame != nil {
-					s.onGameStart(&roomCopy)
-				}
-			} else {
-				unlock()
+				continue
+			}
+			s.gameMgr.PromotePendingPlayers(room)
+			newSignals := s.gameMgr.CommitNewGame(room, game)
+			// Make a copy for callback (room might be modified after unlock)
+			roomCopy := *room
+			unlock()
+			s.processSignals(newSignals)
+			// Notify about game start (for solver etc)
+			if s.onGameStart != nil && roomCopy.CurrentGame != nil {
+				s.onGameStart(&roomCopy)
 			}
 
 		case StartTimerSignal:

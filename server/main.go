@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/rs/cors"
+	"github.com/srsalisbury/bouncebot/model"
 	"github.com/srsalisbury/bouncebot/proto/protoconnect"
 	"github.com/srsalisbury/bouncebot/server/config"
 	"github.com/srsalisbury/bouncebot/server/daily"
@@ -20,11 +21,9 @@ import (
 	"github.com/srsalisbury/bouncebot/server/room"
 	"github.com/srsalisbury/bouncebot/server/ws"
 	"github.com/srsalisbury/bouncebot/solver"
+	"github.com/srsalisbury/bouncebot/solver/astar"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
-
-	// Register solvers via init()
-	_ "github.com/srsalisbury/bouncebot/solver/astar"
 )
 
 // Version is set at build time via ldflags
@@ -99,6 +98,21 @@ func main() {
 		stopSolverCleanup()
 		os.Exit(0)
 	}()
+
+	// Check candidate boards against a room's configured minimum solution
+	// length. Per-attempt timeout is intentionally much shorter than
+	// cfg.SolverTimeout (used below for the post-hoc async solve) since this
+	// runs synchronously, in a retry loop, while a player waits for game start.
+	const boardSolveAttemptTimeout = 2 * time.Second
+	rooms.SetBoardSolveFunc(func(game *model.Game) ([]model.BotPosition, bool) {
+		ctx, cancel := context.WithTimeout(context.Background(), boardSolveAttemptTimeout)
+		defer cancel()
+		result := (&astar.AStarSolver{}).Solve(ctx, game)
+		if !result.Completed || result.Solution == nil {
+			return nil, false
+		}
+		return result.Solution.Moves, true
+	})
 
 	// Trigger all registered solvers when a game starts
 	rooms.SetOnGameStart(func(r *room.Room) {

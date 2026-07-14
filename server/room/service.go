@@ -30,6 +30,7 @@ type RoomService struct {
 	disconnectGracePeriod     time.Duration
 	soloDisconnectGracePeriod time.Duration
 	onGameStart               GameStartCallback
+	solveBoardFn              BoardSolveFunc
 }
 
 // NewRoomService creates a new RoomService with all components.
@@ -65,6 +66,14 @@ func (s *RoomService) SetSoloDisconnectGracePeriod(d time.Duration) {
 // SetOnGameStart sets the callback for when a new game starts.
 func (s *RoomService) SetOnGameStart(cb GameStartCallback) {
 	s.onGameStart = cb
+}
+
+// SetBoardSolveFunc sets the function used to check a candidate board's optimal
+// solution length when a room configures a minimum solution length above the
+// no-op default. See BoardSolveFunc for the safety contract implementations
+// must satisfy.
+func (s *RoomService) SetBoardSolveFunc(fn BoardSolveFunc) {
+	s.solveBoardFn = fn
 }
 
 // ---- Public API (backward compatible with old Store) ----
@@ -142,19 +151,36 @@ func (s *RoomService) GetProto(roomID string) (*pb.Room, error) {
 	return proto, nil
 }
 
+// selectNewGame runs board selection for a room: it briefly locks the room to
+// snapshot what's needed to build a candidate source, then releases the lock
+// before running the (possibly slow, if a minimum solution length is
+// configured) generateBoard search. Returns ok=false if the room doesn't exist.
+func (s *RoomService) selectNewGame(roomID string) (game *model.Game, moves []model.BotPosition, ok bool) {
+	room, unlock := s.repo.GetWithLock(roomID)
+	if room == nil {
+		unlock()
+		return nil, nil, false
+	}
+	candidateFn, minLength := s.gameMgr.NewGameSource(room)
+	unlock()
+
+	game, moves = generateBoard(minLength, candidateFn, s.solveBoardFn)
+	return game, moves, true
+}
+
 // StartGame starts a new game in the room.
 func (s *RoomService) StartGame(roomID string) (*pb.Room, error) {
+	game, _, ok := s.selectNewGame(roomID)
+	if !ok {
+		return nil, fmt.Errorf("room not found: %s", roomID)
+	}
+
 	room, unlock := s.repo.GetWithLock(roomID)
 	if room == nil {
 		unlock()
 		return nil, fmt.Errorf("room not found: %s", roomID)
 	}
-
-	signals, err := s.gameMgr.StartGame(room)
-	if err != nil {
-		unlock()
-		return nil, err
-	}
+	signals := s.gameMgr.CommitNewGame(room, game)
 	proto := room.ToProto()
 	// Make a copy for callback (room might be modified after unlock)
 	roomCopy := *room
@@ -307,6 +333,11 @@ func (s *RoomService) UpdateRoomSettings(roomID, sessionToken string, settings R
 		return fmt.Errorf("only host can change settings")
 	}
 
+	if settings.MinSolutionLength < MinMinSolutionLength {
+		settings.MinSolutionLength = MinMinSolutionLength
+	} else if settings.MinSolutionLength > MaxMinSolutionLength {
+		settings.MinSolutionLength = MaxMinSolutionLength
+	}
 	room.Settings = settings
 	unlock()
 

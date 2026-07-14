@@ -173,6 +173,7 @@ func (s *bounceBotServer) UpdateRoomSettings(_ context.Context, req *connect.Req
 	settings := room.RoomSettings{
 		ShowSolverMoveCount: req.Msg.Settings.ShowSolverMoveCount,
 		ShowSolverSolutions: req.Msg.Settings.ShowSolverSolutions,
+		MinSolutionLength:   int(req.Msg.Settings.MinSolutionLength),
 	}
 	err := s.rooms.UpdateRoomSettings(req.Msg.RoomId, req.Msg.SessionToken, settings)
 	if err != nil {
