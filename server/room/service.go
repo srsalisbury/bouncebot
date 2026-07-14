@@ -42,7 +42,7 @@ func NewRoomService() *RoomService {
 		solutionMgr:           solutionMgr,
 		persistence:           NewPersistenceManager(),
 		timerMgr:              NewTimerManager(),
-		disconnectGracePeriod:     30 * time.Second,
+		disconnectGracePeriod:     5 * time.Minute,
 		soloDisconnectGracePeriod: 30 * time.Minute,
 	}
 }

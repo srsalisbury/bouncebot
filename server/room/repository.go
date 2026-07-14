@@ -54,8 +54,8 @@ func NewRoomRepository() RoomRepository {
 	}
 }
 
-// roomIDChars is the character set for room IDs (no 0, 1, I, O to avoid confusion)
-const roomIDChars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+// roomIDChars is the character set for room IDs (letters only, no digits)
+const roomIDChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // generateRoomID creates a random 4-character room ID.
 func generateRoomID() string {

@@ -15,7 +15,11 @@ const featureStore = useFeatureStore()
 
 const storedName = roomStore.currentPlayerName
 const playerName = ref(storedName && storedName !== 'Player' ? storedName : '')
-const joinRoomId = ref('')
+const joinRoomIdRaw = ref('')
+const joinRoomId = computed({
+  get: () => joinRoomIdRaw.value,
+  set: (v: string) => { joinRoomIdRaw.value = v.toUpperCase() },
+})
 const isStartingSolo = ref(false)
 const isCreating = ref(false)
 const isJoining = ref(false)
@@ -261,6 +265,7 @@ async function joinRoom() {
                 v-model="joinRoomId"
                 type="text"
                 placeholder="Room ID"
+                maxlength="4"
                 class="room-id-inline"
                 :disabled="isLoading"
                 @keyup.enter="joinRoom"
