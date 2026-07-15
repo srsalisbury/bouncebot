@@ -147,7 +147,11 @@ function checksum(bytes: number[]): number {
 
 class ByteReader {
   private pos = 0
-  constructor(private buf: Uint8Array) {}
+  private buf: Uint8Array
+
+  constructor(buf: Uint8Array) {
+    this.buf = buf
+  }
 
   readByte(): number {
     if (this.pos >= this.buf.length) {
