@@ -161,6 +161,59 @@ func TestService_StartGame_DoesNotHoldLockDuringSearch(t *testing.T) {
 	<-done
 }
 
+func TestService_CreateRoomFromBoard(t *testing.T) {
+	svc := NewRoomService()
+	game := model.Game1()
+
+	proto, playerID, sessionToken, err := svc.CreateRoomFromBoard("Alice", game)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if playerID == "" || sessionToken == "" {
+		t.Error("expected a non-empty player ID and session token")
+	}
+	if !proto.IsSinglePlayer {
+		t.Error("expected the room to be single-player")
+	}
+	if proto.CurrentGame == nil {
+		t.Fatal("expected game to be set")
+	}
+	if proto.GameStartedAt == nil {
+		t.Error("expected GameStartedAt to be set")
+	}
+	if proto.CurrentGame.Target.Pos.X != int32(game.Target.Pos.X) || proto.CurrentGame.Target.Pos.Y != int32(game.Target.Pos.Y) {
+		t.Errorf("expected the room's game to match the given board's target, got %v want %v", proto.CurrentGame.Target.Pos, game.Target.Pos)
+	}
+
+	// The session token should actually work for subsequent calls.
+	if _, err := svc.ValidateSessionToken(proto.Id, sessionToken); err != nil {
+		t.Errorf("expected session token to validate, got error: %v", err)
+	}
+}
+
+func TestService_CreateRoomFromBoard_FiresOnGameStart(t *testing.T) {
+	svc := NewRoomService()
+
+	var gotGame *model.Game
+	svc.SetOnGameStart(func(r *Room) {
+		gotGame = r.CurrentGame
+	})
+
+	game := model.Game1()
+	_, _, _, err := svc.CreateRoomFromBoard("Alice", game)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if gotGame == nil {
+		t.Fatal("expected onGameStart to fire with the created room's game")
+	}
+	if !gotGame.Equals(game) {
+		t.Errorf("onGameStart's game did not match the given board:\ngot:\n%s\nwant:\n%s", gotGame.String(), game.String())
+	}
+}
+
 func TestService_SubmitSolution_ValidSolution(t *testing.T) {
 	svc := NewRoomService()
 	mock := &mockBroadcaster{}

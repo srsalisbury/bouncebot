@@ -57,6 +57,9 @@ const (
 	BounceBotBootPlayerProcedure = "/bouncebot.BounceBot/BootPlayer"
 	// BounceBotLeaveRoomProcedure is the fully-qualified name of the BounceBot's LeaveRoom RPC.
 	BounceBotLeaveRoomProcedure = "/bouncebot.BounceBot/LeaveRoom"
+	// BounceBotCreateRoomFromSharedBoardProcedure is the fully-qualified name of the BounceBot's
+	// CreateRoomFromSharedBoard RPC.
+	BounceBotCreateRoomFromSharedBoardProcedure = "/bouncebot.BounceBot/CreateRoomFromSharedBoard"
 	// BounceBotGetDailyChallengeProcedure is the fully-qualified name of the BounceBot's
 	// GetDailyChallenge RPC.
 	BounceBotGetDailyChallengeProcedure = "/bouncebot.BounceBot/GetDailyChallenge"
@@ -80,6 +83,7 @@ type BounceBotClient interface {
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
 	BootPlayer(context.Context, *connect.Request[proto.BootPlayerRequest]) (*connect.Response[proto.BootPlayerResponse], error)
 	LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error)
+	CreateRoomFromSharedBoard(context.Context, *connect.Request[proto.CreateRoomFromSharedBoardRequest]) (*connect.Response[proto.CreateRoomResponse], error)
 	// Daily challenge
 	GetDailyChallenge(context.Context, *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error)
 	SubmitDailySolution(context.Context, *connect.Request[proto.SubmitDailySolutionRequest]) (*connect.Response[proto.SubmitDailySolutionResponse], error)
@@ -158,6 +162,12 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(bounceBotMethods.ByName("LeaveRoom")),
 			connect.WithClientOptions(opts...),
 		),
+		createRoomFromSharedBoard: connect.NewClient[proto.CreateRoomFromSharedBoardRequest, proto.CreateRoomResponse](
+			httpClient,
+			baseURL+BounceBotCreateRoomFromSharedBoardProcedure,
+			connect.WithSchema(bounceBotMethods.ByName("CreateRoomFromSharedBoard")),
+			connect.WithClientOptions(opts...),
+		),
 		getDailyChallenge: connect.NewClient[proto.GetDailyChallengeRequest, proto.GetDailyChallengeResponse](
 			httpClient,
 			baseURL+BounceBotGetDailyChallengeProcedure,
@@ -181,19 +191,20 @@ func NewBounceBotClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 
 // bounceBotClient implements BounceBotClient.
 type bounceBotClient struct {
-	createRoom          *connect.Client[proto.CreateRoomRequest, proto.CreateRoomResponse]
-	joinRoom            *connect.Client[proto.JoinRoomRequest, proto.JoinRoomResponse]
-	getRoom             *connect.Client[proto.GetRoomRequest, proto.Room]
-	startGame           *connect.Client[proto.StartGameRequest, proto.Room]
-	submitSolution      *connect.Client[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse]
-	markFinishedSolving *connect.Client[proto.MarkFinishedSolvingRequest, proto.MarkFinishedSolvingResponse]
-	markReadyForNext    *connect.Client[proto.MarkReadyForNextRequest, proto.MarkReadyForNextResponse]
-	updateRoomSettings  *connect.Client[proto.UpdateRoomSettingsRequest, proto.UpdateRoomSettingsResponse]
-	bootPlayer          *connect.Client[proto.BootPlayerRequest, proto.BootPlayerResponse]
-	leaveRoom           *connect.Client[proto.LeaveRoomRequest, proto.LeaveRoomResponse]
-	getDailyChallenge   *connect.Client[proto.GetDailyChallengeRequest, proto.GetDailyChallengeResponse]
-	submitDailySolution *connect.Client[proto.SubmitDailySolutionRequest, proto.SubmitDailySolutionResponse]
-	getServerInfo       *connect.Client[proto.GetServerInfoRequest, proto.GetServerInfoResponse]
+	createRoom                *connect.Client[proto.CreateRoomRequest, proto.CreateRoomResponse]
+	joinRoom                  *connect.Client[proto.JoinRoomRequest, proto.JoinRoomResponse]
+	getRoom                   *connect.Client[proto.GetRoomRequest, proto.Room]
+	startGame                 *connect.Client[proto.StartGameRequest, proto.Room]
+	submitSolution            *connect.Client[proto.SubmitSolutionRequest, proto.SubmitSolutionResponse]
+	markFinishedSolving       *connect.Client[proto.MarkFinishedSolvingRequest, proto.MarkFinishedSolvingResponse]
+	markReadyForNext          *connect.Client[proto.MarkReadyForNextRequest, proto.MarkReadyForNextResponse]
+	updateRoomSettings        *connect.Client[proto.UpdateRoomSettingsRequest, proto.UpdateRoomSettingsResponse]
+	bootPlayer                *connect.Client[proto.BootPlayerRequest, proto.BootPlayerResponse]
+	leaveRoom                 *connect.Client[proto.LeaveRoomRequest, proto.LeaveRoomResponse]
+	createRoomFromSharedBoard *connect.Client[proto.CreateRoomFromSharedBoardRequest, proto.CreateRoomResponse]
+	getDailyChallenge         *connect.Client[proto.GetDailyChallengeRequest, proto.GetDailyChallengeResponse]
+	submitDailySolution       *connect.Client[proto.SubmitDailySolutionRequest, proto.SubmitDailySolutionResponse]
+	getServerInfo             *connect.Client[proto.GetServerInfoRequest, proto.GetServerInfoResponse]
 }
 
 // CreateRoom calls bouncebot.BounceBot.CreateRoom.
@@ -246,6 +257,11 @@ func (c *bounceBotClient) LeaveRoom(ctx context.Context, req *connect.Request[pr
 	return c.leaveRoom.CallUnary(ctx, req)
 }
 
+// CreateRoomFromSharedBoard calls bouncebot.BounceBot.CreateRoomFromSharedBoard.
+func (c *bounceBotClient) CreateRoomFromSharedBoard(ctx context.Context, req *connect.Request[proto.CreateRoomFromSharedBoardRequest]) (*connect.Response[proto.CreateRoomResponse], error) {
+	return c.createRoomFromSharedBoard.CallUnary(ctx, req)
+}
+
 // GetDailyChallenge calls bouncebot.BounceBot.GetDailyChallenge.
 func (c *bounceBotClient) GetDailyChallenge(ctx context.Context, req *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error) {
 	return c.getDailyChallenge.CallUnary(ctx, req)
@@ -274,6 +290,7 @@ type BounceBotHandler interface {
 	UpdateRoomSettings(context.Context, *connect.Request[proto.UpdateRoomSettingsRequest]) (*connect.Response[proto.UpdateRoomSettingsResponse], error)
 	BootPlayer(context.Context, *connect.Request[proto.BootPlayerRequest]) (*connect.Response[proto.BootPlayerResponse], error)
 	LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error)
+	CreateRoomFromSharedBoard(context.Context, *connect.Request[proto.CreateRoomFromSharedBoardRequest]) (*connect.Response[proto.CreateRoomResponse], error)
 	// Daily challenge
 	GetDailyChallenge(context.Context, *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error)
 	SubmitDailySolution(context.Context, *connect.Request[proto.SubmitDailySolutionRequest]) (*connect.Response[proto.SubmitDailySolutionResponse], error)
@@ -348,6 +365,12 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(bounceBotMethods.ByName("LeaveRoom")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bounceBotCreateRoomFromSharedBoardHandler := connect.NewUnaryHandler(
+		BounceBotCreateRoomFromSharedBoardProcedure,
+		svc.CreateRoomFromSharedBoard,
+		connect.WithSchema(bounceBotMethods.ByName("CreateRoomFromSharedBoard")),
+		connect.WithHandlerOptions(opts...),
+	)
 	bounceBotGetDailyChallengeHandler := connect.NewUnaryHandler(
 		BounceBotGetDailyChallengeProcedure,
 		svc.GetDailyChallenge,
@@ -388,6 +411,8 @@ func NewBounceBotHandler(svc BounceBotHandler, opts ...connect.HandlerOption) (s
 			bounceBotBootPlayerHandler.ServeHTTP(w, r)
 		case BounceBotLeaveRoomProcedure:
 			bounceBotLeaveRoomHandler.ServeHTTP(w, r)
+		case BounceBotCreateRoomFromSharedBoardProcedure:
+			bounceBotCreateRoomFromSharedBoardHandler.ServeHTTP(w, r)
 		case BounceBotGetDailyChallengeProcedure:
 			bounceBotGetDailyChallengeHandler.ServeHTTP(w, r)
 		case BounceBotSubmitDailySolutionProcedure:
@@ -441,6 +466,10 @@ func (UnimplementedBounceBotHandler) BootPlayer(context.Context, *connect.Reques
 
 func (UnimplementedBounceBotHandler) LeaveRoom(context.Context, *connect.Request[proto.LeaveRoomRequest]) (*connect.Response[proto.LeaveRoomResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.LeaveRoom is not implemented"))
+}
+
+func (UnimplementedBounceBotHandler) CreateRoomFromSharedBoard(context.Context, *connect.Request[proto.CreateRoomFromSharedBoardRequest]) (*connect.Response[proto.CreateRoomResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("bouncebot.BounceBot.CreateRoomFromSharedBoard is not implemented"))
 }
 
 func (UnimplementedBounceBotHandler) GetDailyChallenge(context.Context, *connect.Request[proto.GetDailyChallengeRequest]) (*connect.Response[proto.GetDailyChallengeResponse], error) {

@@ -706,6 +706,61 @@ func (x *CreateRoomRequest) GetIsSinglePlayer() bool {
 	return false
 }
 
+// Creates a new single-player room seeded with a specific board, decoded
+// from a share code (see planning/BOARD_SHARING_DESIGN.md). Returns the same
+// shape as CreateRoomResponse.
+type CreateRoomFromSharedBoardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerName    string                 `protobuf:"bytes,1,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
+	ShareCode     string                 `protobuf:"bytes,2,opt,name=share_code,json=shareCode,proto3" json:"share_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateRoomFromSharedBoardRequest) Reset() {
+	*x = CreateRoomFromSharedBoardRequest{}
+	mi := &file_bouncebot_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateRoomFromSharedBoardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateRoomFromSharedBoardRequest) ProtoMessage() {}
+
+func (x *CreateRoomFromSharedBoardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bouncebot_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateRoomFromSharedBoardRequest.ProtoReflect.Descriptor instead.
+func (*CreateRoomFromSharedBoardRequest) Descriptor() ([]byte, []int) {
+	return file_bouncebot_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreateRoomFromSharedBoardRequest) GetPlayerName() string {
+	if x != nil {
+		return x.PlayerName
+	}
+	return ""
+}
+
+func (x *CreateRoomFromSharedBoardRequest) GetShareCode() string {
+	if x != nil {
+		return x.ShareCode
+	}
+	return ""
+}
+
 type JoinRoomRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RoomId        string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
@@ -716,7 +771,7 @@ type JoinRoomRequest struct {
 
 func (x *JoinRoomRequest) Reset() {
 	*x = JoinRoomRequest{}
-	mi := &file_bouncebot_proto_msgTypes[10]
+	mi := &file_bouncebot_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -728,7 +783,7 @@ func (x *JoinRoomRequest) String() string {
 func (*JoinRoomRequest) ProtoMessage() {}
 
 func (x *JoinRoomRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[10]
+	mi := &file_bouncebot_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -741,7 +796,7 @@ func (x *JoinRoomRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinRoomRequest.ProtoReflect.Descriptor instead.
 func (*JoinRoomRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{10}
+	return file_bouncebot_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *JoinRoomRequest) GetRoomId() string {
@@ -769,7 +824,7 @@ type JoinRoomResponse struct {
 
 func (x *JoinRoomResponse) Reset() {
 	*x = JoinRoomResponse{}
-	mi := &file_bouncebot_proto_msgTypes[11]
+	mi := &file_bouncebot_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -781,7 +836,7 @@ func (x *JoinRoomResponse) String() string {
 func (*JoinRoomResponse) ProtoMessage() {}
 
 func (x *JoinRoomResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[11]
+	mi := &file_bouncebot_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -794,7 +849,7 @@ func (x *JoinRoomResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinRoomResponse.ProtoReflect.Descriptor instead.
 func (*JoinRoomResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{11}
+	return file_bouncebot_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *JoinRoomResponse) GetRoom() *Room {
@@ -829,7 +884,7 @@ type CreateRoomResponse struct {
 
 func (x *CreateRoomResponse) Reset() {
 	*x = CreateRoomResponse{}
-	mi := &file_bouncebot_proto_msgTypes[12]
+	mi := &file_bouncebot_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -841,7 +896,7 @@ func (x *CreateRoomResponse) String() string {
 func (*CreateRoomResponse) ProtoMessage() {}
 
 func (x *CreateRoomResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[12]
+	mi := &file_bouncebot_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -854,7 +909,7 @@ func (x *CreateRoomResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRoomResponse.ProtoReflect.Descriptor instead.
 func (*CreateRoomResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{12}
+	return file_bouncebot_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CreateRoomResponse) GetRoom() *Room {
@@ -887,7 +942,7 @@ type GetRoomRequest struct {
 
 func (x *GetRoomRequest) Reset() {
 	*x = GetRoomRequest{}
-	mi := &file_bouncebot_proto_msgTypes[13]
+	mi := &file_bouncebot_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -899,7 +954,7 @@ func (x *GetRoomRequest) String() string {
 func (*GetRoomRequest) ProtoMessage() {}
 
 func (x *GetRoomRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[13]
+	mi := &file_bouncebot_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -912,7 +967,7 @@ func (x *GetRoomRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRoomRequest.ProtoReflect.Descriptor instead.
 func (*GetRoomRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{13}
+	return file_bouncebot_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetRoomRequest) GetRoomId() string {
@@ -931,7 +986,7 @@ type StartGameRequest struct {
 
 func (x *StartGameRequest) Reset() {
 	*x = StartGameRequest{}
-	mi := &file_bouncebot_proto_msgTypes[14]
+	mi := &file_bouncebot_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -943,7 +998,7 @@ func (x *StartGameRequest) String() string {
 func (*StartGameRequest) ProtoMessage() {}
 
 func (x *StartGameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[14]
+	mi := &file_bouncebot_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -956,7 +1011,7 @@ func (x *StartGameRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartGameRequest.ProtoReflect.Descriptor instead.
 func (*StartGameRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{14}
+	return file_bouncebot_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *StartGameRequest) GetRoomId() string {
@@ -977,7 +1032,7 @@ type SubmitSolutionRequest struct {
 
 func (x *SubmitSolutionRequest) Reset() {
 	*x = SubmitSolutionRequest{}
-	mi := &file_bouncebot_proto_msgTypes[15]
+	mi := &file_bouncebot_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -989,7 +1044,7 @@ func (x *SubmitSolutionRequest) String() string {
 func (*SubmitSolutionRequest) ProtoMessage() {}
 
 func (x *SubmitSolutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[15]
+	mi := &file_bouncebot_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1002,7 +1057,7 @@ func (x *SubmitSolutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitSolutionRequest.ProtoReflect.Descriptor instead.
 func (*SubmitSolutionRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{15}
+	return file_bouncebot_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SubmitSolutionRequest) GetRoomId() string {
@@ -1035,7 +1090,7 @@ type SubmitSolutionResponse struct {
 
 func (x *SubmitSolutionResponse) Reset() {
 	*x = SubmitSolutionResponse{}
-	mi := &file_bouncebot_proto_msgTypes[16]
+	mi := &file_bouncebot_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1047,7 +1102,7 @@ func (x *SubmitSolutionResponse) String() string {
 func (*SubmitSolutionResponse) ProtoMessage() {}
 
 func (x *SubmitSolutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[16]
+	mi := &file_bouncebot_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1060,7 +1115,7 @@ func (x *SubmitSolutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitSolutionResponse.ProtoReflect.Descriptor instead.
 func (*SubmitSolutionResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{16}
+	return file_bouncebot_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *SubmitSolutionResponse) GetSolution() *PlayerSolution {
@@ -1080,7 +1135,7 @@ type MarkFinishedSolvingRequest struct {
 
 func (x *MarkFinishedSolvingRequest) Reset() {
 	*x = MarkFinishedSolvingRequest{}
-	mi := &file_bouncebot_proto_msgTypes[17]
+	mi := &file_bouncebot_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1092,7 +1147,7 @@ func (x *MarkFinishedSolvingRequest) String() string {
 func (*MarkFinishedSolvingRequest) ProtoMessage() {}
 
 func (x *MarkFinishedSolvingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[17]
+	mi := &file_bouncebot_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1105,7 +1160,7 @@ func (x *MarkFinishedSolvingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkFinishedSolvingRequest.ProtoReflect.Descriptor instead.
 func (*MarkFinishedSolvingRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{17}
+	return file_bouncebot_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *MarkFinishedSolvingRequest) GetRoomId() string {
@@ -1131,7 +1186,7 @@ type MarkFinishedSolvingResponse struct {
 
 func (x *MarkFinishedSolvingResponse) Reset() {
 	*x = MarkFinishedSolvingResponse{}
-	mi := &file_bouncebot_proto_msgTypes[18]
+	mi := &file_bouncebot_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1143,7 +1198,7 @@ func (x *MarkFinishedSolvingResponse) String() string {
 func (*MarkFinishedSolvingResponse) ProtoMessage() {}
 
 func (x *MarkFinishedSolvingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[18]
+	mi := &file_bouncebot_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1156,7 +1211,7 @@ func (x *MarkFinishedSolvingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkFinishedSolvingResponse.ProtoReflect.Descriptor instead.
 func (*MarkFinishedSolvingResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{18}
+	return file_bouncebot_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *MarkFinishedSolvingResponse) GetSuccess() bool {
@@ -1176,7 +1231,7 @@ type MarkReadyForNextRequest struct {
 
 func (x *MarkReadyForNextRequest) Reset() {
 	*x = MarkReadyForNextRequest{}
-	mi := &file_bouncebot_proto_msgTypes[19]
+	mi := &file_bouncebot_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1188,7 +1243,7 @@ func (x *MarkReadyForNextRequest) String() string {
 func (*MarkReadyForNextRequest) ProtoMessage() {}
 
 func (x *MarkReadyForNextRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[19]
+	mi := &file_bouncebot_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1201,7 +1256,7 @@ func (x *MarkReadyForNextRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReadyForNextRequest.ProtoReflect.Descriptor instead.
 func (*MarkReadyForNextRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{19}
+	return file_bouncebot_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MarkReadyForNextRequest) GetRoomId() string {
@@ -1227,7 +1282,7 @@ type MarkReadyForNextResponse struct {
 
 func (x *MarkReadyForNextResponse) Reset() {
 	*x = MarkReadyForNextResponse{}
-	mi := &file_bouncebot_proto_msgTypes[20]
+	mi := &file_bouncebot_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1239,7 +1294,7 @@ func (x *MarkReadyForNextResponse) String() string {
 func (*MarkReadyForNextResponse) ProtoMessage() {}
 
 func (x *MarkReadyForNextResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[20]
+	mi := &file_bouncebot_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1252,7 +1307,7 @@ func (x *MarkReadyForNextResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReadyForNextResponse.ProtoReflect.Descriptor instead.
 func (*MarkReadyForNextResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{20}
+	return file_bouncebot_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *MarkReadyForNextResponse) GetSuccess() bool {
@@ -1275,7 +1330,7 @@ type SolverResult struct {
 
 func (x *SolverResult) Reset() {
 	*x = SolverResult{}
-	mi := &file_bouncebot_proto_msgTypes[21]
+	mi := &file_bouncebot_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1287,7 +1342,7 @@ func (x *SolverResult) String() string {
 func (*SolverResult) ProtoMessage() {}
 
 func (x *SolverResult) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[21]
+	mi := &file_bouncebot_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1300,7 +1355,7 @@ func (x *SolverResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SolverResult.ProtoReflect.Descriptor instead.
 func (*SolverResult) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{21}
+	return file_bouncebot_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *SolverResult) GetSolverName() string {
@@ -1342,7 +1397,7 @@ type UpdateRoomSettingsRequest struct {
 
 func (x *UpdateRoomSettingsRequest) Reset() {
 	*x = UpdateRoomSettingsRequest{}
-	mi := &file_bouncebot_proto_msgTypes[22]
+	mi := &file_bouncebot_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1354,7 +1409,7 @@ func (x *UpdateRoomSettingsRequest) String() string {
 func (*UpdateRoomSettingsRequest) ProtoMessage() {}
 
 func (x *UpdateRoomSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[22]
+	mi := &file_bouncebot_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1367,7 +1422,7 @@ func (x *UpdateRoomSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRoomSettingsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRoomSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{22}
+	return file_bouncebot_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *UpdateRoomSettingsRequest) GetRoomId() string {
@@ -1401,7 +1456,7 @@ type UpdateRoomSettingsResponse struct {
 
 func (x *UpdateRoomSettingsResponse) Reset() {
 	*x = UpdateRoomSettingsResponse{}
-	mi := &file_bouncebot_proto_msgTypes[23]
+	mi := &file_bouncebot_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1413,7 +1468,7 @@ func (x *UpdateRoomSettingsResponse) String() string {
 func (*UpdateRoomSettingsResponse) ProtoMessage() {}
 
 func (x *UpdateRoomSettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[23]
+	mi := &file_bouncebot_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1426,7 +1481,7 @@ func (x *UpdateRoomSettingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRoomSettingsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateRoomSettingsResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{23}
+	return file_bouncebot_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *UpdateRoomSettingsResponse) GetSuccess() bool {
@@ -1454,7 +1509,7 @@ type BootPlayerRequest struct {
 
 func (x *BootPlayerRequest) Reset() {
 	*x = BootPlayerRequest{}
-	mi := &file_bouncebot_proto_msgTypes[24]
+	mi := &file_bouncebot_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1466,7 +1521,7 @@ func (x *BootPlayerRequest) String() string {
 func (*BootPlayerRequest) ProtoMessage() {}
 
 func (x *BootPlayerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[24]
+	mi := &file_bouncebot_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1479,7 +1534,7 @@ func (x *BootPlayerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BootPlayerRequest.ProtoReflect.Descriptor instead.
 func (*BootPlayerRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{24}
+	return file_bouncebot_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *BootPlayerRequest) GetRoomId() string {
@@ -1513,7 +1568,7 @@ type BootPlayerResponse struct {
 
 func (x *BootPlayerResponse) Reset() {
 	*x = BootPlayerResponse{}
-	mi := &file_bouncebot_proto_msgTypes[25]
+	mi := &file_bouncebot_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1525,7 +1580,7 @@ func (x *BootPlayerResponse) String() string {
 func (*BootPlayerResponse) ProtoMessage() {}
 
 func (x *BootPlayerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[25]
+	mi := &file_bouncebot_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1538,7 +1593,7 @@ func (x *BootPlayerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BootPlayerResponse.ProtoReflect.Descriptor instead.
 func (*BootPlayerResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{25}
+	return file_bouncebot_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *BootPlayerResponse) GetSuccess() bool {
@@ -1565,7 +1620,7 @@ type LeaveRoomRequest struct {
 
 func (x *LeaveRoomRequest) Reset() {
 	*x = LeaveRoomRequest{}
-	mi := &file_bouncebot_proto_msgTypes[26]
+	mi := &file_bouncebot_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1577,7 +1632,7 @@ func (x *LeaveRoomRequest) String() string {
 func (*LeaveRoomRequest) ProtoMessage() {}
 
 func (x *LeaveRoomRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[26]
+	mi := &file_bouncebot_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1590,7 +1645,7 @@ func (x *LeaveRoomRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveRoomRequest.ProtoReflect.Descriptor instead.
 func (*LeaveRoomRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{26}
+	return file_bouncebot_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *LeaveRoomRequest) GetRoomId() string {
@@ -1616,7 +1671,7 @@ type LeaveRoomResponse struct {
 
 func (x *LeaveRoomResponse) Reset() {
 	*x = LeaveRoomResponse{}
-	mi := &file_bouncebot_proto_msgTypes[27]
+	mi := &file_bouncebot_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1628,7 +1683,7 @@ func (x *LeaveRoomResponse) String() string {
 func (*LeaveRoomResponse) ProtoMessage() {}
 
 func (x *LeaveRoomResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[27]
+	mi := &file_bouncebot_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1641,7 +1696,7 @@ func (x *LeaveRoomResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveRoomResponse.ProtoReflect.Descriptor instead.
 func (*LeaveRoomResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{27}
+	return file_bouncebot_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *LeaveRoomResponse) GetSuccess() bool {
@@ -1664,7 +1719,7 @@ type DailyPuzzleInfo struct {
 
 func (x *DailyPuzzleInfo) Reset() {
 	*x = DailyPuzzleInfo{}
-	mi := &file_bouncebot_proto_msgTypes[28]
+	mi := &file_bouncebot_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1676,7 +1731,7 @@ func (x *DailyPuzzleInfo) String() string {
 func (*DailyPuzzleInfo) ProtoMessage() {}
 
 func (x *DailyPuzzleInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[28]
+	mi := &file_bouncebot_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1689,7 +1744,7 @@ func (x *DailyPuzzleInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DailyPuzzleInfo.ProtoReflect.Descriptor instead.
 func (*DailyPuzzleInfo) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{28}
+	return file_bouncebot_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *DailyPuzzleInfo) GetDifficulty() string {
@@ -1730,7 +1785,7 @@ type GetDailyChallengeRequest struct {
 
 func (x *GetDailyChallengeRequest) Reset() {
 	*x = GetDailyChallengeRequest{}
-	mi := &file_bouncebot_proto_msgTypes[29]
+	mi := &file_bouncebot_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1742,7 +1797,7 @@ func (x *GetDailyChallengeRequest) String() string {
 func (*GetDailyChallengeRequest) ProtoMessage() {}
 
 func (x *GetDailyChallengeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[29]
+	mi := &file_bouncebot_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1755,7 +1810,7 @@ func (x *GetDailyChallengeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDailyChallengeRequest.ProtoReflect.Descriptor instead.
 func (*GetDailyChallengeRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{29}
+	return file_bouncebot_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *GetDailyChallengeRequest) GetPlayerId() string {
@@ -1783,7 +1838,7 @@ type GetDailyChallengeResponse struct {
 
 func (x *GetDailyChallengeResponse) Reset() {
 	*x = GetDailyChallengeResponse{}
-	mi := &file_bouncebot_proto_msgTypes[30]
+	mi := &file_bouncebot_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1795,7 +1850,7 @@ func (x *GetDailyChallengeResponse) String() string {
 func (*GetDailyChallengeResponse) ProtoMessage() {}
 
 func (x *GetDailyChallengeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[30]
+	mi := &file_bouncebot_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1808,7 +1863,7 @@ func (x *GetDailyChallengeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDailyChallengeResponse.ProtoReflect.Descriptor instead.
 func (*GetDailyChallengeResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{30}
+	return file_bouncebot_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetDailyChallengeResponse) GetDate() string {
@@ -1844,7 +1899,7 @@ type SubmitDailySolutionRequest struct {
 
 func (x *SubmitDailySolutionRequest) Reset() {
 	*x = SubmitDailySolutionRequest{}
-	mi := &file_bouncebot_proto_msgTypes[31]
+	mi := &file_bouncebot_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1856,7 +1911,7 @@ func (x *SubmitDailySolutionRequest) String() string {
 func (*SubmitDailySolutionRequest) ProtoMessage() {}
 
 func (x *SubmitDailySolutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[31]
+	mi := &file_bouncebot_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1869,7 +1924,7 @@ func (x *SubmitDailySolutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitDailySolutionRequest.ProtoReflect.Descriptor instead.
 func (*SubmitDailySolutionRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{31}
+	return file_bouncebot_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SubmitDailySolutionRequest) GetPlayerId() string {
@@ -1910,7 +1965,7 @@ type SubmitDailySolutionResponse struct {
 
 func (x *SubmitDailySolutionResponse) Reset() {
 	*x = SubmitDailySolutionResponse{}
-	mi := &file_bouncebot_proto_msgTypes[32]
+	mi := &file_bouncebot_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1922,7 +1977,7 @@ func (x *SubmitDailySolutionResponse) String() string {
 func (*SubmitDailySolutionResponse) ProtoMessage() {}
 
 func (x *SubmitDailySolutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[32]
+	mi := &file_bouncebot_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1935,7 +1990,7 @@ func (x *SubmitDailySolutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitDailySolutionResponse.ProtoReflect.Descriptor instead.
 func (*SubmitDailySolutionResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{32}
+	return file_bouncebot_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SubmitDailySolutionResponse) GetCorrect() bool {
@@ -1960,7 +2015,7 @@ type GetServerInfoRequest struct {
 
 func (x *GetServerInfoRequest) Reset() {
 	*x = GetServerInfoRequest{}
-	mi := &file_bouncebot_proto_msgTypes[33]
+	mi := &file_bouncebot_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1972,7 +2027,7 @@ func (x *GetServerInfoRequest) String() string {
 func (*GetServerInfoRequest) ProtoMessage() {}
 
 func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[33]
+	mi := &file_bouncebot_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1985,7 +2040,7 @@ func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetServerInfoRequest) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{33}
+	return file_bouncebot_proto_rawDescGZIP(), []int{34}
 }
 
 type GetServerInfoResponse struct {
@@ -1997,7 +2052,7 @@ type GetServerInfoResponse struct {
 
 func (x *GetServerInfoResponse) Reset() {
 	*x = GetServerInfoResponse{}
-	mi := &file_bouncebot_proto_msgTypes[34]
+	mi := &file_bouncebot_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2009,7 +2064,7 @@ func (x *GetServerInfoResponse) String() string {
 func (*GetServerInfoResponse) ProtoMessage() {}
 
 func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bouncebot_proto_msgTypes[34]
+	mi := &file_bouncebot_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2022,7 +2077,7 @@ func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetServerInfoResponse) Descriptor() ([]byte, []int) {
-	return file_bouncebot_proto_rawDescGZIP(), []int{34}
+	return file_bouncebot_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetServerInfoResponse) GetDailyChallengeEnabled() bool {
@@ -2088,7 +2143,12 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x11CreateRoomRequest\x12\x1f\n" +
 	"\vplayer_name\x18\x01 \x01(\tR\n" +
 	"playerName\x12(\n" +
-	"\x10is_single_player\x18\x02 \x01(\bR\x0eisSinglePlayer\"K\n" +
+	"\x10is_single_player\x18\x02 \x01(\bR\x0eisSinglePlayer\"b\n" +
+	" CreateRoomFromSharedBoardRequest\x12\x1f\n" +
+	"\vplayer_name\x18\x01 \x01(\tR\n" +
+	"playerName\x12\x1d\n" +
+	"\n" +
+	"share_code\x18\x02 \x01(\tR\tshareCode\"K\n" +
 	"\x0fJoinRoomRequest\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x1f\n" +
 	"\vplayer_name\x18\x02 \x01(\tR\n" +
@@ -2172,7 +2232,7 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x0enew_completion\x18\x02 \x01(\bR\rnewCompletion\"\x16\n" +
 	"\x14GetServerInfoRequest\"O\n" +
 	"\x15GetServerInfoResponse\x126\n" +
-	"\x17daily_challenge_enabled\x18\x01 \x01(\bR\x15dailyChallengeEnabled2\xd1\b\n" +
+	"\x17daily_challenge_enabled\x18\x01 \x01(\bR\x15dailyChallengeEnabled2\xbc\t\n" +
 	"\tBounceBot\x12K\n" +
 	"\n" +
 	"CreateRoom\x12\x1c.bouncebot.CreateRoomRequest\x1a\x1d.bouncebot.CreateRoomResponse\"\x00\x12E\n" +
@@ -2185,7 +2245,8 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x12UpdateRoomSettings\x12$.bouncebot.UpdateRoomSettingsRequest\x1a%.bouncebot.UpdateRoomSettingsResponse\"\x00\x12K\n" +
 	"\n" +
 	"BootPlayer\x12\x1c.bouncebot.BootPlayerRequest\x1a\x1d.bouncebot.BootPlayerResponse\"\x00\x12H\n" +
-	"\tLeaveRoom\x12\x1b.bouncebot.LeaveRoomRequest\x1a\x1c.bouncebot.LeaveRoomResponse\"\x00\x12`\n" +
+	"\tLeaveRoom\x12\x1b.bouncebot.LeaveRoomRequest\x1a\x1c.bouncebot.LeaveRoomResponse\"\x00\x12i\n" +
+	"\x19CreateRoomFromSharedBoard\x12+.bouncebot.CreateRoomFromSharedBoardRequest\x1a\x1d.bouncebot.CreateRoomResponse\"\x00\x12`\n" +
 	"\x11GetDailyChallenge\x12#.bouncebot.GetDailyChallengeRequest\x1a$.bouncebot.GetDailyChallengeResponse\"\x00\x12f\n" +
 	"\x13SubmitDailySolution\x12%.bouncebot.SubmitDailySolutionRequest\x1a&.bouncebot.SubmitDailySolutionResponse\"\x00\x12T\n" +
 	"\rGetServerInfo\x12\x1f.bouncebot.GetServerInfoRequest\x1a .bouncebot.GetServerInfoResponse\"\x00B(Z&github.com/srsalisbury/bouncebot/protob\x06proto3"
@@ -2202,44 +2263,45 @@ func file_bouncebot_proto_rawDescGZIP() []byte {
 	return file_bouncebot_proto_rawDescData
 }
 
-var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
+var file_bouncebot_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_bouncebot_proto_goTypes = []any{
-	(*Position)(nil),                    // 0: bouncebot.Position
-	(*Board)(nil),                       // 1: bouncebot.Board
-	(*BotPos)(nil),                      // 2: bouncebot.BotPos
-	(*Game)(nil),                        // 3: bouncebot.Game
-	(*Player)(nil),                      // 4: bouncebot.Player
-	(*PlayerSolution)(nil),              // 5: bouncebot.PlayerSolution
-	(*PlayerScore)(nil),                 // 6: bouncebot.PlayerScore
-	(*RoomSettings)(nil),                // 7: bouncebot.RoomSettings
-	(*Room)(nil),                        // 8: bouncebot.Room
-	(*CreateRoomRequest)(nil),           // 9: bouncebot.CreateRoomRequest
-	(*JoinRoomRequest)(nil),             // 10: bouncebot.JoinRoomRequest
-	(*JoinRoomResponse)(nil),            // 11: bouncebot.JoinRoomResponse
-	(*CreateRoomResponse)(nil),          // 12: bouncebot.CreateRoomResponse
-	(*GetRoomRequest)(nil),              // 13: bouncebot.GetRoomRequest
-	(*StartGameRequest)(nil),            // 14: bouncebot.StartGameRequest
-	(*SubmitSolutionRequest)(nil),       // 15: bouncebot.SubmitSolutionRequest
-	(*SubmitSolutionResponse)(nil),      // 16: bouncebot.SubmitSolutionResponse
-	(*MarkFinishedSolvingRequest)(nil),  // 17: bouncebot.MarkFinishedSolvingRequest
-	(*MarkFinishedSolvingResponse)(nil), // 18: bouncebot.MarkFinishedSolvingResponse
-	(*MarkReadyForNextRequest)(nil),     // 19: bouncebot.MarkReadyForNextRequest
-	(*MarkReadyForNextResponse)(nil),    // 20: bouncebot.MarkReadyForNextResponse
-	(*SolverResult)(nil),                // 21: bouncebot.SolverResult
-	(*UpdateRoomSettingsRequest)(nil),   // 22: bouncebot.UpdateRoomSettingsRequest
-	(*UpdateRoomSettingsResponse)(nil),  // 23: bouncebot.UpdateRoomSettingsResponse
-	(*BootPlayerRequest)(nil),           // 24: bouncebot.BootPlayerRequest
-	(*BootPlayerResponse)(nil),          // 25: bouncebot.BootPlayerResponse
-	(*LeaveRoomRequest)(nil),            // 26: bouncebot.LeaveRoomRequest
-	(*LeaveRoomResponse)(nil),           // 27: bouncebot.LeaveRoomResponse
-	(*DailyPuzzleInfo)(nil),             // 28: bouncebot.DailyPuzzleInfo
-	(*GetDailyChallengeRequest)(nil),    // 29: bouncebot.GetDailyChallengeRequest
-	(*GetDailyChallengeResponse)(nil),   // 30: bouncebot.GetDailyChallengeResponse
-	(*SubmitDailySolutionRequest)(nil),  // 31: bouncebot.SubmitDailySolutionRequest
-	(*SubmitDailySolutionResponse)(nil), // 32: bouncebot.SubmitDailySolutionResponse
-	(*GetServerInfoRequest)(nil),        // 33: bouncebot.GetServerInfoRequest
-	(*GetServerInfoResponse)(nil),       // 34: bouncebot.GetServerInfoResponse
-	(*timestamppb.Timestamp)(nil),       // 35: google.protobuf.Timestamp
+	(*Position)(nil),                         // 0: bouncebot.Position
+	(*Board)(nil),                            // 1: bouncebot.Board
+	(*BotPos)(nil),                           // 2: bouncebot.BotPos
+	(*Game)(nil),                             // 3: bouncebot.Game
+	(*Player)(nil),                           // 4: bouncebot.Player
+	(*PlayerSolution)(nil),                   // 5: bouncebot.PlayerSolution
+	(*PlayerScore)(nil),                      // 6: bouncebot.PlayerScore
+	(*RoomSettings)(nil),                     // 7: bouncebot.RoomSettings
+	(*Room)(nil),                             // 8: bouncebot.Room
+	(*CreateRoomRequest)(nil),                // 9: bouncebot.CreateRoomRequest
+	(*CreateRoomFromSharedBoardRequest)(nil), // 10: bouncebot.CreateRoomFromSharedBoardRequest
+	(*JoinRoomRequest)(nil),                  // 11: bouncebot.JoinRoomRequest
+	(*JoinRoomResponse)(nil),                 // 12: bouncebot.JoinRoomResponse
+	(*CreateRoomResponse)(nil),               // 13: bouncebot.CreateRoomResponse
+	(*GetRoomRequest)(nil),                   // 14: bouncebot.GetRoomRequest
+	(*StartGameRequest)(nil),                 // 15: bouncebot.StartGameRequest
+	(*SubmitSolutionRequest)(nil),            // 16: bouncebot.SubmitSolutionRequest
+	(*SubmitSolutionResponse)(nil),           // 17: bouncebot.SubmitSolutionResponse
+	(*MarkFinishedSolvingRequest)(nil),       // 18: bouncebot.MarkFinishedSolvingRequest
+	(*MarkFinishedSolvingResponse)(nil),      // 19: bouncebot.MarkFinishedSolvingResponse
+	(*MarkReadyForNextRequest)(nil),          // 20: bouncebot.MarkReadyForNextRequest
+	(*MarkReadyForNextResponse)(nil),         // 21: bouncebot.MarkReadyForNextResponse
+	(*SolverResult)(nil),                     // 22: bouncebot.SolverResult
+	(*UpdateRoomSettingsRequest)(nil),        // 23: bouncebot.UpdateRoomSettingsRequest
+	(*UpdateRoomSettingsResponse)(nil),       // 24: bouncebot.UpdateRoomSettingsResponse
+	(*BootPlayerRequest)(nil),                // 25: bouncebot.BootPlayerRequest
+	(*BootPlayerResponse)(nil),               // 26: bouncebot.BootPlayerResponse
+	(*LeaveRoomRequest)(nil),                 // 27: bouncebot.LeaveRoomRequest
+	(*LeaveRoomResponse)(nil),                // 28: bouncebot.LeaveRoomResponse
+	(*DailyPuzzleInfo)(nil),                  // 29: bouncebot.DailyPuzzleInfo
+	(*GetDailyChallengeRequest)(nil),         // 30: bouncebot.GetDailyChallengeRequest
+	(*GetDailyChallengeResponse)(nil),        // 31: bouncebot.GetDailyChallengeResponse
+	(*SubmitDailySolutionRequest)(nil),       // 32: bouncebot.SubmitDailySolutionRequest
+	(*SubmitDailySolutionResponse)(nil),      // 33: bouncebot.SubmitDailySolutionResponse
+	(*GetServerInfoRequest)(nil),             // 34: bouncebot.GetServerInfoRequest
+	(*GetServerInfoResponse)(nil),            // 35: bouncebot.GetServerInfoResponse
+	(*timestamppb.Timestamp)(nil),            // 36: google.protobuf.Timestamp
 }
 var file_bouncebot_proto_depIdxs = []int32{
 	0,  // 0: bouncebot.Board.v_walls:type_name -> bouncebot.Position
@@ -2249,16 +2311,16 @@ var file_bouncebot_proto_depIdxs = []int32{
 	1,  // 4: bouncebot.Game.board:type_name -> bouncebot.Board
 	2,  // 5: bouncebot.Game.bots:type_name -> bouncebot.BotPos
 	2,  // 6: bouncebot.Game.target:type_name -> bouncebot.BotPos
-	35, // 7: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
+	36, // 7: bouncebot.PlayerSolution.solved_at:type_name -> google.protobuf.Timestamp
 	2,  // 8: bouncebot.PlayerSolution.moves:type_name -> bouncebot.BotPos
 	4,  // 9: bouncebot.Room.players:type_name -> bouncebot.Player
-	35, // 10: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
+	36, // 10: bouncebot.Room.created_at:type_name -> google.protobuf.Timestamp
 	3,  // 11: bouncebot.Room.current_game:type_name -> bouncebot.Game
-	35, // 12: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
+	36, // 12: bouncebot.Room.game_started_at:type_name -> google.protobuf.Timestamp
 	5,  // 13: bouncebot.Room.solutions:type_name -> bouncebot.PlayerSolution
 	6,  // 14: bouncebot.Room.scores:type_name -> bouncebot.PlayerScore
 	4,  // 15: bouncebot.Room.pending_players:type_name -> bouncebot.Player
-	21, // 16: bouncebot.Room.solver_results:type_name -> bouncebot.SolverResult
+	22, // 16: bouncebot.Room.solver_results:type_name -> bouncebot.SolverResult
 	7,  // 17: bouncebot.Room.settings:type_name -> bouncebot.RoomSettings
 	8,  // 18: bouncebot.JoinRoomResponse.room:type_name -> bouncebot.Room
 	8,  // 19: bouncebot.CreateRoomResponse.room:type_name -> bouncebot.Room
@@ -2267,36 +2329,38 @@ var file_bouncebot_proto_depIdxs = []int32{
 	2,  // 22: bouncebot.SolverResult.moves:type_name -> bouncebot.BotPos
 	7,  // 23: bouncebot.UpdateRoomSettingsRequest.settings:type_name -> bouncebot.RoomSettings
 	3,  // 24: bouncebot.DailyPuzzleInfo.game:type_name -> bouncebot.Game
-	28, // 25: bouncebot.GetDailyChallengeResponse.puzzles:type_name -> bouncebot.DailyPuzzleInfo
+	29, // 25: bouncebot.GetDailyChallengeResponse.puzzles:type_name -> bouncebot.DailyPuzzleInfo
 	2,  // 26: bouncebot.SubmitDailySolutionRequest.moves:type_name -> bouncebot.BotPos
 	9,  // 27: bouncebot.BounceBot.CreateRoom:input_type -> bouncebot.CreateRoomRequest
-	10, // 28: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
-	13, // 29: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
-	14, // 30: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
-	15, // 31: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
-	17, // 32: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
-	19, // 33: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
-	22, // 34: bouncebot.BounceBot.UpdateRoomSettings:input_type -> bouncebot.UpdateRoomSettingsRequest
-	24, // 35: bouncebot.BounceBot.BootPlayer:input_type -> bouncebot.BootPlayerRequest
-	26, // 36: bouncebot.BounceBot.LeaveRoom:input_type -> bouncebot.LeaveRoomRequest
-	29, // 37: bouncebot.BounceBot.GetDailyChallenge:input_type -> bouncebot.GetDailyChallengeRequest
-	31, // 38: bouncebot.BounceBot.SubmitDailySolution:input_type -> bouncebot.SubmitDailySolutionRequest
-	33, // 39: bouncebot.BounceBot.GetServerInfo:input_type -> bouncebot.GetServerInfoRequest
-	12, // 40: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.CreateRoomResponse
-	11, // 41: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
-	8,  // 42: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
-	8,  // 43: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
-	16, // 44: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
-	18, // 45: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
-	20, // 46: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
-	23, // 47: bouncebot.BounceBot.UpdateRoomSettings:output_type -> bouncebot.UpdateRoomSettingsResponse
-	25, // 48: bouncebot.BounceBot.BootPlayer:output_type -> bouncebot.BootPlayerResponse
-	27, // 49: bouncebot.BounceBot.LeaveRoom:output_type -> bouncebot.LeaveRoomResponse
-	30, // 50: bouncebot.BounceBot.GetDailyChallenge:output_type -> bouncebot.GetDailyChallengeResponse
-	32, // 51: bouncebot.BounceBot.SubmitDailySolution:output_type -> bouncebot.SubmitDailySolutionResponse
-	34, // 52: bouncebot.BounceBot.GetServerInfo:output_type -> bouncebot.GetServerInfoResponse
-	40, // [40:53] is the sub-list for method output_type
-	27, // [27:40] is the sub-list for method input_type
+	11, // 28: bouncebot.BounceBot.JoinRoom:input_type -> bouncebot.JoinRoomRequest
+	14, // 29: bouncebot.BounceBot.GetRoom:input_type -> bouncebot.GetRoomRequest
+	15, // 30: bouncebot.BounceBot.StartGame:input_type -> bouncebot.StartGameRequest
+	16, // 31: bouncebot.BounceBot.SubmitSolution:input_type -> bouncebot.SubmitSolutionRequest
+	18, // 32: bouncebot.BounceBot.MarkFinishedSolving:input_type -> bouncebot.MarkFinishedSolvingRequest
+	20, // 33: bouncebot.BounceBot.MarkReadyForNext:input_type -> bouncebot.MarkReadyForNextRequest
+	23, // 34: bouncebot.BounceBot.UpdateRoomSettings:input_type -> bouncebot.UpdateRoomSettingsRequest
+	25, // 35: bouncebot.BounceBot.BootPlayer:input_type -> bouncebot.BootPlayerRequest
+	27, // 36: bouncebot.BounceBot.LeaveRoom:input_type -> bouncebot.LeaveRoomRequest
+	10, // 37: bouncebot.BounceBot.CreateRoomFromSharedBoard:input_type -> bouncebot.CreateRoomFromSharedBoardRequest
+	30, // 38: bouncebot.BounceBot.GetDailyChallenge:input_type -> bouncebot.GetDailyChallengeRequest
+	32, // 39: bouncebot.BounceBot.SubmitDailySolution:input_type -> bouncebot.SubmitDailySolutionRequest
+	34, // 40: bouncebot.BounceBot.GetServerInfo:input_type -> bouncebot.GetServerInfoRequest
+	13, // 41: bouncebot.BounceBot.CreateRoom:output_type -> bouncebot.CreateRoomResponse
+	12, // 42: bouncebot.BounceBot.JoinRoom:output_type -> bouncebot.JoinRoomResponse
+	8,  // 43: bouncebot.BounceBot.GetRoom:output_type -> bouncebot.Room
+	8,  // 44: bouncebot.BounceBot.StartGame:output_type -> bouncebot.Room
+	17, // 45: bouncebot.BounceBot.SubmitSolution:output_type -> bouncebot.SubmitSolutionResponse
+	19, // 46: bouncebot.BounceBot.MarkFinishedSolving:output_type -> bouncebot.MarkFinishedSolvingResponse
+	21, // 47: bouncebot.BounceBot.MarkReadyForNext:output_type -> bouncebot.MarkReadyForNextResponse
+	24, // 48: bouncebot.BounceBot.UpdateRoomSettings:output_type -> bouncebot.UpdateRoomSettingsResponse
+	26, // 49: bouncebot.BounceBot.BootPlayer:output_type -> bouncebot.BootPlayerResponse
+	28, // 50: bouncebot.BounceBot.LeaveRoom:output_type -> bouncebot.LeaveRoomResponse
+	13, // 51: bouncebot.BounceBot.CreateRoomFromSharedBoard:output_type -> bouncebot.CreateRoomResponse
+	31, // 52: bouncebot.BounceBot.GetDailyChallenge:output_type -> bouncebot.GetDailyChallengeResponse
+	33, // 53: bouncebot.BounceBot.SubmitDailySolution:output_type -> bouncebot.SubmitDailySolutionResponse
+	35, // 54: bouncebot.BounceBot.GetServerInfo:output_type -> bouncebot.GetServerInfoResponse
+	41, // [41:55] is the sub-list for method output_type
+	27, // [27:41] is the sub-list for method input_type
 	27, // [27:27] is the sub-list for extension type_name
 	27, // [27:27] is the sub-list for extension extendee
 	0,  // [0:27] is the sub-list for field type_name
@@ -2313,7 +2377,7 @@ func file_bouncebot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bouncebot_proto_rawDesc), len(file_bouncebot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   35,
+			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

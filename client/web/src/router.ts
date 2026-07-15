@@ -4,6 +4,7 @@ import RoomView from './views/RoomView.vue'
 import HelpView from './views/HelpView.vue'
 import DailyChallengeView from './views/DailyChallengeView.vue'
 import DailyGameView from './views/DailyGameView.vue'
+import ShareLandingView from './views/ShareLandingView.vue'
 import { config } from './config'
 import { useFeatureStore } from './stores/featureStore'
 
@@ -35,6 +36,12 @@ const router = createRouter({
       path: '/daily/:difficulty',
       name: 'daily-game',
       component: DailyGameView,
+      props: true,
+    },
+    {
+      path: '/share/:code',
+      name: 'share',
+      component: ShareLandingView,
       props: true,
     },
   ],

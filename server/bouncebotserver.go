@@ -89,6 +89,34 @@ func (s *bounceBotServer) CreateRoom(ctx context.Context, req *connect.Request[p
 	}), nil
 }
 
+func (s *bounceBotServer) CreateRoomFromSharedBoard(ctx context.Context, req *connect.Request[pb.CreateRoomFromSharedBoardRequest]) (*connect.Response[pb.CreateRoomResponse], error) {
+	clientIP := ratelimit.ClientIPFromContext(ctx)
+	if clientIP != "" && s.createRoomLimiter != nil && !s.createRoomLimiter.Allow(clientIP) {
+		return nil, connect.NewError(connect.CodeResourceExhausted, nil)
+	}
+
+	playerName, err := validatePlayerName(req.Msg.PlayerName)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	game, err := model.DecodeShareCode(req.Msg.ShareCode)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	roomProto, playerID, sessionToken, err := s.rooms.CreateRoomFromBoard(playerName, game)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&pb.CreateRoomResponse{
+		Room:         roomProto,
+		PlayerId:     playerID,
+		SessionToken: sessionToken,
+	}), nil
+}
+
 func (s *bounceBotServer) JoinRoom(_ context.Context, req *connect.Request[pb.JoinRoomRequest]) (*connect.Response[pb.JoinRoomResponse], error) {
 	playerName, err := validatePlayerName(req.Msg.PlayerName)
 	if err != nil {

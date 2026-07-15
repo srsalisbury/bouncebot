@@ -19,6 +19,7 @@ service BounceBot {
   rpc UpdateRoomSettings (UpdateRoomSettingsRequest) returns (UpdateRoomSettingsResponse) {}
   rpc BootPlayer (BootPlayerRequest) returns (BootPlayerResponse) {}
   rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse) {}
+  rpc CreateRoomFromSharedBoard (CreateRoomFromSharedBoardRequest) returns (CreateRoomResponse) {}
 
   // Daily challenge
   rpc GetDailyChallenge (GetDailyChallengeRequest) returns (GetDailyChallengeResponse) {}
@@ -117,6 +118,14 @@ message Room {
 message CreateRoomRequest {
   string player_name = 1;
   bool is_single_player = 2;  // If true, only the creator can be in this room
+}
+
+// Creates a new single-player room seeded with a specific board, decoded
+// from a share code (see planning/BOARD_SHARING_DESIGN.md). Returns the same
+// shape as CreateRoomResponse.
+message CreateRoomFromSharedBoardRequest {
+  string player_name = 1;
+  string share_code = 2;
 }
 
 message JoinRoomRequest {

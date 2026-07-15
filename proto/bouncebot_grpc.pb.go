@@ -19,19 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BounceBot_CreateRoom_FullMethodName          = "/bouncebot.BounceBot/CreateRoom"
-	BounceBot_JoinRoom_FullMethodName            = "/bouncebot.BounceBot/JoinRoom"
-	BounceBot_GetRoom_FullMethodName             = "/bouncebot.BounceBot/GetRoom"
-	BounceBot_StartGame_FullMethodName           = "/bouncebot.BounceBot/StartGame"
-	BounceBot_SubmitSolution_FullMethodName      = "/bouncebot.BounceBot/SubmitSolution"
-	BounceBot_MarkFinishedSolving_FullMethodName = "/bouncebot.BounceBot/MarkFinishedSolving"
-	BounceBot_MarkReadyForNext_FullMethodName    = "/bouncebot.BounceBot/MarkReadyForNext"
-	BounceBot_UpdateRoomSettings_FullMethodName  = "/bouncebot.BounceBot/UpdateRoomSettings"
-	BounceBot_BootPlayer_FullMethodName          = "/bouncebot.BounceBot/BootPlayer"
-	BounceBot_LeaveRoom_FullMethodName           = "/bouncebot.BounceBot/LeaveRoom"
-	BounceBot_GetDailyChallenge_FullMethodName   = "/bouncebot.BounceBot/GetDailyChallenge"
-	BounceBot_SubmitDailySolution_FullMethodName = "/bouncebot.BounceBot/SubmitDailySolution"
-	BounceBot_GetServerInfo_FullMethodName       = "/bouncebot.BounceBot/GetServerInfo"
+	BounceBot_CreateRoom_FullMethodName                = "/bouncebot.BounceBot/CreateRoom"
+	BounceBot_JoinRoom_FullMethodName                  = "/bouncebot.BounceBot/JoinRoom"
+	BounceBot_GetRoom_FullMethodName                   = "/bouncebot.BounceBot/GetRoom"
+	BounceBot_StartGame_FullMethodName                 = "/bouncebot.BounceBot/StartGame"
+	BounceBot_SubmitSolution_FullMethodName            = "/bouncebot.BounceBot/SubmitSolution"
+	BounceBot_MarkFinishedSolving_FullMethodName       = "/bouncebot.BounceBot/MarkFinishedSolving"
+	BounceBot_MarkReadyForNext_FullMethodName          = "/bouncebot.BounceBot/MarkReadyForNext"
+	BounceBot_UpdateRoomSettings_FullMethodName        = "/bouncebot.BounceBot/UpdateRoomSettings"
+	BounceBot_BootPlayer_FullMethodName                = "/bouncebot.BounceBot/BootPlayer"
+	BounceBot_LeaveRoom_FullMethodName                 = "/bouncebot.BounceBot/LeaveRoom"
+	BounceBot_CreateRoomFromSharedBoard_FullMethodName = "/bouncebot.BounceBot/CreateRoomFromSharedBoard"
+	BounceBot_GetDailyChallenge_FullMethodName         = "/bouncebot.BounceBot/GetDailyChallenge"
+	BounceBot_SubmitDailySolution_FullMethodName       = "/bouncebot.BounceBot/SubmitDailySolution"
+	BounceBot_GetServerInfo_FullMethodName             = "/bouncebot.BounceBot/GetServerInfo"
 )
 
 // BounceBotClient is the client API for BounceBot service.
@@ -51,6 +52,7 @@ type BounceBotClient interface {
 	UpdateRoomSettings(ctx context.Context, in *UpdateRoomSettingsRequest, opts ...grpc.CallOption) (*UpdateRoomSettingsResponse, error)
 	BootPlayer(ctx context.Context, in *BootPlayerRequest, opts ...grpc.CallOption) (*BootPlayerResponse, error)
 	LeaveRoom(ctx context.Context, in *LeaveRoomRequest, opts ...grpc.CallOption) (*LeaveRoomResponse, error)
+	CreateRoomFromSharedBoard(ctx context.Context, in *CreateRoomFromSharedBoardRequest, opts ...grpc.CallOption) (*CreateRoomResponse, error)
 	// Daily challenge
 	GetDailyChallenge(ctx context.Context, in *GetDailyChallengeRequest, opts ...grpc.CallOption) (*GetDailyChallengeResponse, error)
 	SubmitDailySolution(ctx context.Context, in *SubmitDailySolutionRequest, opts ...grpc.CallOption) (*SubmitDailySolutionResponse, error)
@@ -166,6 +168,16 @@ func (c *bounceBotClient) LeaveRoom(ctx context.Context, in *LeaveRoomRequest, o
 	return out, nil
 }
 
+func (c *bounceBotClient) CreateRoomFromSharedBoard(ctx context.Context, in *CreateRoomFromSharedBoardRequest, opts ...grpc.CallOption) (*CreateRoomResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateRoomResponse)
+	err := c.cc.Invoke(ctx, BounceBot_CreateRoomFromSharedBoard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bounceBotClient) GetDailyChallenge(ctx context.Context, in *GetDailyChallengeRequest, opts ...grpc.CallOption) (*GetDailyChallengeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDailyChallengeResponse)
@@ -213,6 +225,7 @@ type BounceBotServer interface {
 	UpdateRoomSettings(context.Context, *UpdateRoomSettingsRequest) (*UpdateRoomSettingsResponse, error)
 	BootPlayer(context.Context, *BootPlayerRequest) (*BootPlayerResponse, error)
 	LeaveRoom(context.Context, *LeaveRoomRequest) (*LeaveRoomResponse, error)
+	CreateRoomFromSharedBoard(context.Context, *CreateRoomFromSharedBoardRequest) (*CreateRoomResponse, error)
 	// Daily challenge
 	GetDailyChallenge(context.Context, *GetDailyChallengeRequest) (*GetDailyChallengeResponse, error)
 	SubmitDailySolution(context.Context, *SubmitDailySolutionRequest) (*SubmitDailySolutionResponse, error)
@@ -257,6 +270,9 @@ func (UnimplementedBounceBotServer) BootPlayer(context.Context, *BootPlayerReque
 }
 func (UnimplementedBounceBotServer) LeaveRoom(context.Context, *LeaveRoomRequest) (*LeaveRoomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveRoom not implemented")
+}
+func (UnimplementedBounceBotServer) CreateRoomFromSharedBoard(context.Context, *CreateRoomFromSharedBoardRequest) (*CreateRoomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateRoomFromSharedBoard not implemented")
 }
 func (UnimplementedBounceBotServer) GetDailyChallenge(context.Context, *GetDailyChallengeRequest) (*GetDailyChallengeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDailyChallenge not implemented")
@@ -468,6 +484,24 @@ func _BounceBot_LeaveRoom_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BounceBot_CreateRoomFromSharedBoard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRoomFromSharedBoardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BounceBotServer).CreateRoomFromSharedBoard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BounceBot_CreateRoomFromSharedBoard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BounceBotServer).CreateRoomFromSharedBoard(ctx, req.(*CreateRoomFromSharedBoardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _BounceBot_GetDailyChallenge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetDailyChallengeRequest)
 	if err := dec(in); err != nil {
@@ -568,6 +602,10 @@ var BounceBot_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LeaveRoom",
 			Handler:    _BounceBot_LeaveRoom_Handler,
+		},
+		{
+			MethodName: "CreateRoomFromSharedBoard",
+			Handler:    _BounceBot_CreateRoomFromSharedBoard_Handler,
 		},
 		{
 			MethodName: "GetDailyChallenge",

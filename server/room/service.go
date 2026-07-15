@@ -85,6 +85,35 @@ func (s *RoomService) Create(playerName string, isSinglePlayer bool) (*Room, str
 	return s.repo.Create(playerName, isSinglePlayer)
 }
 
+// CreateRoomFromBoard creates a new single-player room and immediately
+// commits the given game as its current game, bypassing normal board
+// selection entirely - the board is already fully specified (e.g. decoded
+// from a share code), so there's nothing to generate or filter by minimum
+// solution length. Returns the room proto, player ID, and session token.
+func (s *RoomService) CreateRoomFromBoard(playerName string, game *model.Game) (*pb.Room, string, string, error) {
+	room, playerID, sessionToken := s.repo.Create(playerName, true)
+
+	roomLocked, unlock := s.repo.GetWithLock(room.ID)
+	if roomLocked == nil {
+		unlock()
+		return nil, "", "", fmt.Errorf("room not found: %s", room.ID)
+	}
+	signals := s.gameMgr.CommitNewGame(roomLocked, game)
+	proto := roomLocked.ToProto()
+	// Make a copy for callback (room might be modified after unlock)
+	roomCopy := *roomLocked
+	unlock()
+
+	s.processSignals(signals)
+
+	// Notify about game start (for solver etc)
+	if s.onGameStart != nil && roomCopy.CurrentGame != nil {
+		s.onGameStart(&roomCopy)
+	}
+
+	return proto, playerID, sessionToken, nil
+}
+
 // Join adds a player to an existing room.
 // Returns the room proto, the new player's ID, session token, and any error.
 func (s *RoomService) Join(roomID, playerName string) (*pb.Room, string, string, error) {

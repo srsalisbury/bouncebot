@@ -33,6 +33,10 @@ const props = defineProps<{
   playerColor?: string
 }>()
 
+const emit = defineEmits<{
+  share: []
+}>()
+
 const store = useGameStore()
 const showHowToPlay = ref(false)
 const boardRef = ref<HTMLElement | null>(null)
@@ -364,6 +368,11 @@ function handleSwitchPlayerSolution(index: number) {
         <h1 v-if="props.gameNumber != null" class="title">
           <span class="game-label">GAME</span>
           <span class="game-number">{{ props.gameNumber }}</span>
+          <button class="share-btn" title="Share this board" aria-label="Share this board" @click="emit('share')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="white">
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+            </svg>
+          </button>
         </h1>
         <!-- Board area (board + hints) -->
         <div class="board-area">
@@ -653,6 +662,28 @@ function handleSwitchPlayerSolution(index: number) {
   margin-top: 1rem;
   font-size: 1.8rem;
   text-align: center;
+  position: relative;
+}
+
+.share-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #1976d2;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.share-btn:hover {
+  background: #1565c0;
 }
 
 .game-label {
@@ -844,6 +875,15 @@ function handleSwitchPlayerSolution(index: number) {
   .title {
     grid-column: 1;
     font-size: 1.4rem;
+    /* Match .board's width formula so the share button (right-aligned within
+       .title) lines up with the board's actual right edge, not the screen's -
+       the board is height-constrained and centered on mobile, so it's often
+       narrower than the full row width. Must be `width`, not `max-width`: a
+       grid item with auto margins and no explicit width shrinks to fit its
+       content instead of stretching, which breaks the alignment. */
+    width: min(calc(100% - 2rem), calc(100dvh - 19rem), calc(100vh - 19rem));
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .board-area {
