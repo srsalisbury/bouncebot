@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file bouncebot.proto.
  */
 export const file_bouncebot: GenFile = /*@__PURE__*/
-  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUikAEKBUJvYXJkEgwKBHNpemUYASABKAUSJAoHdl93YWxscxgCIAMoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbhIkCgdoX3dhbGxzGAMgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEi0KEHBvc3NpYmxlX3RhcmdldHMYBCADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiNwoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEwoLY29sb3JfaW5kZXgYAyABKAUidAoOUGxheWVyU29sdXRpb24SEQoJcGxheWVyX2lkGAEgASgJEi0KCXNvbHZlZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIi4KC1BsYXllclNjb3JlEhEKCXBsYXllcl9pZBgBIAEoCRIMCgR3aW5zGAIgASgFImoKDFJvb21TZXR0aW5ncxIeChZzaG93X3NvbHZlcl9tb3ZlX2NvdW50GAEgASgIEh0KFXNob3dfc29sdmVyX3NvbHV0aW9ucxgCIAEoCBIbChNtaW5fc29sdXRpb25fbGVuZ3RoGAMgASgFIoIECgRSb29tEgoKAmlkGAEgASgJEiIKB3BsYXllcnMYAiADKAsyES5ib3VuY2Vib3QuUGxheWVyEi4KCmNyZWF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiUKDGN1cnJlbnRfZ2FtZRgEIAEoCzIPLmJvdW5jZWJvdC5HYW1lEjMKD2dhbWVfc3RhcnRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLAoJc29sdXRpb25zGAYgAygLMhkuYm91bmNlYm90LlBsYXllclNvbHV0aW9uEiYKBnNjb3JlcxgHIAMoCzIWLmJvdW5jZWJvdC5QbGF5ZXJTY29yZRIUCgxnYW1lc19wbGF5ZWQYCCABKAUSGAoQZmluaXNoZWRfc29sdmluZxgJIAMoCRIWCg5yZWFkeV9mb3JfbmV4dBgKIAMoCRIYChBpc19zaW5nbGVfcGxheWVyGAsgASgIEioKD3BlbmRpbmdfcGxheWVycxgMIAMoCzIRLmJvdW5jZWJvdC5QbGF5ZXISLwoOc29sdmVyX3Jlc3VsdHMYDSADKAsyFy5ib3VuY2Vib3QuU29sdmVyUmVzdWx0EikKCHNldHRpbmdzGA4gASgLMhcuYm91bmNlYm90LlJvb21TZXR0aW5ncyJCChFDcmVhdGVSb29tUmVxdWVzdBITCgtwbGF5ZXJfbmFtZRgBIAEoCRIYChBpc19zaW5nbGVfcGxheWVyGAIgASgIIjcKD0pvaW5Sb29tUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhMKC3BsYXllcl9uYW1lGAIgASgJIlsKEEpvaW5Sb29tUmVzcG9uc2USHQoEcm9vbRgBIAEoCzIPLmJvdW5jZWJvdC5Sb29tEhEKCXBsYXllcl9pZBgCIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAMgASgJIl0KEkNyZWF0ZVJvb21SZXNwb25zZRIdCgRyb29tGAEgASgLMg8uYm91bmNlYm90LlJvb20SEQoJcGxheWVyX2lkGAIgASgJEhUKDXNlc3Npb25fdG9rZW4YAyABKAkiIQoOR2V0Um9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCSIjChBTdGFydEdhbWVSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkiYQoVU3VibWl0U29sdXRpb25SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCRIgCgVtb3ZlcxgDIAMoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiRQoWU3VibWl0U29sdXRpb25SZXNwb25zZRIrCghzb2x1dGlvbhgBIAEoCzIZLmJvdW5jZWJvdC5QbGF5ZXJTb2x1dGlvbiJEChpNYXJrRmluaXNoZWRTb2x2aW5nUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkiLgobTWFya0ZpbmlzaGVkU29sdmluZ1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiQQoXTWFya1JlYWR5Rm9yTmV4dFJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAIgASgJIisKGE1hcmtSZWFkeUZvck5leHRSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIImcKDFNvbHZlclJlc3VsdBITCgtzb2x2ZXJfbmFtZRgBIAEoCRIgCgVtb3ZlcxgCIAMoCzIRLmJvdW5jZWJvdC5Cb3RQb3MSDQoFZXJyb3IYAyABKAkSEQoJY29tcGxldGVkGAQgASgIIm4KGVVwZGF0ZVJvb21TZXR0aW5nc1JlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAIgASgJEikKCHNldHRpbmdzGAMgASgLMhcuYm91bmNlYm90LlJvb21TZXR0aW5ncyI8ChpVcGRhdGVSb29tU2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg0KBWVycm9yGAIgASgJIlUKEUJvb3RQbGF5ZXJSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCRIYChB0YXJnZXRfcGxheWVyX2lkGAMgASgJIjQKEkJvb3RQbGF5ZXJSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg0KBWVycm9yGAIgASgJIjoKEExlYXZlUm9vbVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAIgASgJIiQKEUxlYXZlUm9vbVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiawoPRGFpbHlQdXp6bGVJbmZvEhIKCmRpZmZpY3VsdHkYASABKAkSHQoEZ2FtZRgCIAEoCzIPLmJvdW5jZWJvdC5HYW1lEg4KBnNvbHZlZBgDIAEoCBIVCg1vcHRpbWFsX21vdmVzGAQgASgFIk4KGEdldERhaWx5Q2hhbGxlbmdlUmVxdWVzdBIRCglwbGF5ZXJfaWQYASABKAkSHwoXdGltZXpvbmVfb2Zmc2V0X21pbnV0ZXMYAiABKAUicwoZR2V0RGFpbHlDaGFsbGVuZ2VSZXNwb25zZRIMCgRkYXRlGAEgASgJEisKB3B1enpsZXMYAiADKAsyGi5ib3VuY2Vib3QuRGFpbHlQdXp6bGVJbmZvEhsKE3NlY29uZHNfdW50aWxfcmVzZXQYAyABKAUicwoaU3VibWl0RGFpbHlTb2x1dGlvblJlcXVlc3QSEQoJcGxheWVyX2lkGAEgASgJEgwKBGRhdGUYAiABKAkSEgoKZGlmZmljdWx0eRgDIAEoCRIgCgVtb3ZlcxgEIAMoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiRgobU3VibWl0RGFpbHlTb2x1dGlvblJlc3BvbnNlEg8KB2NvcnJlY3QYASABKAgSFgoObmV3X2NvbXBsZXRpb24YAiABKAgiFgoUR2V0U2VydmVySW5mb1JlcXVlc3QiOAoVR2V0U2VydmVySW5mb1Jlc3BvbnNlEh8KF2RhaWx5X2NoYWxsZW5nZV9lbmFibGVkGAEgASgIMtEICglCb3VuY2VCb3QSSwoKQ3JlYXRlUm9vbRIcLmJvdW5jZWJvdC5DcmVhdGVSb29tUmVxdWVzdBodLmJvdW5jZWJvdC5DcmVhdGVSb29tUmVzcG9uc2UiABJFCghKb2luUm9vbRIaLmJvdW5jZWJvdC5Kb2luUm9vbVJlcXVlc3QaGy5ib3VuY2Vib3QuSm9pblJvb21SZXNwb25zZSIAEjcKB0dldFJvb20SGS5ib3VuY2Vib3QuR2V0Um9vbVJlcXVlc3QaDy5ib3VuY2Vib3QuUm9vbSIAEjsKCVN0YXJ0R2FtZRIbLmJvdW5jZWJvdC5TdGFydEdhbWVSZXF1ZXN0Gg8uYm91bmNlYm90LlJvb20iABJXCg5TdWJtaXRTb2x1dGlvbhIgLmJvdW5jZWJvdC5TdWJtaXRTb2x1dGlvblJlcXVlc3QaIS5ib3VuY2Vib3QuU3VibWl0U29sdXRpb25SZXNwb25zZSIAEmYKE01hcmtGaW5pc2hlZFNvbHZpbmcSJS5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1JlcXVlc3QaJi5ib3VuY2Vib3QuTWFya0ZpbmlzaGVkU29sdmluZ1Jlc3BvbnNlIgASXQoQTWFya1JlYWR5Rm9yTmV4dBIiLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVxdWVzdBojLmJvdW5jZWJvdC5NYXJrUmVhZHlGb3JOZXh0UmVzcG9uc2UiABJjChJVcGRhdGVSb29tU2V0dGluZ3MSJC5ib3VuY2Vib3QuVXBkYXRlUm9vbVNldHRpbmdzUmVxdWVzdBolLmJvdW5jZWJvdC5VcGRhdGVSb29tU2V0dGluZ3NSZXNwb25zZSIAEksKCkJvb3RQbGF5ZXISHC5ib3VuY2Vib3QuQm9vdFBsYXllclJlcXVlc3QaHS5ib3VuY2Vib3QuQm9vdFBsYXllclJlc3BvbnNlIgASSAoJTGVhdmVSb29tEhsuYm91bmNlYm90LkxlYXZlUm9vbVJlcXVlc3QaHC5ib3VuY2Vib3QuTGVhdmVSb29tUmVzcG9uc2UiABJgChFHZXREYWlseUNoYWxsZW5nZRIjLmJvdW5jZWJvdC5HZXREYWlseUNoYWxsZW5nZVJlcXVlc3QaJC5ib3VuY2Vib3QuR2V0RGFpbHlDaGFsbGVuZ2VSZXNwb25zZSIAEmYKE1N1Ym1pdERhaWx5U29sdXRpb24SJS5ib3VuY2Vib3QuU3VibWl0RGFpbHlTb2x1dGlvblJlcXVlc3QaJi5ib3VuY2Vib3QuU3VibWl0RGFpbHlTb2x1dGlvblJlc3BvbnNlIgASVAoNR2V0U2VydmVySW5mbxIfLmJvdW5jZWJvdC5HZXRTZXJ2ZXJJbmZvUmVxdWVzdBogLmJvdW5jZWJvdC5HZXRTZXJ2ZXJJbmZvUmVzcG9uc2UiAEIoWiZnaXRodWIuY29tL3Nyc2FsaXNidXJ5L2JvdW5jZWJvdC9wcm90b2IGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("Cg9ib3VuY2Vib3QucHJvdG8SCWJvdW5jZWJvdCIgCghQb3NpdGlvbhIJCgF4GAEgASgFEgkKAXkYAiABKAUikAEKBUJvYXJkEgwKBHNpemUYASABKAUSJAoHdl93YWxscxgCIAMoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbhIkCgdoX3dhbGxzGAMgAygLMhMuYm91bmNlYm90LlBvc2l0aW9uEi0KEHBvc3NpYmxlX3RhcmdldHMYBCADKAsyEy5ib3VuY2Vib3QuUG9zaXRpb24iNgoGQm90UG9zEgoKAmlkGAEgASgFEiAKA3BvcxgCIAEoCzITLmJvdW5jZWJvdC5Qb3NpdGlvbiJrCgRHYW1lEh8KBWJvYXJkGAEgASgLMhAuYm91bmNlYm90LkJvYXJkEh8KBGJvdHMYAiADKAsyES5ib3VuY2Vib3QuQm90UG9zEiEKBnRhcmdldBgDIAEoCzIRLmJvdW5jZWJvdC5Cb3RQb3MiNwoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEwoLY29sb3JfaW5kZXgYAyABKAUidAoOUGxheWVyU29sdXRpb24SEQoJcGxheWVyX2lkGAEgASgJEi0KCXNvbHZlZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASIAoFbW92ZXMYAyADKAsyES5ib3VuY2Vib3QuQm90UG9zIi4KC1BsYXllclNjb3JlEhEKCXBsYXllcl9pZBgBIAEoCRIMCgR3aW5zGAIgASgFImoKDFJvb21TZXR0aW5ncxIeChZzaG93X3NvbHZlcl9tb3ZlX2NvdW50GAEgASgIEh0KFXNob3dfc29sdmVyX3NvbHV0aW9ucxgCIAEoCBIbChNtaW5fc29sdXRpb25fbGVuZ3RoGAMgASgFIoIECgRSb29tEgoKAmlkGAEgASgJEiIKB3BsYXllcnMYAiADKAsyES5ib3VuY2Vib3QuUGxheWVyEi4KCmNyZWF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiUKDGN1cnJlbnRfZ2FtZRgEIAEoCzIPLmJvdW5jZWJvdC5HYW1lEjMKD2dhbWVfc3RhcnRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLAoJc29sdXRpb25zGAYgAygLMhkuYm91bmNlYm90LlBsYXllclNvbHV0aW9uEiYKBnNjb3JlcxgHIAMoCzIWLmJvdW5jZWJvdC5QbGF5ZXJTY29yZRIUCgxnYW1lc19wbGF5ZWQYCCABKAUSGAoQZmluaXNoZWRfc29sdmluZxgJIAMoCRIWCg5yZWFkeV9mb3JfbmV4dBgKIAMoCRIYChBpc19zaW5nbGVfcGxheWVyGAsgASgIEioKD3BlbmRpbmdfcGxheWVycxgMIAMoCzIRLmJvdW5jZWJvdC5QbGF5ZXISLwoOc29sdmVyX3Jlc3VsdHMYDSADKAsyFy5ib3VuY2Vib3QuU29sdmVyUmVzdWx0EikKCHNldHRpbmdzGA4gASgLMhcuYm91bmNlYm90LlJvb21TZXR0aW5ncyJCChFDcmVhdGVSb29tUmVxdWVzdBITCgtwbGF5ZXJfbmFtZRgBIAEoCRIYChBpc19zaW5nbGVfcGxheWVyGAIgASgIIksKIENyZWF0ZVJvb21Gcm9tU2hhcmVkQm9hcmRSZXF1ZXN0EhMKC3BsYXllcl9uYW1lGAEgASgJEhIKCnNoYXJlX2NvZGUYAiABKAkiNwoPSm9pblJvb21SZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSEwoLcGxheWVyX25hbWUYAiABKAkiWwoQSm9pblJvb21SZXNwb25zZRIdCgRyb29tGAEgASgLMg8uYm91bmNlYm90LlJvb20SEQoJcGxheWVyX2lkGAIgASgJEhUKDXNlc3Npb25fdG9rZW4YAyABKAkiXQoSQ3JlYXRlUm9vbVJlc3BvbnNlEh0KBHJvb20YASABKAsyDy5ib3VuY2Vib3QuUm9vbRIRCglwbGF5ZXJfaWQYAiABKAkSFQoNc2Vzc2lvbl90b2tlbhgDIAEoCSIhCg5HZXRSb29tUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJIiMKEFN0YXJ0R2FtZVJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCSJhChVTdWJtaXRTb2x1dGlvblJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAIgASgJEiAKBW1vdmVzGAMgAygLMhEuYm91bmNlYm90LkJvdFBvcyJFChZTdWJtaXRTb2x1dGlvblJlc3BvbnNlEisKCHNvbHV0aW9uGAEgASgLMhkuYm91bmNlYm90LlBsYXllclNvbHV0aW9uIkQKGk1hcmtGaW5pc2hlZFNvbHZpbmdSZXF1ZXN0Eg8KB3Jvb21faWQYASABKAkSFQoNc2Vzc2lvbl90b2tlbhgCIAEoCSIuChtNYXJrRmluaXNoZWRTb2x2aW5nUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCJBChdNYXJrUmVhZHlGb3JOZXh0UmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkiKwoYTWFya1JlYWR5Rm9yTmV4dFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiZwoMU29sdmVyUmVzdWx0EhMKC3NvbHZlcl9uYW1lGAEgASgJEiAKBW1vdmVzGAIgAygLMhEuYm91bmNlYm90LkJvdFBvcxINCgVlcnJvchgDIAEoCRIRCgljb21wbGV0ZWQYBCABKAgibgoZVXBkYXRlUm9vbVNldHRpbmdzUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkSKQoIc2V0dGluZ3MYAyABKAsyFy5ib3VuY2Vib3QuUm9vbVNldHRpbmdzIjwKGlVwZGF0ZVJvb21TZXR0aW5nc1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDQoFZXJyb3IYAiABKAkiVQoRQm9vdFBsYXllclJlcXVlc3QSDwoHcm9vbV9pZBgBIAEoCRIVCg1zZXNzaW9uX3Rva2VuGAIgASgJEhgKEHRhcmdldF9wbGF5ZXJfaWQYAyABKAkiNAoSQm9vdFBsYXllclJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDQoFZXJyb3IYAiABKAkiOgoQTGVhdmVSb29tUmVxdWVzdBIPCgdyb29tX2lkGAEgASgJEhUKDXNlc3Npb25fdG9rZW4YAiABKAkiJAoRTGVhdmVSb29tUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCJrCg9EYWlseVB1enpsZUluZm8SEgoKZGlmZmljdWx0eRgBIAEoCRIdCgRnYW1lGAIgASgLMg8uYm91bmNlYm90LkdhbWUSDgoGc29sdmVkGAMgASgIEhUKDW9wdGltYWxfbW92ZXMYBCABKAUiTgoYR2V0RGFpbHlDaGFsbGVuZ2VSZXF1ZXN0EhEKCXBsYXllcl9pZBgBIAEoCRIfChd0aW1lem9uZV9vZmZzZXRfbWludXRlcxgCIAEoBSJzChlHZXREYWlseUNoYWxsZW5nZVJlc3BvbnNlEgwKBGRhdGUYASABKAkSKwoHcHV6emxlcxgCIAMoCzIaLmJvdW5jZWJvdC5EYWlseVB1enpsZUluZm8SGwoTc2Vjb25kc191bnRpbF9yZXNldBgDIAEoBSJzChpTdWJtaXREYWlseVNvbHV0aW9uUmVxdWVzdBIRCglwbGF5ZXJfaWQYASABKAkSDAoEZGF0ZRgCIAEoCRISCgpkaWZmaWN1bHR5GAMgASgJEiAKBW1vdmVzGAQgAygLMhEuYm91bmNlYm90LkJvdFBvcyJGChtTdWJtaXREYWlseVNvbHV0aW9uUmVzcG9uc2USDwoHY29ycmVjdBgBIAEoCBIWCg5uZXdfY29tcGxldGlvbhgCIAEoCCIWChRHZXRTZXJ2ZXJJbmZvUmVxdWVzdCI4ChVHZXRTZXJ2ZXJJbmZvUmVzcG9uc2USHwoXZGFpbHlfY2hhbGxlbmdlX2VuYWJsZWQYASABKAgyvAkKCUJvdW5jZUJvdBJLCgpDcmVhdGVSb29tEhwuYm91bmNlYm90LkNyZWF0ZVJvb21SZXF1ZXN0Gh0uYm91bmNlYm90LkNyZWF0ZVJvb21SZXNwb25zZSIAEkUKCEpvaW5Sb29tEhouYm91bmNlYm90LkpvaW5Sb29tUmVxdWVzdBobLmJvdW5jZWJvdC5Kb2luUm9vbVJlc3BvbnNlIgASNwoHR2V0Um9vbRIZLmJvdW5jZWJvdC5HZXRSb29tUmVxdWVzdBoPLmJvdW5jZWJvdC5Sb29tIgASOwoJU3RhcnRHYW1lEhsuYm91bmNlYm90LlN0YXJ0R2FtZVJlcXVlc3QaDy5ib3VuY2Vib3QuUm9vbSIAElcKDlN1Ym1pdFNvbHV0aW9uEiAuYm91bmNlYm90LlN1Ym1pdFNvbHV0aW9uUmVxdWVzdBohLmJvdW5jZWJvdC5TdWJtaXRTb2x1dGlvblJlc3BvbnNlIgASZgoTTWFya0ZpbmlzaGVkU29sdmluZxIlLmJvdW5jZWJvdC5NYXJrRmluaXNoZWRTb2x2aW5nUmVxdWVzdBomLmJvdW5jZWJvdC5NYXJrRmluaXNoZWRTb2x2aW5nUmVzcG9uc2UiABJdChBNYXJrUmVhZHlGb3JOZXh0EiIuYm91bmNlYm90Lk1hcmtSZWFkeUZvck5leHRSZXF1ZXN0GiMuYm91bmNlYm90Lk1hcmtSZWFkeUZvck5leHRSZXNwb25zZSIAEmMKElVwZGF0ZVJvb21TZXR0aW5ncxIkLmJvdW5jZWJvdC5VcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0GiUuYm91bmNlYm90LlVwZGF0ZVJvb21TZXR0aW5nc1Jlc3BvbnNlIgASSwoKQm9vdFBsYXllchIcLmJvdW5jZWJvdC5Cb290UGxheWVyUmVxdWVzdBodLmJvdW5jZWJvdC5Cb290UGxheWVyUmVzcG9uc2UiABJICglMZWF2ZVJvb20SGy5ib3VuY2Vib3QuTGVhdmVSb29tUmVxdWVzdBocLmJvdW5jZWJvdC5MZWF2ZVJvb21SZXNwb25zZSIAEmkKGUNyZWF0ZVJvb21Gcm9tU2hhcmVkQm9hcmQSKy5ib3VuY2Vib3QuQ3JlYXRlUm9vbUZyb21TaGFyZWRCb2FyZFJlcXVlc3QaHS5ib3VuY2Vib3QuQ3JlYXRlUm9vbVJlc3BvbnNlIgASYAoRR2V0RGFpbHlDaGFsbGVuZ2USIy5ib3VuY2Vib3QuR2V0RGFpbHlDaGFsbGVuZ2VSZXF1ZXN0GiQuYm91bmNlYm90LkdldERhaWx5Q2hhbGxlbmdlUmVzcG9uc2UiABJmChNTdWJtaXREYWlseVNvbHV0aW9uEiUuYm91bmNlYm90LlN1Ym1pdERhaWx5U29sdXRpb25SZXF1ZXN0GiYuYm91bmNlYm90LlN1Ym1pdERhaWx5U29sdXRpb25SZXNwb25zZSIAElQKDUdldFNlcnZlckluZm8SHy5ib3VuY2Vib3QuR2V0U2VydmVySW5mb1JlcXVlc3QaIC5ib3VuY2Vib3QuR2V0U2VydmVySW5mb1Jlc3BvbnNlIgBCKFomZ2l0aHViLmNvbS9zcnNhbGlzYnVyeS9ib3VuY2Vib3QvcHJvdG9iBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * Board grid position.
@@ -388,6 +388,32 @@ export const CreateRoomRequestSchema: GenMessage<CreateRoomRequest> = /*@__PURE_
   messageDesc(file_bouncebot, 9);
 
 /**
+ * Creates a new single-player room seeded with a specific board, decoded
+ * from a share code (see planning/BOARD_SHARING_DESIGN.md). Returns the same
+ * shape as CreateRoomResponse.
+ *
+ * @generated from message bouncebot.CreateRoomFromSharedBoardRequest
+ */
+export type CreateRoomFromSharedBoardRequest = Message<"bouncebot.CreateRoomFromSharedBoardRequest"> & {
+  /**
+   * @generated from field: string player_name = 1;
+   */
+  playerName: string;
+
+  /**
+   * @generated from field: string share_code = 2;
+   */
+  shareCode: string;
+};
+
+/**
+ * Describes the message bouncebot.CreateRoomFromSharedBoardRequest.
+ * Use `create(CreateRoomFromSharedBoardRequestSchema)` to create a new message.
+ */
+export const CreateRoomFromSharedBoardRequestSchema: GenMessage<CreateRoomFromSharedBoardRequest> = /*@__PURE__*/
+  messageDesc(file_bouncebot, 10);
+
+/**
  * @generated from message bouncebot.JoinRoomRequest
  */
 export type JoinRoomRequest = Message<"bouncebot.JoinRoomRequest"> & {
@@ -407,7 +433,7 @@ export type JoinRoomRequest = Message<"bouncebot.JoinRoomRequest"> & {
  * Use `create(JoinRoomRequestSchema)` to create a new message.
  */
 export const JoinRoomRequestSchema: GenMessage<JoinRoomRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 10);
+  messageDesc(file_bouncebot, 11);
 
 /**
  * @generated from message bouncebot.JoinRoomResponse
@@ -434,7 +460,7 @@ export type JoinRoomResponse = Message<"bouncebot.JoinRoomResponse"> & {
  * Use `create(JoinRoomResponseSchema)` to create a new message.
  */
 export const JoinRoomResponseSchema: GenMessage<JoinRoomResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 11);
+  messageDesc(file_bouncebot, 12);
 
 /**
  * @generated from message bouncebot.CreateRoomResponse
@@ -461,7 +487,7 @@ export type CreateRoomResponse = Message<"bouncebot.CreateRoomResponse"> & {
  * Use `create(CreateRoomResponseSchema)` to create a new message.
  */
 export const CreateRoomResponseSchema: GenMessage<CreateRoomResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 12);
+  messageDesc(file_bouncebot, 13);
 
 /**
  * @generated from message bouncebot.GetRoomRequest
@@ -478,7 +504,7 @@ export type GetRoomRequest = Message<"bouncebot.GetRoomRequest"> & {
  * Use `create(GetRoomRequestSchema)` to create a new message.
  */
 export const GetRoomRequestSchema: GenMessage<GetRoomRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 13);
+  messageDesc(file_bouncebot, 14);
 
 /**
  * @generated from message bouncebot.StartGameRequest
@@ -495,7 +521,7 @@ export type StartGameRequest = Message<"bouncebot.StartGameRequest"> & {
  * Use `create(StartGameRequestSchema)` to create a new message.
  */
 export const StartGameRequestSchema: GenMessage<StartGameRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 14);
+  messageDesc(file_bouncebot, 15);
 
 /**
  * @generated from message bouncebot.SubmitSolutionRequest
@@ -522,7 +548,7 @@ export type SubmitSolutionRequest = Message<"bouncebot.SubmitSolutionRequest"> &
  * Use `create(SubmitSolutionRequestSchema)` to create a new message.
  */
 export const SubmitSolutionRequestSchema: GenMessage<SubmitSolutionRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 15);
+  messageDesc(file_bouncebot, 16);
 
 /**
  * @generated from message bouncebot.SubmitSolutionResponse
@@ -539,7 +565,7 @@ export type SubmitSolutionResponse = Message<"bouncebot.SubmitSolutionResponse">
  * Use `create(SubmitSolutionResponseSchema)` to create a new message.
  */
 export const SubmitSolutionResponseSchema: GenMessage<SubmitSolutionResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 16);
+  messageDesc(file_bouncebot, 17);
 
 /**
  * @generated from message bouncebot.MarkFinishedSolvingRequest
@@ -561,7 +587,7 @@ export type MarkFinishedSolvingRequest = Message<"bouncebot.MarkFinishedSolvingR
  * Use `create(MarkFinishedSolvingRequestSchema)` to create a new message.
  */
 export const MarkFinishedSolvingRequestSchema: GenMessage<MarkFinishedSolvingRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 17);
+  messageDesc(file_bouncebot, 18);
 
 /**
  * @generated from message bouncebot.MarkFinishedSolvingResponse
@@ -578,7 +604,7 @@ export type MarkFinishedSolvingResponse = Message<"bouncebot.MarkFinishedSolving
  * Use `create(MarkFinishedSolvingResponseSchema)` to create a new message.
  */
 export const MarkFinishedSolvingResponseSchema: GenMessage<MarkFinishedSolvingResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 18);
+  messageDesc(file_bouncebot, 19);
 
 /**
  * @generated from message bouncebot.MarkReadyForNextRequest
@@ -600,7 +626,7 @@ export type MarkReadyForNextRequest = Message<"bouncebot.MarkReadyForNextRequest
  * Use `create(MarkReadyForNextRequestSchema)` to create a new message.
  */
 export const MarkReadyForNextRequestSchema: GenMessage<MarkReadyForNextRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 19);
+  messageDesc(file_bouncebot, 20);
 
 /**
  * @generated from message bouncebot.MarkReadyForNextResponse
@@ -617,7 +643,7 @@ export type MarkReadyForNextResponse = Message<"bouncebot.MarkReadyForNextRespon
  * Use `create(MarkReadyForNextResponseSchema)` to create a new message.
  */
 export const MarkReadyForNextResponseSchema: GenMessage<MarkReadyForNextResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 20);
+  messageDesc(file_bouncebot, 21);
 
 /**
  * Solver result sent via WebSocket when solver completes
@@ -657,7 +683,7 @@ export type SolverResult = Message<"bouncebot.SolverResult"> & {
  * Use `create(SolverResultSchema)` to create a new message.
  */
 export const SolverResultSchema: GenMessage<SolverResult> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 21);
+  messageDesc(file_bouncebot, 22);
 
 /**
  * @generated from message bouncebot.UpdateRoomSettingsRequest
@@ -686,7 +712,7 @@ export type UpdateRoomSettingsRequest = Message<"bouncebot.UpdateRoomSettingsReq
  * Use `create(UpdateRoomSettingsRequestSchema)` to create a new message.
  */
 export const UpdateRoomSettingsRequestSchema: GenMessage<UpdateRoomSettingsRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 22);
+  messageDesc(file_bouncebot, 23);
 
 /**
  * @generated from message bouncebot.UpdateRoomSettingsResponse
@@ -708,7 +734,7 @@ export type UpdateRoomSettingsResponse = Message<"bouncebot.UpdateRoomSettingsRe
  * Use `create(UpdateRoomSettingsResponseSchema)` to create a new message.
  */
 export const UpdateRoomSettingsResponseSchema: GenMessage<UpdateRoomSettingsResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 23);
+  messageDesc(file_bouncebot, 24);
 
 /**
  * @generated from message bouncebot.BootPlayerRequest
@@ -739,7 +765,7 @@ export type BootPlayerRequest = Message<"bouncebot.BootPlayerRequest"> & {
  * Use `create(BootPlayerRequestSchema)` to create a new message.
  */
 export const BootPlayerRequestSchema: GenMessage<BootPlayerRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 24);
+  messageDesc(file_bouncebot, 25);
 
 /**
  * @generated from message bouncebot.BootPlayerResponse
@@ -761,7 +787,7 @@ export type BootPlayerResponse = Message<"bouncebot.BootPlayerResponse"> & {
  * Use `create(BootPlayerResponseSchema)` to create a new message.
  */
 export const BootPlayerResponseSchema: GenMessage<BootPlayerResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 25);
+  messageDesc(file_bouncebot, 26);
 
 /**
  * @generated from message bouncebot.LeaveRoomRequest
@@ -783,7 +809,7 @@ export type LeaveRoomRequest = Message<"bouncebot.LeaveRoomRequest"> & {
  * Use `create(LeaveRoomRequestSchema)` to create a new message.
  */
 export const LeaveRoomRequestSchema: GenMessage<LeaveRoomRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 26);
+  messageDesc(file_bouncebot, 27);
 
 /**
  * @generated from message bouncebot.LeaveRoomResponse
@@ -800,7 +826,7 @@ export type LeaveRoomResponse = Message<"bouncebot.LeaveRoomResponse"> & {
  * Use `create(LeaveRoomResponseSchema)` to create a new message.
  */
 export const LeaveRoomResponseSchema: GenMessage<LeaveRoomResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 27);
+  messageDesc(file_bouncebot, 28);
 
 /**
  * Daily challenge messages
@@ -836,7 +862,7 @@ export type DailyPuzzleInfo = Message<"bouncebot.DailyPuzzleInfo"> & {
  * Use `create(DailyPuzzleInfoSchema)` to create a new message.
  */
 export const DailyPuzzleInfoSchema: GenMessage<DailyPuzzleInfo> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 28);
+  messageDesc(file_bouncebot, 29);
 
 /**
  * @generated from message bouncebot.GetDailyChallengeRequest
@@ -858,7 +884,7 @@ export type GetDailyChallengeRequest = Message<"bouncebot.GetDailyChallengeReque
  * Use `create(GetDailyChallengeRequestSchema)` to create a new message.
  */
 export const GetDailyChallengeRequestSchema: GenMessage<GetDailyChallengeRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 29);
+  messageDesc(file_bouncebot, 30);
 
 /**
  * @generated from message bouncebot.GetDailyChallengeResponse
@@ -885,7 +911,7 @@ export type GetDailyChallengeResponse = Message<"bouncebot.GetDailyChallengeResp
  * Use `create(GetDailyChallengeResponseSchema)` to create a new message.
  */
 export const GetDailyChallengeResponseSchema: GenMessage<GetDailyChallengeResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 30);
+  messageDesc(file_bouncebot, 31);
 
 /**
  * @generated from message bouncebot.SubmitDailySolutionRequest
@@ -917,7 +943,7 @@ export type SubmitDailySolutionRequest = Message<"bouncebot.SubmitDailySolutionR
  * Use `create(SubmitDailySolutionRequestSchema)` to create a new message.
  */
 export const SubmitDailySolutionRequestSchema: GenMessage<SubmitDailySolutionRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 31);
+  messageDesc(file_bouncebot, 32);
 
 /**
  * @generated from message bouncebot.SubmitDailySolutionResponse
@@ -939,7 +965,7 @@ export type SubmitDailySolutionResponse = Message<"bouncebot.SubmitDailySolution
  * Use `create(SubmitDailySolutionResponseSchema)` to create a new message.
  */
 export const SubmitDailySolutionResponseSchema: GenMessage<SubmitDailySolutionResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 32);
+  messageDesc(file_bouncebot, 33);
 
 /**
  * @generated from message bouncebot.GetServerInfoRequest
@@ -952,7 +978,7 @@ export type GetServerInfoRequest = Message<"bouncebot.GetServerInfoRequest"> & {
  * Use `create(GetServerInfoRequestSchema)` to create a new message.
  */
 export const GetServerInfoRequestSchema: GenMessage<GetServerInfoRequest> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 33);
+  messageDesc(file_bouncebot, 34);
 
 /**
  * @generated from message bouncebot.GetServerInfoResponse
@@ -969,7 +995,7 @@ export type GetServerInfoResponse = Message<"bouncebot.GetServerInfoResponse"> &
  * Use `create(GetServerInfoResponseSchema)` to create a new message.
  */
 export const GetServerInfoResponseSchema: GenMessage<GetServerInfoResponse> = /*@__PURE__*/
-  messageDesc(file_bouncebot, 34);
+  messageDesc(file_bouncebot, 35);
 
 /**
  * Service for client to fetch a game board and return results.
@@ -1058,6 +1084,14 @@ export const BounceBot: GenService<{
     methodKind: "unary";
     input: typeof LeaveRoomRequestSchema;
     output: typeof LeaveRoomResponseSchema;
+  },
+  /**
+   * @generated from rpc bouncebot.BounceBot.CreateRoomFromSharedBoard
+   */
+  createRoomFromSharedBoard: {
+    methodKind: "unary";
+    input: typeof CreateRoomFromSharedBoardRequestSchema;
+    output: typeof CreateRoomResponseSchema;
   },
   /**
    * Daily challenge

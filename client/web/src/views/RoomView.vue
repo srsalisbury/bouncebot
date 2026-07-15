@@ -10,9 +10,11 @@ import GameBoard from '../components/GameBoard.vue'
 import PlayersPanel from '../components/PlayersPanel.vue'
 import LeaderboardModal from '../components/LeaderboardModal.vue'
 import SettingsModal from '../components/SettingsModal.vue'
+import ShareModal from '../components/ShareModal.vue'
 import { getPlayerColor, SOLVER_PLAYER_ID, SOLO_PLAYER_ID } from '../constants'
 import { create } from '@bufbuild/protobuf'
 import { PlayerSolutionSchema, BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
+import { encodeShareCode } from '../shareCode'
 
 const props = defineProps<{
   roomId: string
@@ -31,6 +33,8 @@ const showLeaderboard = ref(false)
 const showLeaveConfirm = ref(false)
 const showStatsDropdown = ref(false)
 const showSettings = ref(false)
+const showShareModal = ref(false)
+const shareBoardUrl = ref('')
 
 // Room connection composable
 const {
@@ -282,6 +286,18 @@ async function copyShareUrl() {
   }
 }
 
+function openShareModal() {
+  if (!room.value?.currentGame) return
+  try {
+    const code = encodeShareCode(room.value.currentGame)
+    const path = router.resolve({ name: 'share', params: { code } }).href
+    shareBoardUrl.value = `${window.location.origin}${path}`
+    showShareModal.value = true
+  } catch (e) {
+    console.error('Failed to create a share link for this board', e)
+  }
+}
+
 async function updateSettings(settings: {
   showSolverMoveCount: boolean
   showSolverSolutions: boolean
@@ -460,7 +476,7 @@ async function bootPlayer(targetPlayerId: string) {
 
 function globalKeyHandler(event: KeyboardEvent) {
   // Don't handle if any dialog is open
-  if (showProtectedSolutionDialog.value || showLeaveConfirm.value || showSettings.value) return
+  if (showProtectedSolutionDialog.value || showLeaveConfirm.value || showSettings.value || showShareModal.value) return
 
   if (event.key === 'l' && (hasGame.value || gameEnded.value)) {
     event.preventDefault()
@@ -506,6 +522,23 @@ watch(showSettings, (show) => {
     window.addEventListener('keydown', settingsKeyHandler, true)
   } else {
     window.removeEventListener('keydown', settingsKeyHandler, true)
+  }
+})
+
+function shareModalKeyHandler(event: KeyboardEvent) {
+  if (!showShareModal.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    showShareModal.value = false
+  }
+}
+
+watch(showShareModal, (show) => {
+  if (show) {
+    window.addEventListener('keydown', shareModalKeyHandler, true)
+  } else {
+    window.removeEventListener('keydown', shareModalKeyHandler, true)
   }
 })
 
@@ -593,6 +626,7 @@ onUnmounted(() => {
         :get-best-submitted-index="gameActions.getBestSubmittedIndex"
         :on-solution-deleted="gameActions.notifySolutionDeleted"
         :player-color="currentPlayerColor"
+        @share="openShareModal"
       >
         <template #header="{ toggleHelp }">
           <div class="game-header">
@@ -804,6 +838,13 @@ onUnmounted(() => {
       @close="showSettings = false"
       @update="updateSettings"
       @boot-player="bootPlayer"
+    />
+
+    <!-- Share board modal -->
+    <ShareModal
+      :show="showShareModal"
+      :url="shareBoardUrl"
+      @close="showShareModal = false"
     />
   </div>
 </template>
