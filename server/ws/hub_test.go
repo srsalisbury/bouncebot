@@ -304,55 +304,6 @@ func TestMultipleClientsInRoom(t *testing.T) {
 	hub.unregister(client3)
 }
 
-func TestStaleClientUnregisterSkipsDisconnect(t *testing.T) {
-	store := room.NewRoomService()
-	cfg := &config.Config{}
-	hub := NewHub(store, cfg)
-
-	oldClient := mockClient(hub, "ROOM1", "player1")
-	newClient := mockClient(hub, "ROOM1", "player1")
-
-	// Register old client, then new client (simulates reconnection)
-	hub.register(oldClient)
-	hub.register(newClient)
-
-	// Verify new client is the active one
-	hub.mu.RLock()
-	activeKey := "ROOM1:player1"
-	if hub.activeClients[activeKey] != newClient {
-		t.Error("expected newClient to be the active client after re-register")
-	}
-	hub.mu.RUnlock()
-
-	// Unregister the OLD (stale) client
-	hub.unregister(oldClient)
-
-	// New client should still be active
-	hub.mu.RLock()
-	if hub.activeClients[activeKey] != newClient {
-		t.Error("expected newClient to remain active after stale unregister")
-	}
-	hub.mu.RUnlock()
-
-	// New client's done channel should still be open
-	select {
-	case <-newClient.done:
-		t.Error("newClient's done channel should not be closed")
-	default:
-		// Expected: channel is still open
-	}
-
-	// Old client's done channel should be closed
-	select {
-	case <-oldClient.done:
-		// Expected: channel is closed
-	default:
-		t.Error("oldClient's done channel should be closed")
-	}
-
-	hub.unregister(newClient)
-}
-
 func TestActiveClientUnregisterCleansUp(t *testing.T) {
 	store := room.NewRoomService()
 	cfg := &config.Config{}
@@ -363,8 +314,8 @@ func TestActiveClientUnregisterCleansUp(t *testing.T) {
 
 	activeKey := "ROOM1:player1"
 	hub.mu.RLock()
-	if hub.activeClients[activeKey] != client {
-		t.Error("expected client in activeClients after register")
+	if hub.activeClients[activeKey] != 1 {
+		t.Errorf("expected 1 active connection after register, got %d", hub.activeClients[activeKey])
 	}
 	hub.mu.RUnlock()
 
@@ -382,6 +333,59 @@ func TestActiveClientUnregisterCleansUp(t *testing.T) {
 		// Expected
 	default:
 		t.Error("client's done channel should be closed after unregister")
+	}
+}
+
+// TestDuplicateConnectionUnregisterKeepsPlayerConnected covers the scenario
+// that used to boot players out of rooms mid-game: a player briefly holds two
+// open connections for the same room (e.g. a duplicate tab, or a flaky
+// reconnect), and one of them closes while the other is still live. Closing
+// EITHER connection - not just the one registered last - must not mark the
+// player disconnected while the other stays open, since the surviving
+// connection is what the player is actually still using.
+func TestDuplicateConnectionUnregisterKeepsPlayerConnected(t *testing.T) {
+	for _, closeFirst := range []string{"first-registered", "last-registered"} {
+		t.Run(closeFirst, func(t *testing.T) {
+			store := room.NewRoomService()
+			cfg := &config.Config{}
+			hub := NewHub(store, cfg)
+
+			createdRoom, playerID, _ := store.Create("Mike", false)
+			roomID := createdRoom.ID
+
+			clientA := mockClient(hub, roomID, playerID)
+			clientB := mockClient(hub, roomID, playerID)
+
+			hub.register(clientA)
+			hub.register(clientB)
+
+			activeKey := roomID + ":" + playerID
+			hub.mu.RLock()
+			if hub.activeClients[activeKey] != 2 {
+				t.Fatalf("expected 2 active connections after both register, got %d", hub.activeClients[activeKey])
+			}
+			hub.mu.RUnlock()
+
+			if closeFirst == "first-registered" {
+				hub.unregister(clientA)
+			} else {
+				hub.unregister(clientB)
+			}
+
+			hub.mu.RLock()
+			if hub.activeClients[activeKey] != 1 {
+				t.Errorf("expected 1 remaining active connection, got %d", hub.activeClients[activeKey])
+			}
+			hub.mu.RUnlock()
+
+			rm, err := store.Get(roomID)
+			if err != nil {
+				t.Fatalf("room disappeared: %v", err)
+			}
+			if rm.Players[0].Status != room.PlayerStatusConnected {
+				t.Errorf("expected player to remain connected while one connection is still open, got status %q", rm.Players[0].Status)
+			}
+		})
 	}
 }
 
