@@ -100,7 +100,7 @@ type Client struct {
 type Hub struct {
 	mu            sync.RWMutex
 	rooms         map[string]map[*Client]bool // roomID -> clients
-	activeClients map[string]*Client          // "roomID:playerID" -> current client
+	activeClients map[string]int              // "roomID:playerID" -> number of open connections
 	store         *room.RoomService
 	config        *config.Config
 	upgrader      websocket.Upgrader
@@ -110,7 +110,7 @@ type Hub struct {
 func NewHub(store *room.RoomService, cfg *config.Config) *Hub {
 	h := &Hub{
 		rooms:         make(map[string]map[*Client]bool),
-		activeClients: make(map[string]*Client),
+		activeClients: make(map[string]int),
 		store:         store,
 		config:        cfg,
 	}
@@ -135,29 +135,42 @@ func (h *Hub) register(client *Client) {
 
 	if client.playerID != "" {
 		key := fmt.Sprintf("%s:%s", client.roomID, client.playerID)
-		h.activeClients[key] = client
+		h.activeClients[key]++
 	}
 
 	log.Printf("WebSocket: client connected to room %s (total: %d)", client.roomID, len(h.rooms[client.roomID]))
 }
 
-// unregister removes a client from a room.
+// unregister removes a client from a room. A player is only marked
+// disconnected once their last open connection closes - a player can briefly
+// hold more than one connection (e.g. a duplicate tab, or an old connection
+// that hasn't noticed a reconnect yet), and closing one of those must not
+// mark a player disconnected while another of their connections is still
+// live.
 func (h *Hub) unregister(client *Client) {
 	shouldDisconnect := false
 
 	h.mu.Lock()
+	removed := false
 	if clients, ok := h.rooms[client.roomID]; ok {
 		if _, ok := clients[client]; ok {
 			delete(clients, client)
+			removed = true
 			log.Printf("WebSocket: client disconnected from room %s (remaining: %d)", client.roomID, len(clients))
 			if len(clients) == 0 {
 				delete(h.rooms, client.roomID)
 			}
 		}
 	}
-	if client.playerID != "" {
+	// Gate on removed so a client that's unregistered more than once (e.g.
+	// once from Broadcast's failed-send path, again from its own readPump
+	// exiting) only decrements the count the first time.
+	if removed && client.playerID != "" {
 		key := fmt.Sprintf("%s:%s", client.roomID, client.playerID)
-		if h.activeClients[key] == client {
+		if h.activeClients[key] > 0 {
+			h.activeClients[key]--
+		}
+		if h.activeClients[key] <= 0 {
 			delete(h.activeClients, key)
 			shouldDisconnect = true
 		}
