@@ -11,6 +11,9 @@ services:
       - ALLOWED_ORIGINS=localhost
       # Base directory for all data files (persisted via volume)
       - DATA_DIR=/data
+      # Public URL of the client, used to build the redirect target for
+      # join-room preview links (the client is a separate origin/port here)
+      - PUBLIC_CLIENT_URL=http://localhost
     volumes:
       # Persist data across container restarts
       - bouncebot-data:/data

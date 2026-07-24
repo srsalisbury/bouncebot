@@ -40,6 +40,12 @@ type Config struct {
 
 	// Feature flags
 	EnableDailyChallenge bool
+
+	// PublicClientURL is the public base URL of the client SPA (e.g.
+	// "https://bouncebot.example.com"). Used to build the redirect target
+	// for join-room preview links, since the server and client don't share
+	// an origin.
+	PublicClientURL string
 }
 
 // DefaultConfig returns configuration with sensible defaults.
@@ -55,6 +61,7 @@ func DefaultConfig() *Config {
 		DisconnectGracePeriod:     5 * time.Minute,
 		SoloDisconnectGracePeriod: 30 * time.Minute,
 		SolverTimeout:         30 * time.Second,
+		PublicClientURL:       "http://localhost:5173",
 	}
 }
 
@@ -78,6 +85,7 @@ func (c *Config) RoomsFile() string {
 //   - SOLO_DISCONNECT_GRACE_PERIOD: Solo mode disconnect grace period in seconds (default: 1800)
 //   - SOLVER_TIMEOUT: Solver timeout in seconds (default: 30)
 //   - ENABLE_DAILY_CHALLENGE: Enable daily challenge feature (default: false)
+//   - PUBLIC_CLIENT_URL: Public base URL of the client SPA (default: http://localhost:5173)
 func LoadFromEnv() *Config {
 	// Load .env.local (personal overrides, gitignored) then .env (checked-in defaults).
 	// Each call is separate so a missing .env.local doesn't prevent loading .env.
@@ -150,6 +158,10 @@ func LoadFromEnv() *Config {
 
 	if v := os.Getenv("ENABLE_DAILY_CHALLENGE"); v != "" {
 		cfg.EnableDailyChallenge = v == "true" || v == "1"
+	}
+
+	if v := os.Getenv("PUBLIC_CLIENT_URL"); v != "" {
+		cfg.PublicClientURL = strings.TrimSuffix(v, "/")
 	}
 
 	return cfg

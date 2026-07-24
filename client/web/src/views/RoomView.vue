@@ -15,6 +15,7 @@ import { getPlayerColor, SOLVER_PLAYER_ID, SOLO_PLAYER_ID } from '../constants'
 import { create } from '@bufbuild/protobuf'
 import { PlayerSolutionSchema, BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 import { encodeShareCode } from '../shareCode'
+import { config } from '../config'
 
 const props = defineProps<{
   roomId: string
@@ -86,7 +87,11 @@ const gameActions = useGameActions({
   },
 })
 
-const shareUrl = computed(() => window.location.href)
+// Points at the server-rendered /join page rather than the SPA route
+// directly, so chat apps/social platforms get a real link preview (og:image
+// with the room ID) - they fetch the URL with a plain HTTP GET and don't run
+// the SPA's JS, so a client-side route can't carry per-room preview content.
+const shareUrl = computed(() => `${config.httpBaseUrl}/join/${normalizedRoomId.value}`)
 const isPlayerFinished = computed(() => {
   if (!roomStore.currentPlayerId || !room.value) return false
   return room.value.finishedSolving.includes(roomStore.currentPlayerId)
