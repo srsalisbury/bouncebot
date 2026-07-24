@@ -47,6 +47,7 @@ COPY --from=builder /bouncebot-server /bouncebot-server
 # DISCONNECT_GRACE_PERIOD: Player disconnect grace period in seconds (default: 30)
 # SOLO_DISCONNECT_GRACE_PERIOD: Solo mode disconnect grace period in seconds (default: 1800)
 # ENABLE_DAILY_CHALLENGE: Enable daily challenge feature (default: false)
+# PUBLIC_CLIENT_URL: Public base URL of the client SPA (default: http://localhost:5173)
 
 # Expose the server port
 EXPOSE 8080
