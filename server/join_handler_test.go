@@ -14,8 +14,13 @@ func TestHandleJoinPage_ExistingRoom(t *testing.T) {
 	svc := room.NewRoomService()
 	createdRoom, _, _ := svc.Create("Mike", false)
 
-	handler := handleJoinPage(svc, "https://client.example.com")
-	req := httptest.NewRequest("GET", "https://api.example.com/join/"+createdRoom.ID, nil)
+	// publicServerURL deliberately includes a reverse-proxy path prefix
+	// (e.g. Traefik's stripPrefix for the "/beta/api" subpath) that the
+	// server would never see on the incoming request itself, to guard
+	// against reintroducing the request-Host-based URL construction this
+	// replaced - that approach silently dropped exactly this kind of prefix.
+	handler := handleJoinPage(svc, "https://client.example.com/beta", "https://client.example.com/beta/api")
+	req := httptest.NewRequest("GET", "https://client.example.com/beta/api/join/"+createdRoom.ID, nil)
 	req.SetPathValue("roomId", createdRoom.ID)
 	rec := httptest.NewRecorder()
 
@@ -26,7 +31,7 @@ func TestHandleJoinPage_ExistingRoom(t *testing.T) {
 	}
 	body := rec.Body.String()
 
-	roomURL := "https://client.example.com/room/" + createdRoom.ID
+	roomURL := "https://client.example.com/beta/room/" + createdRoom.ID
 	if !strings.Contains(body, `content="0;url=`+roomURL+`"`) {
 		t.Errorf("expected meta-refresh redirect to %s, got body: %s", roomURL, body)
 	}
@@ -34,7 +39,7 @@ func TestHandleJoinPage_ExistingRoom(t *testing.T) {
 		t.Errorf("expected JS redirect to %s, got body: %s", roomURL, body)
 	}
 
-	imageURL := "https://api.example.com/join/" + createdRoom.ID + "/preview.png"
+	imageURL := "https://client.example.com/beta/api/join/" + createdRoom.ID + "/preview.png"
 	if !strings.Contains(body, `property="og:image" content="`+imageURL+`"`) {
 		t.Errorf("expected og:image pointing at %s, got body: %s", imageURL, body)
 	}
@@ -54,7 +59,7 @@ func TestHandleJoinPage_ExistingRoom(t *testing.T) {
 
 func TestHandleJoinPage_NonexistentRoom(t *testing.T) {
 	svc := room.NewRoomService()
-	handler := handleJoinPage(svc, "https://client.example.com")
+	handler := handleJoinPage(svc, "https://client.example.com", "https://client.example.com/api")
 
 	req := httptest.NewRequest("GET", "https://api.example.com/join/NOPE", nil)
 	req.SetPathValue("roomId", "NOPE")

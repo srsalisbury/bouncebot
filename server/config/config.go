@@ -46,6 +46,15 @@ type Config struct {
 	// for join-room preview links, since the server and client don't share
 	// an origin.
 	PublicClientURL string
+
+	// PublicServerURL is this server's own public base URL, INCLUDING any
+	// path prefix a reverse proxy strips before forwarding (e.g.
+	// "https://bouncebot.example.com/beta/api"). Used to build the og:image
+	// URL for join-room preview links. Can't be derived from the incoming
+	// request's Host header alone: a stripPrefix-style proxy removes the
+	// prefix before the server ever sees the request, so from the server's
+	// perspective that prefix doesn't exist.
+	PublicServerURL string
 }
 
 // DefaultConfig returns configuration with sensible defaults.
@@ -62,6 +71,7 @@ func DefaultConfig() *Config {
 		SoloDisconnectGracePeriod: 30 * time.Minute,
 		SolverTimeout:         30 * time.Second,
 		PublicClientURL:       "http://localhost:5173",
+		PublicServerURL:       "http://localhost:8080",
 	}
 }
 
@@ -86,6 +96,7 @@ func (c *Config) RoomsFile() string {
 //   - SOLVER_TIMEOUT: Solver timeout in seconds (default: 30)
 //   - ENABLE_DAILY_CHALLENGE: Enable daily challenge feature (default: false)
 //   - PUBLIC_CLIENT_URL: Public base URL of the client SPA (default: http://localhost:5173)
+//   - PUBLIC_SERVER_URL: This server's own public base URL, including any reverse-proxy path prefix (default: http://localhost:8080)
 func LoadFromEnv() *Config {
 	// Load .env.local (personal overrides, gitignored) then .env (checked-in defaults).
 	// Each call is separate so a missing .env.local doesn't prevent loading .env.
@@ -162,6 +173,10 @@ func LoadFromEnv() *Config {
 
 	if v := os.Getenv("PUBLIC_CLIENT_URL"); v != "" {
 		cfg.PublicClientURL = strings.TrimSuffix(v, "/")
+	}
+
+	if v := os.Getenv("PUBLIC_SERVER_URL"); v != "" {
+		cfg.PublicServerURL = strings.TrimSuffix(v, "/")
 	}
 
 	return cfg

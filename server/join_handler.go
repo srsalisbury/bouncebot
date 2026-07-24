@@ -9,21 +9,6 @@ import (
 	"github.com/srsalisbury/bouncebot/server/room"
 )
 
-// requestOrigin reconstructs this server's own externally-visible origin
-// from the incoming request, so the og:image URL is absolute (required by
-// most link-preview crawlers) without needing a separate config value for
-// something the request already tells us.
-func requestOrigin(r *http.Request) string {
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
-		scheme = proto
-	}
-	return scheme + "://" + r.Host
-}
-
 const joinPageTemplate = `<!doctype html>
 <html lang="en">
 <head>
@@ -60,7 +45,7 @@ This BounceBot room doesn't exist anymore. <a href="%[1]s">Go to BounceBot</a>.
 // with real Open Graph tags, so link-preview crawlers (which don't run
 // JavaScript) see a proper preview. Real browsers land here for an instant
 // and get forwarded into the actual SPA room route.
-func handleJoinPage(rooms *room.RoomService, publicClientURL string) http.HandlerFunc {
+func handleJoinPage(rooms *room.RoomService, publicClientURL, publicServerURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		roomID := r.PathValue("roomId")
 		roomURL := fmt.Sprintf("%s/room/%s", publicClientURL, roomID)
@@ -74,7 +59,7 @@ func handleJoinPage(rooms *room.RoomService, publicClientURL string) http.Handle
 
 		title := "Join a BounceBot game!"
 		description := fmt.Sprintf("Room %s is waiting - tap to jump in.", roomID)
-		imageURL := fmt.Sprintf("%s/join/%s/preview.png", requestOrigin(r), roomID)
+		imageURL := fmt.Sprintf("%s/join/%s/preview.png", publicServerURL, roomID)
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprintf(w, joinPageTemplate,

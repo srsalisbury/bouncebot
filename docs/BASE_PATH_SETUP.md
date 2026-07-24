@@ -69,8 +69,9 @@ The production deployment lives in `apps/base/bouncebot/` and uses Kustomize. Th
 The base deployment serves at the root path (`/`):
 
 - **`client.yaml`** - Client deployment with `API_BASE_URL=/api` env var, plus a ClusterIP service on port 80
-- **`server.yaml`** - Server deployment with `ALLOWED_ORIGINS`, `DATA_FILE`, `PUBLIC_CLIENT_URL` env vars, a PVC volume mount, and a ClusterIP service on port 8080
+- **`server.yaml`** - Server deployment with `ALLOWED_ORIGINS`, `DATA_FILE`, `PUBLIC_CLIENT_URL`, `PUBLIC_SERVER_URL` env vars, a PVC volume mount, and a ClusterIP service on port 8080
   - `PUBLIC_CLIENT_URL` must point at the real public client URL (e.g. `https://bouncebot.example.com`) - it's used to build the redirect target for join-room preview links (`/join/:roomId`), since the server and client don't share an origin at the container level. Left unset, join links will redirect to `http://localhost:5173`.
+  - `PUBLIC_SERVER_URL` must be this server's own full public URL, **including the `/api` prefix Traefik strips** (e.g. `https://bouncebot.example.com/api`) - it's used to build the og:image URL for join-room preview links. The server never sees `/api` on the incoming request (the `stripPrefix` middleware removes it before forwarding), so it can't be derived from the request itself the way `PUBLIC_CLIENT_URL` could in theory be - it has to be told the full external path. Left unset (or missing the prefix), the preview image 404s and chat apps show the fallback text with no image.
 - **`ingress.yaml`** - Traefik ingress routing `/api` to the server (with a `stripPrefix` middleware to remove `/api`) and `/` to the client
 - **`storage.yaml`** - PersistentVolumeClaim for server room data
 - **`namespace.yaml`** - Creates the `bouncebot` namespace
@@ -89,7 +90,7 @@ The beta overlay uses the base as a resource and applies patches to run alongsid
 
 **Client env vars**: Sets `API_BASE_URL=/beta/api` and `BASE_PATH=/beta/` on the client container
 
-**Server env vars**: Sets `PUBLIC_CLIENT_URL` to the beta client's public URL (e.g. `https://bouncebot.example.com/beta`) so beta join links redirect to the beta app, not prod
+**Server env vars**: Sets `PUBLIC_CLIENT_URL` to the beta client's public URL (e.g. `https://bouncebot.example.com/beta`) so beta join links redirect to the beta app, not prod. Also sets `PUBLIC_SERVER_URL` to the beta server's full public URL including its own stripped prefix (e.g. `https://bouncebot.example.com/beta/api`), not just `/api` - the beta overlay strips `/beta/api`, not `/api`.
 
 **Ingress patches**:
 - Routes `/beta/api` to the beta server service, `/beta` to the beta client service
