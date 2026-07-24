@@ -192,7 +192,7 @@ func main() {
 	// Join-room link preview: a server-rendered page with real Open Graph
 	// tags (crawlers don't run JS, so the SPA's static index.html can't
 	// carry per-room content) that forwards real browsers into the app.
-	mux.HandleFunc("GET /join/{roomId}", handleJoinPage(rooms, cfg.PublicClientURL))
+	mux.HandleFunc("GET /join/{roomId}", handleJoinPage(rooms, cfg.PublicClientURL, cfg.PublicServerURL))
 	mux.HandleFunc("GET /join/{roomId}/preview.png", handleJoinPreviewImage(rooms))
 
 	// CORS configuration for browser access

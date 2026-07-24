@@ -14,6 +14,12 @@ services:
       # Public URL of the client, used to build the redirect target for
       # join-room preview links (the client is a separate origin/port here)
       - PUBLIC_CLIENT_URL=http://localhost
+      # This server's own public URL, used to build the og:image URL for
+      # join-room preview links. No reverse-proxy prefix to account for in
+      # this docker-compose setup, so it's just the direct port mapping -
+      # see docs/BASE_PATH_SETUP.md for the k8s case, where this needs to
+      # include the path prefix a proxy strips before forwarding here.
+      - PUBLIC_SERVER_URL=http://localhost:8080
     volumes:
       # Persist data across container restarts
       - bouncebot-data:/data
