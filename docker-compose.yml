@@ -35,6 +35,10 @@ services:
       - "80:80"
     environment:
       - BASE_PATH=${BASE_PATH:-/}
+      # nginx here has no /api proxy rule (that only exists in the separate
+      # k8s ingress), so the client must call the server directly cross-port
+      # rather than through a relative "/api" path.
+      - API_BASE_URL=http://localhost:8080
     depends_on:
       - server
     restart: unless-stopped
