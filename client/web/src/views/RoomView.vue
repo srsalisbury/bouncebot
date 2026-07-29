@@ -36,6 +36,7 @@ const showStatsDropdown = ref(false)
 const showSettings = ref(false)
 const showShareModal = ref(false)
 const shareBoardUrl = ref('')
+const showInviteModal = ref(false)
 
 // Room connection composable
 const {
@@ -277,20 +278,6 @@ async function joinRoom() {
   isJoining.value = false
 }
 
-async function copyShareUrl() {
-  try {
-    await navigator.clipboard.writeText(shareUrl.value)
-  } catch (err) {
-    // Fallback for older browsers or when clipboard API fails
-    const textArea = document.createElement('textarea')
-    textArea.value = shareUrl.value
-    document.body.appendChild(textArea)
-    textArea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textArea)
-  }
-}
-
 function openShareModal() {
   if (!room.value?.currentGame) return
   try {
@@ -481,7 +468,7 @@ async function bootPlayer(targetPlayerId: string) {
 
 function globalKeyHandler(event: KeyboardEvent) {
   // Don't handle if any dialog is open
-  if (showProtectedSolutionDialog.value || showLeaveConfirm.value || showSettings.value || showShareModal.value) return
+  if (showProtectedSolutionDialog.value || showLeaveConfirm.value || showSettings.value || showShareModal.value || showInviteModal.value) return
 
   if (event.key === 'l' && (hasGame.value || gameEnded.value)) {
     event.preventDefault()
@@ -544,6 +531,23 @@ watch(showShareModal, (show) => {
     window.addEventListener('keydown', shareModalKeyHandler, true)
   } else {
     window.removeEventListener('keydown', shareModalKeyHandler, true)
+  }
+})
+
+function inviteModalKeyHandler(event: KeyboardEvent) {
+  if (!showInviteModal.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    showInviteModal.value = false
+  }
+}
+
+watch(showInviteModal, (show) => {
+  if (show) {
+    window.addEventListener('keydown', inviteModalKeyHandler, true)
+  } else {
+    window.removeEventListener('keydown', inviteModalKeyHandler, true)
   }
 })
 
@@ -735,6 +739,9 @@ onUnmounted(() => {
             <span class="label">Room ID</span>
             <code class="room-id">{{ room.id }}</code>
           </div>
+          <div class="room-actions">
+            <button class="btn-small" @click="showInviteModal = true">Invite</button>
+          </div>
         </div>
 
         <div class="players-section">
@@ -766,7 +773,7 @@ onUnmounted(() => {
             <code class="room-id">{{ room.id }}</code>
           </div>
           <div class="room-actions">
-            <button class="btn-small" @click="copyShareUrl">Copy Link</button>
+            <button class="btn-small" @click="showInviteModal = true">Invite</button>
             <button v-if="isRoomCreator" class="btn-small settings-btn" @click="showSettings = true" title="Room Settings">
               <img src="/gear.svg" alt="Settings" class="gear-icon" />
             </button>
@@ -792,7 +799,7 @@ onUnmounted(() => {
           <p v-else class="waiting-text">Waiting for room creator to start game...</p>
         </div>
 
-        <p class="hint">Share the link above with friends to play together!</p>
+        <p class="hint">Click Invite to share this room with friends!</p>
       </div>
     </div>
 
@@ -850,6 +857,15 @@ onUnmounted(() => {
       :show="showShareModal"
       :url="shareBoardUrl"
       @close="showShareModal = false"
+    />
+
+    <!-- Invite players modal -->
+    <ShareModal
+      :show="showInviteModal"
+      :url="shareUrl"
+      title="Invite Players"
+      :code="room?.id"
+      @close="showInviteModal = false"
     />
   </div>
 </template>

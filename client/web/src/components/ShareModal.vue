@@ -2,10 +2,14 @@
 import { ref, watch } from 'vue'
 import QRCode from 'qrcode'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   show: boolean
   url: string
-}>()
+  title?: string
+  code?: string
+}>(), {
+  title: 'Share Board',
+})
 
 const emit = defineEmits<{
   close: []
@@ -57,10 +61,12 @@ async function copyLink() {
     <div v-if="show" class="modal-backdrop" @click="handleBackdropClick">
       <div class="modal share-modal">
         <button class="close-btn" @click="emit('close')">×</button>
-        <h2>Share Board</h2>
+        <h2>{{ title }}</h2>
+
+        <code v-if="code" class="code-display">{{ code }}</code>
 
         <div class="qr-wrapper">
-          <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR code for the shared board link" class="qr-image" />
+          <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR code for the shared link" class="qr-image" />
         </div>
 
         <button class="copy-link-btn" @click="copyLink">{{ copyLabel }}</button>
@@ -127,6 +133,18 @@ h2 {
   margin: 0 0 1.25rem 0;
   color: #43a047;
   font-size: 1.25rem;
+}
+
+.code-display {
+  display: block;
+  margin: 0 0 1.25rem 0;
+  background: #1e88e5;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #fff;
 }
 
 .qr-wrapper {
