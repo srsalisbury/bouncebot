@@ -243,7 +243,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
       </div>
     </TransitionGroup>
     <!-- Timer display in compact mode (during game) - on right end -->
-    <div v-if="compact && gameStartedAt" class="timer-display">
+    <div v-if="gameStartedAt" class="timer-display">
       <img src="/timer.svg" alt="" class="timer-icon" />
       <span class="timer-value">{{ elapsedTime }}</span>
     </div>
