@@ -27,6 +27,14 @@ const props = defineProps<{
   roomId?: string
   gameNumber?: number
   inputBlocked?: boolean
+  // For pending players watching the in-progress round they'll join next.
+  // Implies inputBlocked (a spectator can never move anything, full stop -
+  // this isn't the same as inputBlocked alone, which just *temporarily*
+  // blocks input, e.g. while a modal is open, and leaves the action buttons
+  // visible for when it's released). Also hides the action buttons and
+  // in-progress solutions panel, which show the *viewer's own* candidate
+  // solutions and don't apply to someone who isn't playing this round.
+  spectatorMode?: boolean
   singlePlayer?: boolean
   getBestSubmittedIndex?: () => number | null
   onSolutionDeleted?: (index: number) => void
@@ -207,7 +215,7 @@ useGameInput(
     onCloseHelp: () => { showHowToPlay.value = false },
   },
   {
-    inputBlocked: computed(() => props.inputBlocked ?? false),
+    inputBlocked: computed(() => !!(props.inputBlocked || props.spectatorMode)),
     gameEnded: computed(() => props.gameEnded ?? false),
     helpOpen: showHowToPlay,
     selectedRobotId: computed(() => store.selectedRobotId),
@@ -223,7 +231,7 @@ useSwipe({
   target: boardRef,
   onSwipeStart: ({ relativeX, relativeY }) => {
     swipeStartRobotId = null
-    if (props.inputBlocked || props.gameEnded) return
+    if (props.inputBlocked || props.gameEnded || props.spectatorMode) return
     // Convert normalized position to cell coordinates
     const cellX = Math.floor(relativeX * BOARD_SIZE)
     const cellY = Math.floor(relativeY * BOARD_SIZE)
@@ -234,7 +242,7 @@ useSwipe({
     }
   },
   onSwipe: (direction) => {
-    if (props.inputBlocked || props.gameEnded) return
+    if (props.inputBlocked || props.gameEnded || props.spectatorMode) return
     // If swipe started on a robot, select it (if not already selected)
     if (swipeStartRobotId !== null && store.selectedRobotId !== swipeStartRobotId) {
       store.selectRobot(swipeStartRobotId)
@@ -244,7 +252,7 @@ useSwipe({
       store.moveRobot(direction)
     }
   },
-  enabled: computed(() => !props.inputBlocked && !props.gameEnded),
+  enabled: computed(() => !props.inputBlocked && !props.gameEnded && !props.spectatorMode),
 })
 
 // When game ends, start showing solutions; when new round starts, stop replay
@@ -453,7 +461,10 @@ function handleSwitchPlayerSolution(index: number) {
         <!-- Keyboard hints under board -->
         <div class="keyboard-hints">
           <div class="desktop-hints">
-            <template v-if="props.gameEnded">
+            <template v-if="props.spectatorMode">
+              You're watching - you'll play the next game
+            </template>
+            <template v-else-if="props.gameEnded">
               <kbd>Shift+←→</kbd> switch solutions
             </template>
             <template v-else>
@@ -461,7 +472,10 @@ function handleSwitchPlayerSolution(index: number) {
             </template>
           </div>
           <div class="mobile-hints">
-            <template v-if="props.gameEnded">
+            <template v-if="props.spectatorMode">
+              You're watching - you'll play the next game
+            </template>
+            <template v-else-if="props.gameEnded">
               swipe through solutions
             </template>
             <template v-else>
@@ -487,8 +501,9 @@ function handleSwitchPlayerSolution(index: number) {
           @switch-solution="handleSwitchPlayerSolution"
         />
 
-        <!-- Normal solutions panel (during game) -->
-        <div v-else-if="!props.gameEnded" class="solutions-panel" :style="props.playerColor ? { '--player-color': props.playerColor } as any : undefined">
+        <!-- Normal solutions panel (during game) - the viewer's own candidate
+             solutions, not applicable to a spectator watching someone else's round -->
+        <div v-else-if="!props.gameEnded && !props.spectatorMode" class="solutions-panel" :style="props.playerColor ? { '--player-color': props.playerColor } as any : undefined">
           <div class="solutions-columns">
             <div
               v-for="(solution, index) in store.solutions"
@@ -556,7 +571,7 @@ function handleSwitchPlayerSolution(index: number) {
       </div>
 
       <!-- Action buttons under board (mobile) -->
-      <div v-if="!props.gameEnded" class="action-buttons mobile-actions">
+      <div v-if="!props.gameEnded && !props.spectatorMode" class="action-buttons mobile-actions">
         <button
           class="action-btn undo-btn"
           @pointerdown="onUndoPointerDown"

@@ -729,11 +729,28 @@ onUnmounted(() => {
       </GameBoard>
     </div>
 
-    <!-- Pending player waiting for next game -->
-    <div v-else-if="room && isPendingPlayer" class="waiting-room">
-      <h1 class="waiting-title">WAITING <span class="room-text">ROOM</span></h1>
+    <!-- Pending player watching the in-progress round they'll join next -->
+    <div v-else-if="room && isPendingPlayer" class="game-wrapper">
+      <GameBoard
+        spectator-mode
+        :get-player-name="getPlayerName"
+        :get-player-color="getPlayerColorById"
+        :game-started-at="room.gameStartedAt"
+        :room-id="room.id"
+        :game-number="displayedGameNumber"
+      >
+        <template #header>
+          <div class="game-header">
+            <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" show-host hide-waiting-message />
+            <div v-if="minSolverMoves !== null" class="solver-status">
+              <img src="/favicon_dark.svg" alt="" class="solver-icon" />
+              <span class="solver-moves">{{ minSolverMoves }}</span>
+            </div>
+          </div>
+        </template>
+      </GameBoard>
 
-      <div class="card">
+      <div class="spectator-footer">
         <div class="room-info">
           <div class="info-row">
             <span class="label">Room ID</span>
@@ -744,21 +761,10 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="players-section">
-          <h3>Players in game</h3>
-          <PlayersPanel :players="room.players" hide-waiting-message show-host />
-        </div>
-
-        <div class="players-section">
-          <h3>Waiting to join</h3>
+        <div v-if="room.pendingPlayers.length > 1" class="players-section">
+          <h3>Also waiting to join</h3>
           <PlayersPanel :players="room.pendingPlayers" hide-waiting-message />
         </div>
-
-        <div class="start-options">
-          <p class="waiting-text">Waiting for next game...</p>
-        </div>
-
-        <p class="hint">You'll join the game when the current round ends.</p>
       </div>
     </div>
 
@@ -949,6 +955,26 @@ onUnmounted(() => {
   padding: 1rem 0;
   min-height: 100vh;
   box-sizing: border-box;
+}
+
+.spectator-footer {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  width: calc(100% - 2rem);
+  max-width: 360px;
+  margin-top: 1.5rem;
+  box-sizing: border-box;
+}
+
+.spectator-footer .room-info {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.spectator-footer .players-section {
+  margin-top: 1.5rem;
 }
 
 .game-header {
