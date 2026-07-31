@@ -30,6 +30,13 @@ export interface GameInputCallbacks {
 export interface GameInputOptions {
   inputBlocked: Ref<boolean>
   gameEnded: Ref<boolean>
+  // A spectator watching someone else's in-progress round. Unlike
+  // inputBlocked (which blocks everything, e.g. while a modal is open), this
+  // only blocks the *movement* half of input (select/move/undo/new
+  // solution) - once gameEnded is also true, a spectator can still browse
+  // the revealed solutions the same way an active player can, since there's
+  // nothing left to protect once the round is over.
+  spectatorMode?: Ref<boolean>
   helpOpen: Ref<boolean>
   selectedRobotId: Ref<number | null>
   robotCount: Ref<number>
@@ -39,6 +46,7 @@ export function useGameInput(callbacks: GameInputCallbacks, options: GameInputOp
   const {
     inputBlocked,
     gameEnded,
+    spectatorMode,
     helpOpen,
     selectedRobotId,
     robotCount,
@@ -84,6 +92,13 @@ export function useGameInput(callbacks: GameInputCallbacks, options: GameInputOp
         return
       }
       return // Ignore other keys in game-ended mode
+    }
+
+    // Spectator watching an in-progress round: never allow moving/selecting/
+    // undoing/starting a solution - there's nothing to browse yet either
+    // (that only exists once gameEnded, handled above), so just block.
+    if (spectatorMode?.value) {
+      return
     }
 
     // Normal game mode below

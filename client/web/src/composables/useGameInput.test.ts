@@ -240,4 +240,48 @@ describe('useGameInput', () => {
       expect(callbacks.onToggleHelp).toHaveBeenCalled()
     })
   })
+
+  describe('spectator mode', () => {
+    it('blocks movement, selection, undo, and new solution while the round is still in progress', () => {
+      const callbacks = createMockCallbacks()
+      const { handleKeydown } = useGameInput(callbacks, createOptions({
+        spectatorMode: ref(true),
+      }))
+
+      handleKeydown(keyEvent('ArrowUp'))
+      handleKeydown(keyEvent('1'))
+      handleKeydown(keyEvent('z'))
+      handleKeydown(keyEvent('n'))
+
+      expect(callbacks.onMove).not.toHaveBeenCalled()
+      expect(callbacks.onSelectRobot).not.toHaveBeenCalled()
+      expect(callbacks.onUndo).not.toHaveBeenCalled()
+      expect(callbacks.onNewSolution).not.toHaveBeenCalled()
+    })
+
+    it('still allows help toggle while spectating', () => {
+      const callbacks = createMockCallbacks()
+      const { handleKeydown } = useGameInput(callbacks, createOptions({
+        spectatorMode: ref(true),
+      }))
+
+      handleKeydown(keyEvent('?'))
+      expect(callbacks.onToggleHelp).toHaveBeenCalled()
+    })
+
+    it('allows switching revealed solutions once the round has ended, unlike mid-round', () => {
+      const callbacks = createMockCallbacks()
+      const { handleKeydown } = useGameInput(callbacks, createOptions({
+        spectatorMode: ref(true),
+        gameEnded: ref(true),
+      }))
+
+      handleKeydown(keyEvent('ArrowLeft', { shiftKey: true }))
+      expect(callbacks.onSwitchPlayerSolution).toHaveBeenCalledWith(-1)
+
+      // But still never allows moving anything
+      handleKeydown(keyEvent('ArrowUp'))
+      expect(callbacks.onMove).not.toHaveBeenCalled()
+    })
+  })
 })
