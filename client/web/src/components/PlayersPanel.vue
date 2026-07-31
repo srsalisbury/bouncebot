@@ -4,7 +4,7 @@ import type { Player, PlayerSolution, PlayerScore } from '../gen/bouncebot_pb'
 import type { Timestamp } from '@bufbuild/protobuf/wkt'
 import { useRoomStore } from '../stores/roomStore'
 import { getPlayerColor, MAX_GAME_TIMER_SECONDS } from '../constants'
-import { getFormattedTimes, calculateDurationSeconds } from '../services/timeUtils'
+import { getFormattedTimes, calculateDurationSeconds, timestampToSeconds } from '../services/timeUtils'
 
 const props = defineProps<{
   players: Player[]
@@ -102,9 +102,7 @@ const sortedPlayers = computed(() => {
         return solA.moves.length - solB.moves.length
       }
       // Same move count: sort by solved time (earlier first)
-      const timeA = solA.solvedAt?.seconds ?? 0
-      const timeB = solB.solvedAt?.seconds ?? 0
-      return Number(timeA) - Number(timeB)
+      return timestampToSeconds(solA.solvedAt) - timestampToSeconds(solB.solvedAt)
     }
     // Only A solved: A comes first
     if (solA) return -1
@@ -125,9 +123,7 @@ const leaderPlayerId = computed(() => {
   // Find earliest among best solutions
   let earliest = bestSolutions[0]
   for (const sol of bestSolutions) {
-    const solTime = sol.solvedAt?.seconds ?? 0
-    const earliestTime = earliest?.solvedAt?.seconds ?? 0
-    if (Number(solTime) < Number(earliestTime)) {
+    if (timestampToSeconds(sol.solvedAt) < timestampToSeconds(earliest?.solvedAt)) {
       earliest = sol
     }
   }
