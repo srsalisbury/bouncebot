@@ -37,9 +37,21 @@ export function useRoomConnection(options: RoomConnectionOptions) {
   const hasGame = computed(() => room.value?.currentGame != null)
   const hasJoined = computed(() => roomStore.currentPlayerId != null && roomStore.currentSessionToken != null)
 
+  // Guards against out-of-order responses: two events fired in quick
+  // succession (e.g. a player's own "ready for next" broadcast, followed
+  // shortly by "game started" once board generation finishes) each trigger a
+  // loadRoom call, and the network makes no guarantee they resolve in the
+  // order they were issued. Without this, a slow response to the earlier
+  // call can land after the later one and silently overwrite fresher state
+  // with stale data (e.g. reverting a promoted pending player back to
+  // "watching" the game that just ended).
+  let loadRoomSeq = 0
+
   async function loadRoom(forceApplyGame = false) {
+    const seq = ++loadRoomSeq
     try {
       const rm = await bounceBotClient.getRoom({ roomId: normalizedRoomId.value })
+      if (seq !== loadRoomSeq) return // superseded by a newer loadRoom call
       const hadGame = hasGame.value
       room.value = rm
 
@@ -89,13 +101,16 @@ export function useRoomConnection(options: RoomConnectionOptions) {
 
       error.value = null
     } catch (e) {
+      if (seq !== loadRoomSeq) return // superseded by a newer loadRoom call
       error.value = e instanceof Error ? e.message : 'Failed to load room'
       // If server says room doesn't exist, clear stored room state (preserve player name)
       if (isRoomNotFoundError(e)) {
         roomStore.clearRoom()
       }
     } finally {
-      isLoading.value = false
+      if (seq === loadRoomSeq) {
+        isLoading.value = false
+      }
     }
   }
 
