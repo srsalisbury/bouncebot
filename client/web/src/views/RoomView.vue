@@ -744,6 +744,7 @@ onUnmounted(() => {
         :game-started-at="room.gameStartedAt"
         :room-id="room.id"
         :game-number="displayedGameNumber"
+        @share="openShareModal"
       >
         <template #header>
           <div class="game-header">
