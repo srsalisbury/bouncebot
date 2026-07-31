@@ -733,15 +733,22 @@ onUnmounted(() => {
     <div v-else-if="room && isPendingPlayer" class="game-wrapper">
       <GameBoard
         spectator-mode
+        :game-ended="gameEnded"
+        :player-solutions="sortedSolutions"
+        :current-player-solution="currentPlayerSolution"
+        :top-three-solutions="topThreeSolutions"
+        :solver-solutions="solverPlayerSolutions"
+        :is-solver-solution="isSolverSolution"
         :get-player-name="getPlayerName"
         :get-player-color="getPlayerColorById"
         :game-started-at="room.gameStartedAt"
         :room-id="room.id"
         :game-number="displayedGameNumber"
+        @share="openShareModal"
       >
         <template #header>
           <div class="game-header">
-            <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" show-host hide-waiting-message />
+            <PlayersPanel :players="room.players" :solutions="room.solutions" :scores="room.scores" :game-started-at="room.gameStartedAt" :finished-solving="room.finishedSolving" compact />
             <div v-if="minSolverMoves !== null" class="solver-status">
               <img src="/favicon_dark.svg" alt="" class="solver-icon" />
               <span class="solver-moves">{{ minSolverMoves }}</span>

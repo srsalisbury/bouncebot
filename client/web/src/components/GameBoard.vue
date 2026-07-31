@@ -191,6 +191,15 @@ function onUndoPointerCancel() {
   }
 }
 
+// Clicking a robot directly bypasses useGameInput entirely (that only
+// handles keyboard/swipe), so it needs its own guard against the same
+// conditions - otherwise a spectator (or anyone else input should be
+// blocked for, e.g. a modal open) could still select a robot by clicking it.
+function handleRobotClick(robotId: number) {
+  if (props.inputBlocked || props.spectatorMode) return
+  store.selectRobot(robotId)
+}
+
 // Input handling composable
 useGameInput(
   {
@@ -215,8 +224,9 @@ useGameInput(
     onCloseHelp: () => { showHowToPlay.value = false },
   },
   {
-    inputBlocked: computed(() => !!(props.inputBlocked || props.spectatorMode)),
+    inputBlocked: computed(() => props.inputBlocked ?? false),
     gameEnded: computed(() => props.gameEnded ?? false),
+    spectatorMode: computed(() => props.spectatorMode ?? false),
     helpOpen: showHowToPlay,
     selectedRobotId: computed(() => store.selectedRobotId),
     robotCount: computed(() => store.robots.length),
@@ -374,6 +384,7 @@ function handleSwitchPlayerSolution(index: number) {
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
         <h1 v-if="props.gameNumber != null" class="title">
+          <span v-if="props.spectatorMode" class="watching-label">WATCHING</span>
           <span class="game-label">GAME</span>
           <span class="game-number">{{ props.gameNumber }}</span>
           <button class="share-btn" title="Share this board" aria-label="Share this board" @click="emit('share')">
@@ -430,7 +441,7 @@ function handleSwitchPlayerSolution(index: number) {
               class="robot"
               :class="{ selected: store.selectedRobotId === robot.id, replaying: isReplaying }"
               :style="getRobotStyle(robot)"
-              @click="store.selectRobot(robot.id)"
+              @click="handleRobotClick(robot.id)"
             >
               {{ robot.id + 1 }}
             </div>
@@ -461,22 +472,22 @@ function handleSwitchPlayerSolution(index: number) {
         <!-- Keyboard hints under board -->
         <div class="keyboard-hints">
           <div class="desktop-hints">
-            <template v-if="props.spectatorMode">
-              You're watching - you'll play the next game
-            </template>
-            <template v-else-if="props.gameEnded">
+            <template v-if="props.gameEnded">
               <kbd>Shift+←→</kbd> switch solutions
+            </template>
+            <template v-else-if="props.spectatorMode">
+              You're watching - you'll play the next game
             </template>
             <template v-else>
               <kbd>1-4</kbd> select · <kbd>↑↓←→</kbd> move · <kbd>z</kbd> undo · <kbd>?</kbd> help
             </template>
           </div>
           <div class="mobile-hints">
-            <template v-if="props.spectatorMode">
-              You're watching - you'll play the next game
-            </template>
-            <template v-else-if="props.gameEnded">
+            <template v-if="props.gameEnded">
               swipe through solutions
+            </template>
+            <template v-else-if="props.spectatorMode">
+              You're watching - you'll play the next game
             </template>
             <template v-else>
               tap to select · swipe to move
@@ -592,9 +603,10 @@ function handleSwitchPlayerSolution(index: number) {
       </div>
     </div>
 
-    <!-- Mobile solutions drawer (only during gameplay, hidden on desktop) -->
+    <!-- Mobile solutions drawer (only during gameplay, hidden on desktop) -
+         the viewer's own candidate solutions, not applicable to a spectator -->
     <SolutionsDrawer
-      v-if="!props.gameEnded"
+      v-if="!props.gameEnded && !props.spectatorMode"
       class="mobile-drawer"
       :player-color="props.playerColor"
       :get-best-submitted-index="props.getBestSubmittedIndex"
@@ -699,6 +711,14 @@ function handleSwitchPlayerSolution(index: number) {
 
 .share-btn:hover {
   background: #1565c0;
+}
+
+.watching-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #888;
 }
 
 .game-label {
