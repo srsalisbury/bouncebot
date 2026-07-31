@@ -1,7 +1,27 @@
 import { describe, it, expect } from 'vitest'
-import { formatDuration, getFormattedTimes } from './timeUtils'
+import { formatDuration, getFormattedTimes, timestampToSeconds } from './timeUtils'
 
 describe('timeUtils', () => {
+  describe('timestampToSeconds', () => {
+    it('returns 0 for an undefined timestamp', () => {
+      expect(timestampToSeconds(undefined)).toBe(0)
+    })
+
+    it('includes sub-second precision from nanos', () => {
+      // Two solves one second apart but only 100ms into their respective
+      // seconds must not compare equal - dropping nanos would make them tie.
+      const earlier = { seconds: 10n, nanos: 100_000_000 }
+      const later = { seconds: 10n, nanos: 900_000_000 }
+      expect(timestampToSeconds(earlier)).toBeLessThan(timestampToSeconds(later))
+    })
+
+    it('distinguishes two solves within the same second', () => {
+      const a = { seconds: 5n, nanos: 200_000_000 }
+      const b = { seconds: 5n, nanos: 800_000_000 }
+      expect(timestampToSeconds(a)).not.toBe(timestampToSeconds(b))
+    })
+  })
+
   describe('formatDuration', () => {
     it('formats m:ss correctly (precision 0)', () => {
       expect(formatDuration(65.12, 0)).toBe('1:05')

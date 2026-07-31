@@ -37,6 +37,17 @@ export function calculateDurationSeconds(start: Timestamp, end: Timestamp): numb
 }
 
 /**
+ * Converts a timestamp to a single comparable number of seconds, including
+ * sub-second precision from nanos - comparing `.seconds` alone treats any two
+ * solves within the same second as simultaneous, which silently falls back
+ * to array order instead of actual solve order.
+ */
+export function timestampToSeconds(t: Timestamp | undefined): number {
+  if (!t) return 0
+  return Number(t.seconds) + Number(t.nanos) / 1e9
+}
+
+/**
  * Generates a map of formatted time strings for a list of items.
  * Automatically increases precision (up to 2 decimal places) for items that would
  * otherwise have identical formatted strings.

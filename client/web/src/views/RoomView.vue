@@ -16,6 +16,7 @@ import { create } from '@bufbuild/protobuf'
 import { PlayerSolutionSchema, BotPosSchema, PositionSchema } from '../gen/bouncebot_pb'
 import { encodeShareCode } from '../shareCode'
 import { config } from '../config'
+import { timestampToSeconds } from '../services/timeUtils'
 
 const props = defineProps<{
   roomId: string
@@ -136,9 +137,7 @@ const sortedSolutions = computed(() => {
     if (a.moves.length !== b.moves.length) {
       return a.moves.length - b.moves.length
     }
-    const timeA = a.solvedAt?.seconds ?? 0n
-    const timeB = b.solvedAt?.seconds ?? 0n
-    return Number(timeA - timeB)
+    return timestampToSeconds(a.solvedAt) - timestampToSeconds(b.solvedAt)
   })
 })
 
@@ -756,23 +755,6 @@ onUnmounted(() => {
           </div>
         </template>
       </GameBoard>
-
-      <div class="spectator-footer">
-        <div class="room-info">
-          <div class="info-row">
-            <span class="label">Room ID</span>
-            <code class="room-id">{{ room.id }}</code>
-          </div>
-          <div class="room-actions">
-            <button class="btn-small" @click="showInviteModal = true">Invite</button>
-          </div>
-        </div>
-
-        <div v-if="room.pendingPlayers.length > 1" class="players-section">
-          <h3>Also waiting to join</h3>
-          <PlayersPanel :players="room.pendingPlayers" hide-waiting-message />
-        </div>
-      </div>
     </div>
 
     <!-- Waiting room -->
@@ -962,26 +944,6 @@ onUnmounted(() => {
   padding: 1rem 0;
   min-height: 100vh;
   box-sizing: border-box;
-}
-
-.spectator-footer {
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 1.5rem 2rem;
-  width: calc(100% - 2rem);
-  max-width: 360px;
-  margin-top: 1.5rem;
-  box-sizing: border-box;
-}
-
-.spectator-footer .room-info {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.spectator-footer .players-section {
-  margin-top: 1.5rem;
 }
 
 .game-header {
