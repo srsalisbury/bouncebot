@@ -439,7 +439,7 @@ function handleSwitchPlayerSolution(index: number) {
               v-for="robot in store.robots"
               :key="`robot-${robot.id}`"
               class="robot"
-              :class="{ selected: store.selectedRobotId === robot.id, replaying: isReplaying }"
+              :class="{ selected: !props.spectatorMode && store.selectedRobotId === robot.id, replaying: isReplaying }"
               :style="getRobotStyle(robot)"
               @click="handleRobotClick(robot.id)"
             >
@@ -636,8 +636,9 @@ function handleSwitchPlayerSolution(index: number) {
     <!-- How to Play modal -->
     <HowToPlayModal :show="showHowToPlay" @close="showHowToPlay = false" />
 
-    <!-- First game onboarding overlay -->
-    <FirstGameOverlay :show="isFirstGame" @dismiss="dismissOnboarding" />
+    <!-- First game onboarding overlay - not shown to spectators, who can't
+         act on it yet; they'll see it once actually promoted into a game -->
+    <FirstGameOverlay :show="isFirstGame && !props.spectatorMode" @dismiss="dismissOnboarding" />
   </div>
 </template>
 
