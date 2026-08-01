@@ -37,6 +37,7 @@ const showStatsDropdown = ref(false)
 const showSettings = ref(false)
 const showShareModal = ref(false)
 const shareBoardUrl = ref('')
+const shareBoardDescription = "Anyone with this link plays this exact board solo\nthey won't join your room."
 const showInviteModal = ref(false)
 
 // Room connection composable
@@ -860,7 +861,7 @@ onUnmounted(() => {
     <ShareModal
       :show="showShareModal"
       :url="shareBoardUrl"
-      description="Anyone with this link plays this exact board solo — they won't join your room."
+      :description="shareBoardDescription"
       @close="showShareModal = false"
     />
 
