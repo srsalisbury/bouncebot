@@ -173,7 +173,8 @@ func (gl *gameLifecycle) MarkFinishedSolving(room *Room, playerID string) ([]Sig
 	}
 
 	// Check if all players are finished -> signal end game
-	if len(room.FinishedSolving) == len(room.Players) {
+	if len(room.FinishedSolving) == len(room.Players) && !room.RoundEnded {
+		room.RoundEnded = true
 		signals = append(signals, EndGameSignal{RoomID: room.ID})
 	}
 
@@ -203,7 +204,8 @@ func (gl *gameLifecycle) MarkReadyForNext(room *Room, playerID string) ([]Signal
 	}
 
 	// Check if all players are ready -> signal start next game
-	if len(room.ReadyForNext) == len(room.Players) {
+	if len(room.ReadyForNext) == len(room.Players) && !room.NextGameStarting {
+		room.NextGameStarting = true
 		signals = append(signals, StartNextGameSignal{RoomID: room.ID})
 	}
 

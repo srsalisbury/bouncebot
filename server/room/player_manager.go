@@ -189,11 +189,13 @@ func (pm *playerManager) RemovePlayer(room *Room, playerID string) []Signal {
 	// Check if removal triggers game state changes
 	if len(room.Players) > 0 {
 		// If game is active and all remaining players are finished, signal end game
-		if hasGame && len(room.FinishedSolving) == len(room.Players) {
+		if hasGame && len(room.FinishedSolving) == len(room.Players) && !room.RoundEnded {
+			room.RoundEnded = true
 			signals = append(signals, EndGameSignal{RoomID: room.ID})
 		}
 		// If all remaining players are ready for next, signal start next game
-		if len(room.ReadyForNext) == len(room.Players) {
+		if len(room.ReadyForNext) == len(room.Players) && !room.NextGameStarting {
+			room.NextGameStarting = true
 			signals = append(signals, StartNextGameSignal{RoomID: room.ID})
 		}
 	}
@@ -255,11 +257,13 @@ func (pm *playerManager) ForceRemovePlayer(room *Room, playerID string) []Signal
 	// Check if removal triggers game state changes
 	if len(room.Players) > 0 {
 		// If game is active and all remaining players are finished, signal end game
-		if hasGame && len(room.FinishedSolving) == len(room.Players) {
+		if hasGame && len(room.FinishedSolving) == len(room.Players) && !room.RoundEnded {
+			room.RoundEnded = true
 			signals = append(signals, EndGameSignal{RoomID: room.ID})
 		}
 		// If all remaining players are ready for next, signal start next game
-		if len(room.ReadyForNext) == len(room.Players) {
+		if len(room.ReadyForNext) == len(room.Players) && !room.NextGameStarting {
+			room.NextGameStarting = true
 			signals = append(signals, StartNextGameSignal{RoomID: room.ID})
 		}
 	}

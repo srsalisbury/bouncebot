@@ -631,10 +631,12 @@ onUnmounted(() => {
         :game-number="displayedGameNumber"
         :input-blocked="showLeaderboard"
         :single-player="isSinglePlayer"
+        :show-invite="!isSinglePlayer"
         :get-best-submitted-index="gameActions.getBestSubmittedIndex"
         :on-solution-deleted="gameActions.notifySolutionDeleted"
         :player-color="currentPlayerColor"
         @share="openShareModal"
+        @invite="showInviteModal = true"
       >
         <template #header="{ toggleHelp }">
           <div class="game-header">
@@ -743,7 +745,9 @@ onUnmounted(() => {
         :game-started-at="room.gameStartedAt"
         :room-id="room.id"
         :game-number="displayedGameNumber"
+        :show-invite="true"
         @share="openShareModal"
+        @invite="showInviteModal = true"
       >
         <template #header>
           <div class="game-header">
@@ -768,7 +772,12 @@ onUnmounted(() => {
             <code class="room-id">{{ room.id }}</code>
           </div>
           <div class="room-actions">
-            <button class="btn-small" @click="showInviteModal = true">Invite</button>
+            <button class="btn-small invite-btn-small" @click="showInviteModal = true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+              Invite
+            </button>
             <button v-if="isRoomCreator" class="btn-small settings-btn" @click="showSettings = true" title="Room Settings">
               <img src="/gear.svg" alt="Settings" class="gear-icon" />
             </button>
@@ -847,18 +856,20 @@ onUnmounted(() => {
       @boot-player="bootPlayer"
     />
 
-    <!-- Share board modal -->
+    <!-- Share board modal: play this exact board solo, doesn't join this room -->
     <ShareModal
       :show="showShareModal"
       :url="shareBoardUrl"
+      description="Anyone with this link plays this exact board solo — they won't join your room."
       @close="showShareModal = false"
     />
 
-    <!-- Invite players modal -->
+    <!-- Invite players modal: join this multiplayer room -->
     <ShareModal
       :show="showInviteModal"
       :url="shareUrl"
       title="Invite Players"
+      description="Anyone with this link joins your room and plays along with you."
       :code="room?.id"
       @close="showInviteModal = false"
     />
@@ -1268,6 +1279,12 @@ onUnmounted(() => {
 
 .btn-small:hover {
   background: #444;
+}
+
+.invite-btn-small {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .room-actions {

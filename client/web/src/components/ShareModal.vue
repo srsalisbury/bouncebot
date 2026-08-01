@@ -6,6 +6,7 @@ const props = withDefaults(defineProps<{
   show: boolean
   url: string
   title?: string
+  description?: string
   code?: string
 }>(), {
   title: 'Share Board',
@@ -19,12 +20,58 @@ const qrDataUrl = ref<string | null>(null)
 const copyLabel = ref('Copy Link')
 let copyResetTimeout: ReturnType<typeof setTimeout> | null = null
 
+const QR_SIZE = 240
+
+// logo_color_halo.svg is a generated asset (scripts/generate-logo-halo.js)
+// combining the logo with a white halo already sized to its own silhouette -
+// see that script for why. Regenerate it if logo_color.svg changes.
+let logoImagePromise: Promise<HTMLImageElement> | null = null
+function loadLogoImage(): Promise<HTMLImageElement> {
+  if (!logoImagePromise) {
+    logoImagePromise = new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = reject
+      img.src = '/logo_color_halo.svg'
+    })
+  }
+  return logoImagePromise
+}
+
+async function generateQrWithLogo(url: string): Promise<string> {
+  const canvas = document.createElement('canvas')
+  // High error correction tolerates roughly up to ~30% of the code being
+  // obscured - the logo below (plus its halo) stays well inside that budget
+  // so the code remains reliably scannable.
+  await QRCode.toCanvas(canvas, url, { margin: 1, width: QR_SIZE, errorCorrectionLevel: 'H' })
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas.toDataURL('image/png')
+
+  try {
+    const logo = await loadLogoImage()
+    // ~13% of the QR's area (width² since the overlay is square). Verified
+    // empirically (BarcodeDetector) that a pristine render stops decoding
+    // around 50-55% width (~30% area, matching level H's theoretical
+    // recovery budget) - staying well under that leaves real margin for
+    // real-world scan noise a phone camera adds (glare, tilt, print quality)
+    // that a perfect digital decode doesn't have to contend with.
+    const logoSize = QR_SIZE * 0.36
+    const logoOffset = (QR_SIZE - logoSize) / 2
+    ctx.drawImage(logo, logoOffset, logoOffset, logoSize, logoSize)
+  } catch {
+    // Logo failed to load - fall back to a plain QR code rather than blocking sharing.
+  }
+
+  return canvas.toDataURL('image/png')
+}
+
 watch(
   () => [props.show, props.url] as const,
   async ([show, url]) => {
     if (!show || !url) return
     copyLabel.value = 'Copy Link'
-    qrDataUrl.value = await QRCode.toDataURL(url, { margin: 1, width: 240 })
+    qrDataUrl.value = await generateQrWithLogo(url)
   },
   { immediate: true }
 )
@@ -62,6 +109,7 @@ async function copyLink() {
       <div class="modal share-modal">
         <button class="close-btn" @click="emit('close')">×</button>
         <h2>{{ title }}</h2>
+        <p v-if="description" class="modal-description">{{ description }}</p>
 
         <code v-if="code" class="code-display">{{ code }}</code>
 
@@ -135,6 +183,12 @@ h2 {
   font-size: 1.25rem;
 }
 
+.modal-description {
+  margin: -0.75rem 0 1.25rem 0;
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
 .code-display {
   display: block;
   margin: 0 0 1.25rem 0;
@@ -195,6 +249,10 @@ h2 {
   .close-btn:hover {
     color: #333;
     background: rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-description {
+    color: #666;
   }
 }
 </style>

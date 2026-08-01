@@ -5,6 +5,7 @@ import { websocketService, type WebSocketEvent, type SolverCompletePayload, type
 import { useRoomStore } from '../stores/roomStore'
 import { isRoomNotFoundError } from '../services/errorUtils'
 import { ROOM_POLL_INTERVAL_MS } from '../constants'
+import { timestampToSeconds } from '../services/timeUtils'
 import type { Room } from '../gen/bouncebot_pb'
 
 export interface SolverSolution {
@@ -53,6 +54,15 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       const rm = await bounceBotClient.getRoom({ roomId: normalizedRoomId.value })
       if (seq !== loadRoomSeq) return // superseded by a newer loadRoom call
       const hadGame = hasGame.value
+      // room.currentGame is never nulled out between rounds server-side (it's
+      // replaced in place when the next round commits), so hadGame alone can't
+      // tell "still the old, finished game" from "a new round already started".
+      // gameStartedAt is set fresh on every round, so a change in it is a
+      // reliable signal even if this call's forceApplyGame flag got lost
+      // because an earlier/later loadRoom call superseded it (see loadRoomSeq
+      // comment above).
+      const prevGameStartedAt = timestampToSeconds(room.value?.gameStartedAt)
+      const isNewRound = timestampToSeconds(rm.gameStartedAt) !== prevGameStartedAt
       room.value = rm
 
       // Check if current player is still in the room (handle stale localStorage)
@@ -75,8 +85,8 @@ export function useRoomConnection(options: RoomConnectionOptions) {
       // Remember this room for easy return if user navigates away
       roomStore.setLastRoom(normalizedRoomId.value)
 
-      // Notify when game first appears or when forced
-      if (rm.currentGame && (!hadGame || forceApplyGame)) {
+      // Notify when game first appears, a new round has started, or when forced
+      if (rm.currentGame && (!hadGame || forceApplyGame || isNewRound)) {
         onRoomUpdated?.(rm)
         if (pollInterval.value) {
           clearInterval(pollInterval.value)

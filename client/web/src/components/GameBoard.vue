@@ -36,6 +36,9 @@ const props = defineProps<{
   // solutions and don't apply to someone who isn't playing this round.
   spectatorMode?: boolean
   singlePlayer?: boolean
+  // Shows the invite-players button next to the game title. Only meaningful
+  // in multiplayer rooms - single-player rooms can't accept joins at all.
+  showInvite?: boolean
   getBestSubmittedIndex?: () => number | null
   onSolutionDeleted?: (index: number) => void
   playerColor?: string
@@ -43,6 +46,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   share: []
+  invite: []
 }>()
 
 const store = useGameStore()
@@ -384,6 +388,11 @@ function handleSwitchPlayerSolution(index: number) {
       <!-- Board layout (grid: title on top, board and solutions below) -->
       <div class="board-layout">
         <h1 v-if="props.gameNumber != null" class="title">
+          <button v-if="props.showInvite" class="invite-btn" title="Invite Players" aria-label="Invite Players" @click="emit('invite')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="white">
+              <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </button>
           <span v-if="props.spectatorMode" class="watching-label">WATCHING</span>
           <span class="game-label">GAME</span>
           <span class="game-number">{{ props.gameNumber }}</span>
@@ -712,6 +721,27 @@ function handleSwitchPlayerSolution(index: number) {
 
 .share-btn:hover {
   background: #1565c0;
+}
+
+.invite-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #43a047;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.invite-btn:hover {
+  background: #388e3c;
 }
 
 .watching-label {

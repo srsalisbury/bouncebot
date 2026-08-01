@@ -8,6 +8,7 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "generate": "buf generate",
+    "generate:logo-halo": "node scripts/generate-logo-halo.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
