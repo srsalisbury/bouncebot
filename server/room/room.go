@@ -38,19 +38,30 @@ type SolverResult struct {
 type Room struct {
 	ID              string
 	Players         []Player
-	PendingPlayers  []Player                  // Players waiting for next game to start
+	PendingPlayers  []Player // Players waiting for next game to start
 	CreatedAt       time.Time
-	LastActivityAt  time.Time                 // Last user action timestamp (for cleanup)
+	LastActivityAt  time.Time // Last user action timestamp (for cleanup)
 	CurrentGame     *model.Game
 	GameStartedAt   *time.Time
-	Solutions       []PlayerSolution          // Current best solution per player
-	Wins            map[string]int            // Wins per player ID
-	GamesPlayed     int                       // Total games completed in room
-	FinishedSolving []string                  // Player IDs who are finished solving (triggers game end)
-	ReadyForNext    []string                  // Player IDs who are ready for next game
-	IsSinglePlayer  bool                      // If true, only the creator can be in this room
-	SolverResults   map[string]*SolverResult  // Solver solutions keyed by solver name
-	Settings        RoomSettings              // Room settings configurable by host
+	Solutions       []PlayerSolution // Current best solution per player
+	Wins            map[string]int   // Wins per player ID
+	GamesPlayed     int              // Total games completed in room
+	FinishedSolving []string         // Player IDs who are finished solving (triggers game end)
+	ReadyForNext    []string         // Player IDs who are ready for next game
+	// RoundEnded and NextGameStarting guard EndGameSignal/StartNextGameSignal
+	// against firing twice for the same transition. Both FinishedSolving and
+	// ReadyForNext equality checks are duplicated across MarkFinishedSolving/
+	// MarkReadyForNext and RemovePlayer/ForceRemovePlayer, and (for
+	// StartNextGameSignal especially) the signal isn't cleared by
+	// ClearGameState until well after board generation - an unrelated event
+	// re-satisfying the same equality mid-generation would otherwise fire a
+	// second, redundant signal. Set at the point a signal is emitted, reset
+	// by ClearGameState once the next round actually commits.
+	RoundEnded       bool
+	NextGameStarting bool
+	IsSinglePlayer   bool                     // If true, only the creator can be in this room
+	SolverResults    map[string]*SolverResult // Solver solutions keyed by solver name
+	Settings         RoomSettings             // Room settings configurable by host
 }
 
 // GetPlayerName returns the name of the player with the given ID, or empty string if not found.
@@ -120,6 +131,8 @@ func (r *Room) ClearGameState() {
 	r.FinishedSolving = nil
 	r.ReadyForNext = nil
 	r.SolverResults = nil
+	r.RoundEnded = false
+	r.NextGameStarting = false
 }
 
 // ToProto converts a Room to its protobuf representation.

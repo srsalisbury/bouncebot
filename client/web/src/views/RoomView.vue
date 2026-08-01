@@ -631,10 +631,12 @@ onUnmounted(() => {
         :game-number="displayedGameNumber"
         :input-blocked="showLeaderboard"
         :single-player="isSinglePlayer"
+        :show-invite="!isSinglePlayer"
         :get-best-submitted-index="gameActions.getBestSubmittedIndex"
         :on-solution-deleted="gameActions.notifySolutionDeleted"
         :player-color="currentPlayerColor"
         @share="openShareModal"
+        @invite="showInviteModal = true"
       >
         <template #header="{ toggleHelp }">
           <div class="game-header">
@@ -743,7 +745,9 @@ onUnmounted(() => {
         :game-started-at="room.gameStartedAt"
         :room-id="room.id"
         :game-number="displayedGameNumber"
+        :show-invite="true"
         @share="openShareModal"
+        @invite="showInviteModal = true"
       >
         <template #header>
           <div class="game-header">
@@ -847,18 +851,20 @@ onUnmounted(() => {
       @boot-player="bootPlayer"
     />
 
-    <!-- Share board modal -->
+    <!-- Share board modal: play this exact board solo, doesn't join this room -->
     <ShareModal
       :show="showShareModal"
       :url="shareBoardUrl"
+      description="Anyone with this link plays this exact board solo — they won't join your room."
       @close="showShareModal = false"
     />
 
-    <!-- Invite players modal -->
+    <!-- Invite players modal: join this multiplayer room -->
     <ShareModal
       :show="showInviteModal"
       :url="shareUrl"
       title="Invite Players"
+      description="Anyone with this link joins your room and plays along with you."
       :code="room?.id"
       @close="showInviteModal = false"
     />

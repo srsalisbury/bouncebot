@@ -87,4 +87,47 @@ describe('useRoomConnection', () => {
     await loadRoom()
     expect(room.value?.gamesPlayed).toBe(1)
   })
+
+  it('detects a new round via gameStartedAt even when the forced game_started response is superseded', async () => {
+    // room.currentGame is never nulled out between rounds server-side (only
+    // replaced when the next round commits), so a plain "did currentGame
+    // just appear" check can't tell a round transition apart from "still the
+    // same finished game". This reproduces: game_started fires -> forced
+    // loadRoom(true) issued, but before its response arrives, player_joined
+    // fires -> loadRoom() issued and supersedes it in loadRoomSeq, so the
+    // forced call's response is discarded entirely. onRoomUpdated must still
+    // fire, driven by the surviving (unforced) call detecting gameStartedAt
+    // changed.
+    const resolvers: Array<(room: Room) => void> = []
+    vi.mocked(bounceBotClient.getRoom).mockImplementation(
+      () => new Promise((resolve) => { resolvers.push(resolve as (room: Room) => void) })
+    )
+
+    const onRoomUpdated = vi.fn()
+    const { loadRoom } = useRoomConnection({ roomId: ref('ABCD'), onRoomUpdated })
+
+    const oldTimestamp = { seconds: 100n, nanos: 0 }
+    const newTimestamp = { seconds: 200n, nanos: 0 }
+
+    // Prime room.value with the already-ended game (stands in for "game just
+    // ended, ready-up screen showing").
+    const primeCall = loadRoom()
+    resolvers[0](fakeRoom({ currentGame: {} as never, gameStartedAt: oldTimestamp as never }))
+    await primeCall
+    onRoomUpdated.mockClear()
+
+    const forcedCall = loadRoom(true) // game_started
+    const laterCall = loadRoom() // player_joined, supersedes forcedCall
+
+    // The later (unforced) call resolves first, already reflecting the new round.
+    resolvers[2](fakeRoom({ currentGame: {} as never, gameStartedAt: newTimestamp as never }))
+    await laterCall
+    expect(onRoomUpdated).toHaveBeenCalledTimes(1)
+
+    // The forced call's response arrives late and is discarded as stale -
+    // must not double-fire onRoomUpdated.
+    resolvers[1](fakeRoom({ currentGame: {} as never, gameStartedAt: newTimestamp as never }))
+    await forcedCall
+    expect(onRoomUpdated).toHaveBeenCalledTimes(1)
+  })
 })
