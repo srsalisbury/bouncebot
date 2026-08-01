@@ -187,6 +187,7 @@ h2 {
   margin: -0.75rem 0 1.25rem 0;
   color: #aaa;
   font-size: 0.85rem;
+  white-space: pre-line;
 }
 
 .code-display {
