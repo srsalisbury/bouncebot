@@ -56,6 +56,7 @@ export interface WebSocketEvent {
 
 type EventHandler = (event: WebSocketEvent) => void
 type DisconnectHandler = () => void
+type ResyncHandler = () => void
 
 const RECONNECT_DELAY = 3000
 const MAX_RECONNECT_ATTEMPTS = 5
@@ -66,16 +67,24 @@ class WebSocketService {
   private sessionToken: string | null = null
   private eventHandler: EventHandler | null = null
   private disconnectHandler: DisconnectHandler | null = null
+  private resyncHandler: ResyncHandler | null = null
   private reconnectTimeout: number | null = null
   private shouldReconnect = false
   private reconnectAttempts = 0
   private hasConnectedSuccessfully = false
 
-  connect(roomId: string, sessionToken: string, onEvent: EventHandler, onDisconnect?: DisconnectHandler): void {
+  connect(
+    roomId: string,
+    sessionToken: string,
+    onEvent: EventHandler,
+    onDisconnect?: DisconnectHandler,
+    onResync?: ResyncHandler
+  ): void {
     this.roomId = roomId
     this.sessionToken = sessionToken
     this.eventHandler = onEvent
     this.disconnectHandler = onDisconnect ?? null
+    this.resyncHandler = onResync ?? null
     this.shouldReconnect = true
     this.reconnectAttempts = 0
     this.hasConnectedSuccessfully = false
@@ -94,6 +103,16 @@ class WebSocketService {
       console.log('WebSocket: connected')
       this.hasConnectedSuccessfully = true
       this.reconnectAttempts = 0
+      // A room broadcast during the gap between a socket dropping and a new
+      // one opening is gone for good - the hub only pushes to clients
+      // registered at broadcast time, nothing is queued for latecomers. Treat
+      // every open (including this service instance's first, e.g. a fresh
+      // page load rejoining a room this player was already in) as a signal to
+      // resync room state: the initial loadRoom() on mount can easily race
+      // ahead of the server noticing this connection and marking the player
+      // reconnected, leaving the client's own row stuck showing "reconnecting"
+      // with nothing left to prompt a refetch. Cheap and idempotent either way.
+      this.resyncHandler?.()
     }
 
     this.ws.onmessage = (event) => {
@@ -162,6 +181,7 @@ class WebSocketService {
     this.sessionToken = null
     this.eventHandler = null
     this.disconnectHandler = null
+    this.resyncHandler = null
     this.reconnectAttempts = 0
     this.hasConnectedSuccessfully = false
   }

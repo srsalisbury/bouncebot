@@ -267,10 +267,14 @@ func (x *Game) GetTarget() *BotPos {
 
 // Player in a room
 type Player struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	ColorIndex    int32                  `protobuf:"varint,3,opt,name=color_index,json=colorIndex,proto3" json:"color_index,omitempty"` // 0-7 for the 8 available player colors
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Id         string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name       string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ColorIndex int32                  `protobuf:"varint,3,opt,name=color_index,json=colorIndex,proto3" json:"color_index,omitempty"` // 0-7 for the 8 available player colors
+	// False if the player's connection has dropped and they're within the
+	// disconnect grace period (still counted for ready/finished checks, but a
+	// client can use this to explain why the room isn't advancing).
+	Connected     bool `protobuf:"varint,4,opt,name=connected,proto3" json:"connected,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -324,6 +328,13 @@ func (x *Player) GetColorIndex() int32 {
 		return x.ColorIndex
 	}
 	return 0
+}
+
+func (x *Player) GetConnected() bool {
+	if x != nil {
+		return x.Connected
+	}
+	return false
 }
 
 // Player's solution result
@@ -2106,12 +2117,13 @@ const file_bouncebot_proto_rawDesc = "" +
 	"\x04Game\x12&\n" +
 	"\x05board\x18\x01 \x01(\v2\x10.bouncebot.BoardR\x05board\x12%\n" +
 	"\x04bots\x18\x02 \x03(\v2\x11.bouncebot.BotPosR\x04bots\x12)\n" +
-	"\x06target\x18\x03 \x01(\v2\x11.bouncebot.BotPosR\x06target\"M\n" +
+	"\x06target\x18\x03 \x01(\v2\x11.bouncebot.BotPosR\x06target\"k\n" +
 	"\x06Player\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
 	"\vcolor_index\x18\x03 \x01(\x05R\n" +
-	"colorIndex\"\x8f\x01\n" +
+	"colorIndex\x12\x1c\n" +
+	"\tconnected\x18\x04 \x01(\bR\tconnected\"\x8f\x01\n" +
 	"\x0ePlayerSolution\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x127\n" +
 	"\tsolved_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\bsolvedAt\x12'\n" +

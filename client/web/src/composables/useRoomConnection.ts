@@ -248,7 +248,8 @@ export function useRoomConnection(options: RoomConnectionOptions) {
         normalizedRoomId.value,
         roomStore.currentSessionToken,
         handleWebSocketEvent,
-        handleWebSocketDisconnect
+        handleWebSocketDisconnect,
+        () => loadRoom()
       )
     }
   }

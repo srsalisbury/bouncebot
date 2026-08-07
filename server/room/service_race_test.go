@@ -1,6 +1,10 @@
 package room
 
 import (
+	"bytes"
+	"log"
+	"os"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -103,5 +107,85 @@ func TestService_StartNextGame_DoesNotDoubleFireOnConcurrentLeave(t *testing.T) 
 
 	if got := atomic.LoadInt32(&startedCount); got != 1 {
 		t.Errorf("expected exactly 1 game start for a single ready-up transition, got %d (board was generated/committed more than once)", got)
+	}
+}
+
+// TestService_StartNextGame_LogsWhenRoomVanishesDuringGeneration reproduces
+// the other side of the same window: if every player leaves while board
+// generation is still running unlocked, the room is garbage collected before
+// StartNextGameSignal gets back to it, and the signal is dropped. That's
+// harmless (nobody's left to strand), but it used to be entirely silent -
+// this asserts it's now logged, so a stuck-room report has something to grep
+// for instead of the trail going cold at "room not found".
+func TestService_StartNextGame_LogsWhenRoomVanishesDuringGeneration(t *testing.T) {
+	svc := NewRoomService()
+
+	room, _, aliceToken := svc.Create("Alice", false)
+	_, _, bobToken, err := svc.Join(room.ID, "Bob")
+	if err != nil {
+		t.Fatalf("join bob: %v", err)
+	}
+
+	if _, err := svc.StartGame(room.ID); err != nil {
+		t.Fatalf("start game: %v", err)
+	}
+
+	if err := svc.UpdateRoomSettings(room.ID, aliceToken, RoomSettings{MinSolutionLength: 2}); err != nil {
+		t.Fatalf("update settings: %v", err)
+	}
+
+	generating := make(chan struct{})
+	release := make(chan struct{})
+	var once atomic.Bool
+	svc.SetBoardSolveFunc(func(game *model.Game) ([]model.BotPosition, bool) {
+		if once.CompareAndSwap(false, true) {
+			close(generating)
+			<-release
+		}
+		return []model.BotPosition{{}, {}}, true
+	})
+
+	for _, tok := range []string{aliceToken, bobToken} {
+		if err := svc.MarkFinishedSolving(room.ID, tok); err != nil {
+			t.Fatalf("mark finished: %v", err)
+		}
+	}
+	if err := svc.MarkReadyForNext(room.ID, aliceToken); err != nil {
+		t.Fatalf("alice ready: %v", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		if err := svc.MarkReadyForNext(room.ID, bobToken); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	select {
+	case <-generating:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for board generation to start")
+	}
+
+	var logBuf bytes.Buffer
+	log.SetOutput(&logBuf)
+	defer log.SetOutput(os.Stderr) // restore the default
+
+	// Both players leave while generation is still blocked - the room has no
+	// one left in it and is garbage collected out from under the in-flight
+	// StartNextGameSignal.
+	if err := svc.LeaveRoom(room.ID, aliceToken); err != nil {
+		t.Fatalf("alice leave: %v", err)
+	}
+	if err := svc.LeaveRoom(room.ID, bobToken); err != nil {
+		t.Fatalf("bob leave: %v", err)
+	}
+
+	close(release)
+	<-done
+
+	if !strings.Contains(logBuf.String(), "dropped StartNextGameSignal") {
+		t.Errorf("expected a log line about the dropped signal, got: %q", logBuf.String())
 	}
 }
