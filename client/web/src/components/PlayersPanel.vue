@@ -172,6 +172,10 @@ function isHost(player: Player): boolean {
   return props.showHost && props.players.length > 0 && player.id === props.players[0]?.id
 }
 
+function isDisconnected(player: Player): boolean {
+  return !player.connected
+}
+
 const formattedTimesMap = computed(() => {
   if (!props.solutions || !props.gameStartedAt) return new Map<string, string>()
 
@@ -217,7 +221,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
         v-for="player in sortedPlayers"
         :key="player.id"
         class="player-item"
-        :class="{ current: isCurrentPlayer(player), solved: getPlayerSolution(player), leader: isLeader(player) }"
+        :class="{ current: isCurrentPlayer(player), solved: getPlayerSolution(player), leader: isLeader(player), disconnected: isDisconnected(player) }"
       >
         <span class="player-dot" :style="{ backgroundColor: getPlayerColorFor(player) }" />
         <span class="player-name">{{ player.name }}</span>
@@ -225,6 +229,7 @@ function getSolveTime(solution: PlayerSolution): string | null {
           <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
         </svg>
         <span v-if="isCurrentPlayer(player)" class="you-label">(you)</span>
+        <span v-if="isDisconnected(player)" class="disconnected-badge" title="Disconnected - waiting for them to reconnect or time out">reconnecting&hellip;</span>
         <span v-if="!compact && getPlayerWins(player) > 0" class="wins-badge">
           {{ getPlayerWins(player) }} {{ getPlayerWins(player) === 1 ? 'win' : 'wins' }}
         </span>
@@ -379,6 +384,25 @@ function getSolveTime(solution: PlayerSolution): string | null {
 .player-item.leader .solution-badge {
   background: var(--color-winner);
   color: #000;
+}
+
+.player-item.disconnected {
+  opacity: 0.6;
+}
+
+.player-item.disconnected .player-dot {
+  filter: grayscale(1);
+}
+
+.disconnected-badge {
+  margin-left: auto;
+  padding: 0.15rem 0.4rem;
+  background: #4a3a1a;
+  color: #e0b060;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* Dropdown summary - hidden by default (shown only in vertical layout) */

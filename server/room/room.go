@@ -143,6 +143,7 @@ func (r *Room) ToProto() *pb.Room {
 			Id:         p.ID,
 			Name:       p.Name,
 			ColorIndex: p.ColorIndex,
+			Connected:  p.Status != PlayerStatusDisconnected,
 		}
 	}
 
@@ -168,13 +169,16 @@ func (r *Room) ToProto() *pb.Room {
 		})
 	}
 
-	// Convert pending players
+	// Convert pending players. A disconnect removes a pending player outright
+	// rather than marking them disconnected (see PlayerManager.DisconnectPlayer),
+	// so anyone still in this list is, by construction, connected.
 	pendingPlayers := make([]*pb.Player, len(r.PendingPlayers))
 	for i, p := range r.PendingPlayers {
 		pendingPlayers[i] = &pb.Player{
 			Id:         p.ID,
 			Name:       p.Name,
 			ColorIndex: p.ColorIndex,
+			Connected:  true,
 		}
 	}
 

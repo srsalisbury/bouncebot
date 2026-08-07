@@ -525,6 +525,33 @@ func TestService_ToProto(t *testing.T) {
 	}
 }
 
+func TestService_ToProto_ConnectedStatus(t *testing.T) {
+	svc := NewRoomService()
+
+	room, aliceID, _ := svc.Create("Alice", false)
+	_, bobID, _, _ := svc.Join(room.ID, "Bob")
+
+	if err := svc.DisconnectPlayer(room.ID, aliceID); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	roomState, _ := svc.Get(room.ID)
+	proto := roomState.ToProto()
+
+	for _, p := range proto.Players {
+		switch p.Id {
+		case aliceID:
+			if p.Connected {
+				t.Error("expected disconnected player to report Connected: false")
+			}
+		case bobID:
+			if !p.Connected {
+				t.Error("expected connected player to report Connected: true")
+			}
+		}
+	}
+}
+
 func TestService_BootPlayer_HostCanBoot(t *testing.T) {
 	svc := NewRoomService()
 	mock := &mockBroadcaster{}

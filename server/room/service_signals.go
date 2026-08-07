@@ -1,5 +1,7 @@
 package room
 
+import "log"
+
 // processSignals interprets and executes signals.
 // This is where the orchestration happens.
 func (s *RoomService) processSignals(signals []Signal) {
@@ -9,19 +11,32 @@ func (s *RoomService) processSignals(signals []Signal) {
 			s.processBroadcast(signal.Event)
 
 		case EndGameSignal:
-			_ = s.withRoomLock(signal.RoomID, func(room *Room) ([]Signal, error) {
+			if err := s.withRoomLock(signal.RoomID, func(room *Room) ([]Signal, error) {
 				return s.gameMgr.EndGame(room), nil
-			})
+			}); err != nil {
+				// Room vanished between the round ending and this signal being
+				// processed (e.g. every player left during the gap) - the room
+				// is gone either way, so there's nothing left to end, but log it
+				// since it'd otherwise be an invisible dead end for whoever's
+				// debugging a "stuck round" report.
+				log.Printf("room %s: dropped EndGameSignal: %v", signal.RoomID, err)
+			}
 
 		case StartNextGameSignal:
 			game, _, ok := s.selectNewGame(signal.RoomID)
 			if !ok {
+				// Room vanished while board generation was running unlocked -
+				// same reasoning as EndGameSignal above. Note: room.NextGameStarting
+				// is left permanently true, but harmlessly so, since the room
+				// (and everyone in it) is already gone.
+				log.Printf("room %s: dropped StartNextGameSignal: room not found during selectNewGame", signal.RoomID)
 				continue
 			}
 
 			room, unlock := s.repo.GetWithLock(signal.RoomID)
 			if room == nil {
 				unlock()
+				log.Printf("room %s: dropped StartNextGameSignal: room not found after selectNewGame", signal.RoomID)
 				continue
 			}
 			s.gameMgr.PromotePendingPlayers(room)
